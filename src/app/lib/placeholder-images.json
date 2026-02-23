@@ -1,0 +1,35 @@
+
+{
+  "placeholderImages": [
+    {
+      "id": "hero-innovation",
+      "description": "Abstract innovation concept",
+      "imageUrl": "https://picsum.photos/seed/innovation1/800/600",
+      "imageHint": "innovation abstract"
+    },
+    {
+      "id": "tech-idea",
+      "description": "Technology idea visualization",
+      "imageUrl": "https://picsum.photos/seed/tech/800/600",
+      "imageHint": "technology future"
+    },
+    {
+      "id": "health-idea",
+      "description": "Healthcare innovation",
+      "imageUrl": "https://picsum.photos/seed/health/800/600",
+      "imageHint": "healthcare medicine"
+    },
+    {
+      "id": "user-avatar-1",
+      "description": "User avatar",
+      "imageUrl": "https://picsum.photos/seed/user1/100/100",
+      "imageHint": "portrait person"
+    },
+    {
+      "id": "user-avatar-2",
+      "description": "User avatar 2",
+      "imageUrl": "https://picsum.photos/seed/user2/100/100",
+      "imageHint": "portrait woman"
+    }
+  ]
+}
