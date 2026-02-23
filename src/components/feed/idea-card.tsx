@@ -6,9 +6,16 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Heart, MessageCircle, Share2, Bookmark, Lightbulb } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { Separator } from "@/components/ui/separator";
+
+interface Comment {
+  id: string;
+  userName: string;
+  userAvatar: string;
+  text: string;
+}
 
 interface IdeaCardProps {
   idea: {
@@ -23,6 +30,7 @@ interface IdeaCardProps {
     tags: string[];
     likes: number;
     comments: number;
+    commentsList?: Comment[];
   };
 }
 
@@ -56,18 +64,43 @@ export function IdeaCard({ idea }: IdeaCardProps) {
         />
       </div>
 
-      <CardContent className="p-4 space-y-2">
-        <h3 className="font-bold text-lg leading-tight line-clamp-1 text-primary">{idea.title}</h3>
-        <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-          {idea.description}
-        </p>
-        <div className="flex flex-wrap gap-2 pt-2">
+      <CardContent className="p-4 space-y-3">
+        <div>
+          <h3 className="font-bold text-lg leading-tight line-clamp-1 text-primary">{idea.title}</h3>
+          <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed mt-1">
+            {idea.description}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
           {idea.tags.map((tag) => (
             <Badge key={tag} variant="secondary" className="bg-muted text-[10px] font-medium border-none rounded-md px-2 py-0">
               #{tag}
             </Badge>
           ))}
         </div>
+
+        {idea.commentsList && idea.commentsList.length > 0 && (
+          <div className="pt-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Comments</span>
+              <Separator className="flex-1" />
+            </div>
+            <div className="space-y-3">
+              {idea.commentsList.map((comment) => (
+                <div key={comment.id} className="flex gap-3 items-start">
+                  <Avatar className="h-6 w-6 border shrink-0">
+                    <AvatarImage src={comment.userAvatar} />
+                    <AvatarFallback>{comment.userName[0]}</AvatarFallback>
+                  </Avatar>
+                  <div className="bg-muted/30 p-2.5 rounded-xl rounded-tl-none border border-muted flex-1">
+                    <p className="text-[11px] font-bold text-foreground mb-0.5">{comment.userName}</p>
+                    <p className="text-xs text-muted-foreground leading-normal">{comment.text}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </CardContent>
 
       <CardFooter className="p-4 pt-0 flex items-center justify-between">

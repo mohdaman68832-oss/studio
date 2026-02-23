@@ -5,7 +5,6 @@ import { IdeaCard } from "@/components/feed/idea-card";
 import { Button } from "@/components/ui/button";
 import { Search, Bell, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 const MOCK_IDEAS = [
   {
@@ -20,6 +19,20 @@ const MOCK_IDEAS = [
     tags: ["GreenTech", "Blockchain", "Energy"],
     likes: 245,
     comments: 42,
+    commentsList: [
+      {
+        id: "c1",
+        userName: "Elena Smith",
+        userAvatar: "https://picsum.photos/seed/user4/100/100",
+        text: "This could revolutionize urban power grids! How do you handle storage variance?"
+      },
+      {
+        id: "c2",
+        userName: "Mark Thompson",
+        userAvatar: "https://picsum.photos/seed/user5/100/100",
+        text: "I'm working on a similar L2 solution. Would love to collaborate."
+      }
+    ]
   },
   {
     id: "2",
@@ -33,6 +46,14 @@ const MOCK_IDEAS = [
     tags: ["Health", "AI", "Wearable"],
     likes: 189,
     comments: 31,
+    commentsList: [
+      {
+        id: "c3",
+        userName: "David Wilson",
+        userAvatar: "https://picsum.photos/seed/user6/100/100",
+        text: "As someone with ADHD, this looks life-changing. When is the beta?"
+      }
+    ]
   },
   {
     id: "3",
@@ -46,6 +67,14 @@ const MOCK_IDEAS = [
     tags: ["IoT", "Urban", "Health"],
     likes: 134,
     comments: 18,
+    commentsList: [
+      {
+        id: "c4",
+        userName: "Chloe Lam",
+        userAvatar: "https://picsum.photos/seed/user7/100/100",
+        text: "Design looks sleek. What's the battery life on a single charge?"
+      }
+    ]
   }
 ];
 
