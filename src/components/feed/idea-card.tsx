@@ -1,10 +1,9 @@
-
 "use client";
 
 import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Heart, MessageCircle, Send, MoreHorizontal, Smile, Lightbulb } from "lucide-react";
+import { Heart, MessageCircle, Send, MoreHorizontal } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
@@ -101,9 +100,6 @@ export function IdeaCard({ idea }: IdeaCardProps) {
           </button>
           <button className="hover:opacity-70">
             <Send size={26} className="text-foreground" />
-          </button>
-          <button className="hover:opacity-70">
-            <Smile size={26} className="text-foreground" />
           </button>
         </div>
         
