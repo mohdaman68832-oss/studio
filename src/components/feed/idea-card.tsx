@@ -2,8 +2,7 @@
 
 import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Heart, MessageCircle, Send, MoreHorizontal } from "lucide-react";
+import { Heart, MoreHorizontal } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
@@ -94,12 +93,6 @@ export function IdeaCard({ idea }: IdeaCardProps) {
         <div className="flex items-center gap-5">
           <button onClick={() => setIsLiked(!isLiked)} className="transition-transform active:scale-125">
             <Heart size={26} className={cn(isLiked ? "text-red-500 fill-current" : "text-foreground")} />
-          </button>
-          <button className="hover:opacity-70">
-            <MessageCircle size={26} className="text-foreground" />
-          </button>
-          <button className="hover:opacity-70">
-            <Send size={26} className="text-foreground" />
           </button>
         </div>
         
