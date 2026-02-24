@@ -1,4 +1,3 @@
-
 "use client";
 
 import { IdeaCard } from "@/components/feed/idea-card";
@@ -13,6 +12,7 @@ const MOCK_IDEAS = [
   {
     id: "1",
     title: "EcoConnect: Smart Grid for Neighborhoods",
+    problem: "Rising energy costs and inefficient localized energy distribution.",
     description: "A decentralized platform enabling neighbors to share excess solar energy with zero transaction fees using blockchain technology.",
     category: "Sustainability",
     userName: "Alex Rivera",
@@ -25,6 +25,7 @@ const MOCK_IDEAS = [
   {
     id: "2",
     title: "NeuroFocus: AI-Driven ADHD Support",
+    problem: "Difficulty maintaining concentration during complex work tasks.",
     description: "Wearable device that monitors focus levels and provides subtle haptic feedback to help individuals with ADHD maintain deep work states.",
     category: "Healthcare",
     userName: "Sarah Chen",
@@ -37,6 +38,7 @@ const MOCK_IDEAS = [
   {
     id: "3",
     title: "Aura: Personal Air Purifier",
+    problem: "High levels of urban air pollution affecting daily respiratory health.",
     description: "Stylish, portable neck-worn air purifier using ionized filtration to create a clean air bubble around the user in polluted urban areas.",
     category: "Technology",
     userName: "Marcus Vane",
@@ -54,7 +56,6 @@ export default function FeedPage() {
 
   const ideasQuery = useMemo(() => {
     if (!db) return null;
-    // We fetch all ideas and filter client-side for immediate responsiveness without index errors
     return query(collection(db, "ideas"));
   }, [db]);
 
@@ -68,7 +69,6 @@ export default function FeedPage() {
 
   return (
     <div className="max-w-md mx-auto min-h-screen bg-background px-4 pt-8 pb-24">
-      {/* Categories Bar */}
       <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar sticky top-0 bg-background/80 backdrop-blur-md z-10 -mx-4 px-4 pt-2">
         {["All", "Art", "Game", "Study", "Technology", "Sustainability", "Healthcare"].map((cat) => (
           <Button 
@@ -85,7 +85,6 @@ export default function FeedPage() {
         ))}
       </div>
 
-      {/* Ideas Feed */}
       <div className="space-y-6 mt-6">
         {loading ? (
           <div className="space-y-12">

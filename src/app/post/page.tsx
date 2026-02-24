@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef } from "react";
@@ -57,7 +56,7 @@ export default function PostPage() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    problem: "General innovation",
+    problem: "",
     targetUsers: "", 
     category: "Technology",
   });
@@ -76,8 +75,6 @@ export default function PostPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // In a real app, you'd upload this to storage. 
-      // For the prototype, we use the local URL for preview and base64 for AI/mock storage.
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
     }
@@ -99,22 +96,21 @@ export default function PostPage() {
     if (!db) return;
     setIsAnalyzing(true);
     try {
-      // 1. Run AI Analysis
       const result = await analyzeIdeaOnPost({
         title: formData.title,
         description: formData.description,
-        problem: formData.problem,
+        problem: formData.problem || "General Innovation",
         solution: "Optimized innovation for " + formData.targetUsers,
         targetUsers: formData.targetUsers,
-        category: formData.category,
+        category: formData.targetUsers || formData.category,
         mediaDataUri: previewUrl || undefined
       });
       setAnalysisResult(result);
 
-      // 2. Post to Firestore immediately
       await addDoc(collection(db, "ideas"), {
         title: formData.title,
         description: formData.description,
+        problem: formData.problem || "Innovation for " + (formData.targetUsers || "everyone"),
         category: formData.targetUsers || formData.category,
         userName: "John Innovator",
         userAvatar: "https://picsum.photos/seed/me/100/100",
@@ -302,9 +298,19 @@ export default function PostPage() {
                 onChange={(e) => updateFormData("title", e.target.value)}
               />
             </div>
+
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest">The Problem</Label>
+              <Textarea 
+                placeholder="What challenge does this solve?" 
+                className="rounded-2xl min-h-[80px] bg-muted/30 border-none focus-visible:ring-primary/20"
+                value={formData.problem}
+                onChange={(e) => updateFormData("problem", e.target.value)}
+              />
+            </div>
             
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest">Brief Description</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest">Description</Label>
               <Textarea 
                 placeholder="Explain the magic behind it..." 
                 className="rounded-2xl min-h-[120px] bg-muted/30 border-none focus-visible:ring-primary/20"
@@ -314,7 +320,7 @@ export default function PostPage() {
             </div>
 
             <div className="space-y-4">
-              <Label className="text-[10px] font-black uppercase tracking-widest">Who is this for?</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest">Category</Label>
               <div className="flex flex-wrap gap-2">
                 {AUDIENCE_KEYWORDS.map((keyword) => (
                   <Button

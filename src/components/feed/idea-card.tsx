@@ -1,4 +1,3 @@
-
 "use client";
 
 import Image from "next/image";
@@ -15,6 +14,7 @@ interface IdeaCardProps {
     id: string;
     title: string;
     description: string;
+    problem?: string;
     category: string;
     userName: string;
     userAvatar: string;
@@ -27,7 +27,7 @@ interface IdeaCardProps {
 
 export function IdeaCard({ idea }: IdeaCardProps) {
   const [isLiked, setIsLiked] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [showDescription, setShowDescription] = useState(false);
   const { toast } = useToast();
 
   const userHandle = idea.userName.toLowerCase().replace(/\s/g, '');
@@ -70,34 +70,32 @@ export function IdeaCard({ idea }: IdeaCardProps) {
         </div>
 
         <div className="space-y-1.5">
-          <h3 className={cn(
-            "text-lg font-black text-primary uppercase tracking-tighter leading-none",
-            !isExpanded && "truncate"
-          )}>
+          <h3 className="text-lg font-black text-primary uppercase tracking-tighter leading-none">
             {idea.title}
           </h3>
-          <div className={cn(
-            "text-sm text-foreground/80 leading-relaxed font-medium",
-            !isExpanded && "line-clamp-2"
-          )}>
-            {idea.description}
+          
+          <div className="space-y-1">
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">The Challenge</p>
+            <p className="text-sm text-foreground/80 leading-relaxed font-bold">
+              {idea.problem || "Solving common urban challenges with innovation."}
+            </p>
           </div>
-          {!isExpanded && (
-            <button 
-              onClick={() => setIsExpanded(true)}
-              className="text-[11px] font-black text-secondary hover:text-secondary/80 mt-1 uppercase tracking-tighter"
-            >
-              Read full brief
-            </button>
+
+          {showDescription && (
+            <div className="mt-3 pt-3 border-t border-muted animate-in fade-in slide-in-from-top-1">
+              <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">Full Brief</p>
+              <p className="text-sm text-foreground/70 leading-relaxed font-medium">
+                {idea.description}
+              </p>
+            </div>
           )}
-          {isExpanded && (
-             <button 
-              onClick={() => setIsExpanded(false)}
-              className="text-[11px] font-black text-muted-foreground hover:text-foreground mt-1 uppercase tracking-tighter"
-            >
-              Collapse
-            </button>
-          )}
+
+          <button 
+            onClick={() => setShowDescription(!showDescription)}
+            className="text-[11px] font-black text-secondary hover:text-secondary/80 mt-1 uppercase tracking-tighter"
+          >
+            {showDescription ? "See less" : "See more details"}
+          </button>
         </div>
       </div>
 
