@@ -54,7 +54,12 @@ export function IdeaCard({ idea }: IdeaCardProps) {
     setCommentText("");
   };
 
+  const handleLikeToggle = () => {
+    setIsLiked(!isLiked);
+  };
+
   const visibleComments = showAllComments ? localComments : localComments.slice(0, 2);
+  const displayLikes = idea.likes + (isLiked ? 1 : 0);
 
   return (
     <div className="mb-8 bg-background">
@@ -136,8 +141,18 @@ export function IdeaCard({ idea }: IdeaCardProps) {
       {/* Action Bar Below Image */}
       <div className="flex items-center justify-between px-3 py-4">
         <div className="flex items-center gap-5">
-          <button onClick={() => setIsLiked(!isLiked)} className="transition-transform active:scale-125">
-            <ArrowBigUp size={32} className={cn(isLiked ? "text-primary fill-current" : "text-foreground")} />
+          <button 
+            onClick={handleLikeToggle} 
+            className="transition-transform active:scale-125"
+            aria-label="Upvote"
+          >
+            <ArrowBigUp 
+              size={32} 
+              className={cn(
+                "transition-colors duration-200",
+                isLiked ? "text-primary fill-current" : "text-foreground"
+              )} 
+            />
           </button>
         </div>
         
@@ -151,12 +166,12 @@ export function IdeaCard({ idea }: IdeaCardProps) {
                 ))}
             </div>
             <span className="text-[10px] font-black uppercase tracking-tighter">
-              {((idea.likes + (isLiked ? 1 : 0)) / 1000).toFixed(1)}k Upvoted
+              {displayLikes >= 1000 ? `${(displayLikes / 1000).toFixed(1)}k` : displayLikes} Upvoted
             </span>
         </div>
       </div>
 
-      {/* Tags Section (Moved below actions to keep it clean) */}
+      {/* Tags Section */}
       <div className="px-3 pb-4">
           <div className="flex flex-wrap gap-1.5">
             {idea.tags.map(tag => (
@@ -183,9 +198,12 @@ export function IdeaCard({ idea }: IdeaCardProps) {
               onKeyDown={(e) => e.key === 'Enter' && handleAddComment()}
             />
             {commentText && (
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={handleAddComment}>
+              <button 
+                className="h-8 w-8 text-primary flex items-center justify-center hover:bg-primary/10 rounded-full transition-colors" 
+                onClick={handleAddComment}
+              >
                 <Send size={16} />
-              </Button>
+              </button>
             )}
           </div>
         </div>
