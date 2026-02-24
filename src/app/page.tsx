@@ -86,7 +86,6 @@ export default function FeedPage() {
           <div className="bg-primary p-1.5 rounded-lg shadow-lg shadow-primary/20">
             <Sparkles className="text-white w-5 h-5" />
           </div>
-          <h1 className="text-2xl font-black tracking-tighter text-primary uppercase">InnovateSphere</h1>
         </div>
         <Button variant="ghost" size="icon" className="rounded-full">
           <Bell className="w-6 h-6 text-muted-foreground" />
