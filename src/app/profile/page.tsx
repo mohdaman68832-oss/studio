@@ -1,10 +1,8 @@
-
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Settings, Edit3, Grid, Bookmark, Heart, LogOut } from "lucide-react";
+import {Settings, Edit3, Grid, Bookmark, Heart} from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Image from "next/image";
 
@@ -93,12 +91,6 @@ export default function ProfilePage() {
           <p className="text-sm font-medium">Your liked ideas will appear here.</p>
         </TabsContent>
       </Tabs>
-
-      <div className="px-6 mt-12 pb-6">
-        <Button variant="outline" className="w-full rounded-2xl text-red-500 border-red-100 hover:bg-red-50 hover:text-red-600">
-          <LogOut size={18} className="mr-2" /> Log Out
-        </Button>
-      </div>
     </div>
   );
 }
