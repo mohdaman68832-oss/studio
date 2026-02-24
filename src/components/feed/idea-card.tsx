@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, MoreHorizontal } from "lucide-react";
+import { Heart } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
@@ -61,9 +61,6 @@ export function IdeaCard({ idea }: IdeaCardProps) {
               </span>
             </div>
           </div>
-          <button className="text-white drop-shadow-md hover:opacity-80 transition-opacity">
-            <MoreHorizontal size={24} />
-          </button>
         </div>
 
         <Image
@@ -119,11 +116,6 @@ export function IdeaCard({ idea }: IdeaCardProps) {
                 <span className="font-bold mr-2">{idea.userName.toLowerCase().replace(/\s/g, '')}</span>
                 {idea.description}
             </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {idea.tags.map((tag) => (
-            <span key={tag} className="text-xs text-blue-600 font-bold">#{tag}</span>
-          ))}
         </div>
 
         {/* Comments Section (Always Visible) */}
