@@ -2,7 +2,7 @@
 
 import { IdeaCard } from "@/components/feed/idea-card";
 import { Button } from "@/components/ui/button";
-import { Search, Bell, Sparkles } from "lucide-react";
+import { Search, Bell } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -83,9 +83,7 @@ export default function FeedPage() {
     <div className="max-w-md mx-auto min-h-screen bg-background px-4 pt-6 pb-24">
       <header className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
-          <div className="bg-primary p-1.5 rounded-lg shadow-lg shadow-primary/20">
-            <Sparkles className="text-white w-5 h-5" />
-          </div>
+          {/* Logo and title removed as requested */}
         </div>
         <Button variant="ghost" size="icon" className="rounded-full">
           <Bell className="w-6 h-6 text-muted-foreground" />
