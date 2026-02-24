@@ -2,8 +2,7 @@
 
 import { IdeaCard } from "@/components/feed/idea-card";
 import { Button } from "@/components/ui/button";
-import { Search, Bell } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const MOCK_IDEAS = [
@@ -86,14 +85,6 @@ export default function FeedPage() {
           <Bell className="w-6 h-6 text-muted-foreground" />
         </Button>
       </header>
-
-      <div className="relative mb-6">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
-        <Input 
-          placeholder="Explore new innovations..." 
-          className="pl-10 h-12 bg-white border-none rounded-2xl shadow-sm focus-visible:ring-primary/20 text-sm"
-        />
-      </div>
 
       <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar">
         {["All", "Sustainability", "Healthcare", "FinTech", "AI", "Education"].map((cat) => (
