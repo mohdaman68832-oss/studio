@@ -1,9 +1,15 @@
+
 "use client";
 
 import { IdeaCard } from "@/components/feed/idea-card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useCollection, useFirestore } from "@/firebase";
+import { collection, query, orderBy } from "firebase/firestore";
+import { useMemo } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
+// Mock data as fallback or initial state
 const MOCK_IDEAS = [
   {
     id: "1",
@@ -16,21 +22,6 @@ const MOCK_IDEAS = [
     innovationScore: 92,
     tags: ["GreenTech", "Blockchain", "Energy"],
     likes: 245,
-    comments: 42,
-    commentsList: [
-      {
-        id: "c1",
-        userName: "Elena Smith",
-        userAvatar: "https://picsum.photos/seed/user4/100/100",
-        text: "Suggestion: Integrating a local battery storage system would make the grid even more resilient during peak hours!"
-      },
-      {
-        id: "c2",
-        userName: "Mark Thompson",
-        userAvatar: "https://picsum.photos/seed/user5/100/100",
-        text: "Feedback: The blockchain aspect is great, but ensure the UI is simple enough for non-technical homeowners."
-      }
-    ]
   },
   {
     id: "2",
@@ -43,15 +34,6 @@ const MOCK_IDEAS = [
     innovationScore: 88,
     tags: ["Health", "AI", "Wearable"],
     likes: 189,
-    comments: 31,
-    commentsList: [
-      {
-        id: "c3",
-        userName: "David Wilson",
-        userAvatar: "https://picsum.photos/seed/user6/100/100",
-        text: "Suggestion: Maybe add a 'Study Buddy' mode where two users can sync focus sessions to encourage accountability?"
-      }
-    ]
   },
   {
     id: "3",
@@ -64,19 +46,22 @@ const MOCK_IDEAS = [
     innovationScore: 76,
     tags: ["IoT", "Urban", "Health"],
     likes: 134,
-    comments: 18,
-    commentsList: [
-      {
-        id: "c4",
-        userName: "Chloe Lam",
-        userAvatar: "https://picsum.photos/seed/user7/100/100",
-        text: "Feedback: Love the design. Could you make the filters compostable to reduce waste? That would be a huge selling point."
-      }
-    ]
   }
 ];
 
 export default function FeedPage() {
+  const db = useFirestore();
+
+  const ideasQuery = useMemo(() => {
+    if (!db) return null;
+    return query(collection(db, "ideas"), orderBy("title", "asc"));
+  }, [db]);
+
+  const { data: firestoreIdeas, loading } = useCollection(ideasQuery);
+
+  // Use Firestore ideas if available, otherwise fallback to mock data
+  const ideasToDisplay = firestoreIdeas && firestoreIdeas.length > 0 ? firestoreIdeas : MOCK_IDEAS;
+
   return (
     <div className="max-w-md mx-auto min-h-screen bg-background px-4 pt-8 pb-24">
       {/* Categories Bar */}
@@ -97,9 +82,20 @@ export default function FeedPage() {
 
       {/* Ideas Feed */}
       <div className="space-y-4 mt-4">
-        {MOCK_IDEAS.map((idea) => (
-          <IdeaCard key={idea.id} idea={idea} />
-        ))}
+        {loading ? (
+          <div className="space-y-8">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="space-y-4">
+                <Skeleton className="h-10 w-1/2 rounded-full" />
+                <Skeleton className="h-64 w-full rounded-[2.5rem]" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          ideasToDisplay.map((idea) => (
+            <IdeaCard key={idea.id} idea={idea as any} />
+          ))
+        )}
       </div>
     </div>
   );

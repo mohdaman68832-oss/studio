@@ -4,20 +4,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowBigUp, MoreHorizontal, Send, Lightbulb, Share2 } from "lucide-react";
+import { ArrowBigUp, MoreHorizontal, Lightbulb, Share2 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Separator } from "@/components/ui/separator";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-
-interface Comment {
-  id: string;
-  userName: string;
-  userAvatar: string;
-  text: string;
-}
 
 interface IdeaCardProps {
   idea: {
@@ -31,34 +22,15 @@ interface IdeaCardProps {
     innovationScore: number;
     tags: string[];
     likes: number;
-    comments: number;
-    commentsList?: Comment[];
   };
 }
 
 export function IdeaCard({ idea }: IdeaCardProps) {
   const [isLiked, setIsLiked] = useState(false);
-  const [commentText, setCommentText] = useState("");
-  const [showAllComments, setShowAllComments] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [localComments, setLocalComments] = useState<Comment[]>(idea.commentsList || []);
   const { toast } = useToast();
 
   const userHandle = idea.userName.toLowerCase().replace(/\s/g, '');
-
-  const handleAddComment = () => {
-    if (!commentText.trim()) return;
-    
-    const newComment: Comment = {
-      id: Date.now().toString(),
-      userName: "you",
-      userAvatar: "https://picsum.photos/seed/me/100/100",
-      text: commentText,
-    };
-
-    setLocalComments([newComment, ...localComments]);
-    setCommentText("");
-  };
 
   const handleLikeToggle = () => {
     setIsLiked(!isLiked);
@@ -71,12 +43,10 @@ export function IdeaCard({ idea }: IdeaCardProps) {
     });
   };
 
-  const visibleComments = showAllComments ? localComments : localComments.slice(0, 2);
   const displayLikes = idea.likes + (isLiked ? 1 : 0);
 
   return (
     <div className="mb-8 bg-card rounded-[2.5rem] idea-card-shadow overflow-hidden border border-border/50 transition-all hover:shadow-2xl hover:border-primary/20">
-      {/* Header Info Above Image */}
       <div className="px-5 pt-5 pb-3 space-y-3">
         <div className="flex items-center justify-between mb-1">
            <Link href={`/profile/${userHandle}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
@@ -130,23 +100,27 @@ export function IdeaCard({ idea }: IdeaCardProps) {
         </div>
       </div>
 
-      {/* Main Image Frame */}
-      <div className="relative aspect-square w-full mx-auto overflow-hidden">
+      {/* Clicking the image now leads to the detailed suggestion page */}
+      <Link href={`/idea/${idea.id}`} className="block relative aspect-square w-full mx-auto overflow-hidden group">
         <Image
           src={idea.mediaUrl}
           alt={idea.title}
           fill
-          className="object-cover"
+          className="object-cover transition-transform group-hover:scale-105 duration-500"
         />
+        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+          <span className="bg-white/90 text-primary px-4 py-2 rounded-full text-xs font-black uppercase tracking-tighter shadow-lg">
+            Open Suggestion Hub
+          </span>
+        </div>
         <div className="absolute top-4 left-4">
           <Badge className="bg-primary/90 text-white border-none backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-1.5 shadow-lg">
             <Lightbulb size={12} className="fill-current" />
-            <span className="text-[10px] font-black uppercase tracking-wider">Seeking Suggestions</span>
+            <span className="text-[10px] font-black uppercase tracking-wider">Tap to Suggest</span>
           </Badge>
         </div>
-      </div>
+      </Link>
 
-      {/* Action Bar Below Image */}
       <div className="flex items-center justify-between px-5 py-4">
         <div className="flex items-center gap-5">
           <button 
@@ -171,7 +145,6 @@ export function IdeaCard({ idea }: IdeaCardProps) {
           </button>
         </div>
         
-        {/* "Supporters" Section */}
         <div className="flex items-center gap-3 bg-muted/30 py-1.5 px-3 rounded-full border border-border/50">
             <div className="flex -space-x-2">
                 {[1,2,3].map(i => (
@@ -186,8 +159,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
         </div>
       </div>
 
-      {/* Tags Section */}
-      <div className="px-5 pb-4">
+      <div className="px-5 pb-6">
           <div className="flex flex-wrap gap-2">
             {idea.tags.map(tag => (
               <span key={tag} className="text-[11px] font-black text-primary/80 bg-primary/5 px-2 py-0.5 rounded-md">
@@ -195,75 +167,6 @@ export function IdeaCard({ idea }: IdeaCardProps) {
               </span>
             ))}
           </div>
-      </div>
-
-      {/* Comment Input Box */}
-      <div className="px-5 space-y-4 pb-6">
-        <div className="flex items-center gap-3 bg-muted/40 p-2.5 rounded-2xl border border-border/50">
-          <Avatar className="h-8 w-8 shadow-sm">
-            <AvatarImage src="https://picsum.photos/seed/me/100/100" />
-            <AvatarFallback>U</AvatarFallback>
-          </Avatar>
-          <div className="flex-1 flex items-center">
-            <Input 
-              placeholder="Give a suggestion or feedback..." 
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              className="border-none bg-transparent focus-visible:ring-0 shadow-none text-xs h-8 px-0 placeholder:text-muted-foreground/60 font-medium"
-              onKeyDown={(e) => e.key === 'Enter' && handleAddComment()}
-            />
-            {commentText && (
-              <button 
-                className="h-8 w-8 text-secondary flex items-center justify-center hover:bg-secondary/10 rounded-full transition-all" 
-                onClick={handleAddComment}
-              >
-                <Send size={18} />
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Comments Section */}
-        {localComments.length > 0 && (
-          <div className="pt-2 space-y-4">
-            <div className="flex items-center gap-3">
-               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">Suggestion Hub</span>
-               <Separator className="flex-1 opacity-50" />
-            </div>
-            <div className="space-y-4">
-              {visibleComments.map((comment) => {
-                const commenterHandle = comment.userName === "you" ? "me" : comment.userName.toLowerCase().replace(/\s/g, '');
-                return (
-                  <div key={comment.id} className="flex gap-3 items-start animate-in fade-in slide-in-from-top-1 duration-300">
-                    <Link href={`/profile/${commenterHandle}`} className="shrink-0 hover:opacity-80 transition-opacity">
-                      <Avatar className="h-7 w-7 border border-muted/50 shadow-sm">
-                        <AvatarImage src={comment.userAvatar} />
-                        <AvatarFallback>{comment.userName[0]}</AvatarFallback>
-                      </Avatar>
-                    </Link>
-                    <div className="flex-1 bg-muted/20 p-3 rounded-2xl rounded-tl-none border border-border/30">
-                      <p className="text-[12px] leading-relaxed text-foreground/90">
-                          <Link href={`/profile/${commenterHandle}`} className="font-black text-primary mr-1.5 hover:underline">
-                            {comment.userName.toLowerCase().replace(/\s/g, '')}
-                          </Link>
-                          {comment.text}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {localComments.length > 2 && (
-              <button 
-                onClick={() => setShowAllComments(!showAllComments)}
-                className="text-[11px] font-black text-secondary hover:underline transition-all mt-2 uppercase tracking-tighter"
-              >
-                {showAllComments ? "Show less" : `View ${localComments.length - 2} more suggestions...`}
-              </button>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );

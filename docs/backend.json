@@ -1,0 +1,46 @@
+
+{
+  "entities": {
+    "Idea": {
+      "title": "Idea",
+      "description": "An innovative idea post.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
+        "mediaUrl": { "type": "string" },
+        "userName": { "type": "string" },
+        "userAvatar": { "type": "string" },
+        "innovationScore": { "type": "number" },
+        "tags": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["title", "description", "category", "userName"]
+    },
+    "Suggestion": {
+      "title": "Suggestion",
+      "description": "A feedback or suggestion on an idea.",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string" },
+        "userName": { "type": "string" },
+        "userAvatar": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["text", "userName", "createdAt"]
+    }
+  },
+  "auth": {
+    "providers": ["google.com"]
+  },
+  "firestore": {
+    "/ideas/{ideaId}": {
+      "schema": "Idea",
+      "description": "Collection of innovative ideas."
+    },
+    "/ideas/{ideaId}/suggestions/{suggestionId}": {
+      "schema": "Suggestion",
+      "description": "Sub-collection of live suggestions for a specific idea."
+    }
+  }
+}

@@ -3,6 +3,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { Toaster } from '@/components/ui/toaster';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 export const metadata: Metadata = {
   title: 'InnovateSphere | Share & Scale Your Ideas',
@@ -22,11 +24,14 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased bg-background">
-        <main className="pb-20 min-h-screen">
-          {children}
-        </main>
-        <BottomNav />
-        <Toaster />
+        <FirebaseClientProvider>
+          <FirebaseErrorListener />
+          <main className="pb-20 min-h-screen">
+            {children}
+          </main>
+          <BottomNav />
+          <Toaster />
+        </FirebaseClientProvider>
       </body>
     </html>
   );
