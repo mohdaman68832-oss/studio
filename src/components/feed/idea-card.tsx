@@ -2,10 +2,11 @@
 
 import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart } from "lucide-react";
+import { Heart, MoreHorizontal } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 
 interface Comment {
   id: string;
@@ -61,6 +62,9 @@ export function IdeaCard({ idea }: IdeaCardProps) {
               </span>
             </div>
           </div>
+          <button className="text-white drop-shadow-md p-1 hover:bg-white/20 rounded-full transition-colors">
+            <MoreHorizontal size={20} />
+          </button>
         </div>
 
         <Image
@@ -110,12 +114,20 @@ export function IdeaCard({ idea }: IdeaCardProps) {
 
       {/* Text Content */}
       <div className="px-3 space-y-3">
-        <div className="space-y-1">
+        <div className="space-y-2">
             <h3 className="text-sm font-black text-primary uppercase tracking-tight">{idea.title}</h3>
             <p className="text-sm text-foreground/90 leading-relaxed">
                 <span className="font-bold mr-2">{idea.userName.toLowerCase().replace(/\s/g, '')}</span>
                 {idea.description}
             </p>
+            {/* Tags Section Re-added */}
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {idea.tags.map(tag => (
+                <span key={tag} className="text-[10px] font-bold text-primary/70">
+                  #{tag.toLowerCase()}
+                </span>
+              ))}
+            </div>
         </div>
 
         {/* Comments Section (Always Visible) */}
