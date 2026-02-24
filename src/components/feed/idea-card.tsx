@@ -37,6 +37,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [showAllComments, setShowAllComments] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [localComments, setLocalComments] = useState<Comment[]>(idea.commentsList || []);
 
   const handleAddComment = () => {
@@ -57,36 +58,62 @@ export function IdeaCard({ idea }: IdeaCardProps) {
 
   return (
     <div className="mb-8 bg-background">
-      {/* Main Image Frame */}
-      <div className="relative aspect-square w-full overflow-hidden rounded-[2.5rem] shadow-xl">
-        {/* Header Overlay Inside Image */}
-        <div className="absolute top-0 left-0 right-0 z-10 p-5 flex items-center justify-between bg-gradient-to-b from-black/40 to-transparent">
-          <div className="flex items-center gap-3">
-            <div className="p-[2px] rounded-full bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-600">
-              <Avatar className="h-10 w-10 border-2 border-white">
+      {/* Header Info Above Image */}
+      <div className="px-3 pb-3 space-y-2">
+        <div className="flex items-center justify-between mb-2">
+           <div className="flex items-center gap-2">
+              <Avatar className="h-8 w-8 border border-muted">
                 <AvatarImage src={idea.userAvatar} />
                 <AvatarFallback>{idea.userName[0]}</AvatarFallback>
               </Avatar>
-            </div>
-            <div className="flex flex-col">
-              <div className="flex items-center gap-1">
-                <span className="text-sm font-bold text-white drop-shadow-md">
+              <div className="flex flex-col">
+                <span className="text-xs font-bold text-foreground">
                   {idea.userName.toLowerCase().replace(/\s/g, '')}
                 </span>
-                <div className="w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center border border-white/20">
-                   <svg viewBox="0 0 24 24" className="w-2 h-2 text-white fill-current"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                </div>
+                <span className="text-[10px] text-muted-foreground font-medium">
+                  {idea.category} • Innovation: {idea.innovationScore}
+                </span>
               </div>
-              <span className="text-[10px] text-white/90 drop-shadow-md flex items-center gap-1 font-medium">
-                {idea.category} • Innovation: {idea.innovationScore}
-              </span>
-            </div>
-          </div>
-          <button className="text-white drop-shadow-md p-1 hover:bg-white/20 rounded-full transition-colors">
-            <MoreHorizontal size={20} />
+           </div>
+           <button className="text-muted-foreground p-1 hover:bg-muted rounded-full transition-colors">
+            <MoreHorizontal size={18} />
           </button>
         </div>
 
+        <div className="space-y-1">
+          <h3 className={cn(
+            "text-sm font-black text-primary uppercase tracking-tight",
+            !isExpanded && "truncate"
+          )}>
+            {idea.title}
+          </h3>
+          <div className={cn(
+            "text-sm text-foreground/90 leading-relaxed",
+            !isExpanded && "line-clamp-2"
+          )}>
+            {idea.description}
+          </div>
+          {!isExpanded && (
+            <button 
+              onClick={() => setIsExpanded(true)}
+              className="text-[10px] font-bold text-primary hover:underline mt-1 uppercase tracking-tighter"
+            >
+              See more
+            </button>
+          )}
+          {isExpanded && (
+             <button 
+              onClick={() => setIsExpanded(false)}
+              className="text-[10px] font-bold text-muted-foreground hover:underline mt-1 uppercase tracking-tighter"
+            >
+              Show less
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Main Image Frame */}
+      <div className="relative aspect-square w-full overflow-hidden rounded-[2.5rem] shadow-xl">
         <Image
           src={idea.mediaUrl}
           alt={idea.title}
@@ -129,25 +156,19 @@ export function IdeaCard({ idea }: IdeaCardProps) {
         </div>
       </div>
 
-      {/* Text Content */}
-      <div className="px-3 space-y-4">
-        <div className="space-y-2">
-            <h3 className="text-sm font-black text-primary uppercase tracking-tight">{idea.title}</h3>
-            <p className="text-sm text-foreground/90 leading-relaxed">
-                <span className="font-bold mr-2">{idea.userName.toLowerCase().replace(/\s/g, '')}</span>
-                {idea.description}
-            </p>
-            {/* Tags Section */}
-            <div className="flex flex-wrap gap-1.5 pt-1">
-              {idea.tags.map(tag => (
-                <span key={tag} className="text-[10px] font-bold text-primary/70">
-                  #{tag.toLowerCase()}
-                </span>
-              ))}
-            </div>
-        </div>
+      {/* Tags Section (Moved below actions to keep it clean) */}
+      <div className="px-3 pb-4">
+          <div className="flex flex-wrap gap-1.5">
+            {idea.tags.map(tag => (
+              <span key={tag} className="text-[10px] font-bold text-primary/70">
+                #{tag.toLowerCase()}
+              </span>
+            ))}
+          </div>
+      </div>
 
-        {/* Comment Input Box */}
+      {/* Comment Input Box */}
+      <div className="px-3 space-y-4">
         <div className="flex items-center gap-3 bg-muted/20 p-2 rounded-2xl border border-muted/30">
           <Avatar className="h-8 w-8">
             <AvatarImage src="https://picsum.photos/seed/me/100/100" />
@@ -171,7 +192,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
 
         {/* Comments Section */}
         {localComments.length > 0 && (
-          <div className="pt-2 space-y-3">
+          <div className="pt-2 space-y-3 pb-4">
             <div className="flex items-center gap-2">
                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Collaborators & Feed</span>
                <Separator className="flex-1 opacity-30" />
