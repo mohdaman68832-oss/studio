@@ -4,7 +4,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowBigUp, MoreHorizontal, Lightbulb, Share2 } from "lucide-react";
+import { ArrowBigUp, MoreHorizontal, Lightbulb, Share2, Play } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +44,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
   };
 
   const displayLikes = idea.likes + (isLiked ? 1 : 0);
+  const isVideo = idea.mediaUrl.includes('blob:') || idea.mediaUrl.endsWith('.mp4') || idea.mediaUrl.endsWith('.webm');
 
   return (
     <div className="mb-8 bg-card rounded-[2.5rem] idea-card-shadow overflow-hidden border border-border/50 transition-all hover:shadow-2xl hover:border-primary/20">
@@ -100,23 +101,28 @@ export function IdeaCard({ idea }: IdeaCardProps) {
         </div>
       </div>
 
-      {/* Clicking the image now leads to the detailed suggestion page */}
-      <Link href={`/idea/${idea.id}`} className="block relative aspect-square w-full mx-auto overflow-hidden group">
-        <Image
-          src={idea.mediaUrl}
-          alt={idea.title}
-          fill
-          className="object-cover transition-transform group-hover:scale-105 duration-500"
-        />
-        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-          <span className="bg-white/90 text-primary px-4 py-2 rounded-full text-xs font-black uppercase tracking-tighter shadow-lg">
-            Open Suggestion Hub
-          </span>
-        </div>
+      <Link href={`/idea/${idea.id}`} className="block relative aspect-square w-full mx-auto overflow-hidden bg-muted">
+        {isVideo ? (
+          <div className="relative w-full h-full flex items-center justify-center bg-black">
+            <video src={idea.mediaUrl} className="w-full h-full object-cover opacity-80" muted />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="bg-white/20 backdrop-blur-md p-4 rounded-full">
+                <Play className="text-white fill-white" size={32} />
+              </div>
+            </div>
+          </div>
+        ) : (
+          <Image
+            src={idea.mediaUrl}
+            alt={idea.title}
+            fill
+            className="object-cover transition-transform hover:scale-105 duration-500"
+          />
+        )}
         <div className="absolute top-4 left-4">
           <Badge className="bg-primary/90 text-white border-none backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-1.5 shadow-lg">
             <Lightbulb size={12} className="fill-current" />
-            <span className="text-[10px] font-black uppercase tracking-wider">Tap to Suggest</span>
+            <span className="text-[10px] font-black uppercase tracking-wider">Join Discussion</span>
           </Badge>
         </div>
       </Link>
