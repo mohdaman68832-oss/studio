@@ -1,6 +1,8 @@
+
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ArrowBigUp, MoreHorizontal, Send, Lightbulb, Share2 } from "lucide-react";
 import { useState } from "react";
@@ -75,7 +77,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
       {/* Header Info Above Image */}
       <div className="px-5 pt-5 pb-3 space-y-3">
         <div className="flex items-center justify-between mb-1">
-           <div className="flex items-center gap-3">
+           <Link href="/profile" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
               <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
                 <AvatarImage src={idea.userAvatar} />
                 <AvatarFallback>{idea.userName[0]}</AvatarFallback>
@@ -88,7 +90,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
                   {idea.category} <span className="opacity-30">•</span> Score: {idea.innovationScore}
                 </span>
               </div>
-           </div>
+           </Link>
            <button className="text-muted-foreground p-2 hover:bg-muted rounded-full transition-colors">
             <MoreHorizontal size={20} />
           </button>
@@ -229,13 +231,17 @@ export function IdeaCard({ idea }: IdeaCardProps) {
             <div className="space-y-4">
               {visibleComments.map((comment) => (
                 <div key={comment.id} className="flex gap-3 items-start animate-in fade-in slide-in-from-top-1 duration-300">
-                  <Avatar className="h-7 w-7 border border-muted/50 shrink-0 shadow-sm">
-                    <AvatarImage src={comment.userAvatar} />
-                    <AvatarFallback>{comment.userName[0]}</AvatarFallback>
-                  </Avatar>
+                  <Link href="/profile" className="shrink-0 hover:opacity-80 transition-opacity">
+                    <Avatar className="h-7 w-7 border border-muted/50 shadow-sm">
+                      <AvatarImage src={comment.userAvatar} />
+                      <AvatarFallback>{comment.userName[0]}</AvatarFallback>
+                    </Avatar>
+                  </Link>
                   <div className="flex-1 bg-muted/20 p-3 rounded-2xl rounded-tl-none border border-border/30">
                     <p className="text-[12px] leading-relaxed text-foreground/90">
-                        <span className="font-black text-primary mr-1.5">{comment.userName.toLowerCase().replace(/\s/g, '')}</span>
+                        <Link href="/profile" className="font-black text-primary mr-1.5 hover:underline">
+                          {comment.userName.toLowerCase().replace(/\s/g, '')}
+                        </Link>
                         {comment.text}
                     </p>
                   </div>
