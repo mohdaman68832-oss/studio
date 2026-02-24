@@ -44,6 +44,8 @@ export function IdeaCard({ idea }: IdeaCardProps) {
   const [localComments, setLocalComments] = useState<Comment[]>(idea.commentsList || []);
   const { toast } = useToast();
 
+  const userHandle = idea.userName.toLowerCase().replace(/\s/g, '');
+
   const handleAddComment = () => {
     if (!commentText.trim()) return;
     
@@ -77,7 +79,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
       {/* Header Info Above Image */}
       <div className="px-5 pt-5 pb-3 space-y-3">
         <div className="flex items-center justify-between mb-1">
-           <Link href="/profile" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+           <Link href={`/profile/${userHandle}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
               <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
                 <AvatarImage src={idea.userAvatar} />
                 <AvatarFallback>{idea.userName[0]}</AvatarFallback>
@@ -229,24 +231,27 @@ export function IdeaCard({ idea }: IdeaCardProps) {
                <Separator className="flex-1 opacity-50" />
             </div>
             <div className="space-y-4">
-              {visibleComments.map((comment) => (
-                <div key={comment.id} className="flex gap-3 items-start animate-in fade-in slide-in-from-top-1 duration-300">
-                  <Link href="/profile" className="shrink-0 hover:opacity-80 transition-opacity">
-                    <Avatar className="h-7 w-7 border border-muted/50 shadow-sm">
-                      <AvatarImage src={comment.userAvatar} />
-                      <AvatarFallback>{comment.userName[0]}</AvatarFallback>
-                    </Avatar>
-                  </Link>
-                  <div className="flex-1 bg-muted/20 p-3 rounded-2xl rounded-tl-none border border-border/30">
-                    <p className="text-[12px] leading-relaxed text-foreground/90">
-                        <Link href="/profile" className="font-black text-primary mr-1.5 hover:underline">
-                          {comment.userName.toLowerCase().replace(/\s/g, '')}
-                        </Link>
-                        {comment.text}
-                    </p>
+              {visibleComments.map((comment) => {
+                const commenterHandle = comment.userName === "you" ? "me" : comment.userName.toLowerCase().replace(/\s/g, '');
+                return (
+                  <div key={comment.id} className="flex gap-3 items-start animate-in fade-in slide-in-from-top-1 duration-300">
+                    <Link href={`/profile/${commenterHandle}`} className="shrink-0 hover:opacity-80 transition-opacity">
+                      <Avatar className="h-7 w-7 border border-muted/50 shadow-sm">
+                        <AvatarImage src={comment.userAvatar} />
+                        <AvatarFallback>{comment.userName[0]}</AvatarFallback>
+                      </Avatar>
+                    </Link>
+                    <div className="flex-1 bg-muted/20 p-3 rounded-2xl rounded-tl-none border border-border/30">
+                      <p className="text-[12px] leading-relaxed text-foreground/90">
+                          <Link href={`/profile/${commenterHandle}`} className="font-black text-primary mr-1.5 hover:underline">
+                            {comment.userName.toLowerCase().replace(/\s/g, '')}
+                          </Link>
+                          {comment.text}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {localComments.length > 2 && (
