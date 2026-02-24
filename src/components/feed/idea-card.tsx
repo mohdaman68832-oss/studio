@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowBigUp, MoreHorizontal, Send, Lightbulb } from "lucide-react";
+import { ArrowBigUp, MoreHorizontal, Send, Lightbulb, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
@@ -138,7 +138,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
         <div className="flex items-center gap-5">
           <button 
             onClick={handleLikeToggle} 
-            className="transition-transform active:scale-150 group"
+            className={cn("transition-transform group", isLiked && "active-glow")}
             aria-label="Upvote"
           >
             <ArrowBigUp 
@@ -151,7 +151,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
           </button>
         </div>
         
-        {/* "Liked by" Section */}
+        {/* "Supporters" Section */}
         <div className="flex items-center gap-3 bg-muted/30 py-1.5 px-3 rounded-full border border-border/50">
             <div className="flex -space-x-2">
                 {[1,2,3].map(i => (

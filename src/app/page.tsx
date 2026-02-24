@@ -79,6 +79,7 @@ const MOCK_IDEAS = [
 export default function FeedPage() {
   return (
     <div className="max-w-md mx-auto min-h-screen bg-background px-4 pt-8 pb-24">
+      {/* Categories Bar */}
       <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar">
         {["All", "Sustainability", "Healthcare", "FinTech", "AI", "Education"].map((cat) => (
           <Button 
@@ -94,6 +95,7 @@ export default function FeedPage() {
         ))}
       </div>
 
+      {/* Ideas Feed */}
       <div className="space-y-4 mt-4">
         {MOCK_IDEAS.map((idea) => (
           <IdeaCard key={idea.id} idea={idea} />
