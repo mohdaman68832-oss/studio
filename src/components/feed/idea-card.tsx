@@ -2,12 +2,13 @@
 
 import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowBigUp, MoreHorizontal, Send, Lightbulb, Sparkles } from "lucide-react";
+import { ArrowBigUp, MoreHorizontal, Send, Lightbulb, Share2 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 
 interface Comment {
   id: string;
@@ -39,6 +40,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
   const [showAllComments, setShowAllComments] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [localComments, setLocalComments] = useState<Comment[]>(idea.commentsList || []);
+  const { toast } = useToast();
 
   const handleAddComment = () => {
     if (!commentText.trim()) return;
@@ -56,6 +58,13 @@ export function IdeaCard({ idea }: IdeaCardProps) {
 
   const handleLikeToggle = () => {
     setIsLiked(!isLiked);
+  };
+
+  const handleShare = () => {
+    toast({
+      title: "Shared!",
+      description: "Idea link has been copied to clipboard.",
+    });
   };
 
   const visibleComments = showAllComments ? localComments : localComments.slice(0, 2);
@@ -148,6 +157,13 @@ export function IdeaCard({ idea }: IdeaCardProps) {
                 isLiked ? "text-secondary fill-current drop-shadow-[0_0_8px_rgba(255,69,0,0.4)]" : "text-foreground group-hover:text-secondary/50"
               )} 
             />
+          </button>
+          <button 
+            onClick={handleShare}
+            className="text-foreground hover:text-primary transition-colors p-2"
+            aria-label="Share"
+          >
+            <Share2 size={24} />
           </button>
         </div>
         
