@@ -1,32 +1,31 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
+    --background: 220 13% 96%; /* Off-White #F2F3F5 */
+    --foreground: 218 7% 19%; /* Charcoal #2C2F33 */
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 218 7% 19%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --primary: 220 100% 20%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 39 100% 50%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 39 100% 50%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --popover-foreground: 218 7% 19%;
+    --primary: 180 100% 25%; /* Teal #008080 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 16 100% 50%; /* Coral Orange #FF4500 */
+    --secondary-foreground: 0 0% 100%;
+    --muted: 220 13% 90%;
+    --muted-foreground: 218 7% 40%;
+    --accent: 16 100% 50%; /* Coral Orange #FF4500 */
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 220 100% 20%;
-    --radius: 1rem;
-    --chart-1: 220 100% 20%;
-    --chart-2: 39 100% 50%;
+    --border: 220 13% 85%;
+    --input: 220 13% 85%;
+    --ring: 180 100% 25%;
+    --radius: 1.5rem;
+    --chart-1: 180 100% 25%;
+    --chart-2: 16 100% 50%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
@@ -44,9 +43,17 @@
 
 .bottom-nav-blur {
   backdrop-filter: blur(10px);
-  background-color: rgba(255, 255, 255, 0.85);
+  background-color: rgba(242, 243, 245, 0.85);
 }
 
 .idea-card-shadow {
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

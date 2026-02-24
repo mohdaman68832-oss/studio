@@ -7,7 +7,6 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 
 interface Comment {
   id: string;
@@ -62,38 +61,38 @@ export function IdeaCard({ idea }: IdeaCardProps) {
   const displayLikes = idea.likes + (isLiked ? 1 : 0);
 
   return (
-    <div className="mb-8 bg-background">
+    <div className="mb-8 bg-card rounded-[2.5rem] idea-card-shadow overflow-hidden border border-border/50 transition-all hover:shadow-2xl hover:border-primary/20">
       {/* Header Info Above Image */}
-      <div className="px-3 pb-3 space-y-2">
-        <div className="flex items-center justify-between mb-2">
-           <div className="flex items-center gap-2">
-              <Avatar className="h-8 w-8 border border-muted">
+      <div className="px-5 pt-5 pb-3 space-y-3">
+        <div className="flex items-center justify-between mb-1">
+           <div className="flex items-center gap-3">
+              <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
                 <AvatarImage src={idea.userAvatar} />
                 <AvatarFallback>{idea.userName[0]}</AvatarFallback>
               </Avatar>
               <div className="flex flex-col">
-                <span className="text-xs font-bold text-foreground">
+                <span className="text-sm font-black text-foreground tracking-tight">
                   {idea.userName.toLowerCase().replace(/\s/g, '')}
                 </span>
-                <span className="text-[10px] text-muted-foreground font-medium">
-                  {idea.category} • Innovation: {idea.innovationScore}
+                <span className="text-[10px] text-primary font-bold uppercase tracking-widest">
+                  {idea.category} • Score: {idea.innovationScore}
                 </span>
               </div>
            </div>
-           <button className="text-muted-foreground p-1 hover:bg-muted rounded-full transition-colors">
-            <MoreHorizontal size={18} />
+           <button className="text-muted-foreground p-2 hover:bg-muted rounded-full transition-colors">
+            <MoreHorizontal size={20} />
           </button>
         </div>
 
-        <div className="space-y-1">
+        <div className="space-y-1.5">
           <h3 className={cn(
-            "text-sm font-black text-primary uppercase tracking-tight",
+            "text-lg font-black text-primary uppercase tracking-tighter leading-none",
             !isExpanded && "truncate"
           )}>
             {idea.title}
           </h3>
           <div className={cn(
-            "text-sm text-foreground/90 leading-relaxed",
+            "text-sm text-foreground/80 leading-relaxed font-medium",
             !isExpanded && "line-clamp-2"
           )}>
             {idea.description}
@@ -101,7 +100,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
           {!isExpanded && (
             <button 
               onClick={() => setIsExpanded(true)}
-              className="text-[10px] font-bold text-primary hover:underline mt-1 uppercase tracking-tighter"
+              className="text-[11px] font-black text-secondary hover:text-secondary/80 mt-1 uppercase tracking-tighter"
             >
               See more
             </button>
@@ -109,7 +108,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
           {isExpanded && (
              <button 
               onClick={() => setIsExpanded(false)}
-              className="text-[10px] font-bold text-muted-foreground hover:underline mt-1 uppercase tracking-tighter"
+              className="text-[11px] font-black text-muted-foreground hover:text-foreground mt-1 uppercase tracking-tighter"
             >
               Show less
             </button>
@@ -118,64 +117,53 @@ export function IdeaCard({ idea }: IdeaCardProps) {
       </div>
 
       {/* Main Image Frame */}
-      <div className="relative aspect-square w-full overflow-hidden rounded-[2.5rem] shadow-xl">
+      <div className="relative aspect-square w-full mx-auto overflow-hidden">
         <Image
           src={idea.mediaUrl}
           alt={idea.title}
           fill
           className="object-cover"
         />
-
-        {/* Floating Reactions on Image (Bottom Left) */}
-        <div className="absolute bottom-6 left-6 flex -space-x-2 items-center">
-            {[1, 2].map((i) => (
-                <div key={i} className="relative group cursor-pointer">
-                    <Avatar className="h-8 w-8 border-2 border-white shadow-lg transition-transform hover:scale-110">
-                        <AvatarImage src={`https://picsum.photos/seed/${i + 15}/100/100`} />
-                    </Avatar>
-                </div>
-            ))}
-        </div>
       </div>
 
       {/* Action Bar Below Image */}
-      <div className="flex items-center justify-between px-3 py-4">
+      <div className="flex items-center justify-between px-5 py-4">
         <div className="flex items-center gap-5">
           <button 
             onClick={handleLikeToggle} 
-            className="transition-transform active:scale-125"
+            className="transition-transform active:scale-150 group"
             aria-label="Upvote"
           >
             <ArrowBigUp 
-              size={32} 
+              size={36} 
               className={cn(
-                "transition-colors duration-200",
-                isLiked ? "text-primary fill-current" : "text-foreground"
+                "transition-all duration-300",
+                isLiked ? "text-secondary fill-current drop-shadow-[0_0_8px_rgba(255,69,0,0.4)]" : "text-foreground group-hover:text-secondary/50"
               )} 
             />
           </button>
         </div>
         
         {/* "Liked by" Section */}
-        <div className="flex items-center gap-2 bg-muted/30 py-1 px-2 rounded-full border border-muted">
-            <div className="flex -space-x-1.5">
+        <div className="flex items-center gap-3 bg-muted/30 py-1.5 px-3 rounded-full border border-border/50">
+            <div className="flex -space-x-2">
                 {[1,2,3].map(i => (
-                    <Avatar key={i} className="h-5 w-5 border border-white">
+                    <Avatar key={i} className="h-6 w-6 border-2 border-background shadow-sm">
                          <AvatarImage src={`https://picsum.photos/seed/${i + 25}/50/50`} />
                     </Avatar>
                 ))}
             </div>
-            <span className="text-[10px] font-black uppercase tracking-tighter">
+            <span className="text-[11px] font-black uppercase tracking-tighter text-foreground/70">
               {displayLikes >= 1000 ? `${(displayLikes / 1000).toFixed(1)}k` : displayLikes} Upvoted
             </span>
         </div>
       </div>
 
       {/* Tags Section */}
-      <div className="px-3 pb-4">
-          <div className="flex flex-wrap gap-1.5">
+      <div className="px-5 pb-4">
+          <div className="flex flex-wrap gap-2">
             {idea.tags.map(tag => (
-              <span key={tag} className="text-[10px] font-bold text-primary/70">
+              <span key={tag} className="text-[11px] font-black text-primary/80 bg-primary/5 px-2 py-0.5 rounded-md">
                 #{tag.toLowerCase()}
               </span>
             ))}
@@ -183,26 +171,26 @@ export function IdeaCard({ idea }: IdeaCardProps) {
       </div>
 
       {/* Comment Input Box */}
-      <div className="px-3 space-y-4">
-        <div className="flex items-center gap-3 bg-muted/20 p-2 rounded-2xl border border-muted/30">
-          <Avatar className="h-8 w-8">
+      <div className="px-5 space-y-4 pb-6">
+        <div className="flex items-center gap-3 bg-muted/40 p-2.5 rounded-2xl border border-border/50">
+          <Avatar className="h-8 w-8 shadow-sm">
             <AvatarImage src="https://picsum.photos/seed/me/100/100" />
             <AvatarFallback>U</AvatarFallback>
           </Avatar>
           <div className="flex-1 flex items-center">
             <Input 
-              placeholder="Add a comment..." 
+              placeholder="Add your thoughts..." 
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
-              className="border-none bg-transparent focus-visible:ring-0 shadow-none text-xs h-8 px-0"
+              className="border-none bg-transparent focus-visible:ring-0 shadow-none text-xs h-8 px-0 placeholder:text-muted-foreground/60 font-medium"
               onKeyDown={(e) => e.key === 'Enter' && handleAddComment()}
             />
             {commentText && (
               <button 
-                className="h-8 w-8 text-primary flex items-center justify-center hover:bg-primary/10 rounded-full transition-colors" 
+                className="h-8 w-8 text-secondary flex items-center justify-center hover:bg-secondary/10 rounded-full transition-all" 
                 onClick={handleAddComment}
               >
-                <Send size={16} />
+                <Send size={18} />
               </button>
             )}
           </div>
@@ -210,21 +198,21 @@ export function IdeaCard({ idea }: IdeaCardProps) {
 
         {/* Comments Section */}
         {localComments.length > 0 && (
-          <div className="pt-2 space-y-3 pb-4">
-            <div className="flex items-center gap-2">
-               <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Collaborators & Feed</span>
-               <Separator className="flex-1 opacity-30" />
+          <div className="pt-2 space-y-4">
+            <div className="flex items-center gap-3">
+               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">Collaborator Feed</span>
+               <Separator className="flex-1 opacity-50" />
             </div>
             <div className="space-y-4">
               {visibleComments.map((comment) => (
                 <div key={comment.id} className="flex gap-3 items-start animate-in fade-in slide-in-from-top-1 duration-300">
-                  <Avatar className="h-6 w-6 border-2 border-muted shrink-0 shadow-sm">
+                  <Avatar className="h-7 w-7 border border-muted/50 shrink-0 shadow-sm">
                     <AvatarImage src={comment.userAvatar} />
                     <AvatarFallback>{comment.userName[0]}</AvatarFallback>
                   </Avatar>
-                  <div className="flex-1">
-                    <p className="text-[11px] leading-snug text-foreground/80">
-                        <span className="font-black text-foreground mr-1">{comment.userName.toLowerCase().replace(/\s/g, '')}</span>
+                  <div className="flex-1 bg-muted/20 p-3 rounded-2xl rounded-tl-none border border-border/30">
+                    <p className="text-[12px] leading-relaxed text-foreground/90">
+                        <span className="font-black text-primary mr-1.5">{comment.userName.toLowerCase().replace(/\s/g, '')}</span>
                         {comment.text}
                     </p>
                   </div>
@@ -235,9 +223,9 @@ export function IdeaCard({ idea }: IdeaCardProps) {
             {localComments.length > 2 && (
               <button 
                 onClick={() => setShowAllComments(!showAllComments)}
-                className="text-[10px] font-bold text-muted-foreground hover:text-primary transition-colors mt-2 uppercase tracking-tighter"
+                className="text-[11px] font-black text-secondary hover:underline transition-all mt-2 uppercase tracking-tighter"
               >
-                {showAllComments ? "Show Less" : `View ${localComments.length - 2} More Comments...`}
+                {showAllComments ? "Show Less" : `View ${localComments.length - 2} More Conversations...`}
               </button>
             )}
           </div>
