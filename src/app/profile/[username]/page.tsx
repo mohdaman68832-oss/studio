@@ -1,7 +1,7 @@
 
 "use client";
 
-import { use } from "react";
+import { use, useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Grid, Bookmark, Heart, MessageSquare } from "lucide-react";
@@ -12,6 +12,16 @@ import { useRouter } from "next/navigation";
 export default function UserProfilePage({ params }: { params: Promise<{ username: string }> }) {
   const { username } = use(params);
   const router = useRouter();
+  const [stats, setStats] = useState({ ideas: 0, views: 0, likes: 0 });
+
+  useEffect(() => {
+    // Setting random stats only on client to avoid hydration mismatch
+    setStats({
+      ideas: Math.floor(Math.random() * 20) + 1,
+      views: Math.floor(Math.random() * 500) + 100,
+      likes: Math.floor(Math.random() * 1000) + 50,
+    });
+  }, []);
 
   // Mock mapping handles to full names for display
   const userMap: Record<string, { name: string, bio: string, role: string, avatar: string }> = {
@@ -55,9 +65,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
           <ChevronLeft size={24} />
         </Button>
         <h1 className="text-lg font-black text-primary uppercase tracking-tighter">Profile</h1>
-        <Button variant="ghost" size="icon" className="rounded-full opacity-0 pointer-events-none">
-          <ChevronLeft size={24} />
-        </Button>
+        <div className="w-10" /> {/* Spacer */}
       </div>
 
       <div className="px-6 flex flex-col items-center mb-8">
@@ -84,15 +92,15 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
 
         <div className="grid grid-cols-3 gap-8 w-full border-t pt-6">
           <div className="text-center">
-            <p className="text-lg font-black text-primary">{Math.floor(Math.random() * 20) + 1}</p>
+            <p className="text-lg font-black text-primary">{stats.ideas}</p>
             <p className="text-[10px] uppercase font-bold text-muted-foreground">Ideas</p>
           </div>
           <div className="text-center border-x">
-            <p className="text-lg font-black text-primary">{Math.floor(Math.random() * 500) + 100}</p>
+            <p className="text-lg font-black text-primary">{stats.views}</p>
             <p className="text-[10px] uppercase font-bold text-muted-foreground">Views</p>
           </div>
           <div className="text-center">
-            <p className="text-lg font-black text-primary">{Math.floor(Math.random() * 1000) + 50}</p>
+            <p className="text-lg font-black text-primary">{stats.likes}</p>
             <p className="text-[10px] uppercase font-bold text-muted-foreground">Likes</p>
           </div>
         </div>

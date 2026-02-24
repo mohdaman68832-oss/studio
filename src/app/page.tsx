@@ -5,11 +5,10 @@ import { IdeaCard } from "@/components/feed/idea-card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useCollection, useFirestore } from "@/firebase";
-import { collection, query, orderBy } from "firebase/firestore";
-import { useMemo } from "react";
+import { collection, query } from "firebase/firestore";
+import { useMemo, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
-// Mock data as fallback or initial state
 const MOCK_IDEAS = [
   {
     id: "1",
@@ -51,28 +50,34 @@ const MOCK_IDEAS = [
 
 export default function FeedPage() {
   const db = useFirestore();
+  const [activeCategory, setActiveCategory] = useState("All");
 
   const ideasQuery = useMemo(() => {
     if (!db) return null;
-    return query(collection(db, "ideas"), orderBy("title", "asc"));
+    // We fetch all ideas and filter client-side for immediate responsiveness without index errors
+    return query(collection(db, "ideas"));
   }, [db]);
 
   const { data: firestoreIdeas, loading } = useCollection(ideasQuery);
 
-  // Use Firestore ideas if available, otherwise fallback to mock data
-  const ideasToDisplay = firestoreIdeas && firestoreIdeas.length > 0 ? firestoreIdeas : MOCK_IDEAS;
+  const ideasToDisplay = useMemo(() => {
+    let base = firestoreIdeas && firestoreIdeas.length > 0 ? firestoreIdeas : MOCK_IDEAS;
+    if (activeCategory === "All") return base;
+    return base.filter(i => i.category === activeCategory);
+  }, [firestoreIdeas, activeCategory]);
 
   return (
     <div className="max-w-md mx-auto min-h-screen bg-background px-4 pt-8 pb-24">
       {/* Categories Bar */}
-      <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar">
-        {["All", "Sustainability", "Healthcare", "FinTech", "AI", "Education"].map((cat) => (
+      <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar sticky top-0 bg-background/80 backdrop-blur-md z-10 -mx-4 px-4 pt-2">
+        {["All", "Art", "Game", "Study", "Technology", "Sustainability", "Healthcare"].map((cat) => (
           <Button 
             key={cat} 
-            variant={cat === "All" ? "default" : "secondary"} 
+            variant={cat === activeCategory ? "default" : "secondary"} 
+            onClick={() => setActiveCategory(cat)}
             className={cn(
-              "rounded-full h-8 text-xs font-bold px-5 shrink-0 uppercase tracking-tighter",
-              cat === "All" ? "bg-primary shadow-lg shadow-primary/20" : "bg-white border-none"
+              "rounded-full h-8 text-[10px] font-black px-5 shrink-0 uppercase tracking-tighter transition-all",
+              cat === activeCategory ? "bg-primary shadow-lg shadow-primary/20" : "bg-white border-none"
             )}
           >
             {cat}
@@ -81,13 +86,19 @@ export default function FeedPage() {
       </div>
 
       {/* Ideas Feed */}
-      <div className="space-y-4 mt-4">
+      <div className="space-y-6 mt-6">
         {loading ? (
-          <div className="space-y-8">
-            {[1, 2, 3].map(i => (
+          <div className="space-y-12">
+            {[1, 2].map(i => (
               <div key={i} className="space-y-4">
-                <Skeleton className="h-10 w-1/2 rounded-full" />
-                <Skeleton className="h-64 w-full rounded-[2.5rem]" />
+                <div className="flex items-center gap-3">
+                   <Skeleton className="h-10 w-10 rounded-full" />
+                   <div className="space-y-2">
+                     <Skeleton className="h-3 w-24" />
+                     <Skeleton className="h-2 w-16" />
+                   </div>
+                </div>
+                <Skeleton className="h-80 w-full rounded-[2.5rem]" />
               </div>
             ))}
           </div>
