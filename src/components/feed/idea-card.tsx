@@ -2,11 +2,12 @@
 
 import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowBigUp, MoreHorizontal, Send } from "lucide-react";
+import { ArrowBigUp, MoreHorizontal, Send, Lightbulb } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 
 interface Comment {
   id: string;
@@ -74,8 +75,8 @@ export function IdeaCard({ idea }: IdeaCardProps) {
                 <span className="text-sm font-black text-foreground tracking-tight">
                   {idea.userName.toLowerCase().replace(/\s/g, '')}
                 </span>
-                <span className="text-[10px] text-primary font-bold uppercase tracking-widest">
-                  {idea.category} • Score: {idea.innovationScore}
+                <span className="text-[10px] text-primary font-bold uppercase tracking-widest flex items-center gap-1">
+                  {idea.category} <span className="opacity-30">•</span> Score: {idea.innovationScore}
                 </span>
               </div>
            </div>
@@ -102,7 +103,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
               onClick={() => setIsExpanded(true)}
               className="text-[11px] font-black text-secondary hover:text-secondary/80 mt-1 uppercase tracking-tighter"
             >
-              See more
+              Read full brief
             </button>
           )}
           {isExpanded && (
@@ -110,7 +111,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
               onClick={() => setIsExpanded(false)}
               className="text-[11px] font-black text-muted-foreground hover:text-foreground mt-1 uppercase tracking-tighter"
             >
-              Show less
+              Collapse
             </button>
           )}
         </div>
@@ -124,6 +125,12 @@ export function IdeaCard({ idea }: IdeaCardProps) {
           fill
           className="object-cover"
         />
+        <div className="absolute top-4 left-4">
+          <Badge className="bg-primary/90 text-white border-none backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-1.5 shadow-lg">
+            <Lightbulb size={12} className="fill-current" />
+            <span className="text-[10px] font-black uppercase tracking-wider">Seeking Suggestions</span>
+          </Badge>
+        </div>
       </div>
 
       {/* Action Bar Below Image */}
@@ -154,7 +161,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
                 ))}
             </div>
             <span className="text-[11px] font-black uppercase tracking-tighter text-foreground/70">
-              {displayLikes >= 1000 ? `${(displayLikes / 1000).toFixed(1)}k` : displayLikes} Upvoted
+              {displayLikes >= 1000 ? `${(displayLikes / 1000).toFixed(1)}k` : displayLikes} Supporters
             </span>
         </div>
       </div>
@@ -179,7 +186,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
           </Avatar>
           <div className="flex-1 flex items-center">
             <Input 
-              placeholder="Add your thoughts..." 
+              placeholder="Give a suggestion or feedback..." 
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               className="border-none bg-transparent focus-visible:ring-0 shadow-none text-xs h-8 px-0 placeholder:text-muted-foreground/60 font-medium"
@@ -200,7 +207,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
         {localComments.length > 0 && (
           <div className="pt-2 space-y-4">
             <div className="flex items-center gap-3">
-               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">Collaborator Feed</span>
+               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">Suggestion Hub</span>
                <Separator className="flex-1 opacity-50" />
             </div>
             <div className="space-y-4">
@@ -225,7 +232,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
                 onClick={() => setShowAllComments(!showAllComments)}
                 className="text-[11px] font-black text-secondary hover:underline transition-all mt-2 uppercase tracking-tighter"
               >
-                {showAllComments ? "Show Less" : `View ${localComments.length - 2} More Conversations...`}
+                {showAllComments ? "Show less" : `View ${localComments.length - 2} more suggestions...`}
               </button>
             )}
           </div>
