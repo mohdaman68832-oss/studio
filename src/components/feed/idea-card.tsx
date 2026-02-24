@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from "next/image";
@@ -23,20 +24,25 @@ interface IdeaCardProps {
     tags: string[];
     likes: number;
   };
+  priority?: boolean;
 }
 
-export function IdeaCard({ idea }: IdeaCardProps) {
+export function IdeaCard({ idea, priority = false }: IdeaCardProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [showDescription, setShowDescription] = useState(false);
   const { toast } = useToast();
 
   const userHandle = idea.userName.toLowerCase().replace(/\s/g, '');
 
-  const handleLikeToggle = () => {
+  const handleLikeToggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     setIsLiked(!isLiked);
   };
 
-  const handleShare = () => {
+  const handleShare = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     toast({
       title: "Shared!",
       description: "Idea link has been copied to clipboard.",
@@ -44,10 +50,10 @@ export function IdeaCard({ idea }: IdeaCardProps) {
   };
 
   const displayLikes = idea.likes + (isLiked ? 1 : 0);
-  const isVideo = idea.mediaUrl.includes('blob:') || idea.mediaUrl.endsWith('.mp4') || idea.mediaUrl.endsWith('.webm');
+  const isVideo = idea.mediaUrl.includes('blob:') || idea.mediaUrl.endsWith('.mp4') || idea.mediaUrl.endsWith('.webm') || idea.mediaUrl.includes('gtv-videos-bucket');
 
   return (
-    <div className="mb-8 bg-card rounded-[2.5rem] idea-card-shadow overflow-hidden border border-border/50 transition-all hover:shadow-2xl hover:border-primary/20">
+    <div className="bg-card rounded-[2.5rem] idea-card-shadow overflow-hidden border border-border/50 transition-all hover:shadow-2xl hover:border-primary/20">
       <div className="px-5 pt-5 pb-3 space-y-3">
         <div className="flex items-center justify-between mb-1">
            <Link href={`/profile/${userHandle}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
@@ -82,7 +88,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
           </div>
 
           {showDescription && (
-            <div className="mt-3 pt-3 border-t border-muted animate-in fade-in slide-in-from-top-1">
+            <div className="mt-3 pt-3 border-t border-muted animate-in fade-in slide-in-from-top-1 duration-200">
               <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">Full Brief</p>
               <p className="text-sm text-foreground/70 leading-relaxed font-medium">
                 {idea.description}
@@ -91,7 +97,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
           )}
 
           <button 
-            onClick={() => setShowDescription(!showDescription)}
+            onClick={(e) => { e.preventDefault(); setShowDescription(!showDescription); }}
             className="text-[11px] font-black text-secondary hover:text-secondary/80 mt-1 uppercase tracking-tighter"
           >
             {showDescription ? "See less" : "See more details"}
@@ -114,7 +120,8 @@ export function IdeaCard({ idea }: IdeaCardProps) {
             src={idea.mediaUrl}
             alt={idea.title}
             fill
-            className="object-cover transition-transform hover:scale-105 duration-500"
+            priority={priority}
+            className="object-cover transition-transform hover:scale-105 duration-700"
           />
         )}
         <div className="absolute top-4 left-4">

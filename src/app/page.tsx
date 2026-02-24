@@ -1,3 +1,4 @@
+
 "use client";
 
 import { IdeaCard } from "@/components/feed/idea-card";
@@ -102,8 +103,10 @@ export default function FeedPage() {
             ))}
           </div>
         ) : (
-          ideasToDisplay.map((idea) => (
-            <IdeaCard key={idea.id} idea={idea as any} />
+          ideasToDisplay.map((idea, index) => (
+            <div key={idea.id} className="animate-in fade-in slide-in-from-bottom-4 duration-300" style={{ animationDelay: `${index * 50}ms` }}>
+              <IdeaCard idea={idea as any} priority={index < 2} />
+            </div>
           ))
         )}
       </div>
