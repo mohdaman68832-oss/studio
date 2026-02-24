@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef } from "react";
@@ -5,25 +6,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
 import { 
   ChevronRight, 
   ChevronLeft, 
   Upload, 
-  Sparkles, 
   CheckCircle2, 
   Loader2, 
   Image as ImageIcon, 
   Type, 
   Video, 
   X,
-  Plus
+  Send
 } from "lucide-react";
-import { analyzeIdeaOnPost, AIIdeaAnalysisOnPostOutput } from "@/ai/flows/ai-idea-analysis-on-post";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
-import { Badge } from "@/components/ui/badge";
 import { 
   Sheet, 
   SheetContent, 
@@ -44,8 +41,7 @@ const AUDIENCE_KEYWORDS = [
 
 export default function PostPage() {
   const [step, setStep] = useState<Step>(1);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisResult, setAnalysisResult] = useState<AIIdeaAnalysisOnPostOutput | null>(null);
+  const [isPosting, setIsPosting] = useState(false);
   const [mediaType, setMediaType] = useState<"text" | "image" | "video" | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const { toast } = useToast();
@@ -75,6 +71,8 @@ export default function PostPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // In a real app, you'd upload this to storage and get a URL.
+      // For this prototype, we're using object URLs for immediate preview.
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
     }
@@ -85,28 +83,18 @@ export default function PostPage() {
   };
 
   const handleNext = () => {
-    if (step < 3) setStep((s) => (s + 1) as Step);
+    if (step < 2) setStep((s) => (s + 1) as Step);
   };
 
   const handleBack = () => {
     if (step > 1) setStep((s) => (s - 1) as Step);
   };
 
-  const runAnalysisAndPost = async () => {
+  const handlePublish = async () => {
     if (!db) return;
-    setIsAnalyzing(true);
+    setIsPosting(true);
     try {
-      const result = await analyzeIdeaOnPost({
-        title: formData.title,
-        description: formData.description,
-        problem: formData.problem || "General Innovation",
-        solution: "Optimized innovation for " + formData.targetUsers,
-        targetUsers: formData.targetUsers,
-        category: formData.targetUsers || formData.category,
-        mediaDataUri: previewUrl || undefined
-      });
-      setAnalysisResult(result);
-
+      // Direct post to Firestore, bypassing AI analysis to ensure reliability
       await addDoc(collection(db, "ideas"), {
         title: formData.title,
         description: formData.description,
@@ -115,8 +103,8 @@ export default function PostPage() {
         userName: "John Innovator",
         userAvatar: "https://picsum.photos/seed/me/100/100",
         mediaUrl: previewUrl || (mediaType === 'text' ? "https://picsum.photos/seed/textpost/800/800" : "https://picsum.photos/seed/placeholder/800/800"),
-        innovationScore: result.innovationScore,
-        tags: [formData.targetUsers, "AI-Analyzed"],
+        innovationScore: 75, // Default score
+        tags: [formData.targetUsers, "User-Generated"],
         createdAt: serverTimestamp(),
         likes: 0
       });
@@ -134,7 +122,7 @@ export default function PostPage() {
         description: "Something went wrong while publishing your idea.",
       });
     } finally {
-      setIsAnalyzing(false);
+      setIsPosting(false);
     }
   };
 
@@ -146,9 +134,9 @@ export default function PostPage() {
         <header className="flex items-center justify-between">
            <div>
             <h1 className="text-2xl font-black text-primary uppercase tracking-tighter">New Post</h1>
-            <p className="text-xs text-muted-foreground font-bold">Step {step} of 3</p>
+            <p className="text-xs text-muted-foreground font-bold">Step {step === 3 ? 3 : step} of 2</p>
            </div>
-           {step > 1 && (
+           {step === 2 && (
              <Button variant="ghost" size="sm" onClick={handleBack} className="rounded-full text-xs font-bold uppercase">
                <ChevronLeft className="w-4 h-4 mr-1" /> Back
              </Button>
@@ -343,24 +331,24 @@ export default function PostPage() {
           </div>
 
           <Button 
-            className="w-full h-14 rounded-3xl bg-secondary text-white font-black uppercase shadow-xl hover:bg-secondary/90 transition-all" 
-            onClick={runAnalysisAndPost}
-            disabled={isAnalyzing || !formData.title || !formData.description || !formData.targetUsers}
+            className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase shadow-xl hover:shadow-primary/20 transition-all" 
+            onClick={handlePublish}
+            disabled={isPosting || !formData.title || !formData.description || !formData.targetUsers}
           >
-            {isAnalyzing ? (
+            {isPosting ? (
               <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Analyzing & Posting...
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Publishing...
               </>
             ) : (
               <>
-                <Sparkles className="mr-2 h-5 w-5" /> Analyze & Publish
+                <Send className="mr-2 h-5 w-5" /> Publish Innovation
               </>
             )}
           </Button>
         </div>
       )}
 
-      {step === 3 && analysisResult && (
+      {step === 3 && (
         <div className="space-y-8 animate-in zoom-in-95 duration-500">
           <div className="text-center space-y-3">
             <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto">
@@ -368,38 +356,6 @@ export default function PostPage() {
             </div>
             <h2 className="text-2xl font-black uppercase tracking-tighter">Live in Sphere</h2>
             <p className="text-xs text-muted-foreground font-bold">Your innovation is now live on the home feed!</p>
-          </div>
-
-          <div className="grid grid-cols-3 gap-3">
-            <Card className="bg-primary/5 border-none shadow-none rounded-[2rem]">
-              <CardContent className="p-4 text-center">
-                <span className="text-[9px] uppercase font-black text-muted-foreground block mb-1">Score</span>
-                <span className="text-2xl font-black text-primary">{analysisResult.innovationScore}</span>
-              </CardContent>
-            </Card>
-            <Card className="bg-primary/5 border-none shadow-none rounded-[2rem]">
-              <CardContent className="p-4 text-center">
-                <span className="text-[9px] uppercase font-black text-muted-foreground block mb-1">Market</span>
-                <span className="text-xs font-black text-primary uppercase">{analysisResult.marketPotential.split(" ")[0]}</span>
-              </CardContent>
-            </Card>
-            <Card className="bg-primary/5 border-none shadow-none rounded-[2rem]">
-              <CardContent className="p-4 text-center">
-                <span className="text-[9px] uppercase font-black text-muted-foreground block mb-1">Uniqueness</span>
-                <span className="text-xs font-black text-primary uppercase">{analysisResult.uniquenessLevel.split(" ")[0]}</span>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="space-y-4">
-             <Label className="text-[10px] font-black uppercase tracking-widest text-primary">Final Polishing Insights</Label>
-             <div className="bg-muted/30 p-5 rounded-[2.5rem] border border-muted/50">
-               <div className="text-xs text-foreground/80 leading-relaxed space-y-3">
-                  {analysisResult.improvementSuggestions.split('\n').map((line, i) => (
-                    <p key={i}>{line}</p>
-                  ))}
-               </div>
-             </div>
           </div>
 
           <div className="flex flex-col gap-3">
