@@ -2,10 +2,12 @@
 
 import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowBigUp, MoreHorizontal, Heart } from "lucide-react";
+import { ArrowBigUp, MoreHorizontal, Send } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 interface Comment {
   id: string;
@@ -33,6 +35,25 @@ interface IdeaCardProps {
 
 export function IdeaCard({ idea }: IdeaCardProps) {
   const [isLiked, setIsLiked] = useState(false);
+  const [commentText, setCommentText] = useState("");
+  const [showAllComments, setShowAllComments] = useState(false);
+  const [localComments, setLocalComments] = useState<Comment[]>(idea.commentsList || []);
+
+  const handleAddComment = () => {
+    if (!commentText.trim()) return;
+    
+    const newComment: Comment = {
+      id: Date.now().toString(),
+      userName: "you",
+      userAvatar: "https://picsum.photos/seed/me/100/100",
+      text: commentText,
+    };
+
+    setLocalComments([newComment, ...localComments]);
+    setCommentText("");
+  };
+
+  const visibleComments = showAllComments ? localComments : localComments.slice(0, 2);
 
   return (
     <div className="mb-8 bg-background">
@@ -80,9 +101,6 @@ export function IdeaCard({ idea }: IdeaCardProps) {
                     <Avatar className="h-8 w-8 border-2 border-white shadow-lg transition-transform hover:scale-110">
                         <AvatarImage src={`https://picsum.photos/seed/${i + 15}/100/100`} />
                     </Avatar>
-                    <div className="absolute -top-1 -right-1 bg-red-500 rounded-full p-0.5 border border-white">
-                        <Heart size={6} className="text-white fill-current" />
-                    </div>
                 </div>
             ))}
         </div>
@@ -112,7 +130,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
       </div>
 
       {/* Text Content */}
-      <div className="px-3 space-y-3">
+      <div className="px-3 space-y-4">
         <div className="space-y-2">
             <h3 className="text-sm font-black text-primary uppercase tracking-tight">{idea.title}</h3>
             <p className="text-sm text-foreground/90 leading-relaxed">
@@ -129,16 +147,38 @@ export function IdeaCard({ idea }: IdeaCardProps) {
             </div>
         </div>
 
+        {/* Comment Input Box */}
+        <div className="flex items-center gap-3 bg-muted/20 p-2 rounded-2xl border border-muted/30">
+          <Avatar className="h-8 w-8">
+            <AvatarImage src="https://picsum.photos/seed/me/100/100" />
+            <AvatarFallback>U</AvatarFallback>
+          </Avatar>
+          <div className="flex-1 flex items-center">
+            <Input 
+              placeholder="Add a comment..." 
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              className="border-none bg-transparent focus-visible:ring-0 shadow-none text-xs h-8 px-0"
+              onKeyDown={(e) => e.key === 'Enter' && handleAddComment()}
+            />
+            {commentText && (
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={handleAddComment}>
+                <Send size={16} />
+              </Button>
+            )}
+          </div>
+        </div>
+
         {/* Comments Section */}
-        {idea.commentsList && idea.commentsList.length > 0 && (
+        {localComments.length > 0 && (
           <div className="pt-2 space-y-3">
             <div className="flex items-center gap-2">
                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Collaborators & Feed</span>
                <Separator className="flex-1 opacity-30" />
             </div>
             <div className="space-y-4">
-              {idea.commentsList.map((comment) => (
-                <div key={comment.id} className="flex gap-3 items-start">
+              {visibleComments.map((comment) => (
+                <div key={comment.id} className="flex gap-3 items-start animate-in fade-in slide-in-from-top-1 duration-300">
                   <Avatar className="h-6 w-6 border-2 border-muted shrink-0 shadow-sm">
                     <AvatarImage src={comment.userAvatar} />
                     <AvatarFallback>{comment.userName[0]}</AvatarFallback>
@@ -152,6 +192,15 @@ export function IdeaCard({ idea }: IdeaCardProps) {
                 </div>
               ))}
             </div>
+
+            {localComments.length > 2 && (
+              <button 
+                onClick={() => setShowAllComments(!showAllComments)}
+                className="text-[10px] font-bold text-muted-foreground hover:text-primary transition-colors mt-2 uppercase tracking-tighter"
+              >
+                {showAllComments ? "Show Less" : `View ${localComments.length - 2} More Comments...`}
+              </button>
+            )}
           </div>
         )}
       </div>
