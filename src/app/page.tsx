@@ -30,9 +30,9 @@ const MOCK_IDEAS = [
     category: "Healthcare",
     userName: "Sarah Chen",
     userAvatar: "https://picsum.photos/seed/user2/100/100",
-    mediaUrl: "https://picsum.photos/seed/health/800/600",
+    mediaUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
     innovationScore: 88,
-    tags: ["Health", "AI", "Wearable"],
+    tags: ["Health", "AI", "VideoDemo"],
     likes: 189,
   },
   {
@@ -43,9 +43,9 @@ const MOCK_IDEAS = [
     category: "Technology",
     userName: "Marcus Vane",
     userAvatar: "https://picsum.photos/seed/user3/100/100",
-    mediaUrl: "https://picsum.photos/seed/urban/800/600",
+    mediaUrl: "https://picsum.photos/seed/textpost/800/800",
     innovationScore: 76,
-    tags: ["IoT", "Urban", "Health"],
+    tags: ["IoT", "Urban", "TextPost"],
     likes: 134,
   }
 ];

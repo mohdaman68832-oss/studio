@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
@@ -35,7 +34,7 @@ const MOCK_IDEAS = [
     category: "Healthcare",
     userName: "Sarah Chen",
     userAvatar: "https://picsum.photos/seed/user2/100/100",
-    mediaUrl: "https://picsum.photos/seed/health/800/600",
+    mediaUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
     innovationScore: 88,
   },
   {
@@ -46,7 +45,7 @@ const MOCK_IDEAS = [
     category: "Technology",
     userName: "Marcus Vane",
     userAvatar: "https://picsum.photos/seed/user3/100/100",
-    mediaUrl: "https://picsum.photos/seed/urban/800/600",
+    mediaUrl: "https://picsum.photos/seed/textpost/800/800",
     innovationScore: 76,
   }
 ];
@@ -64,7 +63,6 @@ export default function IdeaDetailPage() {
   const ideaRef = useMemo(() => (db ? doc(db, "ideas", ideaId) : null), [db, ideaId]);
   const { data: firestoreIdea, loading: ideaLoading } = useDoc(ideaRef);
 
-  // Fallback to mock data if Firestore document is not found (for initial demo ideas)
   const idea = useMemo(() => {
     if (firestoreIdea) return firestoreIdea;
     return MOCK_IDEAS.find(i => i.id === ideaId);
@@ -119,7 +117,7 @@ export default function IdeaDetailPage() {
     );
   }
 
-  const isVideo = idea?.mediaUrl?.includes('blob:') || idea?.mediaUrl?.endsWith('.mp4') || idea?.mediaUrl?.endsWith('.webm');
+  const isVideo = idea?.mediaUrl?.includes('blob:') || idea?.mediaUrl?.endsWith('.mp4') || idea?.mediaUrl?.endsWith('.webm') || idea?.mediaUrl?.includes('gtv-videos-bucket');
 
   return (
     <div className="max-w-md mx-auto h-screen bg-background flex flex-col">
@@ -135,7 +133,6 @@ export default function IdeaDetailPage() {
 
       <div className="flex-1 overflow-y-auto no-scrollbar" ref={scrollContainerRef}>
         <div className="p-4 space-y-6 pb-24">
-          {/* Media Player/Viewer */}
           <div className="relative aspect-video w-full rounded-[2rem] overflow-hidden border shadow-xl bg-black">
             {isVideo ? (
               <video src={idea?.mediaUrl} controls autoPlay muted className="w-full h-full object-contain" />
@@ -150,7 +147,6 @@ export default function IdeaDetailPage() {
             </div>
           </div>
 
-          {/* Details Section */}
           <div className="space-y-4 bg-white/50 backdrop-blur-sm p-5 rounded-[2rem] border border-border/50">
             <div className="flex items-center gap-3">
               <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
@@ -194,7 +190,6 @@ export default function IdeaDetailPage() {
             </div>
           </div>
 
-          {/* Suggestions Live Hub */}
           <div className="space-y-6 pt-4">
             <div className="flex items-center gap-3 sticky top-0 bg-background/95 backdrop-blur-sm py-2 z-10">
                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 flex items-center gap-2">
@@ -232,7 +227,6 @@ export default function IdeaDetailPage() {
         </div>
       </div>
 
-      {/* Input Area */}
       <div className="shrink-0 p-4 bg-background/80 backdrop-blur-md border-t z-30">
         <div className="max-w-md mx-auto flex items-center gap-3 bg-white p-2 rounded-3xl border border-primary/20 shadow-lg">
           <Avatar className="h-10 w-10 shadow-sm shrink-0">
