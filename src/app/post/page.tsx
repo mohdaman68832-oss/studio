@@ -33,6 +33,9 @@ import {
   SheetTrigger 
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { useFirestore } from "@/firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { useRouter } from "next/navigation";
 
 type Step = 1 | 2 | 3;
 
@@ -47,15 +50,16 @@ export default function PostPage() {
   const [mediaType, setMediaType] = useState<"text" | "image" | "video" | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const { toast } = useToast();
+  const router = useRouter();
+  const db = useFirestore();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    problem: "General innovation", // Default since problem field is less emphasized now
-    targetUsers: "", // This will hold the selected keyword
+    problem: "General innovation",
+    targetUsers: "", 
     category: "Technology",
-    tags: [] as string[],
   });
 
   const updateFormData = (field: string, value: any) => {
@@ -72,6 +76,8 @@ export default function PostPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // In a real app, you'd upload this to storage. 
+      // For the prototype, we use the local URL for preview and base64 for AI/mock storage.
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
     }
@@ -89,25 +95,47 @@ export default function PostPage() {
     if (step > 1) setStep((s) => (s - 1) as Step);
   };
 
-  const runAnalysis = async () => {
+  const runAnalysisAndPost = async () => {
+    if (!db) return;
     setIsAnalyzing(true);
     try {
+      // 1. Run AI Analysis
       const result = await analyzeIdeaOnPost({
         title: formData.title,
         description: formData.description,
         problem: formData.problem,
-        solution: "Optimized innovation for " + formData.targetUsers, // Static replacement for solution
+        solution: "Optimized innovation for " + formData.targetUsers,
         targetUsers: formData.targetUsers,
         category: formData.category,
         mediaDataUri: previewUrl || undefined
       });
       setAnalysisResult(result);
+
+      // 2. Post to Firestore immediately
+      await addDoc(collection(db, "ideas"), {
+        title: formData.title,
+        description: formData.description,
+        category: formData.targetUsers || formData.category,
+        userName: "John Innovator",
+        userAvatar: "https://picsum.photos/seed/me/100/100",
+        mediaUrl: previewUrl || (mediaType === 'text' ? "https://picsum.photos/seed/textpost/800/800" : "https://picsum.photos/seed/placeholder/800/800"),
+        innovationScore: result.innovationScore,
+        tags: [formData.targetUsers, "AI-Analyzed"],
+        createdAt: serverTimestamp(),
+        likes: 0
+      });
+
+      toast({
+        title: "Success!",
+        description: "Your innovation has been published to the Sphere.",
+      });
+
       setStep(3);
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Analysis Failed",
-        description: "Something went wrong while analyzing your idea.",
+        title: "Posting Failed",
+        description: "Something went wrong while publishing your idea.",
       });
     } finally {
       setIsAnalyzing(false);
@@ -310,16 +338,16 @@ export default function PostPage() {
 
           <Button 
             className="w-full h-14 rounded-3xl bg-secondary text-white font-black uppercase shadow-xl hover:bg-secondary/90 transition-all" 
-            onClick={runAnalysis}
+            onClick={runAnalysisAndPost}
             disabled={isAnalyzing || !formData.title || !formData.description || !formData.targetUsers}
           >
             {isAnalyzing ? (
               <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Analyzing...
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Analyzing & Posting...
               </>
             ) : (
               <>
-                <Sparkles className="mr-2 h-5 w-5" /> Analyze & Review
+                <Sparkles className="mr-2 h-5 w-5" /> Analyze & Publish
               </>
             )}
           </Button>
@@ -332,7 +360,8 @@ export default function PostPage() {
             <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto">
                <CheckCircle2 className="w-10 h-10 text-green-500" />
             </div>
-            <h2 className="text-2xl font-black uppercase tracking-tighter">Ready to Sphere</h2>
+            <h2 className="text-2xl font-black uppercase tracking-tighter">Live in Sphere</h2>
+            <p className="text-xs text-muted-foreground font-bold">Your innovation is now live on the home feed!</p>
           </div>
 
           <div className="grid grid-cols-3 gap-3">
@@ -368,11 +397,11 @@ export default function PostPage() {
           </div>
 
           <div className="flex flex-col gap-3">
-            <Button className="h-14 rounded-3xl font-black uppercase shadow-xl" onClick={() => window.location.href = "/"}>
-              Publish to Sphere
+            <Button className="h-14 rounded-3xl font-black uppercase shadow-xl" onClick={() => router.push("/")}>
+              Go to Home Feed
             </Button>
-            <Button variant="ghost" className="font-bold text-xs uppercase" onClick={handleBack}>
-              Edit Details
+            <Button variant="ghost" className="font-bold text-xs uppercase" onClick={() => setStep(1)}>
+              Create Another
             </Button>
           </div>
         </div>
@@ -380,4 +409,3 @@ export default function PostPage() {
     </div>
   );
 }
-
