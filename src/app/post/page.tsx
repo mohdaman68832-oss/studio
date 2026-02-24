@@ -61,8 +61,8 @@ export default function PostPage() {
 
   const handleMediaSelect = (type: "text" | "image" | "video") => {
     setMediaType(type);
-    if (type === "image" || type === "video") {
-      fileInputRef.current?.click();
+    if (type === "text") {
+      setPreviewUrl(null);
     }
   };
 
@@ -144,7 +144,7 @@ export default function PostPage() {
       {step === 1 && (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="space-y-4">
-            <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Select Media Type</Label>
+            <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Select Post Type</Label>
             <div className="grid grid-cols-3 gap-3">
               <Sheet>
                 <SheetTrigger asChild>
@@ -157,23 +157,66 @@ export default function PostPage() {
                     <span className="text-[10px] font-bold uppercase">Image</span>
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="bottom" className="rounded-t-[2.5rem] h-[30vh]">
+                <SheetContent side="bottom" className="rounded-t-[2.5rem] h-[35vh]">
                   <SheetHeader>
-                    <SheetTitle className="text-center text-sm font-black uppercase">Upload from Gallery</SheetTitle>
+                    <SheetTitle className="text-center text-sm font-black uppercase">
+                      Upload {mediaType === 'video' ? 'Video' : 'Image'}
+                    </SheetTitle>
                   </SheetHeader>
                   <div className="flex flex-col items-center justify-center h-full gap-4 pb-8">
                     <input 
                       type="file" 
                       ref={fileInputRef} 
                       className="hidden" 
-                      accept="image/*,video/*" 
+                      accept={mediaType === 'video' ? 'video/*' : 'image/*'} 
                       onChange={handleFileChange} 
                     />
                     <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center">
                        <Upload className="text-muted-foreground" />
                     </div>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase text-center px-8">
+                      Select a {mediaType === 'video' ? 'video file' : 'high-quality image'} to showcase your idea.
+                    </p>
                     <Button onClick={() => fileInputRef.current?.click()} className="rounded-full px-8 font-bold uppercase text-xs">
-                      Choose Files
+                      Choose File
+                    </Button>
+                  </div>
+                </SheetContent>
+              </Sheet>
+
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    className={`h-24 flex-col gap-2 rounded-3xl border-2 transition-all ${mediaType === 'video' ? 'border-primary bg-primary/5' : 'border-muted'}`}
+                    onClick={() => handleMediaSelect("video")}
+                  >
+                    <Video className="w-6 h-6" />
+                    <span className="text-[10px] font-bold uppercase">Video</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="rounded-t-[2.5rem] h-[35vh]">
+                  <SheetHeader>
+                    <SheetTitle className="text-center text-sm font-black uppercase">
+                      Upload Video
+                    </SheetTitle>
+                  </SheetHeader>
+                  <div className="flex flex-col items-center justify-center h-full gap-4 pb-8">
+                    <input 
+                      type="file" 
+                      ref={fileInputRef} 
+                      className="hidden" 
+                      accept="video/*" 
+                      onChange={handleFileChange} 
+                    />
+                    <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center">
+                       <Upload className="text-muted-foreground" />
+                    </div>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase text-center px-8">
+                      Select a short video to demonstrate your innovation.
+                    </p>
+                    <Button onClick={() => fileInputRef.current?.click()} className="rounded-full px-8 font-bold uppercase text-xs">
+                      Choose Video
                     </Button>
                   </div>
                 </SheetContent>
@@ -181,25 +224,16 @@ export default function PostPage() {
 
               <Button 
                 variant="outline" 
-                className={`h-24 flex-col gap-2 rounded-3xl border-2 transition-all ${mediaType === 'video' ? 'border-primary bg-primary/5' : 'border-muted'}`}
-                onClick={() => handleMediaSelect("video")}
-              >
-                <Video className="w-6 h-6" />
-                <span className="text-[10px] font-bold uppercase">Video</span>
-              </Button>
-
-              <Button 
-                variant="outline" 
                 className={`h-24 flex-col gap-2 rounded-3xl border-2 transition-all ${mediaType === 'text' ? 'border-primary bg-primary/5' : 'border-muted'}`}
-                onClick={() => setMediaType("text")}
+                onClick={() => handleMediaSelect("text")}
               >
                 <Type className="w-6 h-6" />
-                <span className="text-[10px] font-bold uppercase">Text</span>
+                <span className="text-[10px] font-bold uppercase">Text Only</span>
               </Button>
             </div>
           </div>
 
-          {previewUrl && (
+          {previewUrl && (mediaType === 'image' || mediaType === 'video') && (
             <div className="relative aspect-video w-full rounded-[2rem] overflow-hidden border shadow-lg animate-in zoom-in-95">
               {mediaType === 'video' ? (
                 <video src={previewUrl} className="w-full h-full object-cover" controls />
@@ -240,7 +274,7 @@ export default function PostPage() {
 
           <Button 
             className="w-full h-14 rounded-3xl text-sm font-black uppercase shadow-xl bg-primary hover:shadow-primary/20 transition-all" 
-            disabled={!formData.title || !formData.description || (!previewUrl && mediaType !== 'text')}
+            disabled={!formData.title || !formData.description || (mediaType !== 'text' && !previewUrl)}
             onClick={handleNext}
           >
             Details <ChevronRight className="ml-2 w-4 h-4" />
