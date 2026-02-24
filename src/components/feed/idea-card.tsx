@@ -2,11 +2,10 @@
 
 import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, MoreHorizontal } from "lucide-react";
+import { ArrowBigUp, MoreHorizontal, Heart } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
 
 interface Comment {
   id: string;
@@ -93,7 +92,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
       <div className="flex items-center justify-between px-3 py-4">
         <div className="flex items-center gap-5">
           <button onClick={() => setIsLiked(!isLiked)} className="transition-transform active:scale-125">
-            <Heart size={26} className={cn(isLiked ? "text-red-500 fill-current" : "text-foreground")} />
+            <ArrowBigUp size={32} className={cn(isLiked ? "text-primary fill-current" : "text-foreground")} />
           </button>
         </div>
         
@@ -107,7 +106,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
                 ))}
             </div>
             <span className="text-[10px] font-black uppercase tracking-tighter">
-              {((idea.likes + (isLiked ? 1 : 0)) / 1000).toFixed(1)}k Liked
+              {((idea.likes + (isLiked ? 1 : 0)) / 1000).toFixed(1)}k Upvoted
             </span>
         </div>
       </div>
@@ -120,7 +119,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
                 <span className="font-bold mr-2">{idea.userName.toLowerCase().replace(/\s/g, '')}</span>
                 {idea.description}
             </p>
-            {/* Tags Section Re-added */}
+            {/* Tags Section */}
             <div className="flex flex-wrap gap-1.5 pt-1">
               {idea.tags.map(tag => (
                 <span key={tag} className="text-[10px] font-bold text-primary/70">
@@ -130,7 +129,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
             </div>
         </div>
 
-        {/* Comments Section (Always Visible) */}
+        {/* Comments Section */}
         {idea.commentsList && idea.commentsList.length > 0 && (
           <div className="pt-2 space-y-3">
             <div className="flex items-center gap-2">
