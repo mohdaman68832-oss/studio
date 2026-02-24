@@ -8,11 +8,48 @@ import { collection, addDoc, query, orderBy, serverTimestamp, doc } from "fireba
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, Send, Sparkles, Lightbulb, MessageCircle } from "lucide-react";
+import { ChevronLeft, Send, Sparkles, Lightbulb, MessageCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+
+const MOCK_IDEAS = [
+  {
+    id: "1",
+    title: "EcoConnect: Smart Grid for Neighborhoods",
+    problem: "Rising energy costs and inefficient localized energy distribution.",
+    description: "A decentralized platform enabling neighbors to share excess solar energy with zero transaction fees using blockchain technology.",
+    category: "Sustainability",
+    userName: "Alex Rivera",
+    userAvatar: "https://picsum.photos/seed/user1/100/100",
+    mediaUrl: "https://picsum.photos/seed/tech/800/600",
+    innovationScore: 92,
+  },
+  {
+    id: "2",
+    title: "NeuroFocus: AI-Driven ADHD Support",
+    problem: "Difficulty maintaining concentration during complex work tasks.",
+    description: "Wearable device that monitors focus levels and provides subtle haptic feedback to help individuals with ADHD maintain deep work states.",
+    category: "Healthcare",
+    userName: "Sarah Chen",
+    userAvatar: "https://picsum.photos/seed/user2/100/100",
+    mediaUrl: "https://picsum.photos/seed/health/800/600",
+    innovationScore: 88,
+  },
+  {
+    id: "3",
+    title: "Aura: Personal Air Purifier",
+    problem: "High levels of urban air pollution affecting daily respiratory health.",
+    description: "Stylish, portable neck-worn air purifier using ionized filtration to create a clean air bubble around the user in polluted urban areas.",
+    category: "Technology",
+    userName: "Marcus Vane",
+    userAvatar: "https://picsum.photos/seed/user3/100/100",
+    mediaUrl: "https://picsum.photos/seed/urban/800/600",
+    innovationScore: 76,
+  }
+];
 
 export default function IdeaDetailPage() {
   const params = useParams();
@@ -21,22 +58,28 @@ export default function IdeaDetailPage() {
   const db = useFirestore();
 
   const [commentText, setCommentText] = useState("");
+  const [showFullDescription, setShowFullDescription] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const ideaRef = useMemo(() => (db ? doc(db, "ideas", ideaId) : null), [db, ideaId]);
-  const { data: idea, loading: ideaLoading } = useDoc(ideaRef);
+  const { data: firestoreIdea, loading: ideaLoading } = useDoc(ideaRef);
+
+  // Fallback to mock data if Firestore document is not found (for initial demo ideas)
+  const idea = useMemo(() => {
+    if (firestoreIdea) return firestoreIdea;
+    return MOCK_IDEAS.find(i => i.id === ideaId);
+  }, [firestoreIdea, ideaId]);
 
   const suggestionsQuery = useMemo(() => {
     if (!db) return null;
     return query(
       collection(db, "ideas", ideaId, "suggestions"),
-      orderBy("createdAt", "asc") // ASC for chat-like experience
+      orderBy("createdAt", "asc")
     );
   }, [db, ideaId]);
 
   const { data: suggestions, loading: suggestionsLoading } = useCollection(suggestionsQuery);
 
-  // Auto-scroll to bottom when new suggestions arrive
   useEffect(() => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
@@ -56,7 +99,7 @@ export default function IdeaDetailPage() {
     setCommentText("");
   };
 
-  if (ideaLoading) {
+  if (ideaLoading && !idea) {
     return (
       <div className="max-w-md mx-auto p-6 space-y-6">
         <Skeleton className="h-10 w-10 rounded-full" />
@@ -67,7 +110,7 @@ export default function IdeaDetailPage() {
     );
   }
 
-  if (!idea && !ideaLoading) {
+  if (!idea) {
     return (
       <div className="max-w-md mx-auto p-12 text-center space-y-4">
         <p className="text-muted-foreground font-bold uppercase tracking-widest text-xs">Idea not found</p>
@@ -92,6 +135,7 @@ export default function IdeaDetailPage() {
 
       <div className="flex-1 overflow-y-auto no-scrollbar" ref={scrollContainerRef}>
         <div className="p-4 space-y-6 pb-24">
+          {/* Media Player/Viewer */}
           <div className="relative aspect-video w-full rounded-[2rem] overflow-hidden border shadow-xl bg-black">
             {isVideo ? (
               <video src={idea?.mediaUrl} controls autoPlay muted className="w-full h-full object-contain" />
@@ -106,7 +150,8 @@ export default function IdeaDetailPage() {
             </div>
           </div>
 
-          <div className="space-y-3">
+          {/* Details Section */}
+          <div className="space-y-4 bg-white/50 backdrop-blur-sm p-5 rounded-[2rem] border border-border/50">
             <div className="flex items-center gap-3">
               <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
                 <AvatarImage src={idea?.userAvatar} />
@@ -117,13 +162,41 @@ export default function IdeaDetailPage() {
                 <p className="text-[10px] text-primary font-bold uppercase tracking-widest">{idea?.category}</p>
               </div>
             </div>
-            <p className="text-sm text-foreground/80 leading-relaxed font-medium">
-              {idea?.description}
-            </p>
+
+            <div className="space-y-1">
+              <h2 className="text-lg font-black text-primary uppercase tracking-tighter leading-tight">{idea?.title}</h2>
+              <div className="space-y-1 mt-2">
+                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">The Challenge</p>
+                <p className="text-sm text-foreground/80 font-bold leading-relaxed">{idea?.problem}</p>
+              </div>
+
+              {showFullDescription && (
+                <div className="mt-4 pt-4 border-t border-muted animate-in fade-in slide-in-from-top-2">
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-primary mb-2">Detailed Brief</p>
+                  <p className="text-sm text-foreground/70 leading-relaxed font-medium">
+                    {idea?.description}
+                  </p>
+                </div>
+              )}
+
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowFullDescription(!showFullDescription)}
+                className="mt-2 h-auto p-0 text-[10px] font-black uppercase tracking-widest text-secondary hover:bg-transparent"
+              >
+                {showFullDescription ? (
+                  <span className="flex items-center gap-1">Show Less <ChevronUp size={12} /></span>
+                ) : (
+                  <span className="flex items-center gap-1">See Full Description <ChevronDown size={12} /></span>
+                )}
+              </Button>
+            </div>
           </div>
 
+          {/* Suggestions Live Hub */}
           <div className="space-y-6 pt-4">
-            <div className="flex items-center gap-3 sticky top-0 bg-background py-2">
+            <div className="flex items-center gap-3 sticky top-0 bg-background/95 backdrop-blur-sm py-2 z-10">
                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 flex items-center gap-2">
                  <MessageCircle size={14} /> Live Feedback
                </span>
@@ -159,6 +232,7 @@ export default function IdeaDetailPage() {
         </div>
       </div>
 
+      {/* Input Area */}
       <div className="shrink-0 p-4 bg-background/80 backdrop-blur-md border-t z-30">
         <div className="max-w-md mx-auto flex items-center gap-3 bg-white p-2 rounded-3xl border border-primary/20 shadow-lg">
           <Avatar className="h-10 w-10 shadow-sm shrink-0">
