@@ -6,13 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ChevronLeft, ShieldCheck, Loader2, Coins } from "lucide-react";
+import { ChevronLeft, ShieldCheck, Loader2 } from "lucide-react";
 import { useFirestore } from "@/firebase";
 import { collection, addDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
-const UNION_PRICE = 500; // Simulated price in "paise" or coins
+const UNION_PRICE = 500; // Simulated price in Rupees
 
 export default function CreateUnionPage() {
   const router = useRouter();
@@ -121,12 +121,12 @@ export default function CreateUnionPage() {
 
       <div className="bg-secondary/10 p-6 rounded-[2.5rem] border border-secondary/20 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="bg-secondary p-2 rounded-xl text-white">
-            <Coins size={20} />
+          <div className="bg-secondary w-10 h-10 rounded-xl text-white flex items-center justify-center font-black text-xl">
+            ₹
           </div>
           <div>
             <p className="text-[10px] font-black uppercase text-secondary">Formation Fee</p>
-            <p className="text-lg font-black text-foreground">{UNION_PRICE} InnovateCoins</p>
+            <p className="text-lg font-black text-foreground">₹{UNION_PRICE}</p>
           </div>
         </div>
         <ShieldCheck className="text-secondary opacity-20" size={32} />
