@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, MessageSquare, Users, Globe, ChevronRight } from "lucide-react";
+import { Search, MessageSquare, Users, Globe, ChevronRight } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -76,12 +76,6 @@ export default function ChatPage() {
     <div className="max-w-md mx-auto min-h-screen bg-background pt-6 pb-24">
       <div className="px-6 flex items-center justify-between mb-6">
         <h1 className="text-2xl font-black text-primary uppercase tracking-tighter">Connect</h1>
-        <button 
-          onClick={() => router.push("/unions/create")}
-          className="bg-primary text-white p-2 rounded-2xl shadow-lg hover:scale-105 transition-transform"
-        >
-          <Plus size={20} />
-        </button>
       </div>
 
       <div className="px-6 mb-6">
