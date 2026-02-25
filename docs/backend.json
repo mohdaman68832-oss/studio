@@ -28,6 +28,20 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["text", "userName", "createdAt"]
+    },
+    "Union": {
+      "title": "Union",
+      "description": "A collaborative group or union of innovators.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
+        "memberCount": { "type": "number" },
+        "avatarUrl": { "type": "string" },
+        "createdBy": { "type": "string" }
+      },
+      "required": ["name", "description", "category"]
     }
   },
   "auth": {
@@ -41,6 +55,10 @@
     "/ideas/{ideaId}/suggestions/{suggestionId}": {
       "schema": "Suggestion",
       "description": "Sub-collection of live suggestions for a specific idea."
+    },
+    "/unions/{unionId}": {
+      "schema": "Union",
+      "description": "Global unions for collaboration."
     }
   }
 }
