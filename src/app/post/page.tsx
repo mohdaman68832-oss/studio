@@ -52,9 +52,7 @@ export default function PostPage() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    problem: "",
     targetUsers: "", 
-    category: "Technology",
   });
 
   const updateFormData = (field: string, value: any) => {
@@ -71,8 +69,6 @@ export default function PostPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // In a real app, you'd upload this to storage and get a URL.
-      // For this prototype, we're using object URLs for immediate preview.
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
     }
@@ -94,16 +90,15 @@ export default function PostPage() {
     if (!db) return;
     setIsPosting(true);
     try {
-      // Direct post to Firestore, bypassing AI analysis to ensure reliability
       await addDoc(collection(db, "ideas"), {
         title: formData.title,
         description: formData.description,
-        problem: formData.problem || "Innovation for " + (formData.targetUsers || "everyone"),
-        category: formData.targetUsers || formData.category,
+        problem: "Innovation for " + (formData.targetUsers || "everyone"),
+        category: formData.targetUsers || "Technology",
         userName: "John Innovator",
         userAvatar: "https://picsum.photos/seed/me/100/100",
         mediaUrl: previewUrl || (mediaType === 'text' ? "https://picsum.photos/seed/textpost/800/800" : "https://picsum.photos/seed/placeholder/800/800"),
-        innovationScore: 75, // Default score
+        innovationScore: 75,
         tags: [formData.targetUsers, "User-Generated"],
         createdAt: serverTimestamp(),
         likes: 0
@@ -181,9 +176,6 @@ export default function PostPage() {
                     <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center">
                        <Upload className="text-muted-foreground" />
                     </div>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase text-center px-8">
-                      Select a high-quality image to showcase your idea.
-                    </p>
                     <Button onClick={() => fileInputRef.current?.click()} className="rounded-full px-8 font-bold uppercase text-xs">
                       Choose File
                     </Button>
@@ -222,9 +214,6 @@ export default function PostPage() {
                     <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center">
                        <Upload className="text-muted-foreground" />
                     </div>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase text-center px-8">
-                      Select a short video to demonstrate your innovation.
-                    </p>
                     <Button onClick={() => fileInputRef.current?.click()} className="rounded-full px-8 font-bold uppercase text-xs">
                       Choose Video
                     </Button>
@@ -286,16 +275,6 @@ export default function PostPage() {
                 onChange={(e) => updateFormData("title", e.target.value)}
               />
             </div>
-
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest">The Problem</Label>
-              <Textarea 
-                placeholder="What challenge does this solve?" 
-                className="rounded-2xl min-h-[80px] bg-muted/30 border-none focus-visible:ring-primary/20"
-                value={formData.problem}
-                onChange={(e) => updateFormData("problem", e.target.value)}
-              />
-            </div>
             
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-widest">Description</Label>
@@ -308,7 +287,7 @@ export default function PostPage() {
             </div>
 
             <div className="space-y-4">
-              <Label className="text-[10px] font-black uppercase tracking-widest">Category</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest">Who is this for?</Label>
               <div className="flex flex-wrap gap-2">
                 {AUDIENCE_KEYWORDS.map((keyword) => (
                   <Button

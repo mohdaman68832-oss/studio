@@ -19,10 +19,16 @@ export function initializeFirebase(): {
   const auth = getAuth(firebaseApp);
   
   let analytics;
-  if (typeof window !== 'undefined') {
+  // Only attempt to initialize analytics if we have a valid-looking API key
+  // and we are running in the browser.
+  if (typeof window !== 'undefined' && firebaseConfig.apiKey !== 'placeholder-api-key') {
     isSupported().then((supported) => {
       if (supported) {
-        analytics = getAnalytics(firebaseApp);
+        try {
+          analytics = getAnalytics(firebaseApp);
+        } catch (e) {
+          console.warn('Analytics initialization failed:', e);
+        }
       }
     });
   }
