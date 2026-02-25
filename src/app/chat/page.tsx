@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -11,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useCollection, useFirestore } from "@/firebase";
 import { collection, query, where } from "firebase/firestore";
+import { useRouter } from "next/navigation";
 
 const MOCK_CHATS = [
   {
@@ -63,6 +63,7 @@ const MOCK_UNIONS = [
 export default function ChatPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const db = useFirestore();
+  const router = useRouter();
 
   const filteredUnions = useMemo(() => {
     return MOCK_UNIONS.filter(u => 
@@ -75,7 +76,10 @@ export default function ChatPage() {
     <div className="max-w-md mx-auto min-h-screen bg-background pt-6 pb-24">
       <div className="px-6 flex items-center justify-between mb-6">
         <h1 className="text-2xl font-black text-primary uppercase tracking-tighter">Connect</h1>
-        <button className="bg-primary text-white p-2 rounded-2xl shadow-lg hover:scale-105 transition-transform">
+        <button 
+          onClick={() => router.push("/unions/create")}
+          className="bg-primary text-white p-2 rounded-2xl shadow-lg hover:scale-105 transition-transform"
+        >
           <Plus size={20} />
         </button>
       </div>
