@@ -8,8 +8,7 @@ import { Search, MessageSquare, Users, Globe, ChevronRight } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { useCollection, useFirestore } from "@/firebase";
-import { collection, query, where } from "firebase/firestore";
+import { useFirestore } from "@/firebase";
 import { useRouter } from "next/navigation";
 
 const MOCK_CHATS = [
@@ -147,9 +146,10 @@ export default function ChatPage() {
 
           <div className="space-y-4">
             {filteredUnions.map((union) => (
-              <div 
+              <Link 
                 key={union.id} 
-                className="bg-white p-5 rounded-[2.5rem] shadow-sm border border-border/50 flex items-center gap-4 hover:shadow-md transition-shadow"
+                href={`/unions/${union.id}`}
+                className="bg-white p-5 rounded-[2.5rem] shadow-sm border border-border/50 flex items-center gap-4 hover:shadow-md transition-shadow cursor-pointer block"
               >
                 <Avatar className="h-16 w-16 rounded-3xl border-2 border-primary/5">
                   <AvatarImage src={union.avatar} className="object-cover" />
@@ -169,11 +169,11 @@ export default function ChatPage() {
                       <span className="text-[10px] font-bold text-muted-foreground">{union.memberCount.toLocaleString()} members</span>
                     </div>
                     <Button size="sm" className="h-7 rounded-full px-4 text-[10px] font-black uppercase tracking-widest shadow-sm">
-                      Join
+                      View
                     </Button>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
 
             {filteredUnions.length === 0 && (
