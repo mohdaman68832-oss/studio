@@ -51,6 +51,7 @@ export default function PostPage() {
 
   const [formData, setFormData] = useState({
     title: "",
+    problem: "",
     description: "",
     targetUsers: "", 
   });
@@ -92,8 +93,8 @@ export default function PostPage() {
     try {
       await addDoc(collection(db, "ideas"), {
         title: formData.title,
+        problem: formData.problem,
         description: formData.description,
-        problem: "Innovation for " + (formData.targetUsers || "everyone"),
         category: formData.targetUsers || "Technology",
         userName: "John Innovator",
         userAvatar: "https://picsum.photos/seed/me/100/100",
@@ -273,6 +274,16 @@ export default function PostPage() {
                 className="rounded-2xl h-12 bg-muted/30 border-none focus-visible:ring-primary/20"
                 value={formData.title}
                 onChange={(e) => updateFormData("title", e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest">The Problem</Label>
+              <Input 
+                placeholder="What challenge are you solving?" 
+                className="rounded-2xl h-12 bg-muted/30 border-none focus-visible:ring-primary/20"
+                value={formData.problem}
+                onChange={(e) => updateFormData("problem", e.target.value)}
               />
             </div>
             

@@ -29,7 +29,6 @@ interface IdeaCardProps {
 
 export function IdeaCard({ idea, priority = false }: IdeaCardProps) {
   const [isLiked, setIsLiked] = useState(false);
-  const [showDescription, setShowDescription] = useState(false);
   const { toast } = useToast();
 
   const userHandle = idea.userName.toLowerCase().replace(/\s/g, '');
@@ -51,6 +50,7 @@ export function IdeaCard({ idea, priority = false }: IdeaCardProps) {
 
   const displayLikes = idea.likes + (isLiked ? 1 : 0);
   const isVideo = idea.mediaUrl.includes('blob:') || idea.mediaUrl.endsWith('.mp4') || idea.mediaUrl.endsWith('.webm') || idea.mediaUrl.includes('gtv-videos-bucket');
+  const isTextPost = idea.mediaUrl.includes('textpost');
 
   return (
     <div className="bg-card rounded-[2.5rem] idea-card-shadow overflow-hidden border border-border/50 transition-all hover:shadow-2xl hover:border-primary/20">
@@ -75,7 +75,7 @@ export function IdeaCard({ idea, priority = false }: IdeaCardProps) {
           </button>
         </div>
 
-        <div className="space-y-1.5">
+        <Link href={`/idea/${idea.id}`} className="block space-y-1.5 cursor-pointer">
           <h3 className="text-lg font-black text-primary uppercase tracking-tighter leading-none">
             {idea.title}
           </h3>
@@ -87,50 +87,46 @@ export function IdeaCard({ idea, priority = false }: IdeaCardProps) {
             </p>
           </div>
 
-          {showDescription && (
-            <div className="mt-3 pt-3 border-t border-muted animate-in fade-in slide-in-from-top-1 duration-200">
-              <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">Full Brief</p>
-              <p className="text-sm text-foreground/70 leading-relaxed font-medium">
+          {isTextPost && (
+            <div className="mt-2 pt-2 border-t border-muted/50">
+              <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">Detailed Brief</p>
+              <p className="text-sm text-foreground/70 leading-relaxed font-medium line-clamp-3">
                 {idea.description}
               </p>
+              <p className="text-[10px] font-black text-secondary mt-2 uppercase">Click to discuss & message</p>
             </div>
           )}
-
-          <button 
-            onClick={(e) => { e.preventDefault(); setShowDescription(!showDescription); }}
-            className="text-[11px] font-black text-secondary hover:text-secondary/80 mt-1 uppercase tracking-tighter"
-          >
-            {showDescription ? "See less" : "See more details"}
-          </button>
-        </div>
+        </Link>
       </div>
 
-      <Link href={`/idea/${idea.id}`} className="block relative aspect-square w-full mx-auto overflow-hidden bg-muted">
-        {isVideo ? (
-          <div className="relative w-full h-full flex items-center justify-center bg-black">
-            <video src={idea.mediaUrl} className="w-full h-full object-cover opacity-80" muted />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="bg-white/20 backdrop-blur-md p-4 rounded-full">
-                <Play className="text-white fill-white" size={32} />
+      {!isTextPost && (
+        <Link href={`/idea/${idea.id}`} className="block relative aspect-square w-full mx-auto overflow-hidden bg-muted">
+          {isVideo ? (
+            <div className="relative w-full h-full flex items-center justify-center bg-black">
+              <video src={idea.mediaUrl} className="w-full h-full object-cover opacity-80" muted />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="bg-white/20 backdrop-blur-md p-4 rounded-full">
+                  <Play className="text-white fill-white" size={32} />
+                </div>
               </div>
             </div>
+          ) : (
+            <Image
+              src={idea.mediaUrl}
+              alt={idea.title}
+              fill
+              priority={priority}
+              className="object-cover transition-transform hover:scale-105 duration-700"
+            />
+          )}
+          <div className="absolute top-4 left-4">
+            <Badge className="bg-primary/90 text-white border-none backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-1.5 shadow-lg">
+              <Lightbulb size={12} className="fill-current" />
+              <span className="text-[10px] font-black uppercase tracking-wider">Join Discussion</span>
+            </Badge>
           </div>
-        ) : (
-          <Image
-            src={idea.mediaUrl}
-            alt={idea.title}
-            fill
-            priority={priority}
-            className="object-cover transition-transform hover:scale-105 duration-700"
-          />
-        )}
-        <div className="absolute top-4 left-4">
-          <Badge className="bg-primary/90 text-white border-none backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-1.5 shadow-lg">
-            <Lightbulb size={12} className="fill-current" />
-            <span className="text-[10px] font-black uppercase tracking-wider">Join Discussion</span>
-          </Badge>
-        </div>
-      </Link>
+        </Link>
+      )}
 
       <div className="flex items-center justify-between px-5 py-4">
         <div className="flex items-center gap-5">
@@ -165,7 +161,7 @@ export function IdeaCard({ idea, priority = false }: IdeaCardProps) {
                 ))}
             </div>
             <span className="text-[11px] font-black uppercase tracking-tighter text-foreground/70">
-              {displayLikes >= 1000 ? `${(displayLikes / 1000).toFixed(1)}k` : displayLikes} Supporters
+              {displayLikes >= 1000 ? `${(displayLikes / 1000).toFixed(1)}k` : displayLikes}
             </span>
         </div>
       </div>
