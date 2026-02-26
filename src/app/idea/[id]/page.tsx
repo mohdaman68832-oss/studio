@@ -21,7 +21,7 @@ const MOCK_IDEAS = [
     title: "EcoConnect: Smart Grid for Neighborhoods",
     problem: "Rising energy costs and inefficient localized energy distribution.",
     description: "A decentralized platform enabling neighbors to share excess solar energy with zero transaction fees using blockchain technology.",
-    category: "Sustainability",
+    category: "Technology",
     userName: "Alex Rivera",
     userAvatar: "https://picsum.photos/seed/user1/100/100",
     mediaUrl: "https://picsum.photos/seed/tech/800/600",
@@ -39,41 +39,41 @@ const MOCK_IDEAS = [
     innovationScore: 88,
   },
   {
-    id: "4",
-    title: "Shadow Realm: Next-Gen VR RPG",
-    problem: "Lack of truly immersive and reactive environments in current VR gaming.",
-    description: "A VR RPG where the world dynamically evolves based on your choices using generative AI for NPC dialogue and quest generation.",
+    id: "3",
+    title: "Minimalist Productivity System",
+    problem: "App overload and digital distraction.",
+    description: "A text-based, ultra-fast productivity system that works in the terminal or as a simple web app. No distractions, just focus.",
+    category: "Business",
+    userName: "Marcus Vane",
+    userAvatar: "https://picsum.photos/seed/user3/100/100",
+    mediaUrl: "", 
+    innovationScore: 76,
+  },
+  {
+    id: "m1",
+    title: "When the code finally works",
+    problem: "Coding is hard, debugging is harder.",
+    description: "That feeling when you find the missing semicolon after 3 hours of searching.",
     category: "Meme",
     userName: "Kaelen Voss",
     userAvatar: "https://picsum.photos/seed/kaelen/100/100",
-    mediaUrl: "https://picsum.photos/seed/gaming/800/600",
-    innovationScore: 95,
+    mediaUrl: "https://picsum.photos/seed/meme1/800/800",
+    innovationScore: 99,
   },
   {
-    id: "5",
-    title: "CanvasFlow: Collaborative Digital Murals",
-    problem: "Artists struggling to collaborate in real-time on large-scale digital projects.",
-    description: "An infinite digital canvas where hundreds of artists can contribute to a single mural simultaneously with low latency and smart layer management.",
-    category: "Art",
+    id: "m2",
+    title: "AI taking over the world",
+    problem: "AI hype vs reality.",
+    description: "Expectation: Robots everywhere. Reality: My vacuum cleaner is stuck under the sofa again.",
+    category: "Meme",
     userName: "Maya Artiste",
     userAvatar: "https://picsum.photos/seed/maya/100/100",
-    mediaUrl: "https://picsum.photos/seed/artpro/800/600",
-    innovationScore: 84,
-  },
-  {
-    id: "3",
-    title: "Aura: Personal Air Purifier",
-    problem: "High levels of urban air pollution affecting daily respiratory health.",
-    description: "Stylish, portable neck-worn air purifier using ionized filtration to create a clean air bubble around the user in polluted urban areas.",
-    category: "Technology",
-    userName: "Marcus Vane",
-    userAvatar: "https://picsum.photos/seed/user3/100/100",
-    mediaUrl: "", // Text post
-    innovationScore: 76,
+    mediaUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+    innovationScore: 95,
   }
 ];
 
-// Re-creating Union Mock Data Logic to handle dynamically generated post IDs
+// Re-creating Union Mock Data Logic
 const getUnionMockPost = (ideaId: string) => {
   if (!ideaId.startsWith('post-')) return null;
   const i = parseInt(ideaId.replace('post-', ''));
@@ -81,16 +81,13 @@ const getUnionMockPost = (ideaId: string) => {
     id: ideaId,
     title: [
       "Neural Mesh Network", "Smart Grid AI", "Bio-degradable Tech", "Solar Glass v2", 
-      "Haptic Learning", "Urban Wind Turbine", "Water Filter IoT", "Clean Air Necklace",
-      "Self-Healing Materials", "Vertical Farm Controller", "Robot Companion", "Exo-Suit for Logistics",
-      "Mind-Link VR", "Ocean Plastic Recycler", "Carbon Capture Fan", "Green Blockchain",
-      "AI Medical Assistant", "Smart Soil Sensor", "Portable Hydro Generator", "Solar Car Paint"
-    ][i % 20],
+      "Haptic Learning", "Urban Wind Turbine", "Water Filter IoT", "Clean Air Necklace"
+    ][i % 8],
     description: "Exploring the limits of what is possible with modern engineering and design. This project focuses on high-impact scalability for urban environments.",
-    problem: "Traditional solutions are too slow, expensive, and environmentally damaging for our current needs.",
+    problem: "Traditional solutions are too slow, expensive, and environmentally damaging.",
     category: i % 2 === 0 ? "Technology" : "Sustainability",
-    userName: ["Alex Rivera", "Sarah Chen", "Marcus Vane", "Elena Gilbert", "Tony Stark"][i % 5],
-    userAvatar: `https://picsum.photos/seed/user${i % 5}/100/100`,
+    userName: ["Alex Rivera", "Sarah Chen", "Marcus Vane", "Elena Gilbert"][i % 4],
+    userAvatar: `https://picsum.photos/seed/user${i % 4}/100/100`,
     mediaUrl: i % 4 === 0 
       ? "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" 
       : `https://picsum.photos/seed/innovation${i}/800/800`,
@@ -167,7 +164,7 @@ export default function IdeaDetailPage() {
     );
   }
 
-  const isVideo = idea?.mediaUrl && (idea?.mediaUrl?.includes('blob:') || idea?.mediaUrl?.endsWith('.mp4') || idea?.mediaUrl?.endsWith('.webm') || idea?.mediaUrl?.includes('gtv-videos-bucket'));
+  const isVideo = idea?.mediaUrl && (idea?.mediaUrl?.includes('blob:') || idea?.mediaUrl?.endsWith('.mp4') || idea?.mediaUrl?.endsWith('.webm') || idea?.mediaUrl?.includes('gtv-videos-bucket') || idea?.mediaUrl?.startsWith('data:video'));
   const isTextPost = !idea?.mediaUrl || idea?.mediaUrl?.includes('textpost') || idea?.mediaUrl === "";
 
   return (

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { IdeaCard } from "@/components/feed/idea-card";
@@ -15,13 +16,13 @@ const MOCK_IDEAS = [
     title: "EcoConnect: Smart Grid for Neighborhoods",
     problem: "Rising energy costs and inefficient localized energy distribution.",
     description: "A decentralized platform enabling neighbors to share excess solar energy with zero transaction fees using blockchain technology.",
-    category: "Meme",
+    category: "Technology",
     userName: "Alex Rivera",
     userAvatar: "https://picsum.photos/seed/user1/100/100",
     mediaUrl: "https://picsum.photos/seed/tech/800/600",
     innovationScore: 92,
-    tags: ["Meme", "Special", "Energy"],
-    likes: 0,
+    tags: ["Energy", "Blockchain"],
+    likes: 124,
   },
   {
     id: "2",
@@ -34,7 +35,59 @@ const MOCK_IDEAS = [
     mediaUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
     innovationScore: 88,
     tags: ["Health", "AI", "VideoDemo"],
-    likes: 0,
+    likes: 89,
+  },
+  {
+    id: "3",
+    title: "Minimalist Productivity System",
+    problem: "App overload and digital distraction.",
+    description: "A text-based, ultra-fast productivity system that works in the terminal or as a simple web app. No distractions, just focus.",
+    category: "Business",
+    userName: "Marcus Vane",
+    userAvatar: "https://picsum.photos/seed/user3/100/100",
+    mediaUrl: "", // Text post
+    innovationScore: 76,
+    tags: ["Focus", "Minimalism"],
+    likes: 45,
+  },
+  {
+    id: "m1",
+    title: "When the code finally works",
+    problem: "Coding is hard, debugging is harder.",
+    description: "That feeling when you find the missing semicolon after 3 hours of searching.",
+    category: "Meme",
+    userName: "Kaelen Voss",
+    userAvatar: "https://picsum.photos/seed/kaelen/100/100",
+    mediaUrl: "https://picsum.photos/seed/meme1/800/800",
+    innovationScore: 99,
+    tags: ["DevLife", "Relatable"],
+    likes: 2450,
+  },
+  {
+    id: "m2",
+    title: "AI taking over the world",
+    problem: "AI hype vs reality.",
+    description: "Expectation: Robots everywhere. Reality: My vacuum cleaner is stuck under the sofa again.",
+    category: "Meme",
+    userName: "Maya Artiste",
+    userAvatar: "https://picsum.photos/seed/maya/100/100",
+    mediaUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+    innovationScore: 95,
+    tags: ["AI", "Funny"],
+    likes: 1800,
+  },
+  {
+    id: "m3",
+    title: "The Innovation Cycle",
+    problem: "Startup life is a roller coaster.",
+    description: "99% perspiration, 1% inspiration, and 100% coffee.",
+    category: "Meme",
+    userName: "Tony Stark",
+    userAvatar: "https://picsum.photos/seed/tony/100/100",
+    mediaUrl: "https://picsum.photos/seed/meme2/800/800",
+    innovationScore: 82,
+    tags: ["Startups", "Hustle"],
+    likes: 720,
   }
 ];
 
@@ -59,25 +112,21 @@ export default function FeedPage() {
   const { data: firestoreIdeas, isLoading: loading } = useCollection(ideasQuery);
 
   const ideasToDisplay = useMemo(() => {
-    const base = firestoreIdeas && firestoreIdeas.length > 0 ? firestoreIdeas : MOCK_IDEAS;
+    const base = firestoreIdeas && firestoreIdeas.length > 0 ? [...firestoreIdeas, ...MOCK_IDEAS] : MOCK_IDEAS;
     
+    // Deduplicate by ID if both mock and firestore have same IDs
+    const unique = Array.from(new Map(base.map(item => [item.id, item])).values());
+
     if (activeCategory === "Meme") {
-      return base.filter(i => i.category?.toLowerCase() === "meme");
+      return unique.filter(i => i.category?.toLowerCase() === "meme");
     }
 
     if (activeCategory === "All") {
-      // If user has interests, filter by them or show Memes
-      if (profile?.interests && profile.interests.length > 0) {
-        return base.filter(i => 
-          profile.interests.includes(i.category) || 
-          i.category?.toLowerCase() === "meme" 
-        );
-      }
-      return base;
+      return unique;
     }
 
-    return base;
-  }, [firestoreIdeas, activeCategory, profile]);
+    return unique;
+  }, [firestoreIdeas, activeCategory]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -126,7 +175,7 @@ export default function FeedPage() {
         </div>
       </header>
 
-      {/* Category Bar: No longer sticky */}
+      {/* Category Bar: Not sticky anymore */}
       <div className="flex w-full gap-2 -mx-4 px-4 pt-2 pb-4 mb-2 border-b border-border/50">
         {CATEGORIES.map((cat) => (
           <Button 
