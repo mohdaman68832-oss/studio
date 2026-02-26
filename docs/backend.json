@@ -1,64 +1,485 @@
-
 {
   "entities": {
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
+      "type": "object",
+      "description": "Represents a user's public profile information and aggregated statistics within the InnovateSphere application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserProfile entity."
+        },
+        "username": {
+          "type": "string",
+          "description": "The user's chosen display name, which must be unique."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address, used for contact and potentially login identity. (Note: Actual authentication credentials are not stored here).",
+          "format": "email"
+        },
+        "profilePictureUrl": {
+          "type": "string",
+          "description": "URL to the user's profile image.",
+          "format": "uri"
+        },
+        "bio": {
+          "type": "string",
+          "description": "A short biographical description provided by the user."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the user's profile was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the user's profile was last updated.",
+          "format": "date-time"
+        },
+        "totalIdeasPosted": {
+          "type": "number",
+          "description": "The total number of ideas posted by this user. (For User Dashboard Analytics)"
+        },
+        "totalViewsReceived": {
+          "type": "number",
+          "description": "The sum of all views across all ideas posted by this user. (For User Dashboard Analytics)"
+        },
+        "averageRatingReceived": {
+          "type": "number",
+          "description": "The average rating received across all ideas posted by this user. (For User Dashboard Analytics)"
+        },
+        "totalIdeasSaved": {
+          "type": "number",
+          "description": "The total number of ideas this user has saved to their personal collection. (For User Dashboard Analytics)"
+        },
+        "collaborationRequestsCount": {
+          "type": "number",
+          "description": "The total number of collaboration requests received by this user. (For User Dashboard Analytics)"
+        }
+      },
+      "required": [
+        "id",
+        "username",
+        "email",
+        "createdAt",
+        "updatedAt",
+        "totalIdeasPosted",
+        "totalViewsReceived",
+        "averageRatingReceived",
+        "totalIdeasSaved",
+        "collaborationRequestsCount"
+      ]
+    },
     "Idea": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Idea",
-      "description": "An innovative idea post.",
       "type": "object",
+      "description": "Represents an innovative idea submitted by a user, including its details, media, and AI-generated analysis.",
       "properties": {
-        "title": { "type": "string" },
-        "description": { "type": "string" },
-        "category": { "type": "string" },
-        "mediaUrl": { "type": "string" },
-        "userName": { "type": "string" },
-        "userAvatar": { "type": "string" },
-        "innovationScore": { "type": "number" },
-        "tags": { "type": "array", "items": { "type": "string" } }
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Idea entity."
+        },
+        "authorId": {
+          "type": "string",
+          "description": "Reference to the UserProfile who posted this idea. (Relationship: UserProfile 1:N Idea)"
+        },
+        "title": {
+          "type": "string",
+          "description": "The concise title of the idea."
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description or overview of the idea."
+        },
+        "problemStatement": {
+          "type": "string",
+          "description": "A description of the problem that the idea aims to solve."
+        },
+        "solutionDescription": {
+          "type": "string",
+          "description": "A description of how the idea provides a solution to the stated problem."
+        },
+        "targetAudience": {
+          "type": "string",
+          "description": "The intended target users or market for this idea."
+        },
+        "category": {
+          "type": "string",
+          "description": "The category or domain to which the idea belongs (e.g., 'Technology', 'Healthcare', 'Art')."
+        },
+        "desiredFeedbackAreas": {
+          "type": "string",
+          "description": "Specific areas on which the idea's author is seeking feedback."
+        },
+        "mediaAssetUrls": {
+          "type": "array",
+          "description": "An array of URLs pointing to images or videos associated with the idea.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tags": {
+          "type": "array",
+          "description": "An array of keywords or tags associated with the idea for discoverability.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "innovationScore": {
+          "type": "number",
+          "description": "AI-generated score indicating the level of innovation of the idea."
+        },
+        "marketPotentialScore": {
+          "type": "number",
+          "description": "AI-generated score indicating the market potential of the idea."
+        },
+        "uniquenessLevelScore": {
+          "type": "number",
+          "description": "AI-generated score indicating the uniqueness level of the idea."
+        },
+        "improvementSuggestions": {
+          "type": "array",
+          "description": "AI-generated suggestions for improving the idea.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the idea was first posted.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the idea was last updated.",
+          "format": "date-time"
+        },
+        "viewCount": {
+          "type": "number",
+          "description": "The total number of times this idea has been viewed."
+        },
+        "saveCount": {
+          "type": "number",
+          "description": "The total number of times this idea has been saved by other users."
+        },
+        "ratingCount": {
+          "type": "number",
+          "description": "The total number of ratings received for this idea."
+        },
+        "averageRating": {
+          "type": "number",
+          "description": "The average rating score received for this idea."
+        }
       },
-      "required": ["title", "description", "category", "userName"]
+      "required": [
+        "id",
+        "authorId",
+        "title",
+        "description",
+        "problemStatement",
+        "solutionDescription",
+        "targetAudience",
+        "category",
+        "desiredFeedbackAreas",
+        "mediaAssetUrls",
+        "tags",
+        "innovationScore",
+        "marketPotentialScore",
+        "uniquenessLevelScore",
+        "improvementSuggestions",
+        "createdAt",
+        "updatedAt",
+        "viewCount",
+        "saveCount",
+        "ratingCount",
+        "averageRating"
+      ]
     },
-    "Suggestion": {
-      "title": "Suggestion",
-      "description": "A feedback or suggestion on an idea.",
+    "IdeaRating": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "IdeaRating",
       "type": "object",
+      "description": "Represents a single rating given by a user to an idea.",
       "properties": {
-        "text": { "type": "string" },
-        "userName": { "type": "string" },
-        "userAvatar": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the IdeaRating entity."
+        },
+        "raterId": {
+          "type": "string",
+          "description": "Reference to the UserProfile who submitted the rating. (Relationship: UserProfile 1:N IdeaRating)"
+        },
+        "ideaId": {
+          "type": "string",
+          "description": "Reference to the Idea being rated. (Relationship: Idea 1:N IdeaRating)"
+        },
+        "score": {
+          "type": "number",
+          "description": "The numerical rating given to the idea (e.g., 1 to 5)."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the rating was submitted.",
+          "format": "date-time"
+        }
       },
-      "required": ["text", "userName", "createdAt"]
+      "required": [
+        "id",
+        "raterId",
+        "ideaId",
+        "score",
+        "createdAt"
+      ]
     },
-    "Union": {
-      "title": "Union",
-      "description": "A collaborative group or union of innovators.",
+    "IdeaFeedback": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "IdeaFeedback",
       "type": "object",
+      "description": "Represents a piece of feedback or a comment provided by a user on an idea.",
       "properties": {
-        "name": { "type": "string" },
-        "description": { "type": "string" },
-        "category": { "type": "string" },
-        "memberCount": { "type": "number" },
-        "avatarUrl": { "type": "string" },
-        "createdBy": { "type": "string" }
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the IdeaFeedback entity."
+        },
+        "feedbackerId": {
+          "type": "string",
+          "description": "Reference to the UserProfile who provided the feedback. (Relationship: UserProfile 1:N IdeaFeedback)"
+        },
+        "ideaId": {
+          "type": "string",
+          "description": "Reference to the Idea on which the feedback was provided. (Relationship: Idea 1:N IdeaFeedback)"
+        },
+        "comment": {
+          "type": "string",
+          "description": "The textual content of the feedback or comment."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the feedback was submitted.",
+          "format": "date-time"
+        },
+        "parentFeedbackId": {
+          "type": "string",
+          "description": "Optional reference to another IdeaFeedback entity if this is a reply. (Relationship: IdeaFeedback 1:N IdeaFeedback)"
+        }
       },
-      "required": ["name", "description", "category"]
+      "required": [
+        "id",
+        "feedbackerId",
+        "ideaId",
+        "comment",
+        "createdAt"
+      ]
+    },
+    "CollaborationSession": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CollaborationSession",
+      "type": "object",
+      "description": "Represents a real-time collaboration session centered around a specific idea.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the CollaborationSession entity."
+        },
+        "ideaId": {
+          "type": "string",
+          "description": "Reference to the Idea around which this collaboration session is formed. (Relationship: Idea 1:N CollaborationSession)"
+        },
+        "creatorId": {
+          "type": "string",
+          "description": "Reference to the UserProfile who initiated this collaboration session. (Relationship: UserProfile 1:N CollaborationSession)"
+        },
+        "participantIds": {
+          "type": "array",
+          "description": "An array of UserProfile IDs participating in this collaboration session. (Relationship: UserProfile N:N CollaborationSession)",
+          "items": {
+            "type": "string"
+          }
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the collaboration session."
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief description of the collaboration session's purpose."
+        },
+        "status": {
+          "type": "string",
+          "description": "The current status of the collaboration session (e.g., 'active', 'completed', 'archived')."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the collaboration session was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the collaboration session was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "ideaId",
+        "creatorId",
+        "participantIds",
+        "title",
+        "description",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ChatMessage": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ChatMessage",
+      "type": "object",
+      "description": "Represents a single message exchanged within a real-time collaboration chat session.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the ChatMessage entity."
+        },
+        "sessionId": {
+          "type": "string",
+          "description": "Reference to the CollaborationSession this message belongs to. (Relationship: CollaborationSession 1:N ChatMessage)"
+        },
+        "senderId": {
+          "type": "string",
+          "description": "Reference to the UserProfile who sent this message. (Relationship: UserProfile 1:N ChatMessage)"
+        },
+        "content": {
+          "type": "string",
+          "description": "The actual text content of the chat message."
+        },
+        "sentAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the message was sent.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "sessionId",
+        "senderId",
+        "content",
+        "sentAt"
+      ]
     }
   },
   "auth": {
-    "providers": ["google.com"]
+    "providers": [
+      "password",
+      "anonymous"
+    ]
   },
   "firestore": {
-    "/ideas/{ideaId}": {
-      "schema": "Idea",
-      "description": "Collection of innovative ideas."
-    },
-    "/ideas/{ideaId}/suggestions/{suggestionId}": {
-      "schema": "Suggestion",
-      "description": "Sub-collection of live suggestions for a specific idea."
-    },
-    "/unions/{unionId}": {
-      "schema": "Union",
-      "description": "Global unions for collaboration."
-    }
+    "structure": [
+      {
+        "path": "/userProfiles/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores user's public profile information and aggregated analytics. Access is restricted to the owner (matching `userId` with `request.auth.uid`) for write operations, and public read for profile display. Owned by `userId`.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique ID of the user, matching their Firebase Authentication UID."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/ideas/{ideaId}",
+        "definition": {
+          "entityName": "Idea",
+          "schema": {
+            "$ref": "#/backend/entities/Idea"
+          },
+          "description": "Stores details of innovative ideas submitted by users. Includes `authorId` for ownership checks. Publicly readable (for Idea Feed), write/update/delete restricted to `authorId`. Supports QAP for idea discovery.",
+          "params": [
+            {
+              "name": "ideaId",
+              "description": "The unique ID of the idea."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/ideaRatings/{ratingId}",
+        "definition": {
+          "entityName": "IdeaRating",
+          "schema": {
+            "$ref": "#/backend/entities/IdeaRating"
+          },
+          "description": "Stores individual user ratings for ideas. Includes denormalized `raterId` and `ideaId` for authorization independence. Publicly readable (to contribute to averages), write/update/delete restricted to `raterId`.",
+          "params": [
+            {
+              "name": "ratingId",
+              "description": "The unique ID of the idea rating."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/ideaFeedbacks/{feedbackId}",
+        "definition": {
+          "entityName": "IdeaFeedback",
+          "schema": {
+            "$ref": "#/backend/entities/IdeaFeedback"
+          },
+          "description": "Stores user feedback and comments on ideas. Includes denormalized `feedbackerId` and `ideaId` for authorization independence. Publicly readable, write/update/delete restricted to `feedbackerId`.",
+          "params": [
+            {
+              "name": "feedbackId",
+              "description": "The unique ID of the idea feedback."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/collaborationSessions/{sessionId}",
+        "definition": {
+          "entityName": "CollaborationSession",
+          "schema": {
+            "$ref": "#/backend/entities/CollaborationSession"
+          },
+          "description": "Manages real-time collaboration sessions for ideas. Includes `creatorId` and denormalized `participantIds` array (membership map) for authorization independence. Access is restricted to `creatorId` or any `participantId`.",
+          "params": [
+            {
+              "name": "sessionId",
+              "description": "The unique ID of the collaboration session."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/collaborationSessions/{sessionId}/chatMessages/{messageId}",
+        "definition": {
+          "entityName": "ChatMessage",
+          "schema": {
+            "$ref": "#/backend/entities/ChatMessage"
+          },
+          "description": "Stores individual chat messages within a collaboration session. Includes denormalized `creatorId` and `participantIds` from the parent session for authorization independence. Write/read access is restricted to session `participantIds`.",
+          "params": [
+            {
+              "name": "sessionId",
+              "description": "The unique ID of the parent collaboration session."
+            },
+            {
+              "name": "messageId",
+              "description": "The unique ID of the chat message."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure for InnovateSphere prioritizes security, scalability, and debuggability by adhering to the core design principles and mandates. The central strategy is **Authorization Independence via Denormalization** (Mandate A), which eliminates the need for expensive and complex `get()` calls in Firestore Security Rules, thereby enabling atomic operations and simplifying rule logic. Each document requiring access control contains the necessary authorization context (e.g., `ownerId`, `members` map) directly within its fields.\n\n**Key structural decisions and how they address mandates:**\n\n1.  **User Profiles (`/userProfiles/{userId}`):** User-specific public data is stored in a top-level collection. Ownership is implicitly path-based (`userId` matches `request.auth.uid`). This structure is simple and secure for personal data, allowing `userId` to directly control access to their profile. This directly aligns with 'Private Data: Prefer Path-Based ownership' (Mandate C.1).\n\n2.  **Ideas (`/ideas/{ideaId}`):** Ideas are publicly discoverable for the 'Idea Feed' UI feature, so they reside in a top-level collection. Each `Idea` document includes an `authorId` field. This `authorId` is used directly in security rules to grant write/update/delete permissions to the creator, ensuring authorization independence for all idea-related operations. The public readability of `/ideas` fully supports the **QAP (Query as you please, but authorize all access)** principle for the Idea Feed, as all documents in this collection have the same security posture (public read, owner write).\n\n3.  **Idea Ratings (`/ideaRatings/{ratingId}`) and Idea Feedback (`/ideaFeedbacks/{feedbackId}`):** These are also top-level collections. Crucially, each `IdeaRating` document includes `raterId` and `ideaId`, and each `IdeaFeedback` document includes `feedbackerId` and `ideaId`. This **denormalization** (Mandate A) means security rules for these documents do not need to perform `get()` operations on the parent `Idea` or `UserProfile` documents to determine authorization. For example, a rule can simply check `request.auth.uid == resource.data.raterId`. Both collections are structured for public readability to allow for aggregate calculations (e.g., average rating) and public comments, while write access is restricted to the respective `raterId`/`feedbackerId` (QAPs).\n\n4.  **Collaboration Sessions (`/collaborationSessions/{sessionId}`):** Collaboration is inherently multi-user. Each `CollaborationSession` document includes `creatorId` and a `participantIds` array. This array serves as a **membership map**, denormalizing the access list directly into the document. Security rules check if `request.auth.uid` is `creatorId` or present in `participantIds` for read/write access. This completely avoids `get()` calls for membership validation, ensuring authorization independence and enabling atomic updates (Mandate A, C.3).\n\n5.  **Chat Messages (`/collaborationSessions/{sessionId}/chatMessages/{messageId}`):** Chat messages are stored as a subcollection under `CollaborationSession`. To maintain **Authorization Independence** (Mandate A), each `ChatMessage` document **must denormalize** the `creatorId` and `participantIds` from its parent `CollaborationSession`. This allows rules to verify if `request.auth.uid` is authorized to read/write messages in a specific session without having to `get()` the parent `CollaborationSession` document. This is a critical application of denormalization for nested, collaborative data and aligns with 'Continue Hierarchy for Nested Data' (Mandate C.3).\n\n**Structural Segregation (Mandate B)** is achieved as each collection (or subcollection, with appropriate denormalization) maintains a homogeneous security posture. For example, all `Idea` documents are public read/author write, ensuring consistent and simple rules across the collection. The `status` field in `CollaborationSession` exemplifies **Explicit State Modeling** (Mandate D.1).\n\nThis structure provides clear, explicit authorization intent, simplifies security rules by removing complex dependency lookups, and supports efficient queries for UI features like the Idea Feed and User Dashboard Analytics."
   }
 }
