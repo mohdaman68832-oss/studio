@@ -57,6 +57,19 @@ const PALETTE = [
   "#9C27B0", "#E91E63", "#000000", "#F2F3F5", "#FFE4E1", "#3399FF", "#00CCFF", "#00BFFF"
 ];
 
+// Helper to calculate contrast color (Black or White) based on background brightness
+function getContrastColor(hexColor: string | undefined): string {
+  if (!hexColor || !hexColor.startsWith('#')) return 'inherit';
+  
+  const r = parseInt(hexColor.slice(1, 3), 16);
+  const g = parseInt(hexColor.slice(3, 5), 16);
+  const b = parseInt(hexColor.slice(5, 7), 16);
+  
+  // Brightness formula
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  return brightness >= 128 ? '#1A1A1A' : '#FFFFFF';
+}
+
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
@@ -127,10 +140,7 @@ export default function ProfilePage() {
         setFormData(prev => ({ ...prev, stickers: [...prev.stickers, newSticker] }));
         setActiveStickerId(newStickerId);
         setIsEditModalOpen(false);
-        toast({
-          title: "Sticker Added",
-          description: "Use 'Move' in settings to place it.",
-        });
+        toast({ title: "Sticker Added", description: "Use 'Move' in settings to place it." });
       }
     }
   };
@@ -139,10 +149,7 @@ export default function ProfilePage() {
     if (!activeColor) return;
     setFormData(prev => ({
       ...prev,
-      customColors: {
-        ...prev.customColors,
-        [zone]: activeColor
-      }
+      customColors: { ...prev.customColors, [zone]: activeColor }
     }));
   };
 
@@ -156,13 +163,8 @@ export default function ProfilePage() {
   const handleSaveProfile = async () => {
     if (!user || !profileRef) return;
     setIsSaving(true);
-
     try {
-      await updateProfile(user, {
-        displayName: formData.name,
-        photoURL: formData.profilePic
-      });
-
+      await updateProfile(user, { displayName: formData.name, photoURL: formData.profilePic });
       await updateDoc(profileRef, {
         bio: formData.bio,
         profilePictureUrl: formData.profilePic,
@@ -171,20 +173,12 @@ export default function ProfilePage() {
         customColors: formData.customColors,
         updatedAt: new Date().toISOString()
       });
-
-      toast({
-        title: "Success",
-        description: "Profile updated successfully!",
-      });
+      toast({ title: "Success", description: "Profile updated successfully!" });
       setIsEditModalOpen(false);
       setActiveStickerId(null);
       setIsPaintMode(false);
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Update Failed",
-        description: error.message,
-      });
+      toast({ variant: "destructive", title: "Update Failed", description: error.message });
     } finally {
       setIsSaving(false);
     }
@@ -207,11 +201,9 @@ export default function ProfilePage() {
 
   const handleStickerPointerMove = (e: React.PointerEvent, stickerId: string) => {
     if (draggedStickerId !== stickerId || !containerRef.current) return;
-
     const rect = containerRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
-
     setFormData(prev => ({
       ...prev,
       stickers: prev.stickers.map(s => s.id === stickerId ? { ...s, x, y } : s)
@@ -242,7 +234,6 @@ export default function ProfilePage() {
       style={{ backgroundColor: formData.customColors.background || "var(--background)" }}
       onClick={(e) => handleZoneClick(e, 'background')}
     >
-      
       {isPaintMode && activeColor && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] bg-white px-6 py-2 rounded-full shadow-2xl border-2 border-primary flex items-center gap-3">
           <div className="w-4 h-4 rounded-full border" style={{ backgroundColor: activeColor }}></div>
@@ -331,7 +322,7 @@ export default function ProfilePage() {
 
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-widest">Short Bio</Label>
-              <Textarea value={formData.bio} onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))} className="rounded-2xl h-20 bg-muted/20 border-none resize-none" />
+              <Textarea value={formData.bio} onChange={(prev) => setFormData(p => ({ ...p, bio: prev.target.value }))} className="rounded-2xl h-20 bg-muted/20 border-none resize-none" />
             </div>
 
             <div className="space-y-3">
@@ -390,10 +381,18 @@ export default function ProfilePage() {
         className="px-6 flex justify-between items-center relative z-[90] py-4 transition-colors duration-300 cursor-pointer"
         style={{ backgroundColor: formData.customColors.header }}
       >
-        <h1 className="text-2xl font-black text-primary uppercase tracking-tighter" onClick={(e) => e.stopPropagation()}>Profile</h1>
+        <h1 
+          className="text-2xl font-black uppercase tracking-tighter" 
+          style={{ color: getContrastColor(formData.customColors.header) }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          Profile
+        </h1>
         <Sheet open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full" onClick={(e) => e.stopPropagation()}><Settings size={22} className="text-primary" /></Button>
+            <Button variant="ghost" size="icon" className="rounded-full" onClick={(e) => e.stopPropagation()}>
+              <Settings size={22} style={{ color: getContrastColor(formData.customColors.header) }} />
+            </Button>
           </SheetTrigger>
           <SheetContent side="bottom" className="rounded-t-[2.5rem] p-6 border-none">
             <SheetHeader className="mb-6"><SheetTitle className="text-center text-sm font-black uppercase">Menu</SheetTitle></SheetHeader>
@@ -422,16 +421,32 @@ export default function ProfilePage() {
               <AvatarFallback data-protected="true">{user.displayName?.[0] || "U"}</AvatarFallback>
             </Avatar>
           </div>
-          <h2 className="text-2xl font-black text-foreground uppercase tracking-tighter mb-1" onClick={(e) => e.stopPropagation()}>{user.displayName || "Innovator"}</h2>
-          <p className="text-sm font-bold text-primary mb-4 tracking-widest uppercase" onClick={(e) => e.stopPropagation()}>@{profileData?.username || "user"}</p>
+          <h2 
+            className="text-2xl font-black uppercase tracking-tighter mb-1" 
+            style={{ color: getContrastColor(formData.customColors.userInfo) }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {user.displayName || "Innovator"}
+          </h2>
+          <p 
+            className="text-sm font-bold mb-4 tracking-widest uppercase" 
+            style={{ color: getContrastColor(formData.customColors.userInfo) }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            @{profileData?.username || "user"}
+          </p>
           
           {/* ZONE 3: BIO CARD (Within User Info) */}
           <div 
             onClick={(e) => handleZoneClick(e, 'bioCard')}
-            className="p-6 rounded-[2.5rem] border shadow-none w-full transition-colors duration-300 bg-white cursor-pointer"
+            className="p-6 rounded-[2.5rem] border shadow-none w-full transition-colors duration-300 cursor-pointer"
             style={{ backgroundColor: formData.customColors.bioCard || "#FFFFFF" }}
           >
-            <p className="text-center text-xs text-muted-foreground leading-relaxed font-medium italic" onClick={(e) => e.stopPropagation()}>
+            <p 
+              className="text-center text-xs leading-relaxed font-medium italic" 
+              style={{ color: getContrastColor(formData.customColors.bioCard) }}
+              onClick={(e) => e.stopPropagation()}
+            >
               {formData.bio || "Member since " + new Date(profileData?.createdAt || "").getFullYear()}
             </p>
           </div>
@@ -445,20 +460,20 @@ export default function ProfilePage() {
         style={{ backgroundColor: formData.customColors.statsSection }}
       >
         <div 
-          className="grid grid-cols-3 gap-8 w-full py-6 px-4 rounded-[2rem] border bg-white shadow-none transition-colors"
+          className="grid grid-cols-3 gap-8 w-full py-6 px-4 rounded-[2rem] border transition-colors shadow-none"
           style={{ backgroundColor: formData.customColors.statsSection || "#FFFFFF" }}
         >
           <div className="text-center" onClick={(e) => e.stopPropagation()}>
-            <p className="text-xl font-black text-primary">{profileData?.totalIdeasPosted || 0}</p>
-            <p className="text-[10px] uppercase font-black text-muted-foreground">Ideas</p>
+            <p className="text-xl font-black" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{profileData?.totalIdeasPosted || 0}</p>
+            <p className="text-[10px] uppercase font-black" style={{ color: getContrastColor(formData.customColors.statsSection), opacity: 0.6 }}>Ideas</p>
           </div>
           <div className="text-center border-x border-border/50" onClick={(e) => e.stopPropagation()}>
-            <p className="text-xl font-black text-primary">{(profileData?.totalViewsReceived || 0).toLocaleString()}</p>
-            <p className="text-[10px] uppercase font-black text-muted-foreground">Views</p>
+            <p className="text-xl font-black" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{(profileData?.totalViewsReceived || 0).toLocaleString()}</p>
+            <p className="text-[10px] uppercase font-black" style={{ color: getContrastColor(formData.customColors.statsSection), opacity: 0.6 }}>Views</p>
           </div>
           <div className="text-center" onClick={(e) => e.stopPropagation()}>
-            <p className="text-xl font-black text-primary">{(profileData?.totalIdeasSaved || 0).toLocaleString()}</p>
-            <p className="text-[10px] uppercase font-black text-muted-foreground">Saves</p>
+            <p className="text-xl font-black" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{(profileData?.totalIdeasSaved || 0).toLocaleString()}</p>
+            <p className="text-[10px] uppercase font-black" style={{ color: getContrastColor(formData.customColors.statsSection), opacity: 0.6 }}>Saves</p>
           </div>
         </div>
       </div>
@@ -472,9 +487,27 @@ export default function ProfilePage() {
             style={{ backgroundColor: formData.customColors.tabsList }}
           >
             <TabsList className="w-full bg-transparent border-none rounded-none px-6 h-14" onClick={(e) => e.stopPropagation()}>
-              <TabsTrigger value="my-ideas" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"><Grid size={22} /></TabsTrigger>
-              <TabsTrigger value="saved" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"><Bookmark size={22} /></TabsTrigger>
-              <TabsTrigger value="liked" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"><Heart size={22} /></TabsTrigger>
+              <TabsTrigger 
+                value="my-ideas" 
+                className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                style={{ color: getContrastColor(formData.customColors.tabsList) }}
+              >
+                <Grid size={22} />
+              </TabsTrigger>
+              <TabsTrigger 
+                value="saved" 
+                className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                style={{ color: getContrastColor(formData.customColors.tabsList) }}
+              >
+                <Bookmark size={22} />
+              </TabsTrigger>
+              <TabsTrigger 
+                value="liked" 
+                className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                style={{ color: getContrastColor(formData.customColors.tabsList) }}
+              >
+                <Heart size={22} />
+              </TabsTrigger>
             </TabsList>
           </div>
 
@@ -494,10 +527,10 @@ export default function ProfilePage() {
               </div>
             </TabsContent>
             <TabsContent value="saved" className="flex items-center justify-center py-20 opacity-30" onClick={(e) => e.stopPropagation()}>
-              <Bookmark size={40} />
+              <Bookmark size={40} style={{ color: getContrastColor(formData.customColors.tabsContent) }} />
             </TabsContent>
             <TabsContent value="liked" className="flex items-center justify-center py-20 opacity-30" onClick={(e) => e.stopPropagation()}>
-              <Heart size={40} />
+              <Heart size={40} style={{ color: getContrastColor(formData.customColors.tabsContent) }} />
             </TabsContent>
           </div>
         </Tabs>
