@@ -36,7 +36,7 @@ import { useRouter } from "next/navigation";
 type Step = 1 | 2 | 3;
 
 const AUDIENCE_KEYWORDS = [
-  "Mimi", "Art", "Game", "Study", "Technology", "Sustainability", "Healthcare", "Business", "Education", "Science", "Music"
+  "Meme", "Art", "Game", "Study", "Technology", "Sustainability", "Healthcare", "Business", "Education", "Science", "Music"
 ];
 
 export default function PostPage() {
@@ -53,7 +53,7 @@ export default function PostPage() {
     title: "",
     problem: "",
     description: "",
-    targetUsers: "", 
+    targetUsers: "Meme", // Default to Meme
   });
 
   const updateFormData = (field: string, value: any) => {
@@ -95,7 +95,7 @@ export default function PostPage() {
         title: formData.title,
         problem: formData.problem,
         description: formData.description,
-        category: formData.targetUsers || "Mimi",
+        category: formData.targetUsers || "Meme",
         userName: "John Innovator",
         userAvatar: "https://picsum.photos/seed/me/100/100",
         mediaUrl: mediaType === 'text' ? "" : (previewUrl || "https://picsum.photos/seed/placeholder/800/800"),
@@ -311,7 +311,7 @@ export default function PostPage() {
                       formData.targetUsers === keyword 
                         ? "bg-primary text-white border-primary shadow-md" 
                         : "bg-white border-muted-foreground/20 hover:border-primary/50",
-                      keyword === "Mimi" && "border-primary text-primary"
+                      keyword === "Meme" && "border-primary text-primary"
                     )}
                   >
                     {keyword}

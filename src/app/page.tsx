@@ -16,12 +16,12 @@ const MOCK_IDEAS = [
     title: "EcoConnect: Smart Grid for Neighborhoods",
     problem: "Rising energy costs and inefficient localized energy distribution.",
     description: "A decentralized platform enabling neighbors to share excess solar energy with zero transaction fees using blockchain technology.",
-    category: "Mimi",
+    category: "Meme",
     userName: "Alex Rivera",
     userAvatar: "https://picsum.photos/seed/user1/100/100",
     mediaUrl: "https://picsum.photos/seed/tech/800/600",
     innovationScore: 92,
-    tags: ["Mimi", "Special", "Energy"],
+    tags: ["Meme", "Special", "Energy"],
     likes: 245,
   },
   {
@@ -42,12 +42,12 @@ const MOCK_IDEAS = [
     title: "Shadow Realm: Next-Gen VR RPG",
     problem: "Lack of truly immersive and reactive environments in current VR gaming.",
     description: "A VR RPG where the world dynamically evolves based on your choices using generative AI for NPC dialogue and quest generation.",
-    category: "Mimi",
+    category: "Meme",
     userName: "Kaelen Voss",
     userAvatar: "https://picsum.photos/seed/kaelen/100/100",
     mediaUrl: "https://picsum.photos/seed/gaming/800/600",
     innovationScore: 95,
-    tags: ["Mimi", "Gaming", "AI"],
+    tags: ["Meme", "Gaming", "AI"],
     likes: 512,
   },
   {
@@ -78,7 +78,7 @@ const MOCK_IDEAS = [
   }
 ];
 
-const CATEGORIES = ["All", "Mimi"];
+const CATEGORIES = ["All", "Meme"];
 
 export default function FeedPage() {
   const db = useFirestore();

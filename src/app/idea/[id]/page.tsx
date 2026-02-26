@@ -43,7 +43,7 @@ const MOCK_IDEAS = [
     title: "Shadow Realm: Next-Gen VR RPG",
     problem: "Lack of truly immersive and reactive environments in current VR gaming.",
     description: "A VR RPG where the world dynamically evolves based on your choices using generative AI for NPC dialogue and quest generation.",
-    category: "Game",
+    category: "Meme",
     userName: "Kaelen Voss",
     userAvatar: "https://picsum.photos/seed/kaelen/100/100",
     mediaUrl: "https://picsum.photos/seed/gaming/800/600",
