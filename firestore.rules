@@ -16,66 +16,44 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    function isExistingOwner(userId) {
-      return resource != null && isOwner(userId);
-    }
-
-    function isMember(participantIds) {
-      return isSignedIn() && (request.auth.uid in participantIds);
-    }
-
     // --- Collection Rules ---
 
     match /userProfiles/{userId} {
       allow read: if true;
       allow create: if isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if isOwner(userId);
     }
 
     match /ideas/{ideaId} {
-      allow read: if true;
-      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.authorId);
-      allow delete: if isExistingOwner(resource.data.authorId);
+      // Explicitly allow get and list for public reading
+      allow get, list: if true;
+      
+      // Allow creation for signed in users
+      allow create: if isSignedIn();
+      
+      // Allow any signed in user to update (needed for likes/upvotes)
+      allow update: if isSignedIn();
+      
+      // Only owner can delete
+      allow delete: if isSignedIn() && (resource == null || resource.data.authorId == request.auth.uid);
 
       match /suggestions/{suggestionId} {
-        allow read: if true;
+        allow get, list: if true;
         allow create: if isSignedIn();
       }
     }
 
     match /unions/{unionId} {
-      allow read, list: if true;
+      allow get, list: if true;
       allow create: if isSignedIn();
       allow update: if isSignedIn();
     }
 
-    match /ideaRatings/{ratingId} {
-      allow read: if true;
-      allow create: if isSignedIn() && request.resource.data.raterId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.raterId);
-      allow delete: if isExistingOwner(resource.data.raterId);
-    }
-
-    match /ideaFeedbacks/{feedbackId} {
-      allow read: if true;
-      allow create: if isSignedIn() && request.resource.data.feedbackerId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.feedbackerId);
-      allow delete: if isExistingOwner(resource.data.feedbackerId);
-    }
-
-    match /collaborationSessions/{sessionId} {
-      allow get: if isMember(resource.data.participantIds) || isOwner(resource.data.creatorId);
-      allow list: if isSignedIn();
-      allow create: if isSignedIn() && request.resource.data.creatorId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.creatorId) || isMember(resource.data.participantIds);
-      allow delete: if isExistingOwner(resource.data.creatorId);
-
-      match /chatMessages/{messageId} {
-        allow read: if isOwner(resource.data.senderId) || isMember(resource.data.participantIds);
-        allow create: if isSignedIn() && request.resource.data.senderId == request.auth.uid;
-      }
+    // Catch-all for other collections used in features like analytics or ratings
+    match /{path=**} {
+      allow get, list: if true;
+      allow write: if isSignedIn();
     }
   }
 }

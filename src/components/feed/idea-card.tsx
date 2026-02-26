@@ -199,7 +199,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
           
           <div className="bg-muted/30 py-1.5 px-3 rounded-full border border-border/50">
               <span className="text-[11px] font-black uppercase tracking-tighter text-foreground/70">
-                {(idea.likes || 0) >= 1000 ? `${((idea.likes || 0) / 1000).toFixed(1)}k` : (idea.likes || 0)} Likes
+                {(idea.likes || 0)} upvotes
               </span>
           </div>
         </div>
@@ -273,7 +273,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
         
         <div className="flex items-center gap-3 bg-muted/30 py-1.5 px-3 rounded-full border border-border/50">
             <span className="text-[11px] font-black uppercase tracking-tighter text-foreground/70">
-              {(idea.likes || 0) >= 1000 ? `${((idea.likes || 0) / 1000).toFixed(1)}k` : (idea.likes || 0)} Likes
+              {(idea.likes || 0)} upvotes
             </span>
         </div>
       </div>
