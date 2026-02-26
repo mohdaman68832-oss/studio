@@ -165,17 +165,12 @@ export default function ProfilePage() {
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
 
-    if (isPlacingSticker && activeStickerId) {
+    if (activeStickerId) {
       setFormData(prev => ({
         ...prev,
         stickers: prev.stickers.map(s => s.id === activeStickerId ? { ...s, x, y } : s)
       }));
-      setIsPlacingSticker(false);
-    } else if (activeStickerId) {
-      setFormData(prev => ({
-        ...prev,
-        stickers: prev.stickers.map(s => s.id === activeStickerId ? { ...s, x, y } : s)
-      }));
+      if (isPlacingSticker) setIsPlacingSticker(false);
     }
   };
 
@@ -253,7 +248,7 @@ export default function ProfilePage() {
       )}
 
       {/* Floating Adjustment Bar */}
-      {activeStickerId && !isPlacingSticker && (
+      {activeStickerId && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] w-[90%] max-w-[340px] bg-white rounded-3xl shadow-2xl border-2 border-primary/20 p-4 space-y-4 animate-in slide-in-from-bottom-10">
           <div className="flex items-center justify-between">
              <span className="text-[10px] font-black uppercase tracking-widest text-primary">Adjust Sticker</span>
@@ -384,13 +379,16 @@ export default function ProfilePage() {
           isPaintMode && "cursor-crosshair"
         )}
       >
-        {/* Stickers - Rendered without filters to ensure clarity */}
+        {/* Stickers */}
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id}
-            className={cn("absolute z-40 cursor-pointer", activeStickerId === sticker.id && "ring-2 ring-primary ring-offset-2 rounded-xl")}
+            className={cn("absolute z-40 cursor-pointer pointer-events-auto", activeStickerId === sticker.id && "ring-2 ring-primary ring-offset-2 rounded-xl")}
             style={{ left: `${sticker.x}%`, top: `${sticker.y}%`, transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})` }}
-            onClick={(e) => { e.stopPropagation(); setActiveStickerId(sticker.id); }}
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              setActiveStickerId(sticker.id); 
+            }}
           >
             <div className="relative w-16 h-16 sm:w-20 sm:h-20">
               <Image src={sticker.url} alt="sticker" fill className="object-contain" />
@@ -418,10 +416,9 @@ export default function ProfilePage() {
           
           <div 
             onClick={(e) => handleZoneClick(e, 'bioCard')}
-            className="p-6 rounded-[2.5rem] border shadow-sm w-full transition-colors duration-500"
+            className="p-6 rounded-[2.5rem] border shadow-sm w-full transition-colors duration-500 bg-white"
             style={{ 
-              backgroundColor: formData.customColors.bioCard || "rgba(255, 255, 255, 0.9)",
-              // REMOVED blur from bioCard as requested
+              backgroundColor: formData.customColors.bioCard || "#FFFFFF",
             }}
           >
             <p className="text-center text-xs text-muted-foreground leading-relaxed italic">

@@ -44,8 +44,7 @@
 }
 
 .bottom-nav-blur {
-  /* REMOVED heavy blur to fix "blor" issues */
-  background-color: rgba(242, 243, 245, 0.95);
+  background-color: rgba(242, 243, 245, 1);
   box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
 }
 
