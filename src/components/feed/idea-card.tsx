@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowBigUp, MoreHorizontal, Share2, Play, MessageCircle, X } from "lucide-react";
+import { Heart, MoreHorizontal, Share2, Play, MessageCircle, X } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -73,24 +73,21 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
     const likeDocRef = doc(db, "ideas", idea.id, "likes", user.uid);
 
     if (isLiked) {
-      // Remove Like
+      // Remove Like (Decrement)
       deleteDoc(likeDocRef)
         .then(() => {
-          // Decrement global count
           setDoc(ideaRef, { likes: increment(-1) }, { merge: true });
         })
-        .catch(() => {})
         .finally(() => {
           setTimeout(() => setIsProcessing(false), 300);
         });
     } else {
-      // Add Like
+      // Add Like (Increment)
       setDoc(likeDocRef, { 
         timestamp: serverTimestamp(),
         userId: user.uid 
       })
         .then(() => {
-          // Increment global count
           setDoc(ideaRef, { 
             likes: increment(1),
             title: idea.title || "Untitled",
@@ -98,7 +95,6 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
             createdAt: serverTimestamp()
           }, { merge: true });
         })
-        .catch(() => {})
         .finally(() => {
           setTimeout(() => setIsProcessing(false), 300);
         });
@@ -120,7 +116,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
 
   const CardHeader = (
     <div className="flex items-center justify-between mb-1">
-      <Link href={`/profile/${userHandle}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity z-10">
+      <Link href={`/profile/${userHandle}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity z-10" onClick={(e) => e.stopPropagation()}>
         <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
           <AvatarImage src={idea.userAvatar} />
           <AvatarFallback>{(idea.userName || 'U')[0]}</AvatarFallback>
@@ -131,7 +127,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
           </span>
         </div>
       </Link>
-      <button className="text-muted-foreground p-2 hover:bg-muted rounded-full transition-colors">
+      <button type="button" className="text-muted-foreground p-2 hover:bg-muted rounded-full transition-colors" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
         <MoreHorizontal size={20} />
       </button>
     </div>
@@ -163,28 +159,26 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
 
   const LikeButton = (
     <button 
+      type="button"
       onClick={handleToggleLike}
       className={cn(
-        "flex items-center gap-2 transition-all duration-300 transform active:scale-125 group/like",
+        "flex items-center gap-2 transition-all duration-300 transform active:scale-125 group/like outline-none",
         isProcessing && "active-glow"
       )}
     >
-      <ArrowBigUp 
-        size={36} 
+      <Heart 
+        size={28} 
         className={cn(
           "transition-all duration-300",
           isLiked ? "text-secondary fill-current drop-shadow-[0_0_8px_rgba(255,69,0,0.4)]" : "text-foreground/30"
         )} 
       />
-      <div className="flex flex-col items-start">
-        <span className={cn(
-          "text-sm font-black transition-colors leading-none",
-          isLiked ? "text-secondary" : "text-foreground/40"
-        )}>
-          {likesCount}
-        </span>
-        <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground/30">Support</span>
-      </div>
+      <span className={cn(
+        "text-sm font-black transition-colors leading-none",
+        isLiked ? "text-secondary" : "text-foreground/40"
+      )}>
+        {likesCount}
+      </span>
     </button>
   );
 
@@ -224,16 +218,17 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
           </DialogContent>
         </Dialog>
 
-        <div className="flex items-center justify-start mt-4 gap-6">
+        <div className="flex items-center justify-start mt-4 gap-4">
             {LikeButton}
-            <Link href={`/idea/${idea.id}`} className="text-foreground hover:text-primary transition-all p-2">
-              <MessageCircle size={28} />
+            <Link href={`/idea/${idea.id}`} className="text-foreground hover:text-primary transition-all p-2" onClick={(e) => e.stopPropagation()}>
+              <MessageCircle size={26} />
             </Link>
             <button 
+              type="button"
               onClick={handleShare}
               className="text-foreground hover:text-primary transition-all p-2"
             >
-              <Share2 size={26} />
+              <Share2 size={24} />
             </button>
         </div>
       </div>
@@ -245,7 +240,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
       <div className="px-5 pt-5 pb-3 space-y-3">
         {CardHeader}
 
-        <Link href={`/idea/${idea.id}`} className="block space-y-2">
+        <Link href={`/idea/${idea.id}`} className="block space-y-2" onClick={(e) => e.stopPropagation()}>
           <h3 className="text-lg font-black text-primary uppercase tracking-tighter leading-none">
             {idea.title}
           </h3>
@@ -259,7 +254,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
       </div>
 
       {!isTextPost && (
-        <Link href={`/idea/${idea.id}`} className="block">
+        <Link href={`/idea/${idea.id}`} className="block" onClick={(e) => e.stopPropagation()}>
           {MediaContent}
         </Link>
       )}
@@ -267,10 +262,10 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
       <div className="flex items-center justify-between px-5 py-4">
         <div className="flex items-center gap-4">
           {LikeButton}
-          <Link href={`/idea/${idea.id}`} className="text-foreground hover:text-primary transition-colors p-2">
+          <Link href={`/idea/${idea.id}`} className="text-foreground hover:text-primary transition-colors p-2" onClick={(e) => e.stopPropagation()}>
             <MessageCircle size={24} />
           </Link>
-          <button onClick={handleShare} className="text-foreground hover:text-primary transition-colors p-2">
+          <button type="button" onClick={handleShare} className="text-foreground hover:text-primary transition-colors p-2">
             <Share2 size={24} />
           </button>
         </div>
