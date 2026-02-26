@@ -98,7 +98,7 @@ export default function PostPage() {
         category: formData.targetUsers || "Technology",
         userName: "John Innovator",
         userAvatar: "https://picsum.photos/seed/me/100/100",
-        mediaUrl: previewUrl || (mediaType === 'text' ? "https://picsum.photos/seed/textpost/800/800" : "https://picsum.photos/seed/placeholder/800/800"),
+        mediaUrl: mediaType === 'text' ? "" : (previewUrl || "https://picsum.photos/seed/placeholder/800/800"),
         innovationScore: 75,
         tags: [formData.targetUsers, "User-Generated"],
         createdAt: serverTimestamp(),

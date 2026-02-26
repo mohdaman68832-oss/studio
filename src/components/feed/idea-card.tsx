@@ -49,8 +49,8 @@ export function IdeaCard({ idea, priority = false }: IdeaCardProps) {
   };
 
   const displayLikes = idea.likes + (isLiked ? 1 : 0);
-  const isVideo = idea.mediaUrl.includes('blob:') || idea.mediaUrl.endsWith('.mp4') || idea.mediaUrl.endsWith('.webm') || idea.mediaUrl.includes('gtv-videos-bucket');
-  const isTextPost = idea.mediaUrl.includes('textpost');
+  const isVideo = idea.mediaUrl && (idea.mediaUrl.includes('blob:') || idea.mediaUrl.endsWith('.mp4') || idea.mediaUrl.endsWith('.webm') || idea.mediaUrl.includes('gtv-videos-bucket'));
+  const isTextPost = !idea.mediaUrl || idea.mediaUrl.includes('textpost') || idea.mediaUrl === "";
 
   return (
     <div className="bg-card rounded-[2.5rem] idea-card-shadow overflow-hidden border border-border/50 transition-all hover:shadow-2xl hover:border-primary/20">
@@ -75,7 +75,7 @@ export function IdeaCard({ idea, priority = false }: IdeaCardProps) {
           </button>
         </div>
 
-        <Link href={`/idea/${idea.id}`} className="block space-y-1.5 cursor-pointer">
+        <Link href={`/idea/${idea.id}`} className="block space-y-2 cursor-pointer">
           <h3 className="text-lg font-black text-primary uppercase tracking-tighter leading-none">
             {idea.title}
           </h3>
@@ -93,7 +93,7 @@ export function IdeaCard({ idea, priority = false }: IdeaCardProps) {
               <p className="text-sm text-foreground/70 leading-relaxed font-medium line-clamp-3">
                 {idea.description}
               </p>
-              <p className="text-[10px] font-black text-secondary mt-2 uppercase">Click to discuss & message</p>
+              <p className="text-[10px] font-black text-secondary mt-3 uppercase tracking-widest bg-secondary/5 inline-block px-3 py-1 rounded-full">Click to discuss & collaborate</p>
             </div>
           )}
         </Link>

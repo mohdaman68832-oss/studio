@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
@@ -117,7 +118,8 @@ export default function IdeaDetailPage() {
     );
   }
 
-  const isVideo = idea?.mediaUrl?.includes('blob:') || idea?.mediaUrl?.endsWith('.mp4') || idea?.mediaUrl?.endsWith('.webm') || idea?.mediaUrl?.includes('gtv-videos-bucket');
+  const isVideo = idea?.mediaUrl && (idea?.mediaUrl?.includes('blob:') || idea?.mediaUrl?.endsWith('.mp4') || idea?.mediaUrl?.endsWith('.webm') || idea?.mediaUrl?.includes('gtv-videos-bucket'));
+  const isTextPost = !idea?.mediaUrl || idea?.mediaUrl?.includes('textpost') || idea?.mediaUrl === "";
 
   return (
     <div className="max-w-md mx-auto h-screen bg-background flex flex-col">
@@ -133,30 +135,40 @@ export default function IdeaDetailPage() {
 
       <div className="flex-1 overflow-y-auto no-scrollbar" ref={scrollContainerRef}>
         <div className="p-4 space-y-6 pb-24">
-          <div className="relative aspect-video w-full rounded-[2rem] overflow-hidden border shadow-xl bg-black">
-            {isVideo ? (
-              <video src={idea?.mediaUrl} controls autoPlay muted className="w-full h-full object-contain" />
-            ) : (
-              <Image src={idea?.mediaUrl || "https://picsum.photos/seed/placeholder/800/800"} alt={idea?.title} fill className="object-cover" />
-            )}
-            <div className="absolute top-4 right-4">
-              <Badge className="bg-secondary/90 text-white border-none backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-1.5">
-                <Sparkles size={12} className="fill-current" />
-                <span className="text-[10px] font-black uppercase tracking-wider">{idea?.innovationScore}</span>
-              </Badge>
+          {!isTextPost && (
+            <div className="relative aspect-video w-full rounded-[2rem] overflow-hidden border shadow-xl bg-black">
+              {isVideo ? (
+                <video src={idea?.mediaUrl} controls autoPlay muted className="w-full h-full object-contain" />
+              ) : (
+                <Image src={idea?.mediaUrl || "https://picsum.photos/seed/placeholder/800/800"} alt={idea?.title} fill className="object-cover" />
+              )}
+              <div className="absolute top-4 right-4">
+                <Badge className="bg-secondary/90 text-white border-none backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-1.5">
+                  <Sparkles size={12} className="fill-current" />
+                  <span className="text-[10px] font-black uppercase tracking-wider">{idea?.innovationScore}</span>
+                </Badge>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="space-y-4 bg-white/50 backdrop-blur-sm p-5 rounded-[2rem] border border-border/50">
-            <div className="flex items-center gap-3">
-              <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
-                <AvatarImage src={idea?.userAvatar} />
-                <AvatarFallback>U</AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="text-sm font-black text-foreground">{idea?.userName}</p>
-                <p className="text-[10px] text-primary font-bold uppercase tracking-widest">{idea?.category}</p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
+                  <AvatarImage src={idea?.userAvatar} />
+                  <AvatarFallback>U</AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-sm font-black text-foreground">{idea?.userName}</p>
+                  <p className="text-[10px] text-primary font-bold uppercase tracking-widest">{idea?.category}</p>
+                </div>
               </div>
+              {isTextPost && (
+                <Badge className="bg-secondary/90 text-white border-none rounded-full px-3 py-1 flex items-center gap-1.5">
+                  <Sparkles size={12} className="fill-current" />
+                  <span className="text-[10px] font-black uppercase tracking-wider">{idea?.innovationScore}</span>
+                </Badge>
+              )}
             </div>
 
             <div className="space-y-1">
@@ -166,27 +178,29 @@ export default function IdeaDetailPage() {
                 <p className="text-sm text-foreground/80 font-bold leading-relaxed">{idea?.problem}</p>
               </div>
 
-              {showFullDescription && (
+              {isTextPost || showFullDescription ? (
                 <div className="mt-4 pt-4 border-t border-muted animate-in fade-in slide-in-from-top-2">
                   <p className="text-[9px] font-black uppercase tracking-[0.2em] text-primary mb-2">Detailed Brief</p>
                   <p className="text-sm text-foreground/70 leading-relaxed font-medium">
                     {idea?.description}
                   </p>
                 </div>
-              )}
+              ) : null}
 
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setShowFullDescription(!showFullDescription)}
-                className="mt-2 h-auto p-0 text-[10px] font-black uppercase tracking-widest text-secondary hover:bg-transparent"
-              >
-                {showFullDescription ? (
-                  <span className="flex items-center gap-1">Show Less <ChevronUp size={12} /></span>
-                ) : (
-                  <span className="flex items-center gap-1">See Full Description <ChevronDown size={12} /></span>
-                )}
-              </Button>
+              {!isTextPost && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setShowFullDescription(!showFullDescription)}
+                  className="mt-2 h-auto p-0 text-[10px] font-black uppercase tracking-widest text-secondary hover:bg-transparent"
+                >
+                  {showFullDescription ? (
+                    <span className="flex items-center gap-1">Show Less <ChevronUp size={12} /></span>
+                  ) : (
+                    <span className="flex items-center gap-1">See Full Description <ChevronDown size={12} /></span>
+                  )}
+                </Button>
+              )}
             </div>
           </div>
 
