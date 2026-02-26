@@ -63,8 +63,8 @@ export default function ProfilePage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isPlacingSticker, setIsPlacingSticker] = useState(false);
   const [activeStickerId, setActiveStickerId] = useState<string | null>(null);
+  const [draggedStickerId, setDraggedStickerId] = useState<string | null>(null);
   
   // Color Painting State
   const [activeColor, setActiveColor] = useState<string | null>(null);
@@ -125,11 +125,10 @@ export default function ProfilePage() {
         };
         setFormData(prev => ({ ...prev, stickers: [...prev.stickers, newSticker] }));
         setActiveStickerId(newStickerId);
-        setIsPlacingSticker(true);
         setIsEditModalOpen(false);
         toast({
-          title: "Sticker Ready",
-          description: "Tap header to place. Adjust later.",
+          title: "Sticker Added",
+          description: "Click and hold the sticker to move it.",
         });
       }
     }
@@ -157,21 +156,21 @@ export default function ProfilePage() {
     }
   };
 
-  const handleHeaderClick = (e: React.MouseEvent) => {
-    if (isPaintMode) return;
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!draggedStickerId || !headerRef.current) return;
 
-    if (!headerRef.current) return;
     const rect = headerRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
 
-    if (activeStickerId) {
-      setFormData(prev => ({
-        ...prev,
-        stickers: prev.stickers.map(s => s.id === activeStickerId ? { ...s, x, y } : s)
-      }));
-      if (isPlacingSticker) setIsPlacingSticker(false);
-    }
+    setFormData(prev => ({
+      ...prev,
+      stickers: prev.stickers.map(s => s.id === draggedStickerId ? { ...s, x, y } : s)
+    }));
+  };
+
+  const handlePointerUp = () => {
+    setDraggedStickerId(null);
   };
 
   const handleSaveProfile = async () => {
@@ -224,7 +223,7 @@ export default function ProfilePage() {
       <div className="max-w-md mx-auto min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-[10px] font-black uppercase tracking-widest text-primary">Loading Profile...</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-primary">Initializing Sphere...</p>
         </div>
       </div>
     );
@@ -251,7 +250,7 @@ export default function ProfilePage() {
       {activeStickerId && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] w-[90%] max-w-[340px] bg-white rounded-3xl shadow-2xl border-2 border-primary/20 p-4 space-y-4 animate-in slide-in-from-bottom-10">
           <div className="flex items-center justify-between">
-             <span className="text-[10px] font-black uppercase tracking-widest text-primary">Adjust Sticker</span>
+             <span className="text-[10px] font-black uppercase tracking-widest text-primary">Sticker Controls</span>
              <div className="flex gap-2">
                 <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-destructive" onClick={() => {
                    setFormData(prev => ({ ...prev, stickers: prev.stickers.filter(s => s.id !== activeStickerId) }));
@@ -261,15 +260,21 @@ export default function ProfilePage() {
              </div>
           </div>
           <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <RotateCw size={14} className="text-muted-foreground" />
-              <Slider value={[formData.stickers.find(s => s.id === activeStickerId)?.rotation || 0]} max={360} onValueChange={([v]) => updateActiveSticker({ rotation: v })} />
+            <div className="space-y-1">
+              <Label className="text-[9px] font-bold uppercase tracking-widest opacity-50">Rotation</Label>
+              <div className="flex items-center gap-4">
+                <RotateCw size={14} className="text-muted-foreground" />
+                <Slider value={[formData.stickers.find(s => s.id === activeStickerId)?.rotation || 0]} max={360} onValueChange={([v]) => updateActiveSticker({ rotation: v })} />
+              </div>
             </div>
-            <div className="flex items-center gap-4">
-              <Maximize size={14} className="text-muted-foreground" />
-              <Slider value={[(formData.stickers.find(s => s.id === activeStickerId)?.scale || 1) * 100]} min={50} max={200} onValueChange={([v]) => updateActiveSticker({ scale: v / 100 })} />
+            <div className="space-y-1">
+              <Label className="text-[9px] font-bold uppercase tracking-widest opacity-50">Size</Label>
+              <div className="flex items-center gap-4">
+                <Maximize size={14} className="text-muted-foreground" />
+                <Slider value={[(formData.stickers.find(s => s.id === activeStickerId)?.scale || 1) * 100]} min={50} max={200} onValueChange={([v]) => updateActiveSticker({ scale: v / 100 })} />
+              </div>
             </div>
-            <Button className="w-full h-10 rounded-2xl bg-primary text-white text-[10px] font-black uppercase" onClick={handleSaveProfile} disabled={isSaving}>Save Changes</Button>
+            <Button className="w-full h-10 rounded-2xl bg-primary text-white text-[10px] font-black uppercase" onClick={handleSaveProfile} disabled={isSaving}>Apply & Save</Button>
           </div>
         </div>
       )}
@@ -297,7 +302,7 @@ export default function ProfilePage() {
             
             <div className="space-y-3">
               <Label className="text-[10px] font-black uppercase tracking-widest ml-1 flex items-center gap-2">
-                <PaintBucket size={12} className="text-primary" /> Click a color to start painting
+                <PaintBucket size={12} className="text-primary" /> Select a color to start painting
               </Label>
               <div className="flex flex-wrap gap-2 justify-center bg-muted/20 p-4 rounded-3xl">
                 {PALETTE.map(color => (
@@ -307,7 +312,7 @@ export default function ProfilePage() {
                       setActiveColor(color);
                       setIsPaintMode(true);
                       setIsEditModalOpen(false);
-                      toast({ title: "Paint Mode Active", description: "Tap areas on profile to paint." });
+                      toast({ title: "Paint Mode Active", description: "Tap areas on your profile to color them." });
                     }}
                     className={cn(
                       "w-8 h-8 rounded-full border-2 transition-transform hover:scale-125",
@@ -333,7 +338,7 @@ export default function ProfilePage() {
                  <button onClick={() => profileInputRef.current?.click()} className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100"><Camera className="text-white" size={16} /></button>
                </div>
                <div className="flex-1 space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Name</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Display Name</Label>
                   <Input value={formData.name} onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))} className="rounded-xl h-10 bg-muted/30 border-none" />
                </div>
                <input type="file" ref={profileInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'profile')} />
@@ -351,7 +356,7 @@ export default function ProfilePage() {
                 {formData.stickers.map(s => (
                   <div key={s.id} className="relative w-12 h-12 rounded-xl bg-muted border p-1 group">
                     <Image src={s.url} alt="sticker" fill className="object-contain p-1" />
-                    <button onClick={() => { setActiveStickerId(s.id); setIsEditModalOpen(false); }} className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 flex items-center justify-center text-[8px] font-bold text-white uppercase rounded-xl">Edit</button>
+                    <button onClick={() => { setActiveStickerId(s.id); setIsEditModalOpen(false); }} className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 flex items-center justify-center text-[8px] font-bold text-white uppercase rounded-xl">Move</button>
                   </div>
                 ))}
               </div>
@@ -367,15 +372,16 @@ export default function ProfilePage() {
 
       <div 
         ref={headerRef}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerUp}
         onClick={(e) => {
           if (isPaintMode && activeColor) {
              applyColor('background');
-          } else {
-             handleHeaderClick(e);
           }
         }}
         className={cn(
-          "relative z-10 min-h-[400px]",
+          "relative z-10 min-h-[400px] select-none",
           isPaintMode && "cursor-crosshair"
         )}
       >
@@ -383,15 +389,25 @@ export default function ProfilePage() {
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id}
-            className={cn("absolute z-40 cursor-pointer pointer-events-auto", activeStickerId === sticker.id && "ring-2 ring-primary ring-offset-2 rounded-xl")}
-            style={{ left: `${sticker.x}%`, top: `${sticker.y}%`, transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})` }}
-            onClick={(e) => { 
-              e.stopPropagation(); 
-              setActiveStickerId(sticker.id); 
+            onPointerDown={(e) => {
+              e.stopPropagation();
+              setDraggedStickerId(sticker.id);
+              setActiveStickerId(sticker.id);
+            }}
+            className={cn(
+              "absolute z-40 cursor-grab active:cursor-grabbing pointer-events-auto transition-shadow",
+              activeStickerId === sticker.id && "ring-2 ring-primary ring-offset-2 rounded-xl shadow-2xl",
+              draggedStickerId === sticker.id && "opacity-80 scale-105"
+            )}
+            style={{ 
+              left: `${sticker.x}%`, 
+              top: `${sticker.y}%`, 
+              transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`,
+              touchAction: 'none'
             }}
           >
             <div className="relative w-16 h-16 sm:w-20 sm:h-20">
-              <Image src={sticker.url} alt="sticker" fill className="object-contain" />
+              <Image src={sticker.url} alt="sticker" fill className="object-contain" draggable={false} />
             </div>
           </div>
         ))}
@@ -401,10 +417,10 @@ export default function ProfilePage() {
           className="relative h-48 w-full bg-muted overflow-hidden transition-colors duration-500"
           style={{ backgroundColor: formData.customColors.header || "transparent" }}
         >
-          <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover" />
+          <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover" draggable={false} />
         </div>
 
-        <div className="px-6 -mt-16 flex flex-col items-center mb-8">
+        <div className="px-6 -mt-16 flex flex-col items-center mb-8 relative z-10">
           <div className="relative mb-4">
             <Avatar className="h-32 w-32 border-4 border-white shadow-xl">
               <AvatarImage src={formData.profilePic} />
@@ -421,8 +437,8 @@ export default function ProfilePage() {
               backgroundColor: formData.customColors.bioCard || "#FFFFFF",
             }}
           >
-            <p className="text-center text-xs text-muted-foreground leading-relaxed italic">
-              {formData.bio || "Building the future of decentralized systems."}
+            <p className="text-center text-xs text-muted-foreground leading-relaxed font-medium italic">
+              {formData.bio || "Crafting the next generation of innovative solutions."}
             </p>
           </div>
           
