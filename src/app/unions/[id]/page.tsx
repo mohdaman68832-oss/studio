@@ -80,6 +80,7 @@ export default function UnionDetailPage() {
   const db = useFirestore();
   const unionId = params.id as string;
   const [showFullDesc, setShowFullDesc] = useState(false);
+  const [isJoined, setIsJoined] = useState(false);
 
   const union = useMemo(() => {
     return MOCK_UNIONS.find(u => u.id === unionId) || MOCK_UNIONS[0];
@@ -146,7 +147,7 @@ export default function UnionDetailPage() {
           <div className="flex items-center justify-between bg-white p-4 rounded-3xl border border-border/50 shadow-sm">
             <div className="flex gap-4">
               <div className="flex flex-col">
-                <span className="text-sm font-black text-foreground">{union.memberCount.toLocaleString()}</span>
+                <span className="text-sm font-black text-foreground">{(union.memberCount + (isJoined ? 1 : 0)).toLocaleString()}</span>
                 <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">Joined</span>
               </div>
               <div className="flex flex-col">
@@ -159,35 +160,45 @@ export default function UnionDetailPage() {
               </div>
             </div>
 
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button size="sm" className="rounded-full h-10 px-5 flex items-center gap-2 bg-primary shadow-lg shadow-primary/20">
-                  <Pencil size={14} className="fill-current" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Post</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="bottom" className="rounded-t-[2.5rem] h-[40vh] bg-background">
-                <SheetHeader>
-                  <SheetTitle className="text-center text-sm font-black uppercase tracking-widest mb-6">
-                    Choose Post Format
-                  </SheetTitle>
-                </SheetHeader>
-                <div className="grid grid-cols-3 gap-4 px-2">
-                  <Link href="/post" className="flex flex-col items-center gap-3 p-6 bg-white rounded-[2rem] border-2 border-border hover:border-primary transition-all">
-                    <ImageIcon className="w-8 h-8 text-primary" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Image</span>
-                  </Link>
-                  <Link href="/post" className="flex flex-col items-center gap-3 p-6 bg-white rounded-[2rem] border-2 border-border hover:border-primary transition-all">
-                    <Video className="w-8 h-8 text-secondary" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Video</span>
-                  </Link>
-                  <Link href="/post" className="flex flex-col items-center gap-3 p-6 bg-white rounded-[2rem] border-2 border-border hover:border-primary transition-all">
-                    <Type className="w-8 h-8 text-muted-foreground" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Text</span>
-                  </Link>
-                </div>
-              </SheetContent>
-            </Sheet>
+            {!isJoined ? (
+              <Button 
+                onClick={() => setIsJoined(true)}
+                size="sm" 
+                className="rounded-full h-10 px-6 flex items-center gap-2 bg-secondary shadow-lg shadow-secondary/20"
+              >
+                <span className="text-[10px] font-black uppercase tracking-widest">Join Union</span>
+              </Button>
+            ) : (
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button size="sm" className="rounded-full h-10 px-5 flex items-center gap-2 bg-primary shadow-lg shadow-primary/20">
+                    <Pencil size={14} className="fill-current" />
+                    <span className="text-[10px] font-black uppercase tracking-widest">Post</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="rounded-t-[2.5rem] h-[40vh] bg-background">
+                  <SheetHeader>
+                    <SheetTitle className="text-center text-sm font-black uppercase tracking-widest mb-6">
+                      Choose Post Format
+                    </SheetTitle>
+                  </SheetHeader>
+                  <div className="grid grid-cols-3 gap-4 px-2">
+                    <Link href="/post" className="flex flex-col items-center gap-3 p-6 bg-white rounded-[2rem] border-2 border-border hover:border-primary transition-all">
+                      <ImageIcon className="w-8 h-8 text-primary" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Image</span>
+                    </Link>
+                    <Link href="/post" className="flex flex-col items-center gap-3 p-6 bg-white rounded-[2rem] border-2 border-border hover:border-primary transition-all">
+                      <Video className="w-8 h-8 text-secondary" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Video</span>
+                    </Link>
+                    <Link href="/post" className="flex flex-col items-center gap-3 p-6 bg-white rounded-[2rem] border-2 border-border hover:border-primary transition-all">
+                      <Type className="w-8 h-8 text-muted-foreground" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Text</span>
+                    </Link>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            )}
           </div>
 
           <div className="space-y-6">
