@@ -66,17 +66,14 @@ export default function ProfilePage() {
   const [activeStickerId, setActiveStickerId] = useState<string | null>(null);
   const [draggedStickerId, setDraggedStickerId] = useState<string | null>(null);
   
-  // Color Painting State
   const [activeColor, setActiveColor] = useState<string | null>(null);
   const [isPaintMode, setIsPaintMode] = useState(false);
 
-  // Refs
   const profileInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
   const stickerInputRef = useRef<HTMLInputElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
 
-  // Form State
   const [formData, setFormData] = useState({
     name: "",
     bio: "",
@@ -128,7 +125,7 @@ export default function ProfilePage() {
         setIsEditModalOpen(false);
         toast({
           title: "Sticker Added",
-          description: "Click and hold the sticker to move it.",
+          description: "Sticker is now unlocked for placement. Use adjustment bar to finish.",
         });
       }
     }
@@ -162,6 +159,9 @@ export default function ProfilePage() {
     const rect = headerRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+    // Boundary check for header area only
+    if (y > 100) return;
 
     setFormData(prev => ({
       ...prev,
@@ -246,11 +246,11 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* Floating Adjustment Bar */}
+      {/* Floating Adjustment Bar - Only visible when a sticker is unlocked via settings */}
       {activeStickerId && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] w-[90%] max-w-[340px] bg-white rounded-3xl shadow-2xl border-2 border-primary/20 p-4 space-y-4 animate-in slide-in-from-bottom-10">
           <div className="flex items-center justify-between">
-             <span className="text-[10px] font-black uppercase tracking-widest text-primary">Sticker Controls</span>
+             <span className="text-[10px] font-black uppercase tracking-widest text-primary">Sticker Controls (Unlocked)</span>
              <div className="flex gap-2">
                 <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-destructive" onClick={() => {
                    setFormData(prev => ({ ...prev, stickers: prev.stickers.filter(s => s.id !== activeStickerId) }));
@@ -261,20 +261,20 @@ export default function ProfilePage() {
           </div>
           <div className="space-y-4">
             <div className="space-y-1">
-              <Label className="text-[9px] font-bold uppercase tracking-widest opacity-50">Rotation</Label>
-              <div className="flex items-center gap-4">
-                <RotateCw size={14} className="text-muted-foreground" />
-                <Slider value={[formData.stickers.find(s => s.id === activeStickerId)?.rotation || 0]} max={360} onValueChange={([v]) => updateActiveSticker({ rotation: v })} />
+              <Label className="text-[9px] font-bold uppercase tracking-widest opacity-50">Rotation & Scale</Label>
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-4">
+                  <RotateCw size={14} className="text-muted-foreground shrink-0" />
+                  <Slider value={[formData.stickers.find(s => s.id === activeStickerId)?.rotation || 0]} max={360} onValueChange={([v]) => updateActiveSticker({ rotation: v })} />
+                </div>
+                <div className="flex items-center gap-4">
+                  <Maximize size={14} className="text-muted-foreground shrink-0" />
+                  <Slider value={[(formData.stickers.find(s => s.id === activeStickerId)?.scale || 1) * 100]} min={50} max={200} onValueChange={([v]) => updateActiveSticker({ scale: v / 100 })} />
+                </div>
               </div>
             </div>
-            <div className="space-y-1">
-              <Label className="text-[9px] font-bold uppercase tracking-widest opacity-50">Size</Label>
-              <div className="flex items-center gap-4">
-                <Maximize size={14} className="text-muted-foreground" />
-                <Slider value={[(formData.stickers.find(s => s.id === activeStickerId)?.scale || 1) * 100]} min={50} max={200} onValueChange={([v]) => updateActiveSticker({ scale: v / 100 })} />
-              </div>
-            </div>
-            <Button className="w-full h-10 rounded-2xl bg-primary text-white text-[10px] font-black uppercase" onClick={handleSaveProfile} disabled={isSaving}>Apply & Save</Button>
+            <p className="text-[9px] text-muted-foreground italic text-center">Drag the sticker on profile header to reposition.</p>
+            <Button className="w-full h-10 rounded-2xl bg-primary text-white text-[10px] font-black uppercase" onClick={handleSaveProfile} disabled={isSaving}>Apply & Lock</Button>
           </div>
         </div>
       )}
@@ -350,16 +350,22 @@ export default function ProfilePage() {
             </div>
 
             <div className="space-y-3">
-              <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Stickers</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Stickers (Locked)</Label>
               <div className="flex flex-wrap gap-2">
                 <Button variant="outline" size="sm" className="rounded-full h-12 w-12 border-2 border-dashed border-primary/40" onClick={() => stickerInputRef.current?.click()}><Plus size={20} /></Button>
                 {formData.stickers.map(s => (
                   <div key={s.id} className="relative w-12 h-12 rounded-xl bg-muted border p-1 group">
                     <Image src={s.url} alt="sticker" fill className="object-contain p-1" />
-                    <button onClick={() => { setActiveStickerId(s.id); setIsEditModalOpen(false); }} className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 flex items-center justify-center text-[8px] font-bold text-white uppercase rounded-xl">Move</button>
+                    <button 
+                      onClick={() => { setActiveStickerId(s.id); setIsEditModalOpen(false); }} 
+                      className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 flex items-center justify-center text-[8px] font-bold text-white uppercase rounded-xl"
+                    >
+                      Move
+                    </button>
                   </div>
                 ))}
               </div>
+              <p className="text-[8px] text-muted-foreground italic">Click "Move" on a sticker to unlock it for repositioning on the profile.</p>
               <input type="file" ref={stickerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'sticker')} />
             </div>
           </div>
@@ -385,18 +391,19 @@ export default function ProfilePage() {
           isPaintMode && "cursor-crosshair"
         )}
       >
-        {/* Stickers */}
+        {/* Stickers - Only movable if activeStickerId matches */}
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id}
             onPointerDown={(e) => {
+              // Lock: Only allow drag if this sticker was unlocked via settings
+              if (activeStickerId !== sticker.id) return;
               e.stopPropagation();
               setDraggedStickerId(sticker.id);
-              setActiveStickerId(sticker.id);
             }}
             className={cn(
-              "absolute z-40 cursor-grab active:cursor-grabbing pointer-events-auto transition-shadow",
-              activeStickerId === sticker.id && "ring-2 ring-primary ring-offset-2 rounded-xl shadow-2xl",
+              "absolute z-40 transition-shadow",
+              activeStickerId === sticker.id ? "cursor-grab active:cursor-grabbing ring-2 ring-primary ring-offset-2 rounded-xl shadow-2xl" : "pointer-events-none",
               draggedStickerId === sticker.id && "opacity-80 scale-105"
             )}
             style={{ 
