@@ -11,7 +11,7 @@ import { useAuth, useFirestore } from "@/firebase";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, setDoc, getDocs, collection, query, where } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ChevronRight, ChevronLeft, Check, Camera, Image as ImageIcon, Briefcase } from "lucide-react";
+import { Loader2, ChevronRight, ChevronLeft, Check, Camera, Image as ImageIcon, Briefcase, Monitor, Smartphone, X } from "lucide-react";
 import Link from "next/link";
 import { Progress } from "@/components/ui/progress";
 import Image from "next/image";
@@ -35,6 +35,7 @@ export default function SignupPage() {
   
   const [profilePic, setProfilePic] = useState<string | null>(null);
   const [banner, setBanner] = useState<string | null>(null);
+  const [showBannerEditor, setShowBannerEditor] = useState(false);
   
   const profileInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
@@ -89,7 +90,10 @@ export default function SignupPage() {
     if (file) {
       const url = URL.createObjectURL(file);
       if (type === 'profile') setProfilePic(url);
-      else setBanner(url);
+      else {
+        setBanner(url);
+        setShowBannerEditor(false); // Close editor after selection if opened
+      }
     }
   };
 
@@ -102,17 +106,14 @@ export default function SignupPage() {
   const handleSignup = async () => {
     setLoading(true);
     try {
-      // 1. Create Auth User
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // 2. Update Auth Profile
       await updateProfile(user, { 
         displayName: name,
         photoURL: profilePic || `https://picsum.photos/seed/${user.uid}/200/200`
       });
 
-      // 3. Create User Profile in Firestore
       await setDoc(doc(db, "userProfiles", user.uid), {
         id: user.uid,
         username: username.toLowerCase().trim(),
@@ -150,6 +151,82 @@ export default function SignupPage() {
 
   return (
     <div className="max-w-md mx-auto min-h-screen flex flex-col p-6 space-y-8 bg-background justify-center">
+      
+      {/* Banner Preview Overlay (Simulated Separate Page) */}
+      {showBannerEditor && (
+        <div className="fixed inset-0 z-[100] bg-background flex flex-col animate-in slide-in-from-bottom duration-300">
+          <header className="p-4 flex items-center justify-between border-b">
+            <Button variant="ghost" size="icon" onClick={() => setShowBannerEditor(false)} className="rounded-full">
+              <X size={20} />
+            </Button>
+            <h2 className="text-sm font-black uppercase tracking-widest">Banner Customization</h2>
+            <div className="w-10" />
+          </header>
+
+          <div className="flex-1 overflow-y-auto p-6 space-y-8">
+            <div className="text-center space-y-2">
+               <p className="text-[10px] font-black uppercase text-primary tracking-widest">Device Preview</p>
+               <p className="text-xs text-muted-foreground font-medium">See how your banner looks across different platforms.</p>
+            </div>
+
+            {/* PC Preview */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Monitor size={16} />
+                <span className="text-[10px] font-bold uppercase">Desktop View (PC)</span>
+              </div>
+              <div className="relative aspect-[3/1] w-full bg-muted rounded-xl overflow-hidden border shadow-inner">
+                {banner ? (
+                  <Image src={banner} alt="PC Banner" fill className="object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center opacity-30">
+                    <ImageIcon size={40} />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Mobile Preview */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Smartphone size={16} />
+                <span className="text-[10px] font-bold uppercase">Mobile View</span>
+              </div>
+              <div className="flex justify-center">
+                <div className="relative w-full max-w-[200px] aspect-[4/3] bg-muted rounded-xl overflow-hidden border shadow-inner">
+                  {banner ? (
+                    <Image src={banner} alt="Mobile Banner" fill className="object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center opacity-30">
+                      <ImageIcon size={30} />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-6 space-y-4">
+               <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'banner')} />
+               <Button 
+                onClick={() => bannerInputRef.current?.click()} 
+                className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase tracking-widest"
+               >
+                 {banner ? "Change Photo" : "Upload Banner Photo"}
+               </Button>
+               {banner && (
+                 <Button 
+                  variant="outline" 
+                  onClick={() => setShowBannerEditor(false)} 
+                  className="w-full h-12 rounded-2xl font-black uppercase tracking-widest border-primary text-primary"
+                 >
+                   Looks Good, Save
+                 </Button>
+               )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="text-center space-y-2">
         <h1 className="text-3xl font-black text-primary uppercase tracking-tighter">Join Sphere</h1>
         <p className="text-sm text-muted-foreground font-medium uppercase tracking-widest">
@@ -245,21 +322,23 @@ export default function SignupPage() {
       {step === 3 && (
         <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 pb-10">
           <div className="space-y-4">
-            <div className="relative h-24 bg-muted rounded-2xl overflow-hidden group border border-dashed border-primary/20">
+            <div 
+              onClick={() => setShowBannerEditor(true)}
+              className="relative h-24 bg-muted rounded-2xl overflow-hidden group border border-dashed border-primary/20 cursor-pointer"
+            >
               {banner ? (
                 <Image src={banner} alt="Banner" fill className="object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
-                   <ImageIcon className="text-muted-foreground/40" />
+                   <div className="flex flex-col items-center gap-1">
+                      <ImageIcon className="text-muted-foreground/40" />
+                      <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/40">Tap to Preview & Upload Banner</span>
+                   </div>
                 </div>
               )}
-              <button 
-                onClick={() => bannerInputRef.current?.click()}
-                className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"
-              >
+              <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
                 <Camera size={20} />
-              </button>
-              <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'banner')} />
+              </div>
             </div>
 
             <div className="relative -mt-12 ml-4 w-20 h-20 rounded-full border-4 border-background bg-muted overflow-hidden group shadow-lg">
