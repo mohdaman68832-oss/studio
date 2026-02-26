@@ -121,12 +121,30 @@ export default function ProfilePage() {
     router.push("/login");
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'banner' | 'sticker') => {
+  const saveToFirestore = async (updates: any) => {
+    if (!profileRef) return;
+    try {
+      await updateDoc(profileRef, {
+        ...updates,
+        updatedAt: new Date().toISOString()
+      });
+    } catch (error: any) {
+      console.error("Auto-save failed:", error);
+    }
+  };
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'banner' | 'sticker') => {
     const file = e.target.files?.[0];
     if (file) {
       const url = URL.createObjectURL(file);
-      if (type === 'profile') setFormData(prev => ({ ...prev, profilePic: url }));
-      else if (type === 'banner') setFormData(prev => ({ ...prev, banner: url }));
+      if (type === 'profile') {
+        setFormData(prev => ({ ...prev, profilePic: url }));
+        await saveToFirestore({ profilePictureUrl: url });
+      }
+      else if (type === 'banner') {
+        setFormData(prev => ({ ...prev, banner: url }));
+        await saveToFirestore({ bannerUrl: url });
+      }
       else if (type === 'sticker') {
         const newStickerId = Math.random().toString(36).substr(2, 9);
         const newSticker: Sticker = {
@@ -137,7 +155,9 @@ export default function ProfilePage() {
           rotation: 0,
           scale: 1
         };
-        setFormData(prev => ({ ...prev, stickers: [...prev.stickers, newSticker] }));
+        const updatedStickers = [...formData.stickers, newSticker];
+        setFormData(prev => ({ ...prev, stickers: updatedStickers }));
+        await saveToFirestore({ stickers: updatedStickers });
         setActiveStickerId(newStickerId);
         setIsEditModalOpen(false);
         toast({ title: "Sticker Added", description: "Use 'Move' in settings to place it." });
@@ -145,12 +165,14 @@ export default function ProfilePage() {
     }
   };
 
-  const applyColor = (zone: keyof CustomColors) => {
+  const applyColor = async (zone: keyof CustomColors) => {
     if (!activeColor) return;
+    const updatedColors = { ...formData.customColors, [zone]: activeColor };
     setFormData(prev => ({
       ...prev,
-      customColors: { ...prev.customColors, [zone]: activeColor }
+      customColors: updatedColors
     }));
+    await saveToFirestore({ customColors: updatedColors });
   };
 
   const handleZoneClick = (e: React.MouseEvent, zone: keyof CustomColors) => {
@@ -164,7 +186,9 @@ export default function ProfilePage() {
     if (!user || !profileRef) return;
     setIsSaving(true);
     try {
-      await updateProfile(user, { displayName: formData.name, photoURL: formData.profilePic });
+      if (user.displayName !== formData.name || user.photoURL !== formData.profilePic) {
+        await updateProfile(user, { displayName: formData.name, photoURL: formData.profilePic });
+      }
       await updateDoc(profileRef, {
         bio: formData.bio,
         profilePictureUrl: formData.profilePic,
@@ -173,7 +197,7 @@ export default function ProfilePage() {
         customColors: formData.customColors,
         updatedAt: new Date().toISOString()
       });
-      toast({ title: "Success", description: "Profile updated successfully!" });
+      toast({ title: "Success", description: "Profile saved!" });
       setIsEditModalOpen(false);
       setActiveStickerId(null);
       setIsPaintMode(false);
@@ -210,10 +234,12 @@ export default function ProfilePage() {
     }));
   };
 
-  const handleStickerPointerUp = (e: React.PointerEvent, stickerId: string) => {
+  const handleStickerPointerUp = async (e: React.PointerEvent, stickerId: string) => {
     if (draggedStickerId === stickerId) {
       (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
       setDraggedStickerId(null);
+      // Auto-save position on drop
+      await saveToFirestore({ stickers: formData.stickers });
     }
   };
 
@@ -242,14 +268,40 @@ export default function ProfilePage() {
         </div>
       )}
 
+      {/* RENDER STICKERS */}
+      {formData.stickers.map((sticker) => (
+        <div 
+          key={sticker.id}
+          onPointerDown={(e) => handleStickerPointerDown(e, sticker.id)}
+          onPointerMove={(e) => handleStickerPointerMove(e, sticker.id)}
+          onPointerUp={(e) => handleStickerPointerUp(e, sticker.id)}
+          className={cn(
+            "absolute z-[85]",
+            activeStickerId === sticker.id ? "cursor-grab active:cursor-grabbing ring-2 ring-primary ring-offset-2 rounded-xl" : "pointer-events-none",
+          )}
+          style={{ 
+            left: `${sticker.x}%`, 
+            top: `${sticker.y}%`, 
+            transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`,
+            touchAction: 'none'
+          }}
+        >
+          <div className="relative w-16 h-16 sm:w-20 sm:h-20" data-sticker="true">
+            <Image src={sticker.url} alt="sticker" fill className="object-contain" draggable={false} />
+          </div>
+        </div>
+      ))}
+
       {activeStickerId && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] w-[90%] max-w-[340px] bg-white rounded-3xl shadow-2xl border border-primary/20 p-4 space-y-4 animate-in slide-in-from-bottom-10">
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[110] w-[90%] max-w-[340px] bg-white rounded-3xl shadow-2xl border border-primary/20 p-4 space-y-4 animate-in slide-in-from-bottom-10">
           <div className="flex items-center justify-between">
              <span className="text-[10px] font-black uppercase tracking-widest text-primary">Edit Sticker</span>
              <div className="flex gap-2">
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-destructive" onClick={(e) => {
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-destructive" onClick={async (e) => {
                    e.stopPropagation();
-                   setFormData(prev => ({ ...prev, stickers: prev.stickers.filter(s => s.id !== activeStickerId) }));
+                   const updated = formData.stickers.filter(s => s.id !== activeStickerId);
+                   setFormData(prev => ({ ...prev, stickers: updated }));
+                   await saveToFirestore({ stickers: updated });
                    setActiveStickerId(null);
                 }}><Trash2 size={16} /></Button>
                 <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={(e) => { e.stopPropagation(); setActiveStickerId(null); }}><X size={16} /></Button>
@@ -267,7 +319,7 @@ export default function ProfilePage() {
               </div>
             </div>
             <p className="text-[9px] text-muted-foreground italic text-center">Hold and drag the sticker to move it.</p>
-            <Button className="w-full h-10 rounded-2xl bg-primary text-white text-[10px] font-black uppercase" onClick={(e) => { e.stopPropagation(); handleSaveProfile(); }} disabled={isSaving}>Lock & Save</Button>
+            <Button className="w-full h-10 rounded-2xl bg-primary text-white text-[10px] font-black uppercase" onClick={handleSaveProfile} disabled={isSaving}>Lock Position</Button>
           </div>
         </div>
       )}
@@ -346,39 +398,15 @@ export default function ProfilePage() {
           </div>
           <DialogFooter className="flex-row gap-2 mt-4">
             <Button variant="ghost" className="flex-1 rounded-2xl h-12 uppercase font-black text-[10px]" onClick={() => setIsEditModalOpen(false)}>Cancel</Button>
-            <Button className="flex-1 rounded-2xl h-12 uppercase font-black text-[10px] bg-primary text-white" onClick={handleSaveProfile} disabled={isSaving}>{isSaving ? <Loader2 className="animate-spin h-4 w-4" /> : "Save Changes"}</Button>
+            <Button className="flex-1 rounded-2xl h-12 uppercase font-black text-[10px] bg-primary text-white" onClick={handleSaveProfile} disabled={isSaving}>{isSaving ? <Loader2 className="animate-spin h-4 w-4" /> : "Save Profile"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* RENDER STICKERS */}
-      {formData.stickers.map((sticker) => (
-        <div 
-          key={sticker.id}
-          onPointerDown={(e) => handleStickerPointerDown(e, sticker.id)}
-          onPointerMove={(e) => handleStickerPointerMove(e, sticker.id)}
-          onPointerUp={(e) => handleStickerPointerUp(e, sticker.id)}
-          className={cn(
-            "absolute z-[80]",
-            activeStickerId === sticker.id ? "cursor-grab active:cursor-grabbing ring-2 ring-primary ring-offset-2 rounded-xl" : "pointer-events-none",
-          )}
-          style={{ 
-            left: `${sticker.x}%`, 
-            top: `${sticker.y}%`, 
-            transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`,
-            touchAction: 'none'
-          }}
-        >
-          <div className="relative w-16 h-16 sm:w-20 sm:h-20" data-sticker="true">
-            <Image src={sticker.url} alt="sticker" fill className="object-contain" draggable={false} />
-          </div>
-        </div>
-      ))}
-
-      {/* ZONE 1: HEADER BAR (ISOLATED) */}
+      {/* ZONE 1: HEADER BAR */}
       <div 
         onClick={(e) => handleZoneClick(e, 'header')}
-        className="px-6 flex justify-between items-center relative z-[90] py-4 transition-colors duration-300 cursor-pointer"
+        className="px-6 flex justify-between items-center relative z-[100] py-4 transition-colors duration-300 cursor-pointer"
         style={{ backgroundColor: formData.customColors.header }}
       >
         <h1 
@@ -404,7 +432,7 @@ export default function ProfilePage() {
         </Sheet>
       </div>
 
-      {/* ZONE 2: USER INFO SECTION (Banner, Avatar, Name) */}
+      {/* ZONE 2: USER INFO SECTION */}
       <div 
         onClick={(e) => handleZoneClick(e, 'userInfo')}
         className="transition-colors duration-300 pb-8 cursor-pointer relative z-10"
@@ -436,7 +464,7 @@ export default function ProfilePage() {
             @{profileData?.username || "user"}
           </p>
           
-          {/* ZONE 3: BIO CARD (Within User Info) */}
+          {/* ZONE 3: BIO CARD */}
           <div 
             onClick={(e) => handleZoneClick(e, 'bioCard')}
             className="p-6 rounded-[2.5rem] border shadow-none w-full transition-colors duration-300 cursor-pointer"
