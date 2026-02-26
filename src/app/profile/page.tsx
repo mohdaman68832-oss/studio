@@ -273,7 +273,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* ZONE 1: HEADER BAR */}
+      {/* HEADER BAR */}
       <div 
         onClick={(e) => handleZoneClick(e, 'header')}
         className={cn(
@@ -306,7 +306,7 @@ export default function ProfilePage() {
         </Sheet>
       </div>
 
-      {/* ZONE 2: USER INFO AREA */}
+      {/* USER INFO AREA */}
       <div 
         onClick={(e) => handleZoneClick(e, 'userInfo')}
         className={cn(
@@ -333,7 +333,7 @@ export default function ProfilePage() {
             </p>
           </div>
           
-          {/* ZONE 3: BIO CARD */}
+          {/* BIO CARD */}
           <div 
             onClick={(e) => handleZoneClick(e, 'bioCard')}
             className={cn(
@@ -349,7 +349,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* ZONE 4: STATS SECTION */}
+      {/* STATS SECTION */}
       <div 
         onClick={(e) => handleZoneClick(e, 'statsSection')}
         className={cn(
@@ -377,7 +377,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* ZONE 5 & 6: TABS AND CONTENT */}
+      {/* TABS AND CONTENT */}
       <Tabs defaultValue="my-ideas" className="w-full relative z-10">
         <div 
           onClick={(e) => handleZoneClick(e, 'tabsList')}
@@ -432,7 +432,7 @@ export default function ProfilePage() {
         </div>
       </Tabs>
 
-      {/* STICKERS LAYER - Highest Visibility */}
+      {/* STICKERS LAYER */}
       <div className="absolute inset-0 pointer-events-none z-[160]">
         {formData.stickers.map((sticker) => (
           <div 
@@ -463,14 +463,18 @@ export default function ProfilePage() {
           <div className="flex items-center justify-between">
              <span className="text-[10px] font-black uppercase tracking-widest text-primary">Edit Sticker</span>
              <div className="flex gap-2">
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-destructive" onClick={async (e) => {
+                <button 
+                  className="h-8 w-8 rounded-full text-destructive flex items-center justify-center hover:bg-destructive/10" 
+                  onClick={async (e) => {
                    e.stopPropagation();
                    const updated = formData.stickers.filter(s => s.id !== activeStickerId);
                    setFormData(prev => ({ ...prev, stickers: updated }));
                    await saveToFirestore({ stickers: updated });
                    setActiveStickerId(null);
-                }}><Trash2 size={16} /></Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={(e) => { e.stopPropagation(); setActiveStickerId(null); }}><X size={16} /></Button>
+                }}><Trash2 size={16} /></button>
+                <button 
+                  className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-muted" 
+                  onClick={(e) => { e.stopPropagation(); setActiveStickerId(null); }}><X size={16} /></button>
              </div>
           </div>
           <div className="space-y-4">
