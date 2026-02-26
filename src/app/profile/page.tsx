@@ -19,7 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/dialog";
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -257,7 +257,7 @@ export default function ProfilePage() {
     >
       {isPaintMode && activeColor && (
         <div 
-          className="fixed top-20 left-1/2 -translate-x-1/2 z-[200] bg-white px-6 py-2 rounded-full shadow-2xl border-2 border-primary flex items-center gap-3 animate-in fade-in slide-in-from-top-4"
+          className="fixed top-20 left-1/2 -translate-x-1/2 z-[300] bg-white px-6 py-2 rounded-full shadow-2xl border-2 border-primary flex items-center gap-3 animate-in fade-in slide-in-from-top-4"
           onClick={(e) => e.stopPropagation()} 
         >
           <div className="w-4 h-4 rounded-full border shadow-sm" style={{ backgroundColor: activeColor }}></div>
@@ -277,7 +277,7 @@ export default function ProfilePage() {
       <div 
         onClick={(e) => handleZoneClick(e, 'header')}
         className={cn(
-          "px-6 flex justify-between items-center relative z-[150] py-4 transition-colors duration-300",
+          "px-6 flex justify-between items-center relative z-20 py-4 transition-colors duration-300",
           isPaintMode ? "cursor-crosshair" : "cursor-pointer"
         )}
         style={{ backgroundColor: formData.customColors.header }}
@@ -295,7 +295,7 @@ export default function ProfilePage() {
             </Button>
           </SheetTrigger>
           <SheetContent side="bottom" className="rounded-t-[2.5rem] p-6 border-none">
-            <SheetHeader className="mb-4">
+            <SheetHeader className="mb-4 text-center">
               <SheetTitle className="text-sm font-black uppercase tracking-widest text-center">Profile Options</SheetTitle>
             </SheetHeader>
             <div className="space-y-2">
@@ -319,7 +319,7 @@ export default function ProfilePage() {
           <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover" draggable={false} />
         </div>
 
-        <div className="px-6 -mt-16 flex flex-col items-center relative z-20">
+        <div className="px-6 -mt-16 flex flex-col items-center relative z-10">
           <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-lg" data-protected="true">
             <AvatarImage src={formData.profilePic} />
             <AvatarFallback>{user.displayName?.[0] || "U"}</AvatarFallback>
@@ -432,31 +432,34 @@ export default function ProfilePage() {
         </div>
       </Tabs>
 
-      {formData.stickers.map((sticker) => (
-        <div 
-          key={sticker.id}
-          onPointerDown={(e) => handleStickerPointerDown(e, sticker.id)}
-          onPointerMove={(e) => handleStickerPointerMove(e, sticker.id)}
-          onPointerUp={(e) => handleStickerPointerUp(e, sticker.id)}
-          className={cn(
-            "absolute z-[140]",
-            activeStickerId === sticker.id && !isPaintMode ? "cursor-grab active:cursor-grabbing ring-2 ring-primary ring-offset-2 rounded-xl" : "pointer-events-none",
-          )}
-          style={{ 
-            left: `${sticker.x}%`, 
-            top: `${sticker.y}%`, 
-            transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`,
-            touchAction: 'none'
-          }}
-        >
-          <div className="relative w-24 h-24">
-            <Image src={sticker.url} alt="sticker" fill className="object-contain" draggable={false} />
+      {/* STICKERS LAYER - Highest Visibility */}
+      <div className="absolute inset-0 pointer-events-none z-[160]">
+        {formData.stickers.map((sticker) => (
+          <div 
+            key={sticker.id}
+            onPointerDown={(e) => handleStickerPointerDown(e, sticker.id)}
+            onPointerMove={(e) => handleStickerPointerMove(e, sticker.id)}
+            onPointerUp={(e) => handleStickerPointerUp(e, sticker.id)}
+            className={cn(
+              "absolute pointer-events-auto",
+              activeStickerId === sticker.id && !isPaintMode ? "cursor-grab active:cursor-grabbing ring-2 ring-primary ring-offset-2 rounded-xl" : "",
+            )}
+            style={{ 
+              left: `${sticker.x}%`, 
+              top: `${sticker.y}%`, 
+              transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`,
+              touchAction: 'none'
+            }}
+          >
+            <div className="relative w-24 h-24">
+              <Image src={sticker.url} alt="sticker" fill className="object-contain" draggable={false} />
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
 
       {activeStickerId && !isPaintMode && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[200] w-[90%] max-w-[340px] bg-white rounded-3xl shadow-2xl border border-primary/20 p-4 space-y-4 animate-in slide-in-from-bottom-10">
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[310] w-[90%] max-w-[340px] bg-white rounded-3xl shadow-2xl border border-primary/20 p-4 space-y-4 animate-in slide-in-from-bottom-10">
           <div className="flex items-center justify-between">
              <span className="text-[10px] font-black uppercase tracking-widest text-primary">Edit Sticker</span>
              <div className="flex gap-2">
@@ -488,7 +491,9 @@ export default function ProfilePage() {
 
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="max-w-md w-[95%] rounded-[2.5rem] p-6 max-h-[90vh] overflow-y-auto no-scrollbar border-none">
-          <DialogHeader><DialogTitle className="text-sm font-black uppercase text-center">Customize Profile</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle className="text-sm font-black uppercase text-center">Customize Profile</DialogTitle>
+          </DialogHeader>
           <div className="space-y-6 py-4">
             <div className="space-y-3">
               <Label className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">

@@ -73,6 +73,31 @@ const MOCK_IDEAS = [
   }
 ];
 
+// Re-creating Union Mock Data Logic to handle dynamically generated post IDs
+const getUnionMockPost = (ideaId: string) => {
+  if (!ideaId.startsWith('post-')) return null;
+  const i = parseInt(ideaId.replace('post-', ''));
+  return {
+    id: ideaId,
+    title: [
+      "Neural Mesh Network", "Smart Grid AI", "Bio-degradable Tech", "Solar Glass v2", 
+      "Haptic Learning", "Urban Wind Turbine", "Water Filter IoT", "Clean Air Necklace",
+      "Self-Healing Materials", "Vertical Farm Controller", "Robot Companion", "Exo-Suit for Logistics",
+      "Mind-Link VR", "Ocean Plastic Recycler", "Carbon Capture Fan", "Green Blockchain",
+      "AI Medical Assistant", "Smart Soil Sensor", "Portable Hydro Generator", "Solar Car Paint"
+    ][i % 20],
+    description: "Exploring the limits of what is possible with modern engineering and design. This project focuses on high-impact scalability for urban environments.",
+    problem: "Traditional solutions are too slow, expensive, and environmentally damaging for our current needs.",
+    category: i % 2 === 0 ? "Technology" : "Sustainability",
+    userName: ["Alex Rivera", "Sarah Chen", "Marcus Vane", "Elena Gilbert", "Tony Stark"][i % 5],
+    userAvatar: `https://picsum.photos/seed/user${i % 5}/100/100`,
+    mediaUrl: i % 4 === 0 
+      ? "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" 
+      : `https://picsum.photos/seed/innovation${i}/800/800`,
+    innovationScore: 70 + (i % 30),
+  };
+};
+
 export default function IdeaDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -88,7 +113,9 @@ export default function IdeaDetailPage() {
 
   const idea = useMemo(() => {
     if (firestoreIdea) return firestoreIdea;
-    return MOCK_IDEAS.find(i => i.id === ideaId);
+    const mainMock = MOCK_IDEAS.find(i => i.id === ideaId);
+    if (mainMock) return mainMock;
+    return getUnionMockPost(ideaId);
   }, [firestoreIdea, ideaId]);
 
   const suggestionsQuery = useMemoFirebase(() => {
