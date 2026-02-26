@@ -17,7 +17,7 @@ import {
   DialogHeader,
 } from "@/components/ui/dialog";
 import { useFirestore, useUser, useDoc, useMemoFirebase } from "@/firebase";
-import { doc, setDoc, increment } from "firebase/firestore";
+import { doc, setDoc, deleteDoc, increment } from "firebase/firestore";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
 
@@ -43,7 +43,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
   const { toast } = useToast();
   const db = useFirestore();
   const { user } = useUser();
-  const [isLiking, setIsLiking] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Check if current user has already liked this post
   const userLikeRef = useMemoFirebase(() => 
@@ -53,59 +53,78 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
   const { data: userLike } = useDoc(userLikeRef);
   const isLiked = !!userLike;
 
-  const handleLike = (e: React.MouseEvent) => {
+  const handleToggleLike = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!db || !user || !idea.id || isLiking) return;
+    if (!db || !user || !idea.id || isProcessing) return;
 
-    if (isLiked) {
-      toast({
-        title: "Already Supported!",
-        description: "You have already upvoted this innovation.",
-      });
-      return;
-    }
-
-    setIsLiking(true);
+    setIsProcessing(true);
     const ideaRef = doc(db, "ideas", idea.id);
     const likeDocRef = doc(db, "ideas", idea.id, "likes", user.uid);
 
-    // 1. Create the like document (One user, one vote)
-    setDoc(likeDocRef, { 
-      timestamp: new Date().toISOString(),
-      userId: user.uid 
-    })
-      .then(() => {
-        // 2. Increment the global likes count on the idea document
-        // Using setDoc with merge: true handles cases where the doc might only exist in mock state
-        setDoc(ideaRef, { 
-          likes: increment(1) 
-        }, { merge: true })
-        .catch(async (error) => {
-          const permissionError = new FirestorePermissionError({
-            path: ideaRef.path,
-            operation: 'update',
-            requestResourceData: { likes: 'increment' },
+    if (isLiked) {
+      // UNDO LIKE (Toggle Off)
+      deleteDoc(likeDocRef)
+        .then(() => {
+          setDoc(ideaRef, { 
+            likes: increment(-1) 
+          }, { merge: true })
+          .catch(async (error) => {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+              path: ideaRef.path,
+              operation: 'update',
+              requestResourceData: { likes: 'decrement' },
+            }));
           });
-          errorEmitter.emit('permission-error', permissionError);
+          
+          toast({
+            title: "Like Removed",
+            description: "You unvoted this post.",
+          });
+        })
+        .catch(async (error) => {
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: likeDocRef.path,
+            operation: 'delete',
+          }));
+        })
+        .finally(() => {
+          setTimeout(() => setIsProcessing(false), 300);
         });
+    } else {
+      // ADD LIKE (Toggle On)
+      setDoc(likeDocRef, { 
+        timestamp: new Date().toISOString(),
+        userId: user.uid 
+      })
+        .then(() => {
+          setDoc(ideaRef, { 
+            likes: increment(1) 
+          }, { merge: true })
+          .catch(async (error) => {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+              path: ideaRef.path,
+              operation: 'update',
+              requestResourceData: { likes: 'increment' },
+            }));
+          });
 
-        toast({
-          title: "Upvoted!",
-          description: "Your support has been registered.",
+          toast({
+            title: "Post Liked!",
+            description: "Your upvote was registered.",
+          });
+        })
+        .catch(async (error) => {
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: likeDocRef.path,
+            operation: 'create',
+            requestResourceData: { userId: user.uid },
+          }));
+        })
+        .finally(() => {
+          setTimeout(() => setIsProcessing(false), 300);
         });
-      })
-      .catch(async (error) => {
-        const permissionError = new FirestorePermissionError({
-          path: likeDocRef.path,
-          operation: 'create',
-          requestResourceData: { userId: user.uid },
-        });
-        errorEmitter.emit('permission-error', permissionError);
-      })
-      .finally(() => {
-        setTimeout(() => setIsLiking(false), 300);
-      });
+    }
   };
 
   const handleShare = (e: React.MouseEvent) => {
@@ -113,7 +132,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
     e.stopPropagation();
     toast({
       title: "Shared!",
-      description: "Idea link has been copied to clipboard.",
+      description: "Link copied to clipboard.",
     });
   };
 
@@ -207,10 +226,10 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
         <div className="flex items-center justify-between mt-4">
           <div className="flex items-center gap-4">
             <button 
-              onClick={handleLike}
+              onClick={handleToggleLike}
               className={cn(
                 "flex items-center gap-2 transition-all duration-300 transform active:scale-125",
-                isLiking && "active-glow"
+                isProcessing && "active-glow"
               )}
             >
               <ArrowBigUp 
@@ -220,12 +239,15 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
                   isLiked ? "text-secondary fill-current drop-shadow-[0_0_8px_rgba(255,69,0,0.4)]" : "text-foreground/30"
                 )} 
               />
-              <span className={cn(
-                "text-sm font-black transition-colors",
-                isLiked ? "text-secondary" : "text-foreground/40"
-              )}>
-                {idea.likes || 0}
-              </span>
+              <div className="flex flex-col items-start">
+                <span className={cn(
+                  "text-sm font-black transition-colors leading-none",
+                  isLiked ? "text-secondary" : "text-foreground/40"
+                )}>
+                  {idea.likes || 0}
+                </span>
+                <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground/50">Likes</span>
+              </div>
             </button>
             <Link href={`/idea/${idea.id}`} className="text-foreground hover:text-primary transition-colors p-2">
               <MessageCircle size={26} />
@@ -287,10 +309,10 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
       <div className="flex items-center justify-between px-5 py-4">
         <div className="flex items-center gap-4">
           <button 
-            onClick={handleLike}
+            onClick={handleToggleLike}
             className={cn(
               "flex items-center gap-2 transition-all duration-300 transform active:scale-125",
-              isLiking && "active-glow"
+              isProcessing && "active-glow"
             )}
           >
             <ArrowBigUp 
@@ -300,12 +322,15 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
                 isLiked ? "text-secondary fill-current drop-shadow-[0_0_8px_rgba(255,69,0,0.4)]" : "text-foreground/30"
               )} 
             />
-            <span className={cn(
-              "text-sm font-black transition-colors",
-              isLiked ? "text-secondary" : "text-foreground/40"
-            )}>
-              {idea.likes || 0}
-            </span>
+            <div className="flex flex-col items-start">
+              <span className={cn(
+                "text-sm font-black transition-colors leading-none",
+                isLiked ? "text-secondary" : "text-foreground/40"
+              )}>
+                {idea.likes || 0}
+              </span>
+              <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground/50">Likes</span>
+            </div>
           </button>
           <Link href={`/idea/${idea.id}`} className="text-foreground hover:text-primary transition-colors p-2">
             <MessageCircle size={24} />
