@@ -375,7 +375,7 @@ export default function ProfilePage() {
         </div>
       ))}
 
-      {/* ZONE 1: HEADER BAR */}
+      {/* ZONE 1: HEADER BAR (ISOLATED) */}
       <div 
         onClick={(e) => handleZoneClick(e, 'header')}
         className="px-6 flex justify-between items-center relative z-[90] py-4 transition-colors duration-300 cursor-pointer"
