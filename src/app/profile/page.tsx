@@ -45,6 +45,8 @@ interface CustomColors {
   header?: string;
   bioCard?: string;
   statsSection?: string;
+  tabsList?: string;
+  tabsContent?: string;
   background?: string;
 }
 
@@ -126,7 +128,7 @@ export default function ProfilePage() {
         setIsEditModalOpen(false);
         toast({
           title: "Sticker Added",
-          description: "Select 'Move' in settings to position it in an empty space.",
+          description: "Use the 'Move' option in settings to place it.",
         });
       }
     }
@@ -268,7 +270,7 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
-            <p className="text-[9px] text-muted-foreground italic text-center">Drag on empty background to move.</p>
+            <p className="text-[9px] text-muted-foreground italic text-center">Drag to position over background.</p>
             <Button className="w-full h-10 rounded-2xl bg-primary text-white text-[10px] font-black uppercase" onClick={(e) => { e.stopPropagation(); handleSaveProfile(); }} disabled={isSaving}>Lock Position</Button>
           </div>
         </div>
@@ -312,7 +314,7 @@ export default function ProfilePage() {
                       setActiveColor(color);
                       setIsPaintMode(true);
                       setIsEditModalOpen(false);
-                      toast({ title: "Painting Mode", description: "Tap Header, Bio, Stats, or Background to paint it." });
+                      toast({ title: "Painting Mode", description: "Tap any section to paint it." });
                     }}
                     className={cn(
                       "w-8 h-8 rounded-full border-2 transition-transform hover:scale-110",
@@ -380,9 +382,9 @@ export default function ProfilePage() {
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
-        className="relative z-10 min-h-[520px] select-none"
+        className="relative z-10 select-none"
       >
-        {/* Stickers - Placed behind the UI elements but above background */}
+        {/* Stickers Area */}
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id}
@@ -408,8 +410,17 @@ export default function ProfilePage() {
           </div>
         ))}
 
-        {/* Banner - PROTECTED: Stickers cannot be placed on it */}
-        <div className="relative h-48 w-full bg-muted overflow-hidden transition-colors duration-300" onClick={(e) => e.stopPropagation()}>
+        {/* Banner - PROTECTED Area */}
+        <div 
+          className="relative h-48 w-full bg-muted overflow-hidden transition-colors duration-300" 
+          onClick={(e) => {
+            e.stopPropagation();
+            if (isPaintMode && activeColor) {
+               // Logic to paint specific small parts could be added here if needed, 
+               // for now it just blocks sticker placement.
+            }
+          }}
+        >
           <Image 
             src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} 
             alt="banner" 
@@ -420,8 +431,8 @@ export default function ProfilePage() {
         </div>
 
         <div className="px-6 -mt-16 flex flex-col items-center mb-8 relative z-50">
-          {/* Avatar - PROTECTED: Stickers cannot be placed on it */}
-          <div className="relative mb-4 cursor-default" onClick={(e) => e.stopPropagation()}>
+          {/* Avatar - PROTECTED Area */}
+          <div className="relative mb-4" onClick={(e) => e.stopPropagation()}>
             <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-none">
               <AvatarImage src={formData.profilePic} />
               <AvatarFallback>{user.displayName?.[0] || "U"}</AvatarFallback>
@@ -445,8 +456,8 @@ export default function ProfilePage() {
           {/* ZONE 3: STATS SECTION */}
           <div 
             onClick={(e) => handleZoneClick(e, 'statsSection')}
-            className="grid grid-cols-3 gap-8 w-full py-6 px-4 rounded-[2rem] transition-colors duration-300 border bg-white/50 cursor-pointer"
-            style={{ backgroundColor: formData.customColors.statsSection }}
+            className="grid grid-cols-3 gap-8 w-full py-6 px-4 rounded-[2rem] transition-colors duration-300 border bg-white cursor-pointer"
+            style={{ backgroundColor: formData.customColors.statsSection || "#FFFFFF" }}
           >
             <div className="text-center" onClick={(e) => e.stopPropagation()}>
               <p className="text-xl font-black text-primary">{profileData?.totalIdeasPosted || 0}</p>
@@ -464,22 +475,44 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <div className="relative z-10">
+      {/* ZONE 4: TABS SECTION */}
+      <div className="relative z-10 pb-10">
         <Tabs defaultValue="my-ideas" className="w-full">
-          <TabsList className="w-full bg-transparent border-b rounded-none px-6 h-14">
-            <TabsTrigger value="my-ideas" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary"><Grid size={22} /></TabsTrigger>
-            <TabsTrigger value="saved" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary"><Bookmark size={22} /></TabsTrigger>
-            <TabsTrigger value="liked" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary"><Heart size={22} /></TabsTrigger>
-          </TabsList>
-          <TabsContent value="my-ideas" className="px-1 mt-2">
-            <div className="grid grid-cols-3 gap-1">
-              {[1,2,3,4,5,6].map((i) => (
-                <div key={i} className="aspect-square relative overflow-hidden group">
-                  <Image src={`https://picsum.photos/seed/idea${user.uid}${i}/400/400`} alt="idea" fill className="object-cover" />
-                </div>
-              ))}
-            </div>
-          </TabsContent>
+          {/* ZONE 5: TABS LIST (Icons Bar) */}
+          <div 
+            onClick={(e) => handleZoneClick(e, 'tabsList')}
+            className="transition-colors duration-300 cursor-pointer border-b"
+            style={{ backgroundColor: formData.customColors.tabsList }}
+          >
+            <TabsList className="w-full bg-transparent border-none rounded-none px-6 h-14" onClick={(e) => e.stopPropagation()}>
+              <TabsTrigger value="my-ideas" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary"><Grid size={22} /></TabsTrigger>
+              <TabsTrigger value="saved" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary"><Bookmark size={22} /></TabsTrigger>
+              <TabsTrigger value="liked" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary"><Heart size={22} /></TabsTrigger>
+            </TabsList>
+          </div>
+
+          {/* ZONE 6: TABS CONTENT (Grid Area) */}
+          <div 
+            onClick={(e) => handleZoneClick(e, 'tabsContent')}
+            className="min-h-[300px] transition-colors duration-300 cursor-pointer"
+            style={{ backgroundColor: formData.customColors.tabsContent }}
+          >
+            <TabsContent value="my-ideas" className="px-1 mt-0" onClick={(e) => e.stopPropagation()}>
+              <div className="grid grid-cols-3 gap-1">
+                {[1,2,3,4,5,6].map((i) => (
+                  <div key={i} className="aspect-square relative overflow-hidden group">
+                    <Image src={`https://picsum.photos/seed/idea${user.uid}${i}/400/400`} alt="idea" fill className="object-cover" />
+                  </div>
+                ))}
+              </div>
+            </TabsContent>
+            <TabsContent value="saved" className="flex items-center justify-center py-20 opacity-30" onClick={(e) => e.stopPropagation()}>
+              <Bookmark size={40} />
+            </TabsContent>
+            <TabsContent value="liked" className="flex items-center justify-center py-20 opacity-30" onClick={(e) => e.stopPropagation()}>
+              <Heart size={40} />
+            </TabsContent>
+          </div>
         </Tabs>
       </div>
     </div>
