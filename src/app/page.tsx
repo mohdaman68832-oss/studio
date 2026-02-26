@@ -190,7 +190,7 @@ export default function FeedPage() {
             {ideasToDisplay.length > 0 ? (
               ideasToDisplay.map((idea, index) => (
                 <div key={idea.id} className="animate-in fade-in slide-in-from-bottom-4 duration-300" style={{ animationDelay: `${index * 50}ms` }}>
-                  <IdeaCard idea={idea as any} priority={index < 2} />
+                  <IdeaCard idea={idea as any} priority={index < 2} isMemeView={activeCategory === "Meme"} />
                 </div>
               ))
             ) : (
