@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, MoreHorizontal, Share2, Play, MessageCircle, X } from "lucide-react";
+import { ArrowBigUp, MoreHorizontal, Share2, Play, MessageCircle, X } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -88,6 +88,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
         userId: user.uid 
       })
         .then(() => {
+          // Ensure the document exists before incrementing
           setDoc(ideaRef, { 
             likes: increment(1),
             title: idea.title || "Untitled",
@@ -166,8 +167,8 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
         isProcessing && "active-glow"
       )}
     >
-      <Heart 
-        size={28} 
+      <ArrowBigUp 
+        size={32} 
         className={cn(
           "transition-all duration-300",
           isLiked ? "text-secondary fill-current drop-shadow-[0_0_8px_rgba(255,69,0,0.4)]" : "text-foreground/30"
