@@ -15,7 +15,8 @@ import {
   LayoutGrid,
   Pencil,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  History
 } from "lucide-react";
 import { useCollection, useFirestore } from "@/firebase";
 import { collection, query, where, orderBy } from "firebase/firestore";
@@ -118,9 +119,9 @@ export default function UnionDetailPage() {
             </div>
           </div>
 
-          {/* Stats Bar with Join/Active count and Pencil/Post button */}
+          {/* Stats Bar with Join/Active count, Weekly Posts and Pencil/Post button */}
           <div className="flex items-center justify-between bg-white p-4 rounded-3xl border border-border/50 shadow-sm">
-            <div className="flex gap-6">
+            <div className="flex gap-4">
               <div className="flex flex-col">
                 <span className="text-sm font-black text-foreground">{union.memberCount.toLocaleString()}</span>
                 <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">Joined</span>
@@ -128,6 +129,10 @@ export default function UnionDetailPage() {
               <div className="flex flex-col">
                 <span className="text-sm font-black text-green-500">{union.stats.activeToday}</span>
                 <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">Active</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-black text-primary">{union.stats.weeklyPosts}</span>
+                <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">7d Posts</span>
               </div>
             </div>
 
