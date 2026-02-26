@@ -273,16 +273,11 @@ export default function ProfilePage() {
       )}
 
       <div 
-        onClick={(e) => handleZoneClick(e, 'background')}
-        className="px-6 flex justify-between items-center mb-6 relative z-10"
+        onClick={(e) => handleZoneClick(e, 'header')}
+        className="px-6 flex justify-between items-center mb-6 relative z-10 py-2 transition-colors"
+        style={{ backgroundColor: formData.customColors.header }}
       >
-        <h1 
-          onClick={(e) => handleZoneClick(e, 'header')}
-          className="text-2xl font-black text-primary uppercase tracking-tighter cursor-pointer px-2 rounded-md"
-          style={{ backgroundColor: formData.customColors.header }}
-        >
-          Profile
-        </h1>
+        <h1 className="text-2xl font-black text-primary uppercase tracking-tighter">Profile</h1>
         <Sheet open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full" onClick={(e) => e.stopPropagation()}><Settings size={22} className="text-primary" /></Button>
@@ -314,7 +309,7 @@ export default function ProfilePage() {
                       setActiveColor(color);
                       setIsPaintMode(true);
                       setIsEditModalOpen(false);
-                      toast({ title: "Painting Mode", description: "Tap any section on your profile to paint it." });
+                      toast({ title: "Painting Mode", description: "Tap any section on your profile (Header, Bio, Stats, or Background) to paint it." });
                     }}
                     className={cn(
                       "w-8 h-8 rounded-full border-2 transition-transform hover:scale-110",
@@ -383,9 +378,9 @@ export default function ProfilePage() {
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
         onClick={(e) => handleZoneClick(e, 'background')}
-        className="relative z-10 min-h-[450px] select-none"
+        className="relative z-10 min-h-[500px] select-none"
       >
-        {/* Stickers - Restricted movement on pointer move logic */}
+        {/* Stickers */}
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id}
@@ -413,9 +408,7 @@ export default function ProfilePage() {
 
         {/* Banner Area Zone */}
         <div 
-          onClick={(e) => handleZoneClick(e, 'header')}
-          className="relative h-48 w-full bg-muted overflow-hidden transition-colors duration-300 cursor-pointer"
-          style={{ backgroundColor: formData.customColors.header }}
+          className="relative h-48 w-full bg-muted overflow-hidden transition-colors duration-300"
         >
           <Image 
             src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} 
@@ -433,7 +426,7 @@ export default function ProfilePage() {
             onPointerDown={(e) => e.stopPropagation()} // Avatar blocks sticker movement trigger
             onClick={(e) => e.stopPropagation()}
           >
-            <Avatar className="h-32 w-32 border-4 border-white shadow-sm bg-white">
+            <Avatar className="h-32 w-32 border-4 border-white shadow-none bg-white">
               <AvatarImage src={formData.profilePic} />
               <AvatarFallback>{user.displayName?.[0] || "U"}</AvatarFallback>
             </Avatar>
@@ -445,7 +438,7 @@ export default function ProfilePage() {
           {/* Bio Card Zone */}
           <div 
             onClick={(e) => handleZoneClick(e, 'bioCard')}
-            className="p-6 rounded-[2.5rem] border shadow-sm w-full transition-colors duration-300 bg-white mb-6 cursor-pointer"
+            className="p-6 rounded-[2.5rem] border shadow-none w-full transition-colors duration-300 bg-white mb-6 cursor-pointer"
             style={{ 
               backgroundColor: formData.customColors.bioCard || "#FFFFFF",
             }}
@@ -461,7 +454,7 @@ export default function ProfilePage() {
           {/* Stats Section Zone */}
           <div 
             onClick={(e) => handleZoneClick(e, 'statsSection')}
-            className="grid grid-cols-3 gap-8 w-full py-6 px-4 rounded-[2rem] transition-colors duration-300 border bg-white/50"
+            className="grid grid-cols-3 gap-8 w-full py-6 px-4 rounded-[2rem] transition-colors duration-300 border bg-white/50 cursor-pointer"
             style={{ backgroundColor: formData.customColors.statsSection }}
           >
             <div className="text-center" onClick={(e) => e.stopPropagation()}>
@@ -501,4 +494,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
