@@ -44,6 +44,8 @@ export default function PostPage() {
   const [isPosting, setIsPosting] = useState(false);
   const [mediaType, setMediaType] = useState<"text" | "image" | "video" | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isImageSheetOpen, setIsImageSheetOpen] = useState(false);
+  const [isVideoSheetOpen, setIsVideoSheetOpen] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
   const db = useFirestore();
@@ -67,11 +69,15 @@ export default function PostPage() {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: "image" | "video") => {
     const file = e.target.files?.[0];
     if (file) {
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
+      setMediaType(type);
+      // Auto-close the sheet after selection
+      if (type === "image") setIsImageSheetOpen(false);
+      if (type === "video") setIsVideoSheetOpen(false);
     }
   };
 
@@ -146,7 +152,7 @@ export default function PostPage() {
           <div className="space-y-4">
             <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground text-center block">Choose Your Format</Label>
             <div className="grid grid-cols-3 gap-3">
-              <Sheet>
+              <Sheet open={isImageSheetOpen} onOpenChange={setIsImageSheetOpen}>
                 <SheetTrigger asChild>
                   <Button 
                     variant="outline" 
@@ -172,7 +178,7 @@ export default function PostPage() {
                       ref={fileInputRef} 
                       className="hidden" 
                       accept="image/*" 
-                      onChange={handleFileChange} 
+                      onChange={(e) => handleFileChange(e, "image")} 
                     />
                     <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center">
                        <Upload className="text-muted-foreground" />
@@ -184,7 +190,7 @@ export default function PostPage() {
                 </SheetContent>
               </Sheet>
 
-              <Sheet>
+              <Sheet open={isVideoSheetOpen} onOpenChange={setIsVideoSheetOpen}>
                 <SheetTrigger asChild>
                   <Button 
                     variant="outline" 
@@ -210,7 +216,7 @@ export default function PostPage() {
                       ref={fileInputRef} 
                       className="hidden" 
                       accept="video/*" 
-                      onChange={handleFileChange} 
+                      onChange={(e) => handleFileChange(e, "video")} 
                     />
                     <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center">
                        <Upload className="text-muted-foreground" />
