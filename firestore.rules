@@ -1,95 +1,64 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
      * InnovateSphere Security Rules
-     * 
-     * Core Philosophy:
-     * This ruleset implements an Authorization Independence model via denormalization. 
-     * Security decisions are primarily made using data stored directly on the document 
-     * being accessed (e.g., ownerId, participantIds) to ensure high performance and 
-     * reduce cross-document lookups (get() calls).
      */
 
     // --- Helper Functions ---
-
-    /** @description Checks if the request is from an authenticated user. */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /** @description Checks if the authenticated user's UID matches the provided ID. */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /** @description Checks ownership for existing documents during update or delete. */
     function isExistingOwner(userId) {
       return resource != null && isOwner(userId);
     }
 
-    /** @description Checks if the user is present in a list of participant UIDs. */
     function isMember(participantIds) {
       return isSignedIn() && (request.auth.uid in participantIds);
     }
 
     // --- Collection Rules ---
 
-    /**
-     * @description Rules for User Profiles.
-     */
     match /userProfiles/{userId} {
-      allow get, list: if true;
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow read: if true;
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
 
-    /**
-     * @description Rules for Ideas and their nested suggestions.
-     */
     match /ideas/{ideaId} {
-      allow get, list: if true;
+      allow read: if true;
       allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.authorId) && request.resource.data.authorId == resource.data.authorId;
+      allow update: if isExistingOwner(resource.data.authorId);
       allow delete: if isExistingOwner(resource.data.authorId);
 
-      /**
-       * @description Rules for Idea Suggestions (Live Feedback).
-       * These are nested within an idea and are publicly readable to foster community feedback.
-       */
       match /suggestions/{suggestionId} {
-        allow get, list: if true;
+        allow read: if true;
         allow create: if isSignedIn();
-        // Since we don't have an owner field on suggestions yet in the UI, we'll keep it simple.
-        // In a production app, we would add 'authorId' to suggestions and restrict update/delete.
       }
     }
 
-    /**
-     * @description Rules for Idea Ratings.
-     */
     match /ideaRatings/{ratingId} {
-      allow get, list: if true;
+      allow read: if true;
       allow create: if isSignedIn() && request.resource.data.raterId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.raterId) && request.resource.data.raterId == resource.data.raterId;
+      allow update: if isExistingOwner(resource.data.raterId);
       allow delete: if isExistingOwner(resource.data.raterId);
     }
 
-    /**
-     * @description Rules for Idea Feedback (Top-level collection).
-     */
     match /ideaFeedbacks/{feedbackId} {
-      allow get, list: if true;
+      allow read: if true;
       allow create: if isSignedIn() && request.resource.data.feedbackerId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.feedbackerId) && request.resource.data.feedbackerId == resource.data.feedbackerId;
+      allow update: if isExistingOwner(resource.data.feedbackerId);
       allow delete: if isExistingOwner(resource.data.feedbackerId);
     }
 
-    /**
-     * @description Rules for Collaboration Sessions.
-     */
     match /collaborationSessions/{sessionId} {
       allow get: if isMember(resource.data.participantIds) || isOwner(resource.data.creatorId);
       allow list: if isSignedIn();
@@ -98,11 +67,8 @@ service cloud.firestore {
       allow delete: if isExistingOwner(resource.data.creatorId);
 
       match /chatMessages/{messageId} {
-        allow get: if isOwner(resource.data.senderId) || isMember(resource.data.participantIds);
-        allow list: if isSignedIn();
+        allow read: if isOwner(resource.data.senderId) || isMember(resource.data.participantIds);
         allow create: if isSignedIn() && request.resource.data.senderId == request.auth.uid;
-        allow update: if isExistingOwner(resource.data.senderId) && request.resource.data.senderId == resource.data.senderId;
-        allow delete: if isExistingOwner(resource.data.senderId);
       }
     }
   }
