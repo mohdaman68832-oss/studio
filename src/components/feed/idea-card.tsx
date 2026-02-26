@@ -16,6 +16,8 @@ import {
   DialogTitle,
   DialogHeader,
 } from "@/components/ui/dialog";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection } from "firebase/firestore";
 
 interface IdeaCardProps {
   idea: {
@@ -29,23 +31,25 @@ interface IdeaCardProps {
     mediaUrl: string;
     innovationScore: number;
     tags: string[];
-    likes: number;
   };
   priority?: boolean;
   isMemeView?: boolean;
 }
 
 export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCardProps) {
-  const [isLiked, setIsLiked] = useState(false);
   const { toast } = useToast();
+  const db = useFirestore();
+
+  // Fetch suggestions count to determine upvotes (Upvotes = Comment Count)
+  const suggestionsQuery = useMemoFirebase(() => {
+    if (!db || !idea.id) return null;
+    return collection(db, "ideas", idea.id, "suggestions");
+  }, [db, idea.id]);
+
+  const { data: suggestions } = useCollection(suggestionsQuery);
+  const upvoteCount = suggestions?.length || 0;
 
   const userHandle = idea.userName.toLowerCase().replace(/\s/g, '');
-
-  const handleLikeToggle = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsLiked(!isLiked);
-  };
 
   const handleShare = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -56,7 +60,6 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
     });
   };
 
-  const displayLikes = idea.likes + (isLiked ? 1 : 0);
   const isVideo = idea.mediaUrl && (idea.mediaUrl.includes('blob:') || idea.mediaUrl.endsWith('.mp4') || idea.mediaUrl.endsWith('.webm') || idea.mediaUrl.includes('gtv-videos-bucket'));
   const isTextPost = !idea.mediaUrl || idea.mediaUrl.includes('textpost') || idea.mediaUrl === "";
 
@@ -145,22 +148,18 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
 
         <div className="flex items-center justify-between mt-4">
           <div className="flex items-center gap-6">
-            <button 
-              onClick={handleLikeToggle} 
-              className={cn("transition-transform group", isLiked && "active-glow")}
-              aria-label="Upvote"
-            >
+            <div className="flex flex-col items-center">
               <ArrowBigUp 
                 size={38} 
                 className={cn(
                   "transition-all duration-300",
-                  isLiked ? "text-secondary fill-current drop-shadow-[0_0_8px_rgba(255,69,0,0.4)]" : "text-foreground group-hover:text-secondary/50"
+                  upvoteCount > 0 ? "text-secondary fill-current drop-shadow-[0_0_8px_rgba(255,69,0,0.4)]" : "text-foreground opacity-30"
                 )} 
               />
-            </button>
-            <button className="text-foreground hover:text-primary transition-colors p-2">
+            </div>
+            <Link href={`/idea/${idea.id}`} className="text-foreground hover:text-primary transition-colors p-2">
               <MessageCircle size={26} />
-            </button>
+            </Link>
             <button 
               onClick={handleShare}
               className="text-foreground hover:text-primary transition-colors p-2"
@@ -172,7 +171,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
           
           <div className="bg-muted/30 py-1.5 px-3 rounded-full border border-border/50">
               <span className="text-[11px] font-black uppercase tracking-tighter text-foreground/70">
-                {displayLikes >= 1000 ? `${(displayLikes / 1000).toFixed(1)}k` : displayLikes} upvotes
+                {upvoteCount >= 1000 ? `${(upvoteCount / 1000).toFixed(1)}k` : upvoteCount} upvotes
               </span>
           </div>
         </div>
@@ -203,7 +202,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
               <p className="text-sm text-foreground/70 leading-relaxed font-medium line-clamp-3">
                 {idea.description}
               </p>
-              <p className="text-[10px] font-black text-secondary mt-3 uppercase tracking-widest bg-secondary/5 inline-block px-3 py-1 rounded-full">Click to discuss & collaborate</p>
+              <p className="text-[10px] font-black text-secondary mt-3 uppercase tracking-widest bg-secondary/5 inline-block px-3 py-1 rounded-full">Click to discuss & upvote</p>
             </div>
           )}
         </Link>
@@ -217,19 +216,18 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
 
       <div className="flex items-center justify-between px-5 py-4">
         <div className="flex items-center gap-5">
-          <button 
-            onClick={handleLikeToggle} 
-            className={cn("transition-transform group", isLiked && "active-glow")}
-            aria-label="Upvote"
-          >
+          <div className="flex items-center gap-2">
             <ArrowBigUp 
               size={36} 
               className={cn(
                 "transition-all duration-300",
-                isLiked ? "text-secondary fill-current drop-shadow-[0_0_8px_rgba(255,69,0,0.4)]" : "text-foreground group-hover:text-secondary/50"
+                upvoteCount > 0 ? "text-secondary fill-current drop-shadow-[0_0_8px_rgba(255,69,0,0.4)]" : "text-foreground opacity-30"
               )} 
             />
-          </button>
+          </div>
+          <Link href={`/idea/${idea.id}`} className="text-foreground hover:text-primary transition-colors p-2">
+            <MessageCircle size={24} />
+          </Link>
           <button 
             onClick={handleShare}
             className="text-foreground hover:text-primary transition-colors p-2"
@@ -241,14 +239,15 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
         
         <div className="flex items-center gap-3 bg-muted/30 py-1.5 px-3 rounded-full border border-border/50">
             <div className="flex -space-x-2">
-                {[1,2,3].map(i => (
+                {suggestions && suggestions.slice(0, 3).map((s, i) => (
                     <Avatar key={i} className="h-6 w-6 border-2 border-background shadow-sm">
-                         <AvatarImage src={`https://picsum.photos/seed/${i + 25}/50/50`} />
+                         <AvatarImage src={s.userAvatar || `https://picsum.photos/seed/${i + 25}/50/50`} />
+                         <AvatarFallback>{s.userName?.[0]}</AvatarFallback>
                     </Avatar>
                 ))}
             </div>
             <span className="text-[11px] font-black uppercase tracking-tighter text-foreground/70">
-              {displayLikes >= 1000 ? `${(displayLikes / 1000).toFixed(1)}k` : displayLikes} upvotes
+              {upvoteCount >= 1000 ? `${(upvoteCount / 1000).toFixed(1)}k` : upvoteCount} upvotes
             </span>
         </div>
       </div>
