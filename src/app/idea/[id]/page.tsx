@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useDoc, useCollection, useFirestore } from "@/firebase";
+import { useDoc, useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, addDoc, query, orderBy, serverTimestamp, doc } from "firebase/firestore";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -61,15 +61,15 @@ export default function IdeaDetailPage() {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  const ideaRef = useMemo(() => (db ? doc(db, "ideas", ideaId) : null), [db, ideaId]);
-  const { data: firestoreIdea, loading: ideaLoading } = useDoc(ideaRef);
+  const ideaRef = useMemoFirebase(() => (db ? doc(db, "ideas", ideaId) : null), [db, ideaId]);
+  const { data: firestoreIdea, isLoading: ideaLoading } = useDoc(ideaRef);
 
   const idea = useMemo(() => {
     if (firestoreIdea) return firestoreIdea;
     return MOCK_IDEAS.find(i => i.id === ideaId);
   }, [firestoreIdea, ideaId]);
 
-  const suggestionsQuery = useMemo(() => {
+  const suggestionsQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(
       collection(db, "ideas", ideaId, "suggestions"),
@@ -77,7 +77,7 @@ export default function IdeaDetailPage() {
     );
   }, [db, ideaId]);
 
-  const { data: suggestions, loading: suggestionsLoading } = useCollection(suggestionsQuery);
+  const { data: suggestions, isLoading: suggestionsLoading } = useCollection(suggestionsQuery);
 
   useEffect(() => {
     if (scrollContainerRef.current) {

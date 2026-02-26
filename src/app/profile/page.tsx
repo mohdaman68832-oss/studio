@@ -1,12 +1,25 @@
+
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {Settings, Edit3, Grid, Bookmark, Heart} from "lucide-react";
+import {Settings, Edit3, Grid, Bookmark, Heart, LogOut} from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Image from "next/image";
+import { useUser, useAuth } from "@/firebase";
+import { signOut } from "firebase/auth";
+import { useRouter } from "next/navigation";
 
 export default function ProfilePage() {
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    await signOut(auth);
+    router.push("/login");
+  };
+
   const MY_IDEAS = [
     "https://picsum.photos/seed/idea1/300/300",
     "https://picsum.photos/seed/idea2/300/300",
@@ -16,12 +29,21 @@ export default function ProfilePage() {
     "https://picsum.photos/seed/idea6/300/300",
   ];
 
+  if (isUserLoading) {
+    return <div className="max-w-md mx-auto min-h-screen flex items-center justify-center">Loading Profile...</div>;
+  }
+
+  if (!user) {
+    router.push("/login");
+    return null;
+  }
+
   return (
     <div className="max-w-md mx-auto min-h-screen bg-background pt-6 pb-24">
       <div className="px-6 flex justify-between mb-6">
         <h1 className="text-2xl font-bold text-primary">Profile</h1>
         <div className="flex gap-2">
-          <Button variant="ghost" size="icon" className="rounded-full"><Edit3 size={20}/></Button>
+          <Button variant="ghost" size="icon" className="rounded-full" onClick={handleSignOut}><LogOut size={20}/></Button>
           <Button variant="ghost" size="icon" className="rounded-full"><Settings size={20}/></Button>
         </div>
       </div>
@@ -29,13 +51,13 @@ export default function ProfilePage() {
       <div className="px-6 flex flex-col items-center mb-8">
         <div className="relative mb-4">
           <Avatar className="h-24 w-24 border-4 border-white shadow-xl">
-            <AvatarImage src="https://picsum.photos/seed/me/200/200" />
-            <AvatarFallback>JD</AvatarFallback>
+            <AvatarImage src={user.photoURL || "https://picsum.photos/seed/me/200/200"} />
+            <AvatarFallback>{user.displayName?.[0] || "U"}</AvatarFallback>
           </Avatar>
           <div className="absolute bottom-1 right-1 bg-green-500 w-5 h-5 rounded-full border-4 border-white"></div>
         </div>
-        <h2 className="text-xl font-black text-foreground">John Innovator</h2>
-        <p className="text-sm text-muted-foreground mb-4">Founder @ EcoConnect</p>
+        <h2 className="text-xl font-black text-foreground">{user.displayName || "Innovator"}</h2>
+        <p className="text-sm text-muted-foreground mb-4">{user.email}</p>
         <p className="text-center text-xs text-muted-foreground px-8 leading-relaxed mb-6">
           Building the future of decentralized energy systems. Open to hardware collaborations.
         </p>

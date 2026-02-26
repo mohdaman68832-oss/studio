@@ -4,7 +4,7 @@
 import { IdeaCard } from "@/components/feed/idea-card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useCollection, useFirestore } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy } from "firebase/firestore";
 import { useMemo, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -55,12 +55,12 @@ export default function FeedPage() {
   const db = useFirestore();
   const [activeCategory, setActiveCategory] = useState("All");
 
-  const ideasQuery = useMemo(() => {
+  const ideasQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, "ideas"), orderBy("createdAt", "desc"));
   }, [db]);
 
-  const { data: firestoreIdeas, loading } = useCollection(ideasQuery);
+  const { data: firestoreIdeas, isLoading: loading } = useCollection(ideasQuery);
 
   // Optimistic UI: Use Firestore data if available, otherwise fallback to Mock data instantly
   const ideasToDisplay = useMemo(() => {
@@ -88,8 +88,7 @@ export default function FeedPage() {
       </div>
 
       <div className="space-y-6 mt-6">
-        {/* Only show skeletons on the very first load when NO data is available */}
-        {loading && (!firestoreIdeas || firestoreIdeas.length === 0) && !MOCK_IDEAS ? (
+        {loading && (!firestoreIdeas || firestoreIdeas.length === 0) ? (
           <div className="space-y-12">
             {[1, 2].map(i => (
               <div key={i} className="space-y-4">

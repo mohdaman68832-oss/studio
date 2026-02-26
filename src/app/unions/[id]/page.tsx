@@ -16,7 +16,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import { useCollection, useFirestore } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, where, orderBy } from "firebase/firestore";
 import { IdeaCard } from "@/components/feed/idea-card";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -86,7 +86,7 @@ export default function UnionDetailPage() {
     return MOCK_UNIONS.find(u => u.id === unionId) || MOCK_UNIONS[0];
   }, [unionId]);
 
-  const postsQuery = useMemo(() => {
+  const postsQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(
       collection(db, "ideas"),
@@ -95,7 +95,7 @@ export default function UnionDetailPage() {
     );
   }, [db, union.category]);
 
-  const { data: firestorePosts, loading: postsLoading } = useCollection(postsQuery);
+  const { data: firestorePosts, isLoading: postsLoading } = useCollection(postsQuery);
 
   const posts = useMemo(() => {
     if (firestorePosts && firestorePosts.length > 0) return firestorePosts;
