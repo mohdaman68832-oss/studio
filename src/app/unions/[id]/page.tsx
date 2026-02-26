@@ -132,7 +132,7 @@ export default function UnionDetailPage() {
           {/* Stats Bar */}
           <div className="grid grid-cols-2 gap-3">
             {[
-              { label: "Active Today", value: union.stats.activeToday, icon: TrendingUp, color: "text-green-500" },
+              { label: "Active Users", value: union.stats.activeToday, icon: Users, color: "text-green-500" },
               { label: "Weekly Posts", value: union.stats.weeklyPosts, icon: LayoutGrid, color: "text-secondary" }
             ].map((stat, idx) => (
               <div key={idx} className="bg-white p-4 rounded-3xl border border-border/50 shadow-sm flex flex-col items-center text-center gap-1">
