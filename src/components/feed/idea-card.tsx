@@ -17,7 +17,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { useFirestore, useUser, useDoc, useMemoFirebase } from "@/firebase";
-import { doc, setDoc, deleteDoc, increment } from "firebase/firestore";
+import { doc, setDoc, deleteDoc, increment, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 
 interface IdeaCardProps {
@@ -46,12 +46,22 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // Reference to the current user's like for this post
   const userLikeRef = useMemoFirebase(() => 
     (db && user && idea.id) ? doc(db, "ideas", idea.id, "likes", user.uid) : null
   , [db, user, idea.id]);
   
   const { data: userLike } = useDoc(userLikeRef);
   const isLiked = !!userLike;
+
+  // Real-time listener for the main idea doc to get live likes count
+  const ideaDocRef = useMemoFirebase(() => 
+    (db && idea.id) ? doc(db, "ideas", idea.id) : null
+  , [db, idea.id]);
+  const { data: liveIdeaData } = useDoc(ideaDocRef);
+
+  // Use live count if available, otherwise fallback to idea props
+  const likesCount = liveIdeaData?.likes ?? idea.likes ?? 0;
 
   const handleToggleLike = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -63,8 +73,10 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
     const likeDocRef = doc(db, "ideas", idea.id, "likes", user.uid);
 
     if (isLiked) {
+      // Remove Like
       deleteDoc(likeDocRef)
         .then(() => {
+          // Decrement global count - use setDoc with merge for robustness
           setDoc(ideaRef, { likes: increment(-1) }, { merge: true });
         })
         .catch(() => {})
@@ -72,12 +84,20 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
           setTimeout(() => setIsProcessing(false), 300);
         });
     } else {
+      // Add Like
       setDoc(likeDocRef, { 
-        timestamp: new Date().toISOString(),
+        timestamp: serverTimestamp(),
         userId: user.uid 
       })
         .then(() => {
-          setDoc(ideaRef, { likes: increment(1) }, { merge: true });
+          // Increment global count
+          // If doc doesn't exist (mock data), create it with basic info + count
+          setDoc(ideaRef, { 
+            likes: increment(1),
+            title: idea.title,
+            authorId: idea.id.startsWith('post-') ? 'system' : (idea as any).authorId || 'system',
+            createdAt: serverTimestamp()
+          }, { merge: true });
         })
         .catch(() => {})
         .finally(() => {
@@ -162,7 +182,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
           "text-sm font-black transition-colors leading-none",
           isLiked ? "text-secondary" : "text-foreground/40"
         )}>
-          {idea.likes || 0}
+          {likesCount}
         </span>
         <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground/30">Support</span>
       </div>
@@ -182,11 +202,10 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
           </DialogTrigger>
           <DialogContent className="max-w-screen h-screen w-full p-0 bg-black/95 border-none shadow-none flex items-center justify-center z-[200]">
             <DialogHeader className="sr-only">
-              <DialogTitle>{idea.title || "Meme Preview"}</DialogTitle>
+              <DialogTitle>{idea.title || "Meme Zoom"}</DialogTitle>
             </DialogHeader>
             <DialogClose className="absolute top-6 right-6 z-[210] bg-white/10 hover:bg-white/20 p-3 rounded-full text-white backdrop-blur-md transition-all">
               <X size={32} />
-              <span className="sr-only">Close Zoom</span>
             </DialogClose>
             <div className="relative w-full h-full p-4 flex items-center justify-center">
               {isVideo ? (

@@ -67,6 +67,7 @@ export default function FeedPage() {
     }
 
     if (activeCategory === "All") {
+      // If user has interests, filter by them or show Memes
       if (profile?.interests && profile.interests.length > 0) {
         return base.filter(i => 
           profile.interests.includes(i.category) || 
@@ -81,6 +82,7 @@ export default function FeedPage() {
 
   useEffect(() => {
     const handleScroll = () => {
+      // Show refresh button only when at the very top and scrolling up
       if (window.scrollY === 0) {
         setShowRefresh(true);
       } else if (window.scrollY > 50) {
@@ -93,6 +95,7 @@ export default function FeedPage() {
 
   const handleReload = () => {
     setIsRefreshing(true);
+    // Simulate reload for user feedback
     setTimeout(() => {
       window.location.reload();
     }, 800);
@@ -100,7 +103,7 @@ export default function FeedPage() {
 
   return (
     <div className="max-w-md mx-auto min-h-screen bg-background px-4 pt-8 pb-24 relative">
-      {/* Refresh Trigger Button at the very top */}
+      {/* Deliberate Refresh Trigger Button */}
       <div className={cn(
         "fixed top-4 left-1/2 -translate-x-1/2 z-[100] transition-all duration-300 transform",
         showRefresh ? "translate-y-0 opacity-100" : "-translate-y-20 opacity-0"
@@ -124,7 +127,7 @@ export default function FeedPage() {
         </div>
       </header>
 
-      {/* Category Bar: No longer sticky */}
+      {/* Category Bar: No longer sticky as per request */}
       <div className="flex w-full gap-2 -mx-4 px-4 pt-2 pb-4 mb-2 border-b border-border/50">
         {CATEGORIES.map((cat) => (
           <Button 
