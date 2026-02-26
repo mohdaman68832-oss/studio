@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ArrowBigUp, MoreHorizontal, Lightbulb, Share2, Play, MessageCircle } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -17,7 +17,7 @@ import {
   DialogHeader,
 } from "@/components/ui/dialog";
 import { useFirestore, useUser, useDoc, useMemoFirebase } from "@/firebase";
-import { doc, updateDoc, increment, setDoc, deleteDoc } from "firebase/firestore";
+import { doc, setDoc, increment } from "firebase/firestore";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
 
@@ -58,44 +58,54 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
     e.stopPropagation();
     if (!db || !user || !idea.id || isLiking) return;
 
-    setIsLiking(true);
-    const ideaRef = doc(db, "ideas", idea.id);
-    const likeDocRef = doc(db, "ideas", idea.id, "likes", user.uid);
-
     if (isLiked) {
-      // Unvote logic (Optional, but user said "ek baar hi click kar sakta hai")
-      // If we want to strictly allow only one click that stays orange:
-      // We can just return or show a toast.
       toast({
         title: "Already Supported!",
         description: "You have already upvoted this innovation.",
       });
-      setIsLiking(false);
       return;
-    } else {
-      // Upvote logic
-      setDoc(likeDocRef, { timestamp: new Date().toISOString() })
-        .then(() => {
-          updateDoc(ideaRef, {
-            likes: increment(1)
-          });
-          toast({
-            title: "Upvoted!",
-            description: "Your support has been registered.",
-          });
-        })
+    }
+
+    setIsLiking(true);
+    const ideaRef = doc(db, "ideas", idea.id);
+    const likeDocRef = doc(db, "ideas", idea.id, "likes", user.uid);
+
+    // 1. Create the like document (One user, one vote)
+    setDoc(likeDocRef, { 
+      timestamp: new Date().toISOString(),
+      userId: user.uid 
+    })
+      .then(() => {
+        // 2. Increment the global likes count on the idea document
+        // Using setDoc with merge: true handles cases where the doc might only exist in mock state
+        setDoc(ideaRef, { 
+          likes: increment(1) 
+        }, { merge: true })
         .catch(async (error) => {
           const permissionError = new FirestorePermissionError({
-            path: likeDocRef.path,
-            operation: 'create',
-            requestResourceData: { timestamp: 'now' },
+            path: ideaRef.path,
+            operation: 'update',
+            requestResourceData: { likes: 'increment' },
           });
           errorEmitter.emit('permission-error', permissionError);
-        })
-        .finally(() => {
-          setTimeout(() => setIsLiking(false), 300);
         });
-    }
+
+        toast({
+          title: "Upvoted!",
+          description: "Your support has been registered.",
+        });
+      })
+      .catch(async (error) => {
+        const permissionError = new FirestorePermissionError({
+          path: likeDocRef.path,
+          operation: 'create',
+          requestResourceData: { userId: user.uid },
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      })
+      .finally(() => {
+        setTimeout(() => setIsLiking(false), 300);
+      });
   };
 
   const handleShare = (e: React.MouseEvent) => {

@@ -28,6 +28,7 @@ service cloud.firestore {
     match /ideas/{ideaId} {
       allow get, list: if true;
       allow create: if isSignedIn();
+      // Allow any signed in user to update (increment likes)
       allow update: if isSignedIn();
       allow delete: if isSignedIn() && (resource == null || resource.data.authorId == request.auth.uid);
 
