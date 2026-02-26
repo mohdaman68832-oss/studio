@@ -51,19 +51,6 @@ const MOCK_IDEAS = [
     likes: 512,
   },
   {
-    id: "5",
-    title: "CanvasFlow: Collaborative Digital Murals",
-    problem: "Artists struggling to collaborate in real-time on large-scale digital projects.",
-    description: "An infinite digital canvas where hundreds of artists can contribute to a single mural simultaneously with low latency and smart layer management.",
-    category: "Art",
-    userName: "Maya Artiste",
-    userAvatar: "https://picsum.photos/seed/maya/100/100",
-    mediaUrl: "https://picsum.photos/seed/artpro/800/600",
-    innovationScore: 84,
-    tags: ["DigitalArt", "Collab", "Creative"],
-    likes: 328,
-  },
-  {
     id: "3",
     title: "Aura: Personal Air Purifier",
     problem: "High levels of urban air pollution affecting daily respiratory health.",
@@ -101,9 +88,10 @@ export default function FeedPage() {
 
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY < 10) {
+      // Show refresh button only if at the very top
+      if (window.scrollY === 0) {
         setShowRefresh(true);
-      } else {
+      } else if (window.scrollY > 50) {
         setShowRefresh(false);
       }
     };
@@ -113,6 +101,7 @@ export default function FeedPage() {
 
   const handleReload = () => {
     setIsRefreshing(true);
+    // Simulate a manual reload process
     setTimeout(() => {
       window.location.reload();
     }, 800);
@@ -126,11 +115,13 @@ export default function FeedPage() {
       )}>
         <Button 
           onClick={handleReload}
-          className="rounded-full bg-primary text-white shadow-2xl px-6 py-2 flex items-center gap-2 border-2 border-white/20"
+          className="rounded-full bg-primary text-white shadow-2xl px-6 py-2 flex items-center gap-2 border-2 border-white/20 hover:scale-105 transition-transform"
           disabled={isRefreshing}
         >
           <RefreshCcw size={16} className={cn(isRefreshing && "animate-spin")} />
-          <span className="text-[10px] font-black uppercase tracking-widest">Reload Feed</span>
+          <span className="text-[10px] font-black uppercase tracking-widest">
+            {isRefreshing ? "Refreshing..." : "Reload Feed"}
+          </span>
         </Button>
       </div>
 
@@ -141,7 +132,7 @@ export default function FeedPage() {
         </div>
       </header>
 
-      {/* Categories Bar - Updated to span from side to side */}
+      {/* Categories Bar - Full Width Span */}
       <div className="flex w-full gap-2 sticky top-0 bg-background/80 backdrop-blur-md z-10 -mx-4 px-4 pt-2 pb-4 mb-2 border-b border-border/50">
         {CATEGORIES.map((cat) => (
           <Button 

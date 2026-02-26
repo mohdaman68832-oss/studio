@@ -208,12 +208,6 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
                 </div>
               ))}
             </div>
-            {profileData.totalIdeasPosted === 0 && (
-              <div className="py-20 text-center opacity-30 flex flex-col items-center">
-                <Grid size={40} className="mb-2" style={{ color: getContrastColor(colors.tabsContent) }} />
-                <p className="text-[10px] font-black uppercase tracking-widest">No public ideas yet</p>
-              </div>
-            )}
           </TabsContent>
           <TabsContent value="saved" className="flex items-center justify-center py-20 opacity-30">
             <Bookmark size={40} style={{ color: getContrastColor(colors.tabsContent) }} />

@@ -54,7 +54,7 @@ interface CustomColors {
 const PALETTE = [
   "#FFFFFF", "#FDF2F2", "#F0FDF4", "#EFF6FF", "#FFFBEB",
   "#008080", "#FF4500", "#FFD700", "#4CAF50", "#2196F3",
-  "#9C27B0", "#E91E63", "#000000", "#F2F3F5", "#FFE4E1", "#3399FF", "#00CCFF", "#00BFFF"
+  "#9C27B0", "#E91E63", "#000000", "#F2F3F5"
 ];
 
 function getContrastColor(hexColor: string | undefined): string {
@@ -189,16 +189,6 @@ export default function ProfilePage() {
 
   const handleStickerPointerMove = (e: React.PointerEvent, stickerId: string) => {
     if (draggedStickerId !== stickerId || !containerRef.current || isPaintMode) return;
-    
-    const el = e.currentTarget as HTMLElement;
-    el.style.pointerEvents = 'none';
-    const underneath = document.elementFromPoint(e.clientX, e.clientY);
-    el.style.pointerEvents = 'auto';
-
-    if (underneath?.closest('[data-protected="true"]')) {
-      return; 
-    }
-
     const rect = containerRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
@@ -256,18 +246,10 @@ export default function ProfilePage() {
       onClick={(e) => handleZoneClick(e, 'background')}
     >
       {isPaintMode && activeColor && (
-        <div 
-          className="fixed top-20 left-1/2 -translate-x-1/2 z-[300] bg-white px-6 py-2 rounded-full shadow-2xl border-2 border-primary flex items-center gap-3 animate-in fade-in slide-in-from-top-4"
-          onClick={(e) => e.stopPropagation()} 
-        >
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[300] bg-white px-6 py-2 rounded-full shadow-2xl border-2 border-primary flex items-center gap-3 animate-in fade-in slide-in-from-top-4">
           <div className="w-4 h-4 rounded-full border shadow-sm" style={{ backgroundColor: activeColor }}></div>
           <p className="text-[10px] font-black uppercase tracking-widest text-primary">Paint Mode Active</p>
-          <button 
-            className="h-6 w-6 p-0 rounded-full hover:bg-muted flex items-center justify-center" 
-            onClick={(e) => { e.stopPropagation(); setIsPaintMode(false); setActiveColor(null); }}
-          >
-            <X size={14}/>
-          </button>
+          <button className="h-6 w-6 p-0 rounded-full hover:bg-muted flex items-center justify-center" onClick={() => { setIsPaintMode(false); setActiveColor(null); }}><X size={14}/></button>
         </div>
       )}
 
@@ -283,12 +265,7 @@ export default function ProfilePage() {
         <h1 className="text-2xl font-black uppercase tracking-tighter" style={{ color: getContrastColor(formData.customColors.header) }}>Profile</h1>
         <Sheet open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
           <SheetTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              data-protected="true"
-              className={cn("rounded-full", isPaintMode && "pointer-events-none opacity-50")}
-            >
+            <Button variant="ghost" size="icon" className={cn("rounded-full", isPaintMode && "pointer-events-none opacity-50")}>
               <Settings size={22} style={{ color: getContrastColor(formData.customColors.header) }} />
             </Button>
           </SheetTrigger>
@@ -313,12 +290,12 @@ export default function ProfilePage() {
         )}
         style={{ backgroundColor: formData.customColors.userInfo }}
       >
-        <div className="relative h-48 w-full bg-muted overflow-hidden" data-protected="true">
+        <div className="relative h-48 w-full bg-muted overflow-hidden">
           <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover" draggable={false} />
         </div>
 
         <div className="px-6 -mt-16 flex flex-col items-center relative z-10">
-          <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-lg" data-protected="true">
+          <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-lg">
             <AvatarImage src={formData.profilePic} />
             <AvatarFallback>{user.displayName?.[0] || "U"}</AvatarFallback>
           </Avatar>
@@ -385,13 +362,7 @@ export default function ProfilePage() {
           )}
           style={{ backgroundColor: formData.customColors.tabsList }}
         >
-          <TabsList 
-            data-protected="true"
-            className={cn(
-              "w-full bg-transparent border-none rounded-none px-6 h-14",
-              isPaintMode && "pointer-events-none"
-            )}
-          >
+          <TabsList className={cn("w-full bg-transparent border-none rounded-none px-6 h-14", isPaintMode && "pointer-events-none")}>
             <TabsTrigger value="my-ideas" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent" style={{ color: getContrastColor(formData.customColors.tabsList) }}>
               <Grid size={22} />
             </TabsTrigger>
@@ -461,18 +432,13 @@ export default function ProfilePage() {
           <div className="flex items-center justify-between">
              <span className="text-[10px] font-black uppercase tracking-widest text-primary">Edit Sticker</span>
              <div className="flex gap-2">
-                <button 
-                  className="h-8 w-8 rounded-full text-destructive flex items-center justify-center hover:bg-destructive/10" 
-                  onClick={async (e) => {
-                   e.stopPropagation();
+                <button className="h-8 w-8 rounded-full text-destructive flex items-center justify-center hover:bg-destructive/10" onClick={() => {
                    const updated = formData.stickers.filter(s => s.id !== activeStickerId);
                    setFormData(prev => ({ ...prev, stickers: updated }));
-                   await saveToFirestore({ stickers: updated });
+                   saveToFirestore({ stickers: updated });
                    setActiveStickerId(null);
                 }}><Trash2 size={16} /></button>
-                <button 
-                  className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-muted" 
-                  onClick={(e) => { e.stopPropagation(); setActiveStickerId(null); }}><X size={16} /></button>
+                <button className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-muted" onClick={() => setActiveStickerId(null)}><X size={16} /></button>
              </div>
           </div>
           <div className="space-y-4">

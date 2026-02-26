@@ -96,8 +96,7 @@ export default function SearchPage() {
       profiles: allProfiles?.filter(p => 
         p.username?.toLowerCase().includes(q) || 
         p.bio?.toLowerCase().includes(q) ||
-        p.name?.toLowerCase().includes(q) ||
-        p.interests?.some((i: string) => i.toLowerCase().includes(q))
+        p.name?.toLowerCase().includes(q)
       ) || [],
       unions: allUnions?.filter(u => 
         u.name?.toLowerCase().includes(q) || 
