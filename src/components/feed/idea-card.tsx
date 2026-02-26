@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ArrowBigUp, MoreHorizontal, Lightbulb, Share2, Play, MessageCircle } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -16,8 +16,8 @@ import {
   DialogTitle,
   DialogHeader,
 } from "@/components/ui/dialog";
-import { useFirestore } from "@/firebase";
-import { doc, updateDoc, increment } from "firebase/firestore";
+import { useFirestore, useUser, useDoc, useMemoFirebase } from "@/firebase";
+import { doc, updateDoc, increment, setDoc, deleteDoc } from "firebase/firestore";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
 
@@ -42,34 +42,60 @@ interface IdeaCardProps {
 export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCardProps) {
   const { toast } = useToast();
   const db = useFirestore();
+  const { user } = useUser();
   const [isLiking, setIsLiking] = useState(false);
+
+  // Check if current user has already liked this post
+  const userLikeRef = useMemoFirebase(() => 
+    (db && user && idea.id) ? doc(db, "ideas", idea.id, "likes", user.uid) : null
+  , [db, user, idea.id]);
+  
+  const { data: userLike } = useDoc(userLikeRef);
+  const isLiked = !!userLike;
 
   const handleLike = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!db || !idea.id || isLiking) return;
+    if (!db || !user || !idea.id || isLiking) return;
 
     setIsLiking(true);
     const ideaRef = doc(db, "ideas", idea.id);
+    const likeDocRef = doc(db, "ideas", idea.id, "likes", user.uid);
 
-    // Non-blocking update to increment likes
-    updateDoc(ideaRef, {
-      likes: increment(1)
-    }).catch(async (error) => {
-      const permissionError = new FirestorePermissionError({
-        path: ideaRef.path,
-        operation: 'update',
-        requestResourceData: { likes: 'increment' },
+    if (isLiked) {
+      // Unvote logic (Optional, but user said "ek baar hi click kar sakta hai")
+      // If we want to strictly allow only one click that stays orange:
+      // We can just return or show a toast.
+      toast({
+        title: "Already Supported!",
+        description: "You have already upvoted this innovation.",
       });
-      errorEmitter.emit('permission-error', permissionError);
-    }).finally(() => {
-      setTimeout(() => setIsLiking(false), 300); // Debounce
-    });
-
-    toast({
-      title: "Liked!",
-      description: "Support added! This will help it reach more people.",
-    });
+      setIsLiking(false);
+      return;
+    } else {
+      // Upvote logic
+      setDoc(likeDocRef, { timestamp: new Date().toISOString() })
+        .then(() => {
+          updateDoc(ideaRef, {
+            likes: increment(1)
+          });
+          toast({
+            title: "Upvoted!",
+            description: "Your support has been registered.",
+          });
+        })
+        .catch(async (error) => {
+          const permissionError = new FirestorePermissionError({
+            path: likeDocRef.path,
+            operation: 'create',
+            requestResourceData: { timestamp: 'now' },
+          });
+          errorEmitter.emit('permission-error', permissionError);
+        })
+        .finally(() => {
+          setTimeout(() => setIsLiking(false), 300);
+        });
+    }
   };
 
   const handleShare = (e: React.MouseEvent) => {
@@ -169,11 +195,11 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
         </Dialog>
 
         <div className="flex items-center justify-between mt-4">
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4">
             <button 
               onClick={handleLike}
               className={cn(
-                "flex flex-col items-center transition-all duration-300 transform active:scale-125",
+                "flex items-center gap-2 transition-all duration-300 transform active:scale-125",
                 isLiking && "active-glow"
               )}
             >
@@ -181,9 +207,15 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
                 size={38} 
                 className={cn(
                   "transition-all duration-300",
-                  (idea.likes || 0) > 0 ? "text-secondary fill-current drop-shadow-[0_0_8px_rgba(255,69,0,0.4)]" : "text-foreground opacity-30"
+                  isLiked ? "text-secondary fill-current drop-shadow-[0_0_8px_rgba(255,69,0,0.4)]" : "text-foreground/30"
                 )} 
               />
+              <span className={cn(
+                "text-sm font-black transition-colors",
+                isLiked ? "text-secondary" : "text-foreground/40"
+              )}>
+                {idea.likes || 0}
+              </span>
             </button>
             <Link href={`/idea/${idea.id}`} className="text-foreground hover:text-primary transition-colors p-2">
               <MessageCircle size={26} />
@@ -198,8 +230,8 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
           </div>
           
           <div className="bg-muted/30 py-1.5 px-3 rounded-full border border-border/50">
-              <span className="text-[11px] font-black uppercase tracking-tighter text-foreground/70">
-                {(idea.likes || 0)} upvotes
+              <span className="text-[10px] font-black uppercase tracking-tighter text-foreground/50">
+                Trending Meme
               </span>
           </div>
         </div>
@@ -243,7 +275,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
       )}
 
       <div className="flex items-center justify-between px-5 py-4">
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-4">
           <button 
             onClick={handleLike}
             className={cn(
@@ -255,9 +287,15 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
               size={36} 
               className={cn(
                 "transition-all duration-300",
-                (idea.likes || 0) > 0 ? "text-secondary fill-current drop-shadow-[0_0_8px_rgba(255,69,0,0.4)]" : "text-foreground opacity-30"
+                isLiked ? "text-secondary fill-current drop-shadow-[0_0_8px_rgba(255,69,0,0.4)]" : "text-foreground/30"
               )} 
             />
+            <span className={cn(
+              "text-sm font-black transition-colors",
+              isLiked ? "text-secondary" : "text-foreground/40"
+            )}>
+              {idea.likes || 0}
+            </span>
           </button>
           <Link href={`/idea/${idea.id}`} className="text-foreground hover:text-primary transition-colors p-2">
             <MessageCircle size={24} />
@@ -273,7 +311,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
         
         <div className="flex items-center gap-3 bg-muted/30 py-1.5 px-3 rounded-full border border-border/50">
             <span className="text-[11px] font-black uppercase tracking-tighter text-foreground/70">
-              {(idea.likes || 0)} upvotes
+              {idea.category} Innovation
             </span>
         </div>
       </div>

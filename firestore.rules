@@ -26,21 +26,19 @@ service cloud.firestore {
     }
 
     match /ideas/{ideaId} {
-      // Explicitly allow get and list for public reading
       allow get, list: if true;
-      
-      // Allow creation for signed in users
       allow create: if isSignedIn();
-      
-      // Allow any signed in user to update (needed for likes/upvotes)
       allow update: if isSignedIn();
-      
-      // Only owner can delete
       allow delete: if isSignedIn() && (resource == null || resource.data.authorId == request.auth.uid);
 
       match /suggestions/{suggestionId} {
         allow get, list: if true;
         allow create: if isSignedIn();
+      }
+
+      match /likes/{userId} {
+        allow read: if true;
+        allow write: if isOwner(userId);
       }
     }
 
@@ -50,7 +48,7 @@ service cloud.firestore {
       allow update: if isSignedIn();
     }
 
-    // Catch-all for other collections used in features like analytics or ratings
+    // Catch-all for other collections
     match /{path=**} {
       allow get, list: if true;
       allow write: if isSignedIn();
