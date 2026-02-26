@@ -49,12 +49,13 @@ export default function ProfilePage() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isPlacingSticker, setIsPlacingSticker] = useState(false);
+  const [activeStickerId, setActiveStickerId] = useState<string | null>(null);
 
-  // Refs for image uploads
+  // Refs for image uploads and placement
   const profileInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
   const stickerInputRef = useRef<HTMLInputElement>(null);
-  const profileContainerRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -92,39 +93,46 @@ export default function ProfilePage() {
       if (type === 'profile') setFormData(prev => ({ ...prev, profilePic: url }));
       else if (type === 'banner') setFormData(prev => ({ ...prev, banner: url }));
       else if (type === 'sticker') {
+        const newStickerId = Math.random().toString(36).substr(2, 9);
         const newSticker: Sticker = {
-          id: Math.random().toString(36).substr(2, 9),
+          id: newStickerId,
           url: url,
-          x: 50, // Default to center
+          x: 50,
           y: 50
         };
         setFormData(prev => ({ ...prev, stickers: [...prev.stickers, newSticker] }));
+        setActiveStickerId(newStickerId);
         setIsPlacingSticker(true);
+        setIsEditModalOpen(false); // Close modal to allow placement
         toast({
-          title: "Sticker Added",
-          description: "Tap anywhere on your profile to reposition the sticker.",
+          title: "Sticker Ready",
+          description: "Tap anywhere in the header area to place your sticker.",
         });
       }
     }
   };
 
-  const handleProfileClick = (e: React.MouseEvent) => {
-    if (!isPlacingSticker || !profileContainerRef.current) return;
+  const handleHeaderClick = (e: React.MouseEvent) => {
+    if (!isPlacingSticker || !activeStickerId || !headerRef.current) return;
 
-    const rect = profileContainerRef.current.getBoundingClientRect();
+    const rect = headerRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
 
-    setFormData(prev => {
-      const updatedStickers = [...prev.stickers];
-      if (updatedStickers.length > 0) {
-        updatedStickers[updatedStickers.length - 1].x = x;
-        updatedStickers[updatedStickers.length - 1].y = y;
-      }
-      return { ...prev, stickers: updatedStickers };
-    });
+    setFormData(prev => ({
+      ...prev,
+      stickers: prev.stickers.map(s => 
+        s.id === activeStickerId ? { ...s, x, y } : s
+      )
+    }));
     
     setIsPlacingSticker(false);
+    setActiveStickerId(null);
+    setIsEditModalOpen(true); // Re-open modal to save
+    toast({
+      title: "Placed!",
+      description: "Sticker positioned. Save changes to keep it.",
+    });
   };
 
   const removeSticker = (id: string) => {
@@ -139,13 +147,11 @@ export default function ProfilePage() {
     setIsSaving(true);
 
     try {
-      // Update Auth Profile
       await updateProfile(user, {
         displayName: formData.name,
         photoURL: formData.profilePic
       });
 
-      // Update Firestore Profile
       await updateDoc(profileRef, {
         bio: formData.bio,
         profilePictureUrl: formData.profilePic,
@@ -156,7 +162,7 @@ export default function ProfilePage() {
 
       toast({
         title: "Profile Updated",
-        description: "Your changes have been saved successfully.",
+        description: "Your changes and stickers have been saved.",
       });
       setIsEditModalOpen(false);
     } catch (error: any) {
@@ -181,41 +187,13 @@ export default function ProfilePage() {
   if (!user) return null;
 
   return (
-    <div 
-      className="max-w-md mx-auto min-h-screen bg-background pt-6 pb-24 relative overflow-hidden" 
-      ref={profileContainerRef}
-      onClick={handleProfileClick}
-    >
-      {/* Stickers Layer */}
-      {formData.stickers.map((sticker) => (
-        <div 
-          key={sticker.id}
-          className="absolute z-40 pointer-events-none group"
-          style={{ left: `${sticker.x}%`, top: `${sticker.y}%`, transform: 'translate(-50%, -50%)' }}
-        >
-          <div className="relative w-16 h-16 sm:w-20 sm:h-20 drop-shadow-lg">
-            <Image 
-              src={sticker.url} 
-              alt="sticker" 
-              fill 
-              className="object-contain animate-in zoom-in duration-300" 
-            />
-            {isEditModalOpen && (
-              <button 
-                onClick={() => removeSticker(sticker.id)}
-                className="absolute -top-2 -right-2 bg-destructive text-white rounded-full p-1 shadow-md pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <X size={12} />
-              </button>
-            )}
-          </div>
-        </div>
-      ))}
-
+    <div className="max-w-md mx-auto min-h-screen bg-background pt-6 pb-24 relative overflow-x-hidden">
+      
+      {/* Visual Indicator for placement mode */}
       {isPlacingSticker && (
-        <div className="fixed inset-0 z-[60] bg-primary/20 backdrop-blur-[2px] flex items-center justify-center pointer-events-none">
-          <div className="bg-white/90 px-6 py-3 rounded-full shadow-2xl border-2 border-primary animate-bounce">
-            <p className="text-xs font-black uppercase tracking-widest text-primary">Tap to place your sticker</p>
+        <div className="fixed inset-0 z-[60] bg-primary/20 backdrop-blur-[2px] pointer-events-none">
+          <div className="absolute top-20 left-1/2 -translate-x-1/2 bg-white px-6 py-3 rounded-full shadow-2xl border-2 border-primary animate-bounce">
+            <p className="text-xs font-black uppercase tracking-widest text-primary">Tap Header to Place Sticker</p>
           </div>
         </div>
       )}
@@ -269,7 +247,6 @@ export default function ProfilePage() {
             <DialogTitle className="text-sm font-black uppercase tracking-widest text-center">Customize Profile</DialogTitle>
           </DialogHeader>
           <div className="space-y-6 py-4">
-            {/* Banner Edit */}
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Profile Banner</Label>
               <div 
@@ -288,7 +265,6 @@ export default function ProfilePage() {
               <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'banner')} />
             </div>
 
-            {/* Profile Pic Edit */}
             <div className="flex items-center gap-4">
                <div className="relative w-20 h-20 rounded-full bg-muted overflow-hidden group border-4 border-white shadow-md">
                  <Image src={formData.profilePic || `https://picsum.photos/seed/${user.uid}/200/200`} alt="Profile" fill className="object-cover" />
@@ -320,7 +296,6 @@ export default function ProfilePage() {
               />
             </div>
 
-            {/* Sticker Management */}
             <div className="space-y-3">
               <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Screen Stickers</Label>
               <div className="flex flex-wrap gap-2">
@@ -341,11 +316,21 @@ export default function ProfilePage() {
                     >
                       <X size={10} />
                     </button>
+                    <button 
+                      onClick={() => {
+                        setActiveStickerId(s.id);
+                        setIsPlacingSticker(true);
+                        setIsEditModalOpen(false);
+                      }}
+                      className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 flex items-center justify-center text-[8px] font-bold text-white uppercase rounded-xl"
+                    >
+                      Move
+                    </button>
                   </div>
                 ))}
               </div>
               <input type="file" ref={stickerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'sticker')} />
-              <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest text-center italic">Stickers can be dragged/placed on your main profile page</p>
+              <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest text-center">Stickers can only be placed in the header area.</p>
             </div>
           </div>
           <DialogFooter className="flex-row gap-2 mt-4">
@@ -367,8 +352,33 @@ export default function ProfilePage() {
         </DialogContent>
       </Dialog>
 
-      {/* Main Profile Content */}
-      <div className="relative z-10">
+      {/* Header Area for Stickers Placement */}
+      <div 
+        ref={headerRef}
+        onClick={handleHeaderClick}
+        className={cn(
+          "relative z-10",
+          isPlacingSticker && "cursor-crosshair ring-4 ring-primary ring-inset rounded-b-[3rem] transition-all"
+        )}
+      >
+        {/* Stickers Rendering */}
+        {formData.stickers.map((sticker) => (
+          <div 
+            key={sticker.id}
+            className="absolute z-40 pointer-events-none"
+            style={{ left: `${sticker.x}%`, top: `${sticker.y}%`, transform: 'translate(-50%, -50%)' }}
+          >
+            <div className="relative w-16 h-16 sm:w-20 sm:h-20 drop-shadow-lg">
+              <Image 
+                src={sticker.url} 
+                alt="sticker" 
+                fill 
+                className="object-contain animate-in zoom-in duration-300" 
+              />
+            </div>
+          </div>
+        ))}
+
         <div className="relative h-48 w-full bg-muted overflow-hidden">
           <Image 
             src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} 
@@ -410,7 +420,9 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+      </div>
 
+      <div className="relative z-0">
         <Tabs defaultValue="my-ideas" className="w-full">
           <TabsList className="w-full bg-transparent border-b rounded-none px-6 mb-1 h-14">
             <TabsTrigger value="my-ideas" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none transition-all">
