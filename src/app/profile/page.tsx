@@ -119,7 +119,7 @@ export default function ProfilePage() {
           id: newStickerId,
           url: url,
           x: 50,
-          y: 50,
+          y: 20,
           rotation: 0,
           scale: 1
         };
@@ -159,7 +159,7 @@ export default function ProfilePage() {
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
 
-    // Restriction: Cannot move stickers below the header area
+    // Restriction: Cannot move stickers below the header area (visual boundary)
     if (y > 100) return;
 
     setFormData(prev => ({
@@ -168,8 +168,11 @@ export default function ProfilePage() {
     }));
   };
 
-  const handlePointerUp = () => {
-    setDraggedStickerId(null);
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (draggedStickerId) {
+      (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+      setDraggedStickerId(null);
+    }
   };
 
   const handleSaveProfile = async () => {
@@ -270,7 +273,7 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
-            <p className="text-[9px] text-muted-foreground italic text-center">Drag to position over background.</p>
+            <p className="text-[9px] text-muted-foreground italic text-center">Hold sticker to move it around background.</p>
             <Button className="w-full h-10 rounded-2xl bg-primary text-white text-[10px] font-black uppercase" onClick={(e) => { e.stopPropagation(); handleSaveProfile(); }} disabled={isSaving}>Lock Position</Button>
           </div>
         </div>
@@ -279,7 +282,7 @@ export default function ProfilePage() {
       {/* ZONE 1: HEADER TOP BAR */}
       <div 
         onClick={(e) => handleZoneClick(e, 'header')}
-        className="px-6 flex justify-between items-center relative z-[60] py-4 transition-colors duration-300"
+        className="px-6 flex justify-between items-center relative z-[60] py-4 transition-colors duration-300 cursor-pointer"
         style={{ backgroundColor: formData.customColors.header }}
       >
         <h1 className="text-2xl font-black text-primary uppercase tracking-tighter" onClick={(e) => e.stopPropagation()}>Profile</h1>
@@ -380,8 +383,6 @@ export default function ProfilePage() {
       <div 
         ref={headerRef}
         onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerUp}
         className="relative z-10 select-none"
       >
         {/* Stickers Area */}
@@ -391,8 +392,10 @@ export default function ProfilePage() {
             onPointerDown={(e) => {
               if (activeStickerId !== sticker.id) return;
               e.stopPropagation();
+              (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
               setDraggedStickerId(sticker.id);
             }}
+            onPointerUp={handlePointerUp}
             className={cn(
               "absolute z-[45] transition-shadow",
               activeStickerId === sticker.id ? "cursor-grab active:cursor-grabbing ring-2 ring-primary ring-offset-2 rounded-xl" : "pointer-events-none",
@@ -413,13 +416,7 @@ export default function ProfilePage() {
         {/* Banner - PROTECTED Area */}
         <div 
           className="relative h-48 w-full bg-muted overflow-hidden transition-colors duration-300" 
-          onClick={(e) => {
-            e.stopPropagation();
-            if (isPaintMode && activeColor) {
-               // Logic to paint specific small parts could be added here if needed, 
-               // for now it just blocks sticker placement.
-            }
-          }}
+          onClick={(e) => e.stopPropagation()}
         >
           <Image 
             src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} 
