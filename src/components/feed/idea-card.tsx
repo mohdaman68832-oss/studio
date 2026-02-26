@@ -1,4 +1,3 @@
-
 "use client";
 
 import Image from "next/image";
@@ -30,6 +29,7 @@ interface IdeaCardProps {
     userName: string;
     userAvatar: string;
     authorUsername?: string;
+    authorId?: string;
     mediaUrl: string;
     innovationScore: number;
     tags: string[];
@@ -76,7 +76,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
       // Remove Like
       deleteDoc(likeDocRef)
         .then(() => {
-          // Decrement global count - use setDoc with merge for robustness
+          // Decrement global count
           setDoc(ideaRef, { likes: increment(-1) }, { merge: true });
         })
         .catch(() => {})
@@ -91,11 +91,10 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
       })
         .then(() => {
           // Increment global count
-          // If doc doesn't exist (mock data), create it with basic info + count
           setDoc(ideaRef, { 
             likes: increment(1),
-            title: idea.title,
-            authorId: idea.id.startsWith('post-') ? 'system' : (idea as any).authorId || 'system',
+            title: idea.title || "Untitled",
+            authorId: idea.authorId || 'system',
             createdAt: serverTimestamp()
           }, { merge: true });
         })
@@ -115,7 +114,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
     });
   };
 
-  const userHandle = idea.authorUsername || idea.userName.toLowerCase().replace(/\s/g, '');
+  const userHandle = idea.authorUsername || (idea.userName || 'user').toLowerCase().replace(/\s/g, '');
   const isVideo = idea.mediaUrl && (idea.mediaUrl.includes('blob:') || idea.mediaUrl.endsWith('.mp4') || idea.mediaUrl.endsWith('.webm') || idea.mediaUrl.includes('gtv-videos-bucket') || idea.mediaUrl.startsWith('data:video'));
   const isTextPost = !idea.mediaUrl || idea.mediaUrl.includes('textpost') || idea.mediaUrl === "";
 
@@ -124,7 +123,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
       <Link href={`/profile/${userHandle}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity z-10">
         <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
           <AvatarImage src={idea.userAvatar} />
-          <AvatarFallback>{idea.userName[0]}</AvatarFallback>
+          <AvatarFallback>{(idea.userName || 'U')[0]}</AvatarFallback>
         </Avatar>
         <div className="flex flex-col">
           <span className="text-sm font-black text-foreground tracking-tight">
@@ -156,7 +155,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
           fill
           priority={priority}
           className="object-cover transition-transform group-hover:scale-105 duration-700"
-          unoptimized={!!idea.mediaUrl && idea.mediaUrl.startsWith('data:')}
+          unoptimized={!!idea.mediaUrl && (idea.mediaUrl.startsWith('data:') || idea.mediaUrl.startsWith('blob:'))}
         />
       )}
     </div>
@@ -217,7 +216,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
                     alt={idea.title}
                     fill
                     className="object-contain"
-                    unoptimized={!!idea.mediaUrl && idea.mediaUrl.startsWith('data:')}
+                    unoptimized={!!idea.mediaUrl && (idea.mediaUrl.startsWith('data:') || idea.mediaUrl.startsWith('blob:'))}
                   />
                 </div>
               )}

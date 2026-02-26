@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef } from "react";
@@ -121,7 +120,7 @@ export default function PostPage() {
         userAvatar: profileData?.profilePictureUrl || user.photoURL || "https://picsum.photos/seed/me/100/100",
         authorId: user.uid,
         authorUsername: profileData?.username || "user",
-        mediaUrl: mediaType === 'text' ? "" : (previewUrl || "https://picsum.photos/seed/placeholder/800/800"),
+        mediaUrl: mediaType === 'text' ? "" : (previewUrl || ""),
         innovationScore: 75,
         tags: [formData.targetUsers, "User-Generated"],
         createdAt: serverTimestamp(),
@@ -269,7 +268,7 @@ export default function PostPage() {
                   alt="Preview" 
                   fill 
                   className="object-cover" 
-                  unoptimized={previewUrl.startsWith('data:')}
+                  unoptimized={previewUrl.startsWith('data:') || previewUrl.startsWith('blob:')}
                 />
               )}
               <Button 

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { IdeaCard } from "@/components/feed/idea-card";
@@ -82,7 +81,7 @@ export default function FeedPage() {
 
   useEffect(() => {
     const handleScroll = () => {
-      // Show refresh button only when at the very top and scrolling up
+      // Show refresh button only when at the very top
       if (window.scrollY === 0) {
         setShowRefresh(true);
       } else if (window.scrollY > 50) {
@@ -127,7 +126,7 @@ export default function FeedPage() {
         </div>
       </header>
 
-      {/* Category Bar: No longer sticky as per request */}
+      {/* Category Bar: No longer sticky */}
       <div className="flex w-full gap-2 -mx-4 px-4 pt-2 pb-4 mb-2 border-b border-border/50">
         {CATEGORIES.map((cat) => (
           <Button 
