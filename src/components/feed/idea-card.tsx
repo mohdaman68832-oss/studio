@@ -4,7 +4,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowBigUp, MoreHorizontal, Lightbulb, Share2, Play, MessageCircle, X } from "lucide-react";
+import { ArrowBigUp, MoreHorizontal, Lightbulb, Share2, Play, MessageCircle } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -16,8 +16,10 @@ import {
   DialogTitle,
   DialogHeader,
 } from "@/components/ui/dialog";
-import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection } from "firebase/firestore";
+import { useFirestore } from "@/firebase";
+import { doc, updateDoc, increment } from "firebase/firestore";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
 
 interface IdeaCardProps {
   idea: {
@@ -31,6 +33,7 @@ interface IdeaCardProps {
     mediaUrl: string;
     innovationScore: number;
     tags: string[];
+    likes?: number;
   };
   priority?: boolean;
   isMemeView?: boolean;
@@ -39,17 +42,35 @@ interface IdeaCardProps {
 export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCardProps) {
   const { toast } = useToast();
   const db = useFirestore();
+  const [isLiking, setIsLiking] = useState(false);
 
-  // Fetch suggestions count to determine upvotes (Upvotes = Comment Count)
-  const suggestionsQuery = useMemoFirebase(() => {
-    if (!db || !idea.id) return null;
-    return collection(db, "ideas", idea.id, "suggestions");
-  }, [db, idea.id]);
+  const handleLike = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!db || !idea.id || isLiking) return;
 
-  const { data: suggestions } = useCollection(suggestionsQuery);
-  const upvoteCount = suggestions?.length || 0;
+    setIsLiking(true);
+    const ideaRef = doc(db, "ideas", idea.id);
 
-  const userHandle = idea.userName.toLowerCase().replace(/\s/g, '');
+    // Non-blocking update to increment likes
+    updateDoc(ideaRef, {
+      likes: increment(1)
+    }).catch(async (error) => {
+      const permissionError = new FirestorePermissionError({
+        path: ideaRef.path,
+        operation: 'update',
+        requestResourceData: { likes: 'increment' },
+      });
+      errorEmitter.emit('permission-error', permissionError);
+    }).finally(() => {
+      setTimeout(() => setIsLiking(false), 300); // Debounce
+    });
+
+    toast({
+      title: "Liked!",
+      description: "Support added! This will help it reach more people.",
+    });
+  };
 
   const handleShare = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -60,6 +81,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
     });
   };
 
+  const userHandle = idea.userName.toLowerCase().replace(/\s/g, '');
   const isVideo = idea.mediaUrl && (idea.mediaUrl.includes('blob:') || idea.mediaUrl.endsWith('.mp4') || idea.mediaUrl.endsWith('.webm') || idea.mediaUrl.includes('gtv-videos-bucket'));
   const isTextPost = !idea.mediaUrl || idea.mediaUrl.includes('textpost') || idea.mediaUrl === "";
 
@@ -148,15 +170,21 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
 
         <div className="flex items-center justify-between mt-4">
           <div className="flex items-center gap-6">
-            <div className="flex flex-col items-center">
+            <button 
+              onClick={handleLike}
+              className={cn(
+                "flex flex-col items-center transition-all duration-300 transform active:scale-125",
+                isLiking && "active-glow"
+              )}
+            >
               <ArrowBigUp 
                 size={38} 
                 className={cn(
                   "transition-all duration-300",
-                  upvoteCount > 0 ? "text-secondary fill-current drop-shadow-[0_0_8px_rgba(255,69,0,0.4)]" : "text-foreground opacity-30"
+                  (idea.likes || 0) > 0 ? "text-secondary fill-current drop-shadow-[0_0_8px_rgba(255,69,0,0.4)]" : "text-foreground opacity-30"
                 )} 
               />
-            </div>
+            </button>
             <Link href={`/idea/${idea.id}`} className="text-foreground hover:text-primary transition-colors p-2">
               <MessageCircle size={26} />
             </Link>
@@ -171,7 +199,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
           
           <div className="bg-muted/30 py-1.5 px-3 rounded-full border border-border/50">
               <span className="text-[11px] font-black uppercase tracking-tighter text-foreground/70">
-                {upvoteCount >= 1000 ? `${(upvoteCount / 1000).toFixed(1)}k` : upvoteCount} upvotes
+                {(idea.likes || 0) >= 1000 ? `${((idea.likes || 0) / 1000).toFixed(1)}k` : (idea.likes || 0)} Likes
               </span>
           </div>
         </div>
@@ -202,7 +230,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
               <p className="text-sm text-foreground/70 leading-relaxed font-medium line-clamp-3">
                 {idea.description}
               </p>
-              <p className="text-[10px] font-black text-secondary mt-3 uppercase tracking-widest bg-secondary/5 inline-block px-3 py-1 rounded-full">Click to discuss & upvote</p>
+              <p className="text-[10px] font-black text-secondary mt-3 uppercase tracking-widest bg-secondary/5 inline-block px-3 py-1 rounded-full">Click to discuss & support</p>
             </div>
           )}
         </Link>
@@ -216,15 +244,21 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
 
       <div className="flex items-center justify-between px-5 py-4">
         <div className="flex items-center gap-5">
-          <div className="flex items-center gap-2">
+          <button 
+            onClick={handleLike}
+            className={cn(
+              "flex items-center gap-2 transition-all duration-300 transform active:scale-125",
+              isLiking && "active-glow"
+            )}
+          >
             <ArrowBigUp 
               size={36} 
               className={cn(
                 "transition-all duration-300",
-                upvoteCount > 0 ? "text-secondary fill-current drop-shadow-[0_0_8px_rgba(255,69,0,0.4)]" : "text-foreground opacity-30"
+                (idea.likes || 0) > 0 ? "text-secondary fill-current drop-shadow-[0_0_8px_rgba(255,69,0,0.4)]" : "text-foreground opacity-30"
               )} 
             />
-          </div>
+          </button>
           <Link href={`/idea/${idea.id}`} className="text-foreground hover:text-primary transition-colors p-2">
             <MessageCircle size={24} />
           </Link>
@@ -238,16 +272,8 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
         </div>
         
         <div className="flex items-center gap-3 bg-muted/30 py-1.5 px-3 rounded-full border border-border/50">
-            <div className="flex -space-x-2">
-                {suggestions && suggestions.slice(0, 3).map((s, i) => (
-                    <Avatar key={i} className="h-6 w-6 border-2 border-background shadow-sm">
-                         <AvatarImage src={s.userAvatar || `https://picsum.photos/seed/${i + 25}/50/50`} />
-                         <AvatarFallback>{s.userName?.[0]}</AvatarFallback>
-                    </Avatar>
-                ))}
-            </div>
             <span className="text-[11px] font-black uppercase tracking-tighter text-foreground/70">
-              {upvoteCount >= 1000 ? `${(upvoteCount / 1000).toFixed(1)}k` : upvoteCount} upvotes
+              {(idea.likes || 0) >= 1000 ? `${((idea.likes || 0) / 1000).toFixed(1)}k` : (idea.likes || 0)} Likes
             </span>
         </div>
       </div>

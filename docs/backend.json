@@ -160,6 +160,10 @@
           "type": "number",
           "description": "AI-generated score indicating the level of innovation."
         },
+        "likes": {
+          "type": "number",
+          "description": "Total number of likes/upvotes received."
+        },
         "createdAt": {
           "type": "string",
           "format": "date-time"
