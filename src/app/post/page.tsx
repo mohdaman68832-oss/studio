@@ -311,7 +311,7 @@ export default function PostPage() {
                       formData.targetUsers === keyword 
                         ? "bg-primary text-white border-primary shadow-md" 
                         : "bg-white border-muted-foreground/20 hover:border-primary/50",
-                      keyword === "Meme" && "border-primary text-primary"
+                      keyword === "Meme" && formData.targetUsers !== "Meme" && "border-primary text-primary"
                     )}
                   >
                     {keyword}
