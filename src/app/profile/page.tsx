@@ -31,6 +31,7 @@ import { doc, updateDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Sticker {
   id: string;
@@ -65,6 +66,14 @@ function getContrastColor(hexColor: string | undefined): string {
   const brightness = (r * 299 + g * 587 + b * 114) / 1000;
   return brightness >= 128 ? '#1A1A1A' : '#FFFFFF';
 }
+
+const toBase64 = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = (error) => reject(error);
+  });
 
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
@@ -104,7 +113,7 @@ export default function ProfilePage() {
       setFormData({
         name: user?.displayName || "",
         bio: profileData.bio || "",
-        profilePic: user?.photoURL || profileData.profilePictureUrl || "",
+        profilePic: profileData.profilePictureUrl || user?.photoURL || "",
         banner: profileData.bannerUrl || "",
         stickers: profileData.stickers || [],
         customColors: profileData.customColors || {}
@@ -147,8 +156,8 @@ export default function ProfilePage() {
     if (!user || !profileRef) return;
     setIsSaving(true);
     try {
-      if (user.displayName !== formData.name || user.photoURL !== formData.profilePic) {
-        await updateProfile(user, { displayName: formData.name, photoURL: formData.profilePic });
+      if (user.displayName !== formData.name) {
+        await updateProfile(user, { displayName: formData.name });
       }
       await updateDoc(profileRef, {
         bio: formData.bio,
@@ -206,33 +215,39 @@ export default function ProfilePage() {
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'banner' | 'sticker') => {
     const file = e.target.files?.[0];
     if (file) {
-      const url = URL.createObjectURL(file);
-      if (type === 'profile') {
-        setFormData(prev => ({ ...prev, profilePic: url }));
-        await saveToFirestore({ profilePictureUrl: url });
-      } else if (type === 'banner') {
-        setFormData(prev => ({ ...prev, banner: url }));
-        await saveToFirestore({ bannerUrl: url });
-      } else if (type === 'sticker') {
-        const newStickerId = Math.random().toString(36).substr(2, 9);
-        const newSticker: Sticker = { id: newStickerId, url: url, x: 50, y: 20, rotation: 0, scale: 1 };
-        const updatedStickers = [...formData.stickers, newSticker];
-        setFormData(prev => ({ ...prev, stickers: updatedStickers }));
-        await saveToFirestore({ stickers: updatedStickers });
-        setActiveStickerId(newStickerId);
-        setIsEditModalOpen(false);
+      try {
+        const base64 = await toBase64(file);
+        if (type === 'profile') {
+          setFormData(prev => ({ ...prev, profilePic: base64 }));
+          await saveToFirestore({ profilePictureUrl: base64 });
+        } else if (type === 'banner') {
+          setFormData(prev => ({ ...prev, banner: base64 }));
+          await saveToFirestore({ bannerUrl: base64 });
+        } else if (type === 'sticker') {
+          const newStickerId = Math.random().toString(36).substr(2, 9);
+          const newSticker: Sticker = { id: newStickerId, url: base64, x: 50, y: 20, rotation: 0, scale: 1 };
+          const updatedStickers = [...formData.stickers, newSticker];
+          setFormData(prev => ({ ...prev, stickers: updatedStickers }));
+          await saveToFirestore({ stickers: updatedStickers });
+          setActiveStickerId(newStickerId);
+          setIsEditModalOpen(false);
+        }
+        toast({ title: "Image Uploaded", description: "Your photo is now permanently saved." });
+      } catch (err) {
+        toast({ variant: "destructive", title: "Upload Failed", description: "Could not process image." });
       }
-      toast({
-        title: "Session Image",
-        description: "Images are temporary in session. Real storage coming soon!",
-      });
     }
   };
 
   if (isUserLoading || isProfileLoading) {
     return (
-      <div className="max-w-md mx-auto min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="max-w-md mx-auto min-h-screen pt-0 space-y-4 bg-background">
+        <Skeleton className="h-48 w-full" />
+        <div className="px-6 -mt-16 flex flex-col items-center gap-4">
+          <Skeleton className="h-32 w-32 rounded-full" />
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-20 w-full rounded-[2.5rem]" />
+        </div>
       </div>
     );
   }
@@ -292,7 +307,14 @@ export default function ProfilePage() {
         style={{ backgroundColor: formData.customColors.userInfo }}
       >
         <div className="relative h-48 w-full bg-muted overflow-hidden">
-          <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover" draggable={false} />
+          <Image 
+            src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} 
+            alt="banner" 
+            fill 
+            className="object-cover" 
+            draggable={false}
+            unoptimized={!!formData.banner && formData.banner.startsWith('data:')}
+          />
         </div>
 
         <div className="px-6 -mt-16 flex flex-col items-center relative z-10">
@@ -302,7 +324,7 @@ export default function ProfilePage() {
           </Avatar>
           <div className="text-center mt-4">
             <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(formData.customColors.userInfo) }}>
-              {user.displayName || "Innovator"}
+              {formData.name || user.displayName || "Innovator"}
             </h2>
             <p className="text-xs font-bold tracking-widest uppercase opacity-60" style={{ color: getContrastColor(formData.customColors.userInfo) }}>
               @{profileData?.username || "user"}
@@ -418,7 +440,14 @@ export default function ProfilePage() {
             }}
           >
             <div className="relative w-24 h-24">
-              <Image src={sticker.url} alt="sticker" fill className="object-contain" draggable={false} />
+              <Image 
+                src={sticker.url} 
+                alt="sticker" 
+                fill 
+                className="object-contain" 
+                draggable={false} 
+                unoptimized={sticker.url.startsWith('data:')}
+              />
             </div>
           </div>
         ))}
@@ -439,7 +468,7 @@ export default function ProfilePage() {
              </div>
           </div>
           <div className="space-y-4">
-            <div className="flex flex-col gap-3">
+            <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <RotateCw size={14} className="text-muted-foreground shrink-0" />
                 <Slider value={[formData.stickers.find(s => s.id === activeStickerId)?.rotation || 0]} max={360} onValueChange={([v]) => updateActiveSticker({ rotation: v })} />
@@ -487,9 +516,19 @@ export default function ProfilePage() {
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-widest">Banner Image</Label>
               <div onClick={() => bannerInputRef.current?.click()} className="relative h-24 bg-muted rounded-2xl overflow-hidden cursor-pointer border">
-                {formData.banner ? <Image src={formData.banner} alt="Banner" fill className="object-cover" /> : <div className="w-full h-full flex items-center justify-center opacity-30"><ImageIcon /></div>}
+                {formData.banner ? (
+                  <Image 
+                    src={formData.banner} 
+                    alt="Banner" 
+                    fill 
+                    className="object-cover" 
+                    unoptimized={formData.banner.startsWith('data:')}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center opacity-30"><ImageIcon /></div>
+                )}
               </div>
-              <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'banner')} />
+              <input type="file" min="1" max="1" ref={bannerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'banner')} />
             </div>
 
             <div className="flex items-center gap-4">
@@ -501,7 +540,7 @@ export default function ProfilePage() {
                   <Label className="text-[10px] font-black uppercase tracking-widest">Name</Label>
                   <Input value={formData.name} onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))} className="rounded-xl h-10 bg-muted/20 border-none" />
                </div>
-               <input type="file" ref={profileInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'profile')} />
+               <input type="file" min="1" max="1" ref={profileInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'profile')} />
             </div>
 
             <div className="space-y-2">
@@ -510,12 +549,18 @@ export default function ProfilePage() {
                 <Button variant="outline" size="sm" className="rounded-full h-12 w-12 border-2 border-dashed border-primary/20" onClick={() => stickerInputRef.current?.click()}><Plus size={20} /></Button>
                 {formData.stickers.map(s => (
                   <div key={s.id} className="relative w-12 h-12 rounded-xl bg-muted border p-1 group">
-                    <Image src={s.url} alt="sticker" fill className="object-contain p-1" />
+                    <Image 
+                      src={s.url} 
+                      alt="sticker" 
+                      fill 
+                      className="object-contain p-1" 
+                      unoptimized={s.url.startsWith('data:')}
+                    />
                     <button onClick={() => { setActiveStickerId(s.id); setIsEditModalOpen(false); }} className="absolute inset-0 bg-primary/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-[8px] font-black text-white uppercase rounded-xl">Move</button>
                   </div>
                 ))}
               </div>
-              <input type="file" ref={stickerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'sticker')} />
+              <input type="file" min="1" max="1" ref={stickerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'sticker')} />
             </div>
           </div>
           <DialogFooter className="flex-row gap-2 mt-4">

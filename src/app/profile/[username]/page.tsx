@@ -101,7 +101,13 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         style={{ backgroundColor: colors.userInfo }}
       >
         <div className="relative h-48 w-full bg-muted overflow-hidden">
-          <Image src={profileData.bannerUrl || `https://picsum.photos/seed/banner${profileData.id}/800/400`} alt="banner" fill className="object-cover" />
+          <Image 
+            src={profileData.bannerUrl || `https://picsum.photos/seed/banner${profileData.id}/800/400`} 
+            alt="banner" 
+            fill 
+            className="object-cover" 
+            unoptimized={!!profileData.bannerUrl && profileData.bannerUrl.startsWith('data:')}
+          />
         </div>
 
         <div className="px-6 -mt-16 flex flex-col items-center relative z-10">
@@ -231,7 +237,13 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
             }}
           >
             <div className="relative w-24 h-24">
-              <Image src={sticker.url} alt="sticker" fill className="object-contain" />
+              <Image 
+                src={sticker.url} 
+                alt="sticker" 
+                fill 
+                className="object-contain" 
+                unoptimized={sticker.url.startsWith('data:')}
+              />
             </div>
           </div>
         ))}

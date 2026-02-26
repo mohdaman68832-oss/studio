@@ -23,6 +23,14 @@ const EXPERTISE_OPTIONS = [
   "Art", "Game", "Study", "Technology", "Sustainability", "Healthcare", "Business", "Education", "Science", "Music"
 ];
 
+const toBase64 = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = (error) => reject(error);
+  });
+
 export default function SignupPage() {
   const [step, setStep] = useState<Step>(1);
   const [name, setName] = useState("");
@@ -85,14 +93,18 @@ export default function SignupPage() {
     }
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'banner') => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'banner') => {
     const file = e.target.files?.[0];
     if (file) {
-      const url = URL.createObjectURL(file);
-      if (type === 'profile') setProfilePic(url);
-      else {
-        setBanner(url);
-        setShowBannerEditor(false); // Close editor after selection if opened
+      try {
+        const base64 = await toBase64(file);
+        if (type === 'profile') setProfilePic(base64);
+        else {
+          setBanner(base64);
+          setShowBannerEditor(false);
+        }
+      } catch (err) {
+        toast({ variant: "destructive", title: "Process Failed", description: "Image processing error." });
       }
     }
   };
@@ -177,7 +189,13 @@ export default function SignupPage() {
               </div>
               <div className="relative aspect-[3/1] w-full bg-muted rounded-xl overflow-hidden border shadow-inner">
                 {banner ? (
-                  <Image src={banner} alt="PC Banner" fill className="object-cover" />
+                  <Image 
+                    src={banner} 
+                    alt="PC Banner" 
+                    fill 
+                    className="object-cover" 
+                    unoptimized={banner.startsWith('data:')}
+                  />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center opacity-30">
                     <ImageIcon size={40} />
@@ -195,7 +213,13 @@ export default function SignupPage() {
               <div className="flex justify-center">
                 <div className="relative w-full max-w-[200px] aspect-[4/3] bg-muted rounded-xl overflow-hidden border shadow-inner">
                   {banner ? (
-                    <Image src={banner} alt="Mobile Banner" fill className="object-cover" />
+                    <Image 
+                      src={banner} 
+                      alt="Mobile Banner" 
+                      fill 
+                      className="object-cover" 
+                      unoptimized={banner.startsWith('data:')}
+                    />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center opacity-30">
                       <ImageIcon size={30} />
@@ -327,7 +351,13 @@ export default function SignupPage() {
               className="relative h-24 bg-muted rounded-2xl overflow-hidden group border border-dashed border-primary/20 cursor-pointer"
             >
               {banner ? (
-                <Image src={banner} alt="Banner" fill className="object-cover" />
+                <Image 
+                  src={banner} 
+                  alt="Banner" 
+                  fill 
+                  className="object-cover" 
+                  unoptimized={banner.startsWith('data:')}
+                />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                    <div className="flex flex-col items-center gap-1">
@@ -343,7 +373,13 @@ export default function SignupPage() {
 
             <div className="relative -mt-12 ml-4 w-20 h-20 rounded-full border-4 border-background bg-muted overflow-hidden group shadow-lg">
               {profilePic ? (
-                <Image src={profilePic} alt="Profile" fill className="object-cover" />
+                <Image 
+                  src={profilePic} 
+                  alt="Profile" 
+                  fill 
+                  className="object-cover" 
+                  unoptimized={profilePic.startsWith('data:')}
+                />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   <Camera className="text-muted-foreground/40" />

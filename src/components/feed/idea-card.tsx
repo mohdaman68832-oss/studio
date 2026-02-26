@@ -18,8 +18,6 @@ import {
 } from "@/components/ui/dialog";
 import { useFirestore, useUser, useDoc, useMemoFirebase } from "@/firebase";
 import { doc, setDoc, deleteDoc, increment } from "firebase/firestore";
-import { errorEmitter } from "@/firebase/error-emitter";
-import { FirestorePermissionError } from "@/firebase/errors";
 import { useRouter } from "next/navigation";
 
 interface IdeaCardProps {
@@ -31,7 +29,7 @@ interface IdeaCardProps {
     category: string;
     userName: string;
     userAvatar: string;
-    authorUsername?: string; // Correct property for profile navigation
+    authorUsername?: string;
     mediaUrl: string;
     innovationScore: number;
     tags: string[];
@@ -48,7 +46,6 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Check if current user has already liked this post
   const userLikeRef = useMemoFirebase(() => 
     (db && user && idea.id) ? doc(db, "ideas", idea.id, "likes", user.uid) : null
   , [db, user, idea.id]);
@@ -70,6 +67,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
         .then(() => {
           setDoc(ideaRef, { likes: increment(-1) }, { merge: true });
         })
+        .catch(() => {})
         .finally(() => {
           setTimeout(() => setIsProcessing(false), 300);
         });
@@ -81,6 +79,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
         .then(() => {
           setDoc(ideaRef, { likes: increment(1) }, { merge: true });
         })
+        .catch(() => {})
         .finally(() => {
           setTimeout(() => setIsProcessing(false), 300);
         });
@@ -97,7 +96,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
   };
 
   const userHandle = idea.authorUsername || idea.userName.toLowerCase().replace(/\s/g, '');
-  const isVideo = idea.mediaUrl && (idea.mediaUrl.includes('blob:') || idea.mediaUrl.endsWith('.mp4') || idea.mediaUrl.endsWith('.webm') || idea.mediaUrl.includes('gtv-videos-bucket'));
+  const isVideo = idea.mediaUrl && (idea.mediaUrl.includes('blob:') || idea.mediaUrl.endsWith('.mp4') || idea.mediaUrl.endsWith('.webm') || idea.mediaUrl.includes('gtv-videos-bucket') || idea.mediaUrl.startsWith('data:video'));
   const isTextPost = !idea.mediaUrl || idea.mediaUrl.includes('textpost') || idea.mediaUrl === "";
 
   const CardHeader = (
@@ -137,6 +136,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
           fill
           priority={priority}
           className="object-cover transition-transform group-hover:scale-105 duration-700"
+          unoptimized={!!idea.mediaUrl && idea.mediaUrl.startsWith('data:')}
         />
       )}
     </div>
@@ -171,6 +171,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
                     alt={idea.title}
                     fill
                     className="object-contain"
+                    unoptimized={!!idea.mediaUrl && idea.mediaUrl.startsWith('data:')}
                   />
                 </div>
               )}

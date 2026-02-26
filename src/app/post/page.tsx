@@ -39,6 +39,14 @@ const CATEGORY_KEYWORDS = [
   "Meme", "Art", "Game", "Study", "Technology", "Sustainability", "Healthcare", "Business", "Education", "Science", "Music"
 ];
 
+const toBase64 = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = (error) => reject(error);
+  });
+
 export default function PostPage() {
   const [step, setStep] = useState<Step>(1);
   const [isPosting, setIsPosting] = useState(false);
@@ -52,7 +60,6 @@ export default function PostPage() {
   const { user } = useUser();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch current user's profile to get their unique username
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [user, db]);
   const { data: profileData } = useDoc(profileRef);
 
@@ -60,7 +67,7 @@ export default function PostPage() {
     title: "",
     problem: "",
     description: "",
-    targetUsers: "Meme", // Default to Meme
+    targetUsers: "Meme",
   });
 
   const updateFormData = (field: string, value: any) => {
@@ -74,14 +81,18 @@ export default function PostPage() {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: "image" | "video") => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: "image" | "video") => {
     const file = e.target.files?.[0];
     if (file) {
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
-      setMediaType(type);
-      if (type === "image") setIsImageSheetOpen(false);
-      if (type === "video") setIsVideoSheetOpen(false);
+      try {
+        const base64 = await toBase64(file);
+        setPreviewUrl(base64);
+        setMediaType(type);
+        if (type === "image") setIsImageSheetOpen(false);
+        if (type === "video") setIsVideoSheetOpen(false);
+      } catch (err) {
+        toast({ variant: "destructive", title: "Process Failed", description: "Image processing error." });
+      }
     }
   };
 
@@ -106,8 +117,8 @@ export default function PostPage() {
         problem: formData.problem,
         description: formData.description,
         category: formData.targetUsers || "Meme",
-        userName: user.displayName || "Innovator",
-        userAvatar: user.photoURL || "https://picsum.photos/seed/me/100/100",
+        userName: user.displayName || profileData?.username || "Innovator",
+        userAvatar: profileData?.profilePictureUrl || user.photoURL || "https://picsum.photos/seed/me/100/100",
         authorId: user.uid,
         authorUsername: profileData?.username || "user",
         mediaUrl: mediaType === 'text' ? "" : (previewUrl || "https://picsum.photos/seed/placeholder/800/800"),
@@ -253,7 +264,13 @@ export default function PostPage() {
               {mediaType === 'video' ? (
                 <video src={previewUrl} className="w-full h-full object-cover" controls />
               ) : (
-                <Image src={previewUrl} alt="Preview" fill className="object-cover" />
+                <Image 
+                  src={previewUrl} 
+                  alt="Preview" 
+                  fill 
+                  className="object-cover" 
+                  unoptimized={previewUrl.startsWith('data:')}
+                />
               )}
               <Button 
                 size="icon" 
