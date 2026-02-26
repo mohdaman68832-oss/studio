@@ -126,7 +126,7 @@ export default function ProfilePage() {
         setIsEditModalOpen(false);
         toast({
           title: "Sticker Added",
-          description: "Sticker added! Go to settings > Move to place it in an empty space.",
+          description: "Select 'Move' in settings to position it in an empty space.",
         });
       }
     }
@@ -157,7 +157,7 @@ export default function ProfilePage() {
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
 
-    // Boundary check for header area only
+    // Restriction: Cannot move stickers below the header area
     if (y > 100) return;
 
     setFormData(prev => ({
@@ -227,30 +227,32 @@ export default function ProfilePage() {
 
   return (
     <div 
-      className="max-w-md mx-auto min-h-screen pt-6 pb-24 relative overflow-x-hidden transition-colors duration-300"
+      className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden transition-colors duration-300"
       style={{ backgroundColor: formData.customColors.background || "var(--background)" }}
+      onClick={(e) => handleZoneClick(e, 'background')}
     >
       
-      {/* Paint Mode Active Banner */}
+      {/* Paint Mode Active Hint */}
       {isPaintMode && activeColor && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] bg-white px-6 py-2 rounded-full shadow-2xl border-2 border-primary flex items-center gap-3">
           <div className="w-4 h-4 rounded-full border" style={{ backgroundColor: activeColor }}></div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-primary">Brush Active: Tap area to paint</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-primary">Brush Active: Tap a zone to paint</p>
           <Button variant="ghost" size="icon" className="h-6 w-6 p-0 rounded-full" onClick={() => setIsPaintMode(false)}><X size={14}/></Button>
         </div>
       )}
 
-      {/* Floating Adjustment Bar */}
+      {/* Sticker Control Bar */}
       {activeStickerId && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] w-[90%] max-w-[340px] bg-white rounded-3xl shadow-2xl border border-primary/20 p-4 space-y-4 animate-in slide-in-from-bottom-10">
           <div className="flex items-center justify-between">
-             <span className="text-[10px] font-black uppercase tracking-widest text-primary">Edit Sticker Position</span>
+             <span className="text-[10px] font-black uppercase tracking-widest text-primary">Edit Sticker</span>
              <div className="flex gap-2">
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-destructive" onClick={() => {
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-destructive" onClick={(e) => {
+                   e.stopPropagation();
                    setFormData(prev => ({ ...prev, stickers: prev.stickers.filter(s => s.id !== activeStickerId) }));
                    setActiveStickerId(null);
                 }}><Trash2 size={16} /></Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setActiveStickerId(null)}><X size={16} /></Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={(e) => { e.stopPropagation(); setActiveStickerId(null); }}><X size={16} /></Button>
              </div>
           </div>
           <div className="space-y-4">
@@ -266,18 +268,19 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
-            <p className="text-[9px] text-muted-foreground italic text-center">Drag on empty profile space to reposition.</p>
-            <Button className="w-full h-10 rounded-2xl bg-primary text-white text-[10px] font-black uppercase" onClick={handleSaveProfile} disabled={isSaving}>Lock Position</Button>
+            <p className="text-[9px] text-muted-foreground italic text-center">Drag on empty background to move.</p>
+            <Button className="w-full h-10 rounded-2xl bg-primary text-white text-[10px] font-black uppercase" onClick={(e) => { e.stopPropagation(); handleSaveProfile(); }} disabled={isSaving}>Lock Position</Button>
           </div>
         </div>
       )}
 
+      {/* ZONE 1: HEADER TOP BAR */}
       <div 
         onClick={(e) => handleZoneClick(e, 'header')}
-        className="px-6 flex justify-between items-center mb-6 relative z-10 py-2 transition-colors"
+        className="px-6 flex justify-between items-center relative z-[60] py-4 transition-colors duration-300"
         style={{ backgroundColor: formData.customColors.header }}
       >
-        <h1 className="text-2xl font-black text-primary uppercase tracking-tighter">Profile</h1>
+        <h1 className="text-2xl font-black text-primary uppercase tracking-tighter" onClick={(e) => e.stopPropagation()}>Profile</h1>
         <Sheet open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full" onClick={(e) => e.stopPropagation()}><Settings size={22} className="text-primary" /></Button>
@@ -309,7 +312,7 @@ export default function ProfilePage() {
                       setActiveColor(color);
                       setIsPaintMode(true);
                       setIsEditModalOpen(false);
-                      toast({ title: "Painting Mode", description: "Tap any section on your profile (Header, Bio, Stats, or Background) to paint it." });
+                      toast({ title: "Painting Mode", description: "Tap Header, Bio, Stats, or Background to paint it." });
                     }}
                     className={cn(
                       "w-8 h-8 rounded-full border-2 transition-transform hover:scale-110",
@@ -322,7 +325,7 @@ export default function ProfilePage() {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest">Banner</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest">Banner Image</Label>
               <div onClick={() => bannerInputRef.current?.click()} className="relative h-24 bg-muted rounded-2xl overflow-hidden cursor-pointer border-2 border-dashed border-primary/10">
                 {formData.banner ? <Image src={formData.banner} alt="Banner" fill className="object-cover" /> : <div className="w-full h-full flex items-center justify-center opacity-30"><ImageIcon /></div>}
               </div>
@@ -355,7 +358,7 @@ export default function ProfilePage() {
                     <Image src={s.url} alt="sticker" fill className="object-contain p-1" />
                     <button 
                       onClick={() => { setActiveStickerId(s.id); setIsEditModalOpen(false); }} 
-                      className="absolute inset-0 bg-primary/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-[8px] font-black text-white uppercase rounded-xl"
+                      className="absolute inset-0 bg-primary/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-[8px] font-black text-white uppercase rounded-xl"
                     >
                       Move
                     </button>
@@ -367,7 +370,7 @@ export default function ProfilePage() {
           </div>
           <DialogFooter className="flex-row gap-2 mt-4">
             <Button variant="ghost" className="flex-1 rounded-2xl h-12 uppercase font-black text-[10px]" onClick={() => setIsEditModalOpen(false)}>Cancel</Button>
-            <Button className="flex-1 rounded-2xl h-12 uppercase font-black text-[10px] bg-primary" onClick={handleSaveProfile} disabled={isSaving}>{isSaving ? <Loader2 className="animate-spin h-4 w-4" /> : "Save Profile"}</Button>
+            <Button className="flex-1 rounded-2xl h-12 uppercase font-black text-[10px] bg-primary" onClick={handleSaveProfile} disabled={isSaving}>{isSaving ? <Loader2 className="animate-spin h-4 w-4" /> : "Save Changes"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -377,10 +380,9 @@ export default function ProfilePage() {
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
-        onClick={(e) => handleZoneClick(e, 'background')}
-        className="relative z-10 min-h-[500px] select-none"
+        className="relative z-10 min-h-[520px] select-none"
       >
-        {/* Stickers */}
+        {/* Stickers - Placed behind the UI elements but above background */}
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id}
@@ -406,52 +408,41 @@ export default function ProfilePage() {
           </div>
         ))}
 
-        {/* Banner Area Zone */}
-        <div 
-          className="relative h-48 w-full bg-muted overflow-hidden transition-colors duration-300"
-        >
+        {/* Banner - PROTECTED: Stickers cannot be placed on it */}
+        <div className="relative h-48 w-full bg-muted overflow-hidden transition-colors duration-300" onClick={(e) => e.stopPropagation()}>
           <Image 
             src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} 
             alt="banner" 
             fill 
             className="object-cover" 
             draggable={false}
-            onClick={(e) => e.stopPropagation()} // Banner Image blocks sticker placement/painting directly ON it
           />
         </div>
 
-        <div className="px-6 -mt-16 flex flex-col items-center mb-8 relative z-10">
-          <div 
-            className="relative mb-4 cursor-default"
-            onPointerDown={(e) => e.stopPropagation()} // Avatar blocks sticker movement trigger
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Avatar className="h-32 w-32 border-4 border-white shadow-none bg-white">
+        <div className="px-6 -mt-16 flex flex-col items-center mb-8 relative z-50">
+          {/* Avatar - PROTECTED: Stickers cannot be placed on it */}
+          <div className="relative mb-4 cursor-default" onClick={(e) => e.stopPropagation()}>
+            <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-none">
               <AvatarImage src={formData.profilePic} />
               <AvatarFallback>{user.displayName?.[0] || "U"}</AvatarFallback>
             </Avatar>
           </div>
           
-          <h2 className="text-2xl font-black text-foreground uppercase tracking-tighter mb-1">{user.displayName || "Innovator"}</h2>
-          <p className="text-sm font-bold text-primary mb-4 tracking-widest uppercase">@{profileData?.username || "user"}</p>
+          <h2 className="text-2xl font-black text-foreground uppercase tracking-tighter mb-1" onClick={(e) => e.stopPropagation()}>{user.displayName || "Innovator"}</h2>
+          <p className="text-sm font-bold text-primary mb-4 tracking-widest uppercase" onClick={(e) => e.stopPropagation()}>@{profileData?.username || "user"}</p>
           
-          {/* Bio Card Zone */}
+          {/* ZONE 2: BIO CARD */}
           <div 
             onClick={(e) => handleZoneClick(e, 'bioCard')}
             className="p-6 rounded-[2.5rem] border shadow-none w-full transition-colors duration-300 bg-white mb-6 cursor-pointer"
-            style={{ 
-              backgroundColor: formData.customColors.bioCard || "#FFFFFF",
-            }}
+            style={{ backgroundColor: formData.customColors.bioCard || "#FFFFFF" }}
           >
-            <p 
-              className="text-center text-xs text-muted-foreground leading-relaxed font-medium italic"
-              onClick={(e) => e.stopPropagation()} // Bio Text blocks clicks if painting
-            >
+            <p className="text-center text-xs text-muted-foreground leading-relaxed font-medium italic" onClick={(e) => e.stopPropagation()}>
               {formData.bio || "Crafting the next generation of innovative solutions."}
             </p>
           </div>
           
-          {/* Stats Section Zone */}
+          {/* ZONE 3: STATS SECTION */}
           <div 
             onClick={(e) => handleZoneClick(e, 'statsSection')}
             className="grid grid-cols-3 gap-8 w-full py-6 px-4 rounded-[2rem] transition-colors duration-300 border bg-white/50 cursor-pointer"
@@ -473,7 +464,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <div className="relative z-0">
+      <div className="relative z-10">
         <Tabs defaultValue="my-ideas" className="w-full">
           <TabsList className="w-full bg-transparent border-b rounded-none px-6 h-14">
             <TabsTrigger value="my-ideas" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary"><Grid size={22} /></TabsTrigger>
