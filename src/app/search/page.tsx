@@ -25,23 +25,25 @@ export default function SearchPage() {
   const { data: allUnions } = useCollection(unionsRef);
 
   const filteredResults = useMemo(() => {
-    const query = searchQuery.toLowerCase().trim();
-    if (!query) return { ideas: [], profiles: [], unions: [] };
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return { ideas: [], profiles: [], unions: [] };
 
     return {
       ideas: allIdeas?.filter(i => 
-        i.title?.toLowerCase().includes(query) || 
-        i.description?.toLowerCase().includes(query) ||
-        i.category?.toLowerCase().includes(query)
+        i.title?.toLowerCase().includes(q) || 
+        i.description?.toLowerCase().includes(q) ||
+        i.category?.toLowerCase().includes(q) ||
+        i.problem?.toLowerCase().includes(q)
       ) || [],
       profiles: allProfiles?.filter(p => 
-        p.username?.toLowerCase().includes(query) || 
-        p.bio?.toLowerCase().includes(query)
+        p.username?.toLowerCase().includes(q) || 
+        p.bio?.toLowerCase().includes(q) ||
+        p.name?.toLowerCase().includes(q)
       ) || [],
       unions: allUnions?.filter(u => 
-        u.name?.toLowerCase().includes(query) || 
-        u.description?.toLowerCase().includes(query) ||
-        u.category?.toLowerCase().includes(query)
+        u.name?.toLowerCase().includes(q) || 
+        u.description?.toLowerCase().includes(q) ||
+        u.category?.toLowerCase().includes(q)
       ) || []
     };
   }, [searchQuery, allIdeas, allProfiles, allUnions]);

@@ -45,6 +45,12 @@ service cloud.firestore {
       }
     }
 
+    match /unions/{unionId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+    }
+
     match /ideaRatings/{ratingId} {
       allow read: if true;
       allow create: if isSignedIn() && request.resource.data.raterId == request.auth.uid;
