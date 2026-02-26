@@ -36,7 +36,7 @@ import { useRouter } from "next/navigation";
 type Step = 1 | 2 | 3;
 
 const CATEGORY_KEYWORDS = [
-  "Meme", "Art", "Game", "Study", "Technology", "Sustainability", "Healthcare", "Business", "Education", "Science", "Music"
+  "Art", "Game", "Study", "Technology", "Sustainability", "Healthcare", "Business", "Education", "Science", "Music"
 ];
 
 const toBase64 = (file: File): Promise<string> =>
@@ -67,7 +67,7 @@ export default function PostPage() {
     title: "",
     problem: "",
     description: "",
-    targetUsers: "Meme",
+    targetUsers: "Technology",
   });
 
   const updateFormData = (field: string, value: any) => {
@@ -116,7 +116,7 @@ export default function PostPage() {
         title: formData.title,
         problem: formData.problem,
         description: formData.description,
-        category: formData.targetUsers || "Meme",
+        category: formData.targetUsers,
         userName: user.displayName || profileData?.username || "Innovator",
         userAvatar: profileData?.profilePictureUrl || user.photoURL || "https://picsum.photos/seed/me/100/100",
         authorId: user.uid,
