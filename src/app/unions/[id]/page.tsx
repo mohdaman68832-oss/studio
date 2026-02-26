@@ -7,7 +7,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { 
   ChevronLeft, 
-  Users, 
   Plus, 
   Image as ImageIcon, 
   Video, 
@@ -16,7 +15,6 @@ import {
   Pencil,
   ChevronDown,
   ChevronUp,
-  History
 } from "lucide-react";
 import { useCollection, useFirestore } from "@/firebase";
 import { collection, query, where, orderBy } from "firebase/firestore";
@@ -54,6 +52,28 @@ const MOCK_UNIONS = [
   }
 ];
 
+const MOCK_UNION_POSTS = Array.from({ length: 20 }).map((_, i) => ({
+  id: `post-${i}`,
+  title: [
+    "Neural Mesh Network", "Smart Grid AI", "Bio-degradable Tech", "Solar Glass v2", 
+    "Haptic Learning", "Urban Wind Turbine", "Water Filter IoT", "Clean Air Necklace",
+    "Self-Healing Materials", "Vertical Farm Controller", "Robot Companion", "Exo-Suit for Logistics",
+    "Mind-Link VR", "Ocean Plastic Recycler", "Carbon Capture Fan", "Green Blockchain",
+    "AI Medical Assistant", "Smart Soil Sensor", "Portable Hydro Generator", "Solar Car Paint"
+  ][i],
+  description: "Exploring the limits of what is possible with modern engineering and design. This project focuses on high-impact scalability for urban environments.",
+  problem: "Traditional solutions are too slow, expensive, and environmentally damaging for our current needs.",
+  category: i % 2 === 0 ? "Technology" : "Sustainability",
+  userName: ["Alex Rivera", "Sarah Chen", "Marcus Vane", "Elena Gilbert", "Tony Stark"][i % 5],
+  userAvatar: `https://picsum.photos/seed/user${i % 5}/100/100`,
+  mediaUrl: i % 4 === 0 
+    ? "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" 
+    : `https://picsum.photos/seed/innovation${i}/800/800`,
+  innovationScore: 70 + (i % 30),
+  tags: ["Future", "OpenSource", "Scalable"],
+  likes: 50 + (i * 12),
+}));
+
 export default function UnionDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -74,7 +94,12 @@ export default function UnionDetailPage() {
     );
   }, [db, union.category]);
 
-  const { data: posts, loading: postsLoading } = useCollection(postsQuery);
+  const { data: firestorePosts, loading: postsLoading } = useCollection(postsQuery);
+
+  const posts = useMemo(() => {
+    if (firestorePosts && firestorePosts.length > 0) return firestorePosts;
+    return MOCK_UNION_POSTS.filter(p => p.category === union.category);
+  }, [firestorePosts, union.category]);
 
   return (
     <div className="max-w-md mx-auto min-h-screen bg-background flex flex-col">
@@ -90,7 +115,6 @@ export default function UnionDetailPage() {
 
       <div className="flex-1 overflow-y-auto no-scrollbar">
         <div className="p-6 space-y-6">
-          {/* Hero Section: Profile in Corner, Name, Description */}
           <div className="flex gap-4 items-start">
             <Avatar className="h-20 w-20 rounded-3xl border-2 border-primary/10 shadow-lg shrink-0">
               <AvatarImage src={union.avatar} className="object-cover" />
@@ -119,7 +143,6 @@ export default function UnionDetailPage() {
             </div>
           </div>
 
-          {/* Stats Bar with Join/Active count, Weekly Posts and Pencil/Post button */}
           <div className="flex items-center justify-between bg-white p-4 rounded-3xl border border-border/50 shadow-sm">
             <div className="flex gap-4">
               <div className="flex flex-col">
@@ -173,7 +196,7 @@ export default function UnionDetailPage() {
               <div className="flex-1 h-px bg-border/50" />
             </div>
             
-            <div className="space-y-6">
+            <div className="space-y-8 pb-12">
               {posts && posts.length > 0 ? (
                 posts.map((post) => (
                   <IdeaCard key={post.id} idea={post as any} />
