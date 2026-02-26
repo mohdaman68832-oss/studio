@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Settings, Grid, Bookmark, Heart, LogOut, User, Bell, Shield, HelpCircle, Pencil, Save, X, Loader2, Camera, Image as ImageIcon, Plus, Trash2 } from "lucide-react";
+import { Settings, Grid, Bookmark, Heart, LogOut, User, Bell, Shield, HelpCircle, Pencil, Save, X, Loader2, Camera, Image as ImageIcon, Plus, Trash2, RotateCw, Maximize, Move } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Sheet, 
@@ -23,6 +23,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Slider } from "@/components/ui/slider";
 import Image from "next/image";
 import { useUser, useAuth, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { signOut, updateProfile } from "firebase/auth";
@@ -36,6 +37,8 @@ interface Sticker {
   url: string;
   x: number; // percentage
   y: number; // percentage
+  rotation: number; // degrees
+  scale: number; // 0.5 to 2.0
 }
 
 export default function ProfilePage() {
@@ -98,7 +101,9 @@ export default function ProfilePage() {
           id: newStickerId,
           url: url,
           x: 50,
-          y: 50
+          y: 50,
+          rotation: 0,
+          scale: 1
         };
         setFormData(prev => ({ ...prev, stickers: [...prev.stickers, newSticker] }));
         setActiveStickerId(newStickerId);
@@ -106,33 +111,44 @@ export default function ProfilePage() {
         setIsEditModalOpen(false); // Close modal to allow placement
         toast({
           title: "Sticker Ready",
-          description: "Tap anywhere in the header area to place your sticker.",
+          description: "Tap anywhere in the header to place. You can adjust size and rotation later.",
         });
       }
     }
   };
 
   const handleHeaderClick = (e: React.MouseEvent) => {
-    if (!isPlacingSticker || !activeStickerId || !headerRef.current) return;
+    if (!headerRef.current) return;
 
     const rect = headerRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
 
-    setFormData(prev => ({
-      ...prev,
-      stickers: prev.stickers.map(s => 
-        s.id === activeStickerId ? { ...s, x, y } : s
-      )
-    }));
-    
-    setIsPlacingSticker(false);
-    setActiveStickerId(null);
-    setIsEditModalOpen(true); // Re-open modal to save
-    toast({
-      title: "Placed!",
-      description: "Sticker positioned. Save changes to keep it.",
-    });
+    if (isPlacingSticker && activeStickerId) {
+      setFormData(prev => ({
+        ...prev,
+        stickers: prev.stickers.map(s => 
+          s.id === activeStickerId ? { ...s, x, y } : s
+        )
+      }));
+      
+      setIsPlacingSticker(false);
+      // Keep it active for adjustments
+      toast({
+        title: "Placed!",
+        description: "Now use the controls to rotate or resize.",
+      });
+    } else if (activeStickerId) {
+      // If a sticker is selected, clicking header moves it
+      setFormData(prev => ({
+        ...prev,
+        stickers: prev.stickers.map(s => 
+          s.id === activeStickerId ? { ...s, x, y } : s
+        )
+      }));
+    } else {
+      // If nothing selected, just deselect (already handled by clicking outside)
+    }
   };
 
   const removeSticker = (id: string) => {
@@ -140,6 +156,7 @@ export default function ProfilePage() {
       ...prev,
       stickers: prev.stickers.filter(s => s.id !== id)
     }));
+    if (activeStickerId === id) setActiveStickerId(null);
   };
 
   const handleSaveProfile = async () => {
@@ -165,6 +182,7 @@ export default function ProfilePage() {
         description: "Your changes and stickers have been saved.",
       });
       setIsEditModalOpen(false);
+      setActiveStickerId(null);
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -174,6 +192,16 @@ export default function ProfilePage() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const activeSticker = formData.stickers.find(s => s.id === activeStickerId);
+
+  const updateActiveSticker = (updates: Partial<Sticker>) => {
+    if (!activeStickerId) return;
+    setFormData(prev => ({
+      ...prev,
+      stickers: prev.stickers.map(s => s.id === activeStickerId ? { ...s, ...updates } : s)
+    }));
   };
 
   if (isUserLoading || isProfileLoading) {
@@ -194,6 +222,60 @@ export default function ProfilePage() {
         <div className="fixed inset-0 z-[60] bg-primary/20 backdrop-blur-[2px] pointer-events-none">
           <div className="absolute top-20 left-1/2 -translate-x-1/2 bg-white px-6 py-3 rounded-full shadow-2xl border-2 border-primary animate-bounce">
             <p className="text-xs font-black uppercase tracking-widest text-primary">Tap Header to Place Sticker</p>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Adjustment Bar */}
+      {activeStickerId && !isPlacingSticker && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] w-[90%] max-w-[340px] bg-white rounded-3xl shadow-2xl border-2 border-primary/20 p-4 space-y-4 animate-in slide-in-from-bottom-10">
+          <div className="flex items-center justify-between mb-2">
+             <span className="text-[10px] font-black uppercase tracking-widest text-primary">Adjust Sticker</span>
+             <div className="flex gap-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-destructive" onClick={() => removeSticker(activeStickerId)}>
+                  <Trash2 size={16} />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setActiveStickerId(null)}>
+                  <X size={16} />
+                </Button>
+             </div>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <RotateCw size={14} className="text-muted-foreground shrink-0" />
+              <div className="flex-1">
+                <Slider 
+                  value={[activeSticker?.rotation || 0]} 
+                  max={360} 
+                  step={1} 
+                  onValueChange={([val]) => updateActiveSticker({ rotation: val })} 
+                />
+              </div>
+              <span className="text-[10px] font-bold w-6">{activeSticker?.rotation}°</span>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <Maximize size={14} className="text-muted-foreground shrink-0" />
+              <div className="flex-1">
+                <Slider 
+                  value={[(activeSticker?.scale || 1) * 100]} 
+                  min={50} 
+                  max={200} 
+                  step={1} 
+                  onValueChange={([val]) => updateActiveSticker({ scale: val / 100 })} 
+                />
+              </div>
+              <span className="text-[10px] font-bold w-6">{Math.round((activeSticker?.scale || 1) * 100)}%</span>
+            </div>
+            
+            <p className="text-[8px] font-black uppercase text-center text-muted-foreground/60 tracking-[0.2em]">
+              Tap another spot in the header to move
+            </p>
+
+            <Button className="w-full h-10 rounded-2xl bg-primary text-white text-[10px] font-black uppercase tracking-widest" onClick={handleSaveProfile} disabled={isSaving}>
+              {isSaving ? <Loader2 className="animate-spin" /> : "Save & Finish"}
+            </Button>
           </div>
         </div>
       )}
@@ -311,26 +393,28 @@ export default function ProfilePage() {
                   <div key={s.id} className="relative w-12 h-12 rounded-xl bg-muted border border-border p-1 group">
                     <Image src={s.url} alt="sticker thumb" fill className="object-contain p-1" />
                     <button 
-                      onClick={() => removeSticker(s.id)}
-                      className="absolute -top-1 -right-1 bg-destructive text-white rounded-full p-0.5 shadow-sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeSticker(s.id);
+                      }}
+                      className="absolute -top-1 -right-1 bg-destructive text-white rounded-full p-0.5 shadow-sm z-10"
                     >
                       <X size={10} />
                     </button>
                     <button 
                       onClick={() => {
                         setActiveStickerId(s.id);
-                        setIsPlacingSticker(true);
                         setIsEditModalOpen(false);
                       }}
                       className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 flex items-center justify-center text-[8px] font-bold text-white uppercase rounded-xl"
                     >
-                      Move
+                      Edit
                     </button>
                   </div>
                 ))}
               </div>
               <input type="file" ref={stickerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'sticker')} />
-              <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest text-center">Stickers can only be placed in the header area.</p>
+              <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest text-center">Stickers can be placed & adjusted in the header area.</p>
             </div>
           </div>
           <DialogFooter className="flex-row gap-2 mt-4">
@@ -352,23 +436,34 @@ export default function ProfilePage() {
         </DialogContent>
       </Dialog>
 
-      {/* Header Area for Stickers Placement */}
+      {/* Header Area for Stickers Placement & Adjustment */}
       <div 
         ref={headerRef}
         onClick={handleHeaderClick}
         className={cn(
           "relative z-10",
-          isPlacingSticker && "cursor-crosshair ring-4 ring-primary ring-inset rounded-b-[3rem] transition-all"
+          (isPlacingSticker || activeStickerId) && "cursor-crosshair ring-4 ring-primary ring-inset rounded-b-[3rem] transition-all bg-primary/5"
         )}
       >
         {/* Stickers Rendering */}
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id}
-            className="absolute z-40 pointer-events-none"
-            style={{ left: `${sticker.x}%`, top: `${sticker.y}%`, transform: 'translate(-50%, -50%)' }}
+            className={cn(
+              "absolute z-40 pointer-events-auto cursor-pointer transition-shadow",
+              activeStickerId === sticker.id && "ring-2 ring-primary ring-offset-2 rounded-xl shadow-2xl"
+            )}
+            style={{ 
+              left: `${sticker.x}%`, 
+              top: `${sticker.y}%`, 
+              transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})` 
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setActiveStickerId(sticker.id);
+            }}
           >
-            <div className="relative w-16 h-16 sm:w-20 sm:h-20 drop-shadow-lg">
+            <div className="relative w-16 h-16 sm:w-20 sm:h-20 drop-shadow-xl">
               <Image 
                 src={sticker.url} 
                 alt="sticker" 
