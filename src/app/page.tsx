@@ -22,7 +22,7 @@ const MOCK_IDEAS = [
     mediaUrl: "https://picsum.photos/seed/tech/800/600",
     innovationScore: 92,
     tags: ["Meme", "Special", "Energy"],
-    likes: 245,
+    likes: 0,
   },
   {
     id: "2",
@@ -35,33 +35,7 @@ const MOCK_IDEAS = [
     mediaUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
     innovationScore: 88,
     tags: ["Health", "AI", "VideoDemo"],
-    likes: 189,
-  },
-  {
-    id: "4",
-    title: "Shadow Realm: Next-Gen VR RPG",
-    problem: "Lack of truly immersive and reactive environments in current VR gaming.",
-    description: "A VR RPG where the world dynamically evolves based on your choices using generative AI for NPC dialogue and quest generation.",
-    category: "Meme",
-    userName: "Kaelen Voss",
-    userAvatar: "https://picsum.photos/seed/kaelen/100/100",
-    mediaUrl: "https://picsum.photos/seed/gaming/800/600",
-    innovationScore: 95,
-    tags: ["Meme", "Gaming", "AI"],
-    likes: 512,
-  },
-  {
-    id: "3",
-    title: "Aura: Personal Air Purifier",
-    problem: "High levels of urban air pollution affecting daily respiratory health.",
-    description: "Stylish, portable neck-worn air purifier using ionized filtration to create a clean air bubble around the user in polluted urban areas.",
-    category: "Technology",
-    userName: "Marcus Vane",
-    userAvatar: "https://picsum.photos/seed/user3/100/100",
-    mediaUrl: "", // Text post
-    innovationScore: 76,
-    tags: ["IoT", "Urban", "TextPost"],
-    likes: 134,
+    likes: 0,
   }
 ];
 
@@ -89,18 +63,14 @@ export default function FeedPage() {
     const base = firestoreIdeas && firestoreIdeas.length > 0 ? firestoreIdeas : MOCK_IDEAS;
     
     if (activeCategory === "Meme") {
-      // Show ALL memes for everyone globally
       return base.filter(i => i.category?.toLowerCase() === "meme");
     }
 
     if (activeCategory === "All") {
-      // Personalized Algorithm:
-      // If user has selected interests, show posts matching those interests.
-      // If no interests or not logged in, show everything.
       if (profile?.interests && profile.interests.length > 0) {
         return base.filter(i => 
           profile.interests.includes(i.category) || 
-          i.category?.toLowerCase() === "meme" // Always show memes in 'All' too
+          i.category?.toLowerCase() === "meme" 
         );
       }
       return base;
@@ -153,7 +123,8 @@ export default function FeedPage() {
         </div>
       </header>
 
-      <div className="flex w-full gap-2 sticky top-0 bg-background/80 backdrop-blur-md z-10 -mx-4 px-4 pt-2 pb-4 mb-2 border-b border-border/50">
+      {/* Category Bar: No longer sticky */}
+      <div className="flex w-full gap-2 -mx-4 px-4 pt-2 pb-4 mb-2 border-b border-border/50">
         {CATEGORIES.map((cat) => (
           <Button 
             key={cat} 
@@ -198,7 +169,7 @@ export default function FeedPage() {
                 <div className="bg-muted w-16 h-16 rounded-full flex items-center justify-center mx-auto">
                    <span className="text-2xl">🌍</span>
                 </div>
-                <p className="text-xs font-black uppercase tracking-widest">No innovations found in {activeCategory}</p>
+                <p className="text-xs font-black uppercase tracking-widest">No innovations found</p>
                 <Button variant="ghost" size="sm" onClick={() => setActiveCategory("All")} className="text-[10px] font-black uppercase">
                   View All Feed
                 </Button>
