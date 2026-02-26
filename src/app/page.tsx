@@ -100,6 +100,7 @@ export default function FeedPage() {
 
   return (
     <div className="max-w-md mx-auto min-h-screen bg-background px-4 pt-8 pb-24 relative">
+      {/* Refresh Trigger Button at the very top */}
       <div className={cn(
         "fixed top-4 left-1/2 -translate-x-1/2 z-[100] transition-all duration-300 transform",
         showRefresh ? "translate-y-0 opacity-100" : "-translate-y-20 opacity-0"
