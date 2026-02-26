@@ -89,7 +89,7 @@ export default function FeedPage() {
     const base = firestoreIdeas && firestoreIdeas.length > 0 ? firestoreIdeas : MOCK_IDEAS;
     
     if (activeCategory === "Meme") {
-      // Show ALL memes for everyone
+      // Show ALL memes for everyone globally
       return base.filter(i => i.category?.toLowerCase() === "meme");
     }
 
@@ -100,7 +100,7 @@ export default function FeedPage() {
       if (profile?.interests && profile.interests.length > 0) {
         return base.filter(i => 
           profile.interests.includes(i.category) || 
-          i.category?.toLowerCase() === "meme" // Always show memes in all too
+          i.category?.toLowerCase() === "meme" // Always show memes in 'All' too
         );
       }
       return base;

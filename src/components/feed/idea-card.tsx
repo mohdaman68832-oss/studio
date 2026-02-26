@@ -126,7 +126,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
           </DialogTrigger>
           <DialogContent className="max-w-[95vw] w-full p-0 bg-transparent border-none shadow-none flex items-center justify-center">
             <DialogHeader className="sr-only">
-              <DialogTitle>Meme Preview</DialogTitle>
+              <DialogTitle>{idea.title}</DialogTitle>
             </DialogHeader>
             <div className="relative w-full h-[80vh]">
               {isVideo ? (
@@ -248,7 +248,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
                 ))}
             </div>
             <span className="text-[11px] font-black uppercase tracking-tighter text-foreground/70">
-              {displayLikes >= 1000 ? `${(displayLikes / 1000).toFixed(1)}k` : displayLikes}
+              {displayLikes >= 1000 ? `${(displayLikes / 1000).toFixed(1)}k` : displayLikes} upvotes
             </span>
         </div>
       </div>
