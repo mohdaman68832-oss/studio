@@ -141,15 +141,16 @@ export default function FeedPage() {
         </div>
       </header>
 
-      <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar sticky top-0 bg-background/80 backdrop-blur-md z-10 -mx-4 px-4 pt-2 mb-2 border-b border-border/50">
+      {/* Categories Bar - Updated to span from side to side */}
+      <div className="flex w-full gap-2 sticky top-0 bg-background/80 backdrop-blur-md z-10 -mx-4 px-4 pt-2 pb-4 mb-2 border-b border-border/50">
         {CATEGORIES.map((cat) => (
           <Button 
             key={cat} 
             variant={cat === activeCategory ? "default" : "secondary"} 
             onClick={() => setActiveCategory(cat)}
             className={cn(
-              "rounded-full h-9 text-[10px] font-black px-10 shrink-0 uppercase tracking-tighter transition-all",
-              cat === activeCategory ? "bg-primary shadow-lg shadow-primary/20" : "bg-white border-none text-muted-foreground hover:text-primary"
+              "flex-1 rounded-full h-9 text-[10px] font-black uppercase tracking-widest transition-all",
+              cat === activeCategory ? "bg-primary shadow-lg shadow-primary/20 text-white" : "bg-white border-none text-muted-foreground hover:text-primary"
             )}
           >
             {cat}
