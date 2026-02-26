@@ -4,8 +4,8 @@
 import { IdeaCard } from "@/components/feed/idea-card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy } from "firebase/firestore";
+import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
+import { collection, query, orderBy, doc } from "firebase/firestore";
 import { useMemo, useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RefreshCcw } from "lucide-react";
@@ -69,9 +69,14 @@ const CATEGORIES = ["All", "Meme"];
 
 export default function FeedPage() {
   const db = useFirestore();
+  const { user } = useUser();
   const [activeCategory, setActiveCategory] = useState("All");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showRefresh, setShowRefresh] = useState(false);
+
+  // Fetch current user profile to get interests
+  const userProfileRef = useMemoFirebase(() => (db && user ? doc(db, "userProfiles", user.uid) : null), [db, user]);
+  const { data: profile } = useDoc(userProfileRef);
 
   const ideasQuery = useMemoFirebase(() => {
     if (!db) return null;
@@ -82,13 +87,30 @@ export default function FeedPage() {
 
   const ideasToDisplay = useMemo(() => {
     const base = firestoreIdeas && firestoreIdeas.length > 0 ? firestoreIdeas : MOCK_IDEAS;
-    if (activeCategory === "All") return base;
-    return base.filter(i => i.category?.toLowerCase() === activeCategory.toLowerCase());
-  }, [firestoreIdeas, activeCategory]);
+    
+    if (activeCategory === "Meme") {
+      // Show ALL memes for everyone
+      return base.filter(i => i.category?.toLowerCase() === "meme");
+    }
+
+    if (activeCategory === "All") {
+      // Personalized Algorithm:
+      // If user has selected interests, show posts matching those interests.
+      // If no interests or not logged in, show everything.
+      if (profile?.interests && profile.interests.length > 0) {
+        return base.filter(i => 
+          profile.interests.includes(i.category) || 
+          i.category?.toLowerCase() === "meme" // Always show memes in all too
+        );
+      }
+      return base;
+    }
+
+    return base;
+  }, [firestoreIdeas, activeCategory, profile]);
 
   useEffect(() => {
     const handleScroll = () => {
-      // Show refresh button only if at the very top
       if (window.scrollY === 0) {
         setShowRefresh(true);
       } else if (window.scrollY > 50) {
@@ -101,7 +123,6 @@ export default function FeedPage() {
 
   const handleReload = () => {
     setIsRefreshing(true);
-    // Simulate a manual reload process
     setTimeout(() => {
       window.location.reload();
     }, 800);
@@ -132,7 +153,6 @@ export default function FeedPage() {
         </div>
       </header>
 
-      {/* Categories Bar - Full Width Span */}
       <div className="flex w-full gap-2 sticky top-0 bg-background/80 backdrop-blur-md z-10 -mx-4 px-4 pt-2 pb-4 mb-2 border-b border-border/50">
         {CATEGORIES.map((cat) => (
           <Button 

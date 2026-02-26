@@ -28,7 +28,6 @@ export default function SearchPage() {
   const { data: allProfiles } = useCollection(profilesRef);
   const { data: allUnions } = useCollection(unionsRef);
 
-  // Load history from localStorage on mount
   useEffect(() => {
     const savedHistory = localStorage.getItem(STORAGE_KEY);
     if (savedHistory) {
@@ -40,8 +39,8 @@ export default function SearchPage() {
     }
   }, []);
 
-  const saveToHistory = (query: string) => {
-    const trimmed = query.trim();
+  const saveToHistory = (queryStr: string) => {
+    const trimmed = queryStr.trim();
     if (!trimmed) return;
     
     const newHistory = [trimmed, ...history.filter(h => h.toLowerCase() !== trimmed.toLowerCase())].slice(0, 10);
@@ -49,8 +48,8 @@ export default function SearchPage() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(newHistory));
   };
 
-  const handleSearch = (searchQuery?: string) => {
-    const q = (searchQuery || inputValue).trim();
+  const handleSearch = (searchQueryStr?: string) => {
+    const q = (searchQueryStr || inputValue).trim();
     if (q) {
       setSubmittedQuery(q);
       setInputValue(q);
@@ -192,7 +191,6 @@ export default function SearchPage() {
             <button onClick={clearSearch} className="text-[10px] font-black uppercase text-secondary">Clear</button>
           </div>
 
-          {/* PROFILES SECTION */}
           {filteredResults.profiles.length > 0 && (
             <section className="space-y-4">
               <h3 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2 bg-primary/5 px-3 py-1.5 rounded-full inline-flex">
@@ -215,7 +213,6 @@ export default function SearchPage() {
             </section>
           )}
 
-          {/* UNIONS SECTION */}
           {filteredResults.unions.length > 0 && (
             <section className="space-y-4">
               <h3 className="text-[10px] font-black uppercase tracking-widest text-secondary flex items-center gap-2 bg-secondary/5 px-3 py-1.5 rounded-full inline-flex">
@@ -241,7 +238,6 @@ export default function SearchPage() {
             </section>
           )}
 
-          {/* IDEAS SECTION */}
           {filteredResults.ideas.length > 0 && (
             <section className="space-y-4">
               <h3 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2 bg-primary/5 px-3 py-1.5 rounded-full inline-flex">

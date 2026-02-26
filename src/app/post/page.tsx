@@ -29,13 +29,13 @@ import {
   SheetTrigger 
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { useFirestore } from "@/firebase";
+import { useFirestore, useUser } from "@/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 
 type Step = 1 | 2 | 3;
 
-const AUDIENCE_KEYWORDS = [
+const CATEGORY_KEYWORDS = [
   "Meme", "Art", "Game", "Study", "Technology", "Sustainability", "Healthcare", "Business", "Education", "Science", "Music"
 ];
 
@@ -49,6 +49,7 @@ export default function PostPage() {
   const { toast } = useToast();
   const router = useRouter();
   const db = useFirestore();
+  const { user } = useUser();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
@@ -75,7 +76,7 @@ export default function PostPage() {
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
       setMediaType(type);
-      // Auto-close the sheet after selection
+      // Auto-close drawer as requested
       if (type === "image") setIsImageSheetOpen(false);
       if (type === "video") setIsVideoSheetOpen(false);
     }
@@ -94,7 +95,7 @@ export default function PostPage() {
   };
 
   const handlePublish = async () => {
-    if (!db) return;
+    if (!db || !user) return;
     setIsPosting(true);
     try {
       await addDoc(collection(db, "ideas"), {
@@ -102,8 +103,9 @@ export default function PostPage() {
         problem: formData.problem,
         description: formData.description,
         category: formData.targetUsers || "Meme",
-        userName: "John Innovator",
-        userAvatar: "https://picsum.photos/seed/me/100/100",
+        userName: user.displayName || "Innovator",
+        userAvatar: user.photoURL || "https://picsum.photos/seed/me/100/100",
+        authorId: user.uid,
         mediaUrl: mediaType === 'text' ? "" : (previewUrl || "https://picsum.photos/seed/placeholder/800/800"),
         innovationScore: 75,
         tags: [formData.targetUsers, "User-Generated"],
@@ -304,9 +306,9 @@ export default function PostPage() {
             </div>
 
             <div className="space-y-4">
-              <Label className="text-[10px] font-black uppercase tracking-widest">Who is this for?</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest">Category</Label>
               <div className="flex flex-wrap gap-2">
-                {AUDIENCE_KEYWORDS.map((keyword) => (
+                {CATEGORY_KEYWORDS.map((keyword) => (
                   <Button
                     key={keyword}
                     variant="outline"
