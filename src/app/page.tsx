@@ -16,12 +16,12 @@ const MOCK_IDEAS = [
     title: "EcoConnect: Smart Grid for Neighborhoods",
     problem: "Rising energy costs and inefficient localized energy distribution.",
     description: "A decentralized platform enabling neighbors to share excess solar energy with zero transaction fees using blockchain technology.",
-    category: "Sustainability",
+    category: "Mimi",
     userName: "Alex Rivera",
     userAvatar: "https://picsum.photos/seed/user1/100/100",
     mediaUrl: "https://picsum.photos/seed/tech/800/600",
     innovationScore: 92,
-    tags: ["GreenTech", "Blockchain", "Energy"],
+    tags: ["Mimi", "Special", "Energy"],
     likes: 245,
   },
   {
@@ -42,12 +42,12 @@ const MOCK_IDEAS = [
     title: "Shadow Realm: Next-Gen VR RPG",
     problem: "Lack of truly immersive and reactive environments in current VR gaming.",
     description: "A VR RPG where the world dynamically evolves based on your choices using generative AI for NPC dialogue and quest generation.",
-    category: "Game",
+    category: "Mimi",
     userName: "Kaelen Voss",
     userAvatar: "https://picsum.photos/seed/kaelen/100/100",
     mediaUrl: "https://picsum.photos/seed/gaming/800/600",
     innovationScore: 95,
-    tags: ["VR", "Gaming", "AI"],
+    tags: ["Mimi", "Gaming", "AI"],
     likes: 512,
   },
   {
@@ -78,9 +78,7 @@ const MOCK_IDEAS = [
   }
 ];
 
-const CATEGORIES = [
-  "All", "Art", "Game", "Study", "Technology", "Sustainability", "Healthcare", "Business", "Education", "Science", "Music"
-];
+const CATEGORIES = ["All", "Mimi"];
 
 export default function FeedPage() {
   const db = useFirestore();
@@ -98,7 +96,7 @@ export default function FeedPage() {
   const ideasToDisplay = useMemo(() => {
     const base = firestoreIdeas && firestoreIdeas.length > 0 ? firestoreIdeas : MOCK_IDEAS;
     if (activeCategory === "All") return base;
-    return base.filter(i => i.category.toLowerCase() === activeCategory.toLowerCase());
+    return base.filter(i => i.category?.toLowerCase() === activeCategory.toLowerCase());
   }, [firestoreIdeas, activeCategory]);
 
   useEffect(() => {
@@ -150,7 +148,7 @@ export default function FeedPage() {
             variant={cat === activeCategory ? "default" : "secondary"} 
             onClick={() => setActiveCategory(cat)}
             className={cn(
-              "rounded-full h-9 text-[10px] font-black px-5 shrink-0 uppercase tracking-tighter transition-all",
+              "rounded-full h-9 text-[10px] font-black px-10 shrink-0 uppercase tracking-tighter transition-all",
               cat === activeCategory ? "bg-primary shadow-lg shadow-primary/20" : "bg-white border-none text-muted-foreground hover:text-primary"
             )}
           >
