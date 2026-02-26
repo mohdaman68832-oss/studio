@@ -19,7 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog";
+} from "@/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -190,15 +190,13 @@ export default function ProfilePage() {
   const handleStickerPointerMove = (e: React.PointerEvent, stickerId: string) => {
     if (draggedStickerId !== stickerId || !containerRef.current || isPaintMode) return;
     
-    // Check for protected areas beneath the pointer
-    // Temporarily disable pointer events on the dragged element to see what's underneath
     const el = e.currentTarget as HTMLElement;
     el.style.pointerEvents = 'none';
     const underneath = document.elementFromPoint(e.clientX, e.clientY);
     el.style.pointerEvents = 'auto';
 
     if (underneath?.closest('[data-protected="true"]')) {
-      return; // Do not update position if over protected area
+      return; 
     }
 
     const rect = containerRef.current.getBoundingClientRect();
@@ -257,7 +255,6 @@ export default function ProfilePage() {
       style={{ backgroundColor: formData.customColors.background || "var(--background)" }}
       onClick={(e) => handleZoneClick(e, 'background')}
     >
-      {/* PAINT MODE INDICATOR */}
       {isPaintMode && activeColor && (
         <div 
           className="fixed top-20 left-1/2 -translate-x-1/2 z-[200] bg-white px-6 py-2 rounded-full shadow-2xl border-2 border-primary flex items-center gap-3 animate-in fade-in slide-in-from-top-4"
@@ -276,7 +273,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* ZONE 1: HEADER BAR (Paintable) */}
+      {/* ZONE 1: HEADER BAR */}
       <div 
         onClick={(e) => handleZoneClick(e, 'header')}
         className={cn(
@@ -309,7 +306,7 @@ export default function ProfilePage() {
         </Sheet>
       </div>
 
-      {/* ZONE 2: USER INFO AREA (Paintable) strip */}
+      {/* ZONE 2: USER INFO AREA */}
       <div 
         onClick={(e) => handleZoneClick(e, 'userInfo')}
         className={cn(
@@ -336,7 +333,7 @@ export default function ProfilePage() {
             </p>
           </div>
           
-          {/* ZONE 3: BIO CARD (Paintable) */}
+          {/* ZONE 3: BIO CARD */}
           <div 
             onClick={(e) => handleZoneClick(e, 'bioCard')}
             className={cn(
@@ -352,7 +349,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* ZONE 4: STATS SECTION (Paintable) */}
+      {/* ZONE 4: STATS SECTION */}
       <div 
         onClick={(e) => handleZoneClick(e, 'statsSection')}
         className={cn(
@@ -380,7 +377,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* ZONE 5 & 6: TABS AND CONTENT (Paintable) */}
+      {/* ZONE 5 & 6: TABS AND CONTENT */}
       <Tabs defaultValue="my-ideas" className="w-full relative z-10">
         <div 
           onClick={(e) => handleZoneClick(e, 'tabsList')}
@@ -435,7 +432,6 @@ export default function ProfilePage() {
         </div>
       </Tabs>
 
-      {/* RENDER STICKERS - Rendered at the end of the DOM with very high z-index for visibility */}
       {formData.stickers.map((sticker) => (
         <div 
           key={sticker.id}
@@ -459,7 +455,6 @@ export default function ProfilePage() {
         </div>
       ))}
 
-      {/* STICKER CONTROLS */}
       {activeStickerId && !isPaintMode && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[200] w-[90%] max-w-[340px] bg-white rounded-3xl shadow-2xl border border-primary/20 p-4 space-y-4 animate-in slide-in-from-bottom-10">
           <div className="flex items-center justify-between">
@@ -491,7 +486,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* CUSTOMIZATION DIALOG */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="max-w-md w-[95%] rounded-[2.5rem] p-6 max-h-[90vh] overflow-y-auto no-scrollbar border-none">
           <DialogHeader><DialogTitle className="text-sm font-black uppercase text-center">Customize Profile</DialogTitle></DialogHeader>

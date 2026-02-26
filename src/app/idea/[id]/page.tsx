@@ -39,6 +39,28 @@ const MOCK_IDEAS = [
     innovationScore: 88,
   },
   {
+    id: "4",
+    title: "Shadow Realm: Next-Gen VR RPG",
+    problem: "Lack of truly immersive and reactive environments in current VR gaming.",
+    description: "A VR RPG where the world dynamically evolves based on your choices using generative AI for NPC dialogue and quest generation.",
+    category: "Game",
+    userName: "Kaelen Voss",
+    userAvatar: "https://picsum.photos/seed/kaelen/100/100",
+    mediaUrl: "https://picsum.photos/seed/gaming/800/600",
+    innovationScore: 95,
+  },
+  {
+    id: "5",
+    title: "CanvasFlow: Collaborative Digital Murals",
+    problem: "Artists struggling to collaborate in real-time on large-scale digital projects.",
+    description: "An infinite digital canvas where hundreds of artists can contribute to a single mural simultaneously with low latency and smart layer management.",
+    category: "Art",
+    userName: "Maya Artiste",
+    userAvatar: "https://picsum.photos/seed/maya/100/100",
+    mediaUrl: "https://picsum.photos/seed/artpro/800/600",
+    innovationScore: 84,
+  },
+  {
     id: "3",
     title: "Aura: Personal Air Purifier",
     problem: "High levels of urban air pollution affecting daily respiratory health.",
@@ -46,7 +68,7 @@ const MOCK_IDEAS = [
     category: "Technology",
     userName: "Marcus Vane",
     userAvatar: "https://picsum.photos/seed/user3/100/100",
-    mediaUrl: "https://picsum.photos/seed/textpost/800/800",
+    mediaUrl: "", // Text post
     innovationScore: 76,
   }
 ];
