@@ -8,7 +8,7 @@ import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy } from "firebase/firestore";
 import { useMemo, useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RefreshCcw, Sparkles } from "lucide-react";
+import { RefreshCcw } from "lucide-react";
 
 const MOCK_IDEAS = [
   {
@@ -122,7 +122,6 @@ export default function FeedPage() {
 
   return (
     <div className="max-w-md mx-auto min-h-screen bg-background px-4 pt-8 pb-24 relative">
-      {/* Reload Button Overlay */}
       <div className={cn(
         "fixed top-4 left-1/2 -translate-x-1/2 z-[100] transition-all duration-300 transform",
         showRefresh ? "translate-y-0 opacity-100" : "-translate-y-20 opacity-0"
@@ -142,12 +141,8 @@ export default function FeedPage() {
           <h1 className="text-3xl font-black text-primary uppercase tracking-tighter">Sphere Feed</h1>
           <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Innovation at your fingertips</p>
         </div>
-        <div className="bg-secondary/10 p-2 rounded-2xl">
-          <Sparkles className="text-secondary animate-pulse" size={20} />
-        </div>
       </header>
 
-      {/* Interest Filter Bar */}
       <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar sticky top-0 bg-background/80 backdrop-blur-md z-10 -mx-4 px-4 pt-2 mb-2 border-b border-border/50">
         {CATEGORIES.map((cat) => (
           <Button 

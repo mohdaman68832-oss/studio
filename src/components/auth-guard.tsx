@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useUser } from '@/firebase';
@@ -27,7 +28,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     }
   }, [user, isUserLoading, isAuthPage, router]);
 
-  // Show nothing or a very minimal state while checking auth to feel faster
+  // Fast loading state that doesn't block the UI with a full initializing screen
   if (isUserLoading && !isAuthPage) {
     return (
       <div className="h-screen w-full flex items-center justify-center bg-background/50">
