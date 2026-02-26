@@ -1,13 +1,18 @@
-
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, PlusSquare, Search, MessageCircle, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useUser } from "@/firebase";
 
 export function BottomNav() {
   const pathname = usePathname();
+  const { user } = useUser();
+
+  // Don't show the bottom nav on login/signup pages or if the user isn't logged in
+  const isAuthPage = pathname === '/login' || pathname === '/signup';
+  if (!user || isAuthPage) return null;
 
   const navItems = [
     { label: "Feed", icon: Home, href: "/" },

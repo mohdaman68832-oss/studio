@@ -1,4 +1,3 @@
-
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
@@ -6,6 +5,7 @@ import { BottomNav } from '@/components/layout/bottom-nav';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
+import { AuthGuard } from '@/components/auth-guard';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -24,11 +24,13 @@ export default function RootLayout({
       <body className="font-body antialiased bg-background">
         <FirebaseClientProvider>
           <FirebaseErrorListener />
-          <main className="pb-20 min-h-screen">
-            {children}
-          </main>
-          <BottomNav />
-          <Toaster />
+          <AuthGuard>
+            <main className="pb-20 min-h-screen">
+              {children}
+            </main>
+            <BottomNav />
+            <Toaster />
+          </AuthGuard>
         </FirebaseClientProvider>
       </body>
     </html>
