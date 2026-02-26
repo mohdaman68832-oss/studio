@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -5,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Home, PlusSquare, Search, MessageCircle, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/firebase";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -28,17 +30,38 @@ export function BottomNav() {
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
+          const isProfile = item.label === "Profile";
+
           return (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
                 "flex flex-col items-center justify-center w-full h-full transition-all duration-200",
-                isActive ? "text-primary scale-110" : "text-muted-foreground hover:text-primary"
+                isActive ? "text-primary scale-105" : "text-muted-foreground hover:text-primary"
               )}
             >
-              <Icon size={24} className={cn(isActive && "fill-current opacity-20")} />
-              <span className="text-[10px] mt-1 font-medium">{item.label}</span>
+              <div className="relative flex flex-col items-center">
+                {isProfile ? (
+                  <Avatar className={cn(
+                    "h-7 w-7 border-2 transition-all duration-300",
+                    isActive ? "border-primary scale-110 shadow-md" : "border-transparent"
+                  )}>
+                    <AvatarImage src={user?.photoURL || ""} className="object-cover" />
+                    <AvatarFallback className="text-[8px] font-black uppercase bg-primary/10 text-primary">
+                      {user?.displayName?.[0] || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                ) : (
+                  <Icon size={24} className={cn(isActive && "fill-current opacity-20")} />
+                )}
+              </div>
+              <span className={cn(
+                "text-[9px] mt-1 font-black uppercase tracking-widest",
+                isActive ? "text-primary" : "text-muted-foreground/60"
+              )}>
+                {item.label}
+              </span>
             </Link>
           );
         })}
