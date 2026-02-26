@@ -37,6 +37,32 @@ const MOCK_IDEAS = [
     likes: 189,
   },
   {
+    id: "4",
+    title: "Shadow Realm: Next-Gen VR RPG",
+    problem: "Lack of truly immersive and reactive environments in current VR gaming.",
+    description: "A VR RPG where the world dynamically evolves based on your choices using generative AI for NPC dialogue and quest generation.",
+    category: "Game",
+    userName: "Kaelen Voss",
+    userAvatar: "https://picsum.photos/seed/kaelen/100/100",
+    mediaUrl: "https://picsum.photos/seed/gaming/800/600",
+    innovationScore: 95,
+    tags: ["VR", "Gaming", "AI"],
+    likes: 512,
+  },
+  {
+    id: "5",
+    title: "CanvasFlow: Collaborative Digital Murals",
+    problem: "Artists struggling to collaborate in real-time on large-scale digital projects.",
+    description: "An infinite digital canvas where hundreds of artists can contribute to a single mural simultaneously with low latency and smart layer management.",
+    category: "Art",
+    userName: "Maya Artiste",
+    userAvatar: "https://picsum.photos/seed/maya/100/100",
+    mediaUrl: "https://picsum.photos/seed/artpro/800/600",
+    innovationScore: 84,
+    tags: ["DigitalArt", "Collab", "Creative"],
+    likes: 328,
+  },
+  {
     id: "3",
     title: "Aura: Personal Air Purifier",
     problem: "High levels of urban air pollution affecting daily respiratory health.",
@@ -51,6 +77,10 @@ const MOCK_IDEAS = [
   }
 ];
 
+const CATEGORIES = [
+  "All", "Art", "Game", "Study", "Technology", "Sustainability", "Healthcare", "Business", "Education", "Science", "Music"
+];
+
 export default function FeedPage() {
   const db = useFirestore();
   const [activeCategory, setActiveCategory] = useState("All");
@@ -62,24 +92,32 @@ export default function FeedPage() {
 
   const { data: firestoreIdeas, isLoading: loading } = useCollection(ideasQuery);
 
-  // Optimistic UI: Use Firestore data if available, otherwise fallback to Mock data instantly
+  // Optimistic UI: Filter content based on user interest
   const ideasToDisplay = useMemo(() => {
+    // Combine mock and firestore data for a rich feed experience
     const base = firestoreIdeas && firestoreIdeas.length > 0 ? firestoreIdeas : MOCK_IDEAS;
+    
     if (activeCategory === "All") return base;
-    return base.filter(i => i.category === activeCategory);
+    return base.filter(i => i.category.toLowerCase() === activeCategory.toLowerCase());
   }, [firestoreIdeas, activeCategory]);
 
   return (
     <div className="max-w-md mx-auto min-h-screen bg-background px-4 pt-8 pb-24">
-      <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar sticky top-0 bg-background/80 backdrop-blur-md z-10 -mx-4 px-4 pt-2">
-        {["All", "Art", "Game", "Study", "Technology", "Sustainability", "Healthcare"].map((cat) => (
+      <header className="mb-6 px-1">
+        <h1 className="text-3xl font-black text-primary uppercase tracking-tighter">Sphere Feed</h1>
+        <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Innovation at your fingertips</p>
+      </header>
+
+      {/* Interest Filter Bar */}
+      <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar sticky top-0 bg-background/80 backdrop-blur-md z-10 -mx-4 px-4 pt-2 mb-2 border-b border-border/50">
+        {CATEGORIES.map((cat) => (
           <Button 
             key={cat} 
             variant={cat === activeCategory ? "default" : "secondary"} 
             onClick={() => setActiveCategory(cat)}
             className={cn(
-              "rounded-full h-8 text-[10px] font-black px-5 shrink-0 uppercase tracking-tighter transition-all",
-              cat === activeCategory ? "bg-primary shadow-lg shadow-primary/20" : "bg-white border-none"
+              "rounded-full h-9 text-[10px] font-black px-5 shrink-0 uppercase tracking-tighter transition-all",
+              cat === activeCategory ? "bg-primary shadow-lg shadow-primary/20" : "bg-white border-none text-muted-foreground hover:text-primary"
             )}
           >
             {cat}
@@ -87,7 +125,7 @@ export default function FeedPage() {
         ))}
       </div>
 
-      <div className="space-y-6 mt-6">
+      <div className="space-y-8 mt-6">
         {loading && (!firestoreIdeas || firestoreIdeas.length === 0) ? (
           <div className="space-y-12">
             {[1, 2].map(i => (
@@ -104,11 +142,25 @@ export default function FeedPage() {
             ))}
           </div>
         ) : (
-          ideasToDisplay.map((idea, index) => (
-            <div key={idea.id} className="animate-in fade-in slide-in-from-bottom-4 duration-300" style={{ animationDelay: `${index * 50}ms` }}>
-              <IdeaCard idea={idea as any} priority={index < 2} />
-            </div>
-          ))
+          <>
+            {ideasToDisplay.length > 0 ? (
+              ideasToDisplay.map((idea, index) => (
+                <div key={idea.id} className="animate-in fade-in slide-in-from-bottom-4 duration-300" style={{ animationDelay: `${index * 50}ms` }}>
+                  <IdeaCard idea={idea as any} priority={index < 2} />
+                </div>
+              ))
+            ) : (
+              <div className="py-20 text-center space-y-4 opacity-30">
+                <div className="bg-muted w-16 h-16 rounded-full flex items-center justify-center mx-auto">
+                   <span className="text-2xl">🌍</span>
+                </div>
+                <p className="text-xs font-black uppercase tracking-widest">No innovations found in {activeCategory}</p>
+                <Button variant="ghost" size="sm" onClick={() => setActiveCategory("All")} className="text-[10px] font-black uppercase">
+                  View All Feed
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
