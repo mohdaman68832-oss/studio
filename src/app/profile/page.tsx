@@ -3,7 +3,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {Settings, Edit3, Grid, Bookmark, Heart, LogOut} from "lucide-react";
+import {Settings, Grid, Bookmark, Heart, LogOut} from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Image from "next/image";
 import { useUser, useAuth } from "@/firebase";
@@ -33,8 +33,9 @@ export default function ProfilePage() {
     return <div className="max-w-md mx-auto min-h-screen flex items-center justify-center">Loading Profile...</div>;
   }
 
+  // AuthGuard will handle redirection if user is null.
+  // Returning null here to prevent the error of pushing to router during render.
   if (!user) {
-    router.push("/login");
     return null;
   }
 
@@ -43,7 +44,7 @@ export default function ProfilePage() {
       <div className="px-6 flex justify-between mb-6">
         <h1 className="text-2xl font-bold text-primary">Profile</h1>
         <div className="flex gap-2">
-          <Button variant="ghost" size="icon" className="rounded-full" onClick={handleSignOut}><LogOut size={20}/></Button>
+          <Button variant="ghost" size="icon" className="rounded-full" onClick={handleSignOut} title="Logout"><LogOut size={20}/></Button>
           <Button variant="ghost" size="icon" className="rounded-full"><Settings size={20}/></Button>
         </div>
       </div>
@@ -51,7 +52,7 @@ export default function ProfilePage() {
       <div className="px-6 flex flex-col items-center mb-8">
         <div className="relative mb-4">
           <Avatar className="h-24 w-24 border-4 border-white shadow-xl">
-            <AvatarImage src={user.photoURL || "https://picsum.photos/seed/me/200/200"} />
+            <AvatarImage src={user.photoURL || `https://picsum.photos/seed/${user.uid}/200/200`} />
             <AvatarFallback>{user.displayName?.[0] || "U"}</AvatarFallback>
           </Avatar>
           <div className="absolute bottom-1 right-1 bg-green-500 w-5 h-5 rounded-full border-4 border-white"></div>
