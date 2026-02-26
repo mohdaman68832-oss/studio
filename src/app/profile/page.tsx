@@ -238,7 +238,6 @@ export default function ProfilePage() {
     if (draggedStickerId === stickerId) {
       (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
       setDraggedStickerId(null);
-      // Auto-save position on drop
       await saveToFirestore({ stickers: formData.stickers });
     }
   };
@@ -261,10 +260,13 @@ export default function ProfilePage() {
       onClick={(e) => handleZoneClick(e, 'background')}
     >
       {isPaintMode && activeColor && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] bg-white px-6 py-2 rounded-full shadow-2xl border-2 border-primary flex items-center gap-3">
+        <div 
+          className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] bg-white px-6 py-2 rounded-full shadow-2xl border-2 border-primary flex items-center gap-3 animate-in fade-in slide-in-from-top-4"
+          onClick={(e) => e.stopPropagation()} // STOP BUBBLING
+        >
           <div className="w-4 h-4 rounded-full border" style={{ backgroundColor: activeColor }}></div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-primary">Paint Mode: Tap any zone</p>
-          <Button variant="ghost" size="icon" className="h-6 w-6 p-0 rounded-full" onClick={() => setIsPaintMode(false)}><X size={14}/></Button>
+          <p className="text-[10px] font-black uppercase tracking-widest text-primary">Paint Mode Active</p>
+          <Button variant="ghost" size="icon" className="h-6 w-6 p-0 rounded-full hover:bg-muted" onClick={(e) => { e.stopPropagation(); setIsPaintMode(false); }}><X size={14}/></Button>
         </div>
       )}
 
@@ -276,7 +278,7 @@ export default function ProfilePage() {
           onPointerMove={(e) => handleStickerPointerMove(e, sticker.id)}
           onPointerUp={(e) => handleStickerPointerUp(e, sticker.id)}
           className={cn(
-            "absolute z-[85]",
+            "absolute z-[95]",
             activeStickerId === sticker.id ? "cursor-grab active:cursor-grabbing ring-2 ring-primary ring-offset-2 rounded-xl" : "pointer-events-none",
           )}
           style={{ 
@@ -286,7 +288,7 @@ export default function ProfilePage() {
             touchAction: 'none'
           }}
         >
-          <div className="relative w-16 h-16 sm:w-20 sm:h-20" data-sticker="true">
+          <div className="relative w-20 h-20" data-sticker="true">
             <Image src={sticker.url} alt="sticker" fill className="object-contain" draggable={false} />
           </div>
         </div>
@@ -330,7 +332,7 @@ export default function ProfilePage() {
           <div className="space-y-6 py-4">
             <div className="space-y-3">
               <Label className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                <PaintBucket size={12} /> Palette (Select color to paint)
+                <PaintBucket size={12} /> Color Palette (Select to Paint)
               </Label>
               <div className="flex flex-wrap gap-2 justify-center bg-muted/30 p-4 rounded-3xl">
                 {PALETTE.map(color => (
@@ -340,7 +342,7 @@ export default function ProfilePage() {
                       setActiveColor(color);
                       setIsPaintMode(true);
                       setIsEditModalOpen(false);
-                      toast({ title: "Paint mode active", description: "Tap any section of your profile to paint it." });
+                      toast({ title: "Paint Mode Active", description: "Tap any section to paint it." });
                     }}
                     className={cn(
                       "w-8 h-8 rounded-full border-2 transition-transform hover:scale-110",
