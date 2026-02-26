@@ -1,9 +1,9 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { Search as SearchIcon, Filter, Users, Lightbulb, Globe, UserCircle, X } from "lucide-react";
+import { Search as SearchIcon, Filter, Users, Lightbulb, Globe, UserCircle, X, History, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy } from "firebase/firestore";
@@ -12,9 +12,12 @@ import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { IdeaCard } from "@/components/feed/idea-card";
 
+const STORAGE_KEY = "innovate_sphere_search_history";
+
 export default function SearchPage() {
   const [inputValue, setInputValue] = useState("");
   const [submittedQuery, setSubmittedQuery] = useState("");
+  const [history, setHistory] = useState<string[]>([]);
   const db = useFirestore();
 
   const ideasRef = useMemoFirebase(() => (db ? collection(db, "ideas") : null), [db]);
@@ -25,9 +28,33 @@ export default function SearchPage() {
   const { data: allProfiles } = useCollection(profilesRef);
   const { data: allUnions } = useCollection(unionsRef);
 
-  const handleSearch = () => {
-    if (inputValue.trim()) {
-      setSubmittedQuery(inputValue.trim());
+  // Load history from localStorage on mount
+  useEffect(() => {
+    const savedHistory = localStorage.getItem(STORAGE_KEY);
+    if (savedHistory) {
+      try {
+        setHistory(JSON.parse(savedHistory));
+      } catch (e) {
+        console.error("Failed to parse search history");
+      }
+    }
+  }, []);
+
+  const saveToHistory = (query: string) => {
+    const trimmed = query.trim();
+    if (!trimmed) return;
+    
+    const newHistory = [trimmed, ...history.filter(h => h.toLowerCase() !== trimmed.toLowerCase())].slice(0, 10);
+    setHistory(newHistory);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(newHistory));
+  };
+
+  const handleSearch = (searchQuery?: string) => {
+    const q = (searchQuery || inputValue).trim();
+    if (q) {
+      setSubmittedQuery(q);
+      setInputValue(q);
+      saveToHistory(q);
     }
   };
 
@@ -40,6 +67,18 @@ export default function SearchPage() {
   const clearSearch = () => {
     setInputValue("");
     setSubmittedQuery("");
+  };
+
+  const deleteHistoryItem = (e: React.MouseEvent, item: string) => {
+    e.stopPropagation();
+    const newHistory = history.filter(h => h !== item);
+    setHistory(newHistory);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(newHistory));
+  };
+
+  const clearAllHistory = () => {
+    setHistory([]);
+    localStorage.removeItem(STORAGE_KEY);
   };
 
   const filteredResults = useMemo(() => {
@@ -99,7 +138,7 @@ export default function SearchPage() {
           )}
         </div>
         <Button 
-          onClick={handleSearch}
+          onClick={() => handleSearch()}
           className="h-14 w-14 rounded-2xl shadow-xl bg-primary text-white"
         >
           <SearchIcon size={20} />
@@ -108,27 +147,43 @@ export default function SearchPage() {
 
       {!submittedQuery ? (
         <div className="space-y-6 pt-4 animate-in fade-in slide-in-from-bottom-4">
-          <div className="p-6 bg-primary/5 rounded-[2.5rem] border border-primary/10">
-            <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-2">Discovery Hub</p>
-            <h4 className="text-sm font-bold text-foreground">Find the next big thing. Search for "AI", "Green", "Tech", or any keyword.</h4>
+          <div className="flex items-center justify-between px-1">
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+              <History size={14} /> Recent Searches
+            </h3>
+            {history.length > 0 && (
+              <button 
+                onClick={clearAllHistory}
+                className="text-[10px] font-black uppercase text-secondary hover:underline"
+              >
+                Clear All
+              </button>
+            )}
           </div>
           
-          <div className="space-y-4">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Trending Tags</h3>
-            <div className="flex flex-wrap gap-2">
-              {["AI", "CleanEnergy", "Web3", "HealthTech", "Robotics", "EdTech"].map((tag) => (
-                <button 
-                  key={tag} 
-                  onClick={() => {
-                    setInputValue(tag);
-                    setSubmittedQuery(tag);
-                  }}
-                  className="px-5 py-2.5 bg-white rounded-full text-xs font-black text-primary border border-muted hover:border-primary/30 transition-all shadow-sm uppercase tracking-tighter"
+          <div className="space-y-2">
+            {history.length > 0 ? (
+              history.map((item, index) => (
+                <div 
+                  key={`${item}-${index}`}
+                  onClick={() => handleSearch(item)}
+                  className="flex items-center justify-between bg-white p-4 rounded-2xl border border-transparent hover:border-primary/20 shadow-sm cursor-pointer group transition-all"
                 >
-                  #{tag}
-                </button>
-              ))}
-            </div>
+                  <span className="text-xs font-bold text-foreground/80 group-hover:text-primary">{item}</span>
+                  <button 
+                    onClick={(e) => deleteHistoryItem(e, item)}
+                    className="p-1 hover:bg-muted rounded-full text-muted-foreground"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ))
+            ) : (
+              <div className="py-20 text-center space-y-3 opacity-20">
+                <SearchIcon size={48} className="mx-auto" />
+                <p className="text-[10px] font-black uppercase tracking-widest">Your search history is empty</p>
+              </div>
+            )}
           </div>
         </div>
       ) : (
