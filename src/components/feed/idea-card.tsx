@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from "next/image";
@@ -76,6 +77,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
       // Remove Like (Decrement)
       deleteDoc(likeDocRef)
         .then(() => {
+          // Update likes count without updating createdAt to prevent jumping
           setDoc(ideaRef, { likes: increment(-1) }, { merge: true });
         })
         .finally(() => {
@@ -88,12 +90,13 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
         userId: user.uid 
       })
         .then(() => {
-          // Ensure the document exists before incrementing
+          // Important: We do NOT update createdAt here.
+          // This ensures the post stays in its original chronological position.
           setDoc(ideaRef, { 
             likes: increment(1),
             title: idea.title || "Untitled",
             authorId: idea.authorId || 'system',
-            createdAt: serverTimestamp()
+            // DO NOT set createdAt: serverTimestamp() here as it causes the post to jump to top
           }, { merge: true });
         })
         .finally(() => {
@@ -111,6 +114,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
     });
   };
 
+  // Safe username handling to avoid .toLowerCase() on undefined
   const userHandle = idea.authorUsername || (idea.userName || 'user').toLowerCase().replace(/\s/g, '');
   const isVideo = idea.mediaUrl && (idea.mediaUrl.includes('blob:') || idea.mediaUrl.endsWith('.mp4') || idea.mediaUrl.endsWith('.webm') || idea.mediaUrl.includes('gtv-videos-bucket') || idea.mediaUrl.startsWith('data:video'));
   const isTextPost = !idea.mediaUrl || idea.mediaUrl.includes('textpost') || idea.mediaUrl === "";
@@ -196,7 +200,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
           </DialogTrigger>
           <DialogContent className="max-w-screen h-screen w-full p-0 bg-black/95 border-none shadow-none flex items-center justify-center z-[200]">
             <DialogHeader className="sr-only">
-              <DialogTitle>{idea.title || "Meme Zoom"}</DialogTitle>
+              <DialogTitle>{idea.title || "Meme Viewer"}</DialogTitle>
             </DialogHeader>
             <DialogClose className="absolute top-6 right-6 z-[210] bg-white/10 hover:bg-white/20 p-3 rounded-full text-white backdrop-blur-md transition-all">
               <X size={32} />
