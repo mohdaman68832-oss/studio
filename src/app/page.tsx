@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy } from "firebase/firestore";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { RefreshCcw, Sparkles } from "lucide-react";
 
 const MOCK_IDEAS = [
   {
@@ -84,6 +85,8 @@ const CATEGORIES = [
 export default function FeedPage() {
   const db = useFirestore();
   const [activeCategory, setActiveCategory] = useState("All");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showRefresh, setShowRefresh] = useState(false);
 
   const ideasQuery = useMemoFirebase(() => {
     if (!db) return null;
@@ -92,20 +95,56 @@ export default function FeedPage() {
 
   const { data: firestoreIdeas, isLoading: loading } = useCollection(ideasQuery);
 
-  // Optimistic UI: Filter content based on user interest
   const ideasToDisplay = useMemo(() => {
-    // Combine mock and firestore data for a rich feed experience
     const base = firestoreIdeas && firestoreIdeas.length > 0 ? firestoreIdeas : MOCK_IDEAS;
-    
     if (activeCategory === "All") return base;
     return base.filter(i => i.category.toLowerCase() === activeCategory.toLowerCase());
   }, [firestoreIdeas, activeCategory]);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY < 10) {
+        setShowRefresh(true);
+      } else {
+        setShowRefresh(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const handleReload = () => {
+    setIsRefreshing(true);
+    setTimeout(() => {
+      window.location.reload();
+    }, 800);
+  };
+
   return (
-    <div className="max-w-md mx-auto min-h-screen bg-background px-4 pt-8 pb-24">
-      <header className="mb-6 px-1">
-        <h1 className="text-3xl font-black text-primary uppercase tracking-tighter">Sphere Feed</h1>
-        <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Innovation at your fingertips</p>
+    <div className="max-w-md mx-auto min-h-screen bg-background px-4 pt-8 pb-24 relative">
+      {/* Reload Button Overlay */}
+      <div className={cn(
+        "fixed top-4 left-1/2 -translate-x-1/2 z-[100] transition-all duration-300 transform",
+        showRefresh ? "translate-y-0 opacity-100" : "-translate-y-20 opacity-0"
+      )}>
+        <Button 
+          onClick={handleReload}
+          className="rounded-full bg-primary text-white shadow-2xl px-6 py-2 flex items-center gap-2 border-2 border-white/20"
+          disabled={isRefreshing}
+        >
+          <RefreshCcw size={16} className={cn(isRefreshing && "animate-spin")} />
+          <span className="text-[10px] font-black uppercase tracking-widest">Reload Feed</span>
+        </Button>
+      </div>
+
+      <header className="mb-6 px-1 flex justify-between items-end">
+        <div>
+          <h1 className="text-3xl font-black text-primary uppercase tracking-tighter">Sphere Feed</h1>
+          <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Innovation at your fingertips</p>
+        </div>
+        <div className="bg-secondary/10 p-2 rounded-2xl">
+          <Sparkles className="text-secondary animate-pulse" size={20} />
+        </div>
       </header>
 
       {/* Interest Filter Bar */}
