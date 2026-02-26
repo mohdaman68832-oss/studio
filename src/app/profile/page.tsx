@@ -152,29 +152,6 @@ export default function ProfilePage() {
     }
   };
 
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (!draggedStickerId || !headerRef.current) return;
-
-    const rect = headerRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-
-    // Restriction: Cannot move stickers below the header area (visual boundary)
-    if (y > 100) return;
-
-    setFormData(prev => ({
-      ...prev,
-      stickers: prev.stickers.map(s => s.id === draggedStickerId ? { ...s, x, y } : s)
-    }));
-  };
-
-  const handlePointerUp = (e: React.PointerEvent) => {
-    if (draggedStickerId) {
-      (e.target as HTMLElement).releasePointerCapture(e.pointerId);
-      setDraggedStickerId(null);
-    }
-  };
-
   const handleSaveProfile = async () => {
     if (!user || !profileRef) return;
     setIsSaving(true);
@@ -218,6 +195,49 @@ export default function ProfilePage() {
       ...prev,
       stickers: prev.stickers.map(s => s.id === activeStickerId ? { ...s, ...updates } : s)
     }));
+  };
+
+  const handleStickerPointerDown = (e: React.PointerEvent, stickerId: string) => {
+    if (activeStickerId !== stickerId) return;
+    e.stopPropagation();
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    setDraggedStickerId(stickerId);
+  };
+
+  const handleStickerPointerMove = (e: React.PointerEvent, stickerId: string) => {
+    if (draggedStickerId !== stickerId || !headerRef.current) return;
+
+    const rect = headerRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+    // Movement restriction: only within header
+    if (y > 100) return;
+
+    // "Khali Jagah" Check: Don't allow sticking to protected elements
+    const elementsAtPoint = document.elementsFromPoint(e.clientX, e.clientY);
+    const isProtected = elementsAtPoint.some(el => 
+      el.getAttribute('data-protected') === 'true' || 
+      el.tagName === 'BUTTON' || 
+      el.tagName === 'A'
+    );
+
+    if (isProtected) {
+      // Don't update coordinates if over a protected element to simulate "blocking"
+      return;
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      stickers: prev.stickers.map(s => s.id === stickerId ? { ...s, x, y } : s)
+    }));
+  };
+
+  const handleStickerPointerUp = (e: React.PointerEvent, stickerId: string) => {
+    if (draggedStickerId === stickerId) {
+      (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+      setDraggedStickerId(null);
+    }
   };
 
   if (isUserLoading || isProfileLoading) {
@@ -382,20 +402,15 @@ export default function ProfilePage() {
 
       <div 
         ref={headerRef}
-        onPointerMove={handlePointerMove}
         className="relative z-10 select-none"
       >
         {/* Stickers Area */}
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id}
-            onPointerDown={(e) => {
-              if (activeStickerId !== sticker.id) return;
-              e.stopPropagation();
-              (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-              setDraggedStickerId(sticker.id);
-            }}
-            onPointerUp={handlePointerUp}
+            onPointerDown={(e) => handleStickerPointerDown(e, sticker.id)}
+            onPointerMove={(e) => handleStickerPointerMove(e, sticker.id)}
+            onPointerUp={(e) => handleStickerPointerUp(e, sticker.id)}
             className={cn(
               "absolute z-[45] transition-shadow",
               activeStickerId === sticker.id ? "cursor-grab active:cursor-grabbing ring-2 ring-primary ring-offset-2 rounded-xl" : "pointer-events-none",
@@ -415,6 +430,7 @@ export default function ProfilePage() {
 
         {/* Banner - PROTECTED Area */}
         <div 
+          data-protected="true"
           className="relative h-48 w-full bg-muted overflow-hidden transition-colors duration-300" 
           onClick={(e) => e.stopPropagation()}
         >
@@ -429,10 +445,10 @@ export default function ProfilePage() {
 
         <div className="px-6 -mt-16 flex flex-col items-center mb-8 relative z-50">
           {/* Avatar - PROTECTED Area */}
-          <div className="relative mb-4" onClick={(e) => e.stopPropagation()}>
-            <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-none">
-              <AvatarImage src={formData.profilePic} />
-              <AvatarFallback>{user.displayName?.[0] || "U"}</AvatarFallback>
+          <div className="relative mb-4" onClick={(e) => e.stopPropagation()} data-protected="true">
+            <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-none" data-protected="true">
+              <AvatarImage src={formData.profilePic} data-protected="true" />
+              <AvatarFallback data-protected="true">{user.displayName?.[0] || "U"}</AvatarFallback>
             </Avatar>
           </div>
           
