@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Settings, Grid, Bookmark, Heart, LogOut, User, Bell, Pencil, Loader2, Camera, Image as ImageIcon, Plus, Trash2, RotateCw, Maximize, X, PaintBucket, Pipette } from "lucide-react";
+import { Settings, Grid, Bookmark, Heart, LogOut, Camera, Image as ImageIcon, Plus, Trash2, RotateCw, Maximize, X, PaintBucket, Pencil, Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Sheet, 
@@ -146,7 +146,7 @@ export default function ProfilePage() {
     }));
     toast({
       title: "Painted!",
-      description: `Color applied to ${zone}. Don't forget to save.`,
+      description: `Color applied to ${zone}.`,
     });
   };
 
@@ -158,7 +158,7 @@ export default function ProfilePage() {
   };
 
   const handleHeaderClick = (e: React.MouseEvent) => {
-    if (isPaintMode) return; // Color applying handles this
+    if (isPaintMode) return;
 
     if (!headerRef.current) return;
     const rect = headerRef.current.getBoundingClientRect();
@@ -171,7 +171,6 @@ export default function ProfilePage() {
         stickers: prev.stickers.map(s => s.id === activeStickerId ? { ...s, x, y } : s)
       }));
       setIsPlacingSticker(false);
-      toast({ title: "Placed!" });
     } else if (activeStickerId) {
       setFormData(prev => ({
         ...prev,
@@ -201,12 +200,11 @@ export default function ProfilePage() {
 
       toast({
         title: "Profile Updated",
-        description: "Your creative masterpiece has been saved!",
+        description: "Your masterpiece is saved!",
       });
       setIsEditModalOpen(false);
       setActiveStickerId(null);
       setIsPaintMode(false);
-      setActiveColor(null);
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -229,7 +227,10 @@ export default function ProfilePage() {
   if (isUserLoading || isProfileLoading) {
     return (
       <div className="max-w-md mx-auto min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-pulse text-xs font-black uppercase tracking-widest text-primary">Initializing Sphere...</div>
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-[10px] font-black uppercase tracking-widest text-primary">Loading Profile...</p>
+        </div>
       </div>
     );
   }
@@ -242,11 +243,11 @@ export default function ProfilePage() {
       style={{ backgroundColor: formData.customColors.background || "var(--background)" }}
     >
       
-      {/* Paint Mode Cursor Indicator */}
+      {/* Paint Mode Active Banner */}
       {isPaintMode && activeColor && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] bg-white px-6 py-3 rounded-full shadow-2xl border-2 border-primary flex items-center gap-3 animate-bounce">
-          <div className="w-4 h-4 rounded-full border border-border" style={{ backgroundColor: activeColor }}></div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-primary">Tap areas to Paint</p>
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] bg-white px-6 py-3 rounded-full shadow-2xl border-2 border-primary flex items-center gap-3">
+          <div className="w-4 h-4 rounded-full border" style={{ backgroundColor: activeColor }}></div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-primary">Paint Mode: Tap to color</p>
           <Button variant="ghost" size="sm" className="h-6 w-6 p-0 rounded-full" onClick={() => setIsPaintMode(false)}><X size={14}/></Button>
         </div>
       )}
@@ -254,7 +255,7 @@ export default function ProfilePage() {
       {/* Floating Adjustment Bar */}
       {activeStickerId && !isPlacingSticker && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] w-[90%] max-w-[340px] bg-white rounded-3xl shadow-2xl border-2 border-primary/20 p-4 space-y-4 animate-in slide-in-from-bottom-10">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between">
              <span className="text-[10px] font-black uppercase tracking-widest text-primary">Adjust Sticker</span>
              <div className="flex gap-2">
                 <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-destructive" onClick={() => {
@@ -266,14 +267,14 @@ export default function ProfilePage() {
           </div>
           <div className="space-y-4">
             <div className="flex items-center gap-4">
-              <RotateCw size={14} className="text-muted-foreground shrink-0" />
+              <RotateCw size={14} className="text-muted-foreground" />
               <Slider value={[formData.stickers.find(s => s.id === activeStickerId)?.rotation || 0]} max={360} onValueChange={([v]) => updateActiveSticker({ rotation: v })} />
             </div>
             <div className="flex items-center gap-4">
-              <Maximize size={14} className="text-muted-foreground shrink-0" />
+              <Maximize size={14} className="text-muted-foreground" />
               <Slider value={[(formData.stickers.find(s => s.id === activeStickerId)?.scale || 1) * 100]} min={50} max={200} onValueChange={([v]) => updateActiveSticker({ scale: v / 100 })} />
             </div>
-            <Button className="w-full h-10 rounded-2xl bg-primary text-white text-[10px] font-black uppercase" onClick={handleSaveProfile} disabled={isSaving}>Save & Finish</Button>
+            <Button className="w-full h-10 rounded-2xl bg-primary text-white text-[10px] font-black uppercase" onClick={handleSaveProfile} disabled={isSaving}>Save Changes</Button>
           </div>
         </div>
       )}
@@ -284,7 +285,7 @@ export default function ProfilePage() {
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full"><Settings size={22} className="text-primary" /></Button>
           </SheetTrigger>
-          <SheetContent side="bottom" className="rounded-t-[2.5rem] p-6 bg-background">
+          <SheetContent side="bottom" className="rounded-t-[2.5rem] p-6">
             <SheetHeader className="mb-6"><SheetTitle className="text-center text-sm font-black uppercase">Settings</SheetTitle></SheetHeader>
             <div className="space-y-2">
               <Button variant="ghost" className="w-full justify-start h-14 rounded-2xl gap-4" onClick={() => { setIsSettingsOpen(false); setIsEditModalOpen(true); }}><Pencil size={18} /> Edit Profile</Button>
@@ -294,16 +295,14 @@ export default function ProfilePage() {
         </Sheet>
       </div>
 
-      {/* Edit Profile Dialog */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="max-w-md w-[95%] rounded-[2.5rem] p-6 max-h-[90vh] overflow-y-auto no-scrollbar">
-          <DialogHeader><DialogTitle className="text-sm font-black uppercase text-center">Customize Profile</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="text-sm font-black uppercase text-center">Customize</DialogTitle></DialogHeader>
           <div className="space-y-6 py-4">
             
-            {/* Color Palette Selection */}
             <div className="space-y-3">
               <Label className="text-[10px] font-black uppercase tracking-widest ml-1 flex items-center gap-2">
-                <PaintBucket size={12} className="text-primary" /> Choose a Color to Paint
+                <PaintBucket size={12} className="text-primary" /> Click a color to start painting
               </Label>
               <div className="flex flex-wrap gap-2 justify-center bg-muted/20 p-4 rounded-3xl">
                 {PALETTE.map(color => (
@@ -313,11 +312,11 @@ export default function ProfilePage() {
                       setActiveColor(color);
                       setIsPaintMode(true);
                       setIsEditModalOpen(false);
-                      toast({ title: "Color Hand Ready", description: "Tap any section to paint." });
+                      toast({ title: "Paint Mode Active", description: "Tap areas on profile to paint." });
                     }}
                     className={cn(
                       "w-8 h-8 rounded-full border-2 transition-transform hover:scale-125",
-                      activeColor === color ? "border-primary scale-110 shadow-lg" : "border-white"
+                      activeColor === color ? "border-primary scale-110" : "border-white"
                     )}
                     style={{ backgroundColor: color }}
                   />
@@ -326,7 +325,7 @@ export default function ProfilePage() {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Banner Image</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Banner</Label>
               <div onClick={() => bannerInputRef.current?.click()} className="relative h-24 bg-muted rounded-2xl overflow-hidden cursor-pointer border-2 border-dashed border-primary/20">
                 {formData.banner ? <Image src={formData.banner} alt="Banner" fill className="object-cover" /> : <div className="w-full h-full flex items-center justify-center opacity-30"><ImageIcon /></div>}
               </div>
@@ -334,9 +333,9 @@ export default function ProfilePage() {
             </div>
 
             <div className="flex items-center gap-4">
-               <div className="relative w-20 h-20 rounded-full bg-muted overflow-hidden border-4 border-white shadow-md">
+               <div className="relative w-20 h-20 rounded-full bg-muted overflow-hidden border-2 border-primary/20">
                  <Image src={formData.profilePic || `https://picsum.photos/seed/${user.uid}/200/200`} alt="Profile" fill className="object-cover" />
-                 <button onClick={() => profileInputRef.current?.click()} className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"><Camera className="text-white" size={16} /></button>
+                 <button onClick={() => profileInputRef.current?.click()} className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100"><Camera className="text-white" size={16} /></button>
                </div>
                <div className="flex-1 space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Name</Label>
@@ -347,11 +346,11 @@ export default function ProfilePage() {
 
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Bio</Label>
-              <Textarea value={formData.bio} onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))} className="rounded-2xl h-24 bg-muted/30 border-none resize-none text-xs" />
+              <Textarea value={formData.bio} onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))} className="rounded-2xl h-24 bg-muted/30 border-none resize-none" />
             </div>
 
             <div className="space-y-3">
-              <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Screen Stickers</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Stickers</Label>
               <div className="flex flex-wrap gap-2">
                 <Button variant="outline" size="sm" className="rounded-full h-12 w-12 border-2 border-dashed border-primary/40" onClick={() => stickerInputRef.current?.click()}><Plus size={20} /></Button>
                 {formData.stickers.map(s => (
@@ -366,13 +365,13 @@ export default function ProfilePage() {
           </div>
           <DialogFooter className="flex-row gap-2 mt-4">
             <Button variant="ghost" className="flex-1 rounded-2xl h-12 uppercase font-black text-[10px]" onClick={() => setIsEditModalOpen(false)}>Cancel</Button>
-            <Button className="flex-1 rounded-2xl h-12 uppercase font-black text-[10px] bg-primary" onClick={handleSaveProfile} disabled={isSaving}>{isSaving ? <Loader2 className="animate-spin" /> : "Save Changes"}</Button>
+            <Button className="flex-1 rounded-2xl h-12 uppercase font-black text-[10px] bg-primary" onClick={handleSaveProfile} disabled={isSaving}>{isSaving ? <Loader2 className="animate-spin h-4 w-4" /> : "Save Changes"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Main Profile Area */}
       <div 
+        ref={headerRef}
         onClick={(e) => {
           if (isPaintMode && activeColor) {
              applyColor('background');
@@ -385,15 +384,15 @@ export default function ProfilePage() {
           isPaintMode && "cursor-crosshair"
         )}
       >
-        {/* Stickers */}
+        {/* Stickers - Rendered without filters to ensure clarity */}
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id}
-            className={cn("absolute z-40 cursor-pointer", activeStickerId === sticker.id && "ring-2 ring-primary ring-offset-2 rounded-xl shadow-2xl")}
+            className={cn("absolute z-40 cursor-pointer", activeStickerId === sticker.id && "ring-2 ring-primary ring-offset-2 rounded-xl")}
             style={{ left: `${sticker.x}%`, top: `${sticker.y}%`, transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})` }}
             onClick={(e) => { e.stopPropagation(); setActiveStickerId(sticker.id); }}
           >
-            <div className="relative w-16 h-16 sm:w-20 sm:h-20 drop-shadow-xl">
+            <div className="relative w-16 h-16 sm:w-20 sm:h-20">
               <Image src={sticker.url} alt="sticker" fill className="object-contain" />
             </div>
           </div>
@@ -404,12 +403,12 @@ export default function ProfilePage() {
           className="relative h-48 w-full bg-muted overflow-hidden transition-colors duration-500"
           style={{ backgroundColor: formData.customColors.header || "transparent" }}
         >
-          <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover opacity-90" />
+          <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover" />
         </div>
 
         <div className="px-6 -mt-16 flex flex-col items-center mb-8">
           <div className="relative mb-4">
-            <Avatar className="h-32 w-32 border-[6px] border-white shadow-2xl">
+            <Avatar className="h-32 w-32 border-4 border-white shadow-xl">
               <AvatarImage src={formData.profilePic} />
               <AvatarFallback>{user.displayName?.[0] || "U"}</AvatarFallback>
             </Avatar>
@@ -421,8 +420,8 @@ export default function ProfilePage() {
             onClick={(e) => handleZoneClick(e, 'bioCard')}
             className="p-6 rounded-[2.5rem] border shadow-sm w-full transition-colors duration-500"
             style={{ 
-              backgroundColor: formData.customColors.bioCard || "rgba(255, 255, 255, 0.5)",
-              backdropFilter: "blur(10px)"
+              backgroundColor: formData.customColors.bioCard || "rgba(255, 255, 255, 0.9)",
+              // REMOVED blur from bioCard as requested
             }}
           >
             <p className="text-center text-xs text-muted-foreground leading-relaxed italic">
@@ -436,11 +435,11 @@ export default function ProfilePage() {
               <p className="text-[10px] uppercase font-black text-muted-foreground">Ideas</p>
             </div>
             <div className="text-center border-x border-border/50">
-              <p className="text-xl font-black text-primary">{(profileData?.totalViewsReceived || 4200).toLocaleString()}</p>
+              <p className="text-xl font-black text-primary">{(profileData?.totalViewsReceived || 0).toLocaleString()}</p>
               <p className="text-[10px] uppercase font-black text-muted-foreground">Views</p>
             </div>
             <div className="text-center">
-              <p className="text-xl font-black text-primary">{(profileData?.totalIdeasSaved || 856).toLocaleString()}</p>
+              <p className="text-xl font-black text-primary">{(profileData?.totalIdeasSaved || 0).toLocaleString()}</p>
               <p className="text-[10px] uppercase font-black text-muted-foreground">Saves</p>
             </div>
           </div>
@@ -450,9 +449,9 @@ export default function ProfilePage() {
       <div className="relative z-0">
         <Tabs defaultValue="my-ideas" className="w-full">
           <TabsList className="w-full bg-transparent border-b rounded-none px-6 h-14">
-            <TabsTrigger value="my-ideas" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary transition-all"><Grid size={22} /></TabsTrigger>
-            <TabsTrigger value="saved" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary transition-all"><Bookmark size={22} /></TabsTrigger>
-            <TabsTrigger value="liked" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary transition-all"><Heart size={22} /></TabsTrigger>
+            <TabsTrigger value="my-ideas" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary"><Grid size={22} /></TabsTrigger>
+            <TabsTrigger value="saved" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary"><Bookmark size={22} /></TabsTrigger>
+            <TabsTrigger value="liked" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary"><Heart size={22} /></TabsTrigger>
           </TabsList>
           <TabsContent value="my-ideas" className="px-1 mt-2">
             <div className="grid grid-cols-3 gap-1">

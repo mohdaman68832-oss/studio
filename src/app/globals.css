@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -43,8 +44,9 @@
 }
 
 .bottom-nav-blur {
-  backdrop-filter: blur(10px);
-  background-color: rgba(242, 243, 245, 0.85);
+  /* REMOVED heavy blur to fix "blor" issues */
+  background-color: rgba(242, 243, 245, 0.95);
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
 }
 
 .idea-card-shadow {
