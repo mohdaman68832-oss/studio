@@ -44,7 +44,7 @@ const MOCK_IDEAS = [
     category: "Technology",
     userName: "Marcus Vane",
     userAvatar: "https://picsum.photos/seed/user3/100/100",
-    mediaUrl: "https://picsum.photos/seed/textpost/800/800",
+    mediaUrl: "", // Text post
     innovationScore: 76,
     tags: ["IoT", "Urban", "TextPost"],
     likes: 134,
