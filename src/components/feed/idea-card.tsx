@@ -13,6 +13,8 @@ import {
   Dialog,
   DialogContent,
   DialogTrigger,
+  DialogTitle,
+  DialogHeader,
 } from "@/components/ui/dialog";
 
 interface IdeaCardProps {
@@ -123,6 +125,9 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
             </div>
           </DialogTrigger>
           <DialogContent className="max-w-[95vw] w-full p-0 bg-transparent border-none shadow-none flex items-center justify-center">
+            <DialogHeader className="sr-only">
+              <DialogTitle>Meme Preview</DialogTitle>
+            </DialogHeader>
             <div className="relative w-full h-[80vh]">
               {isVideo ? (
                 <video src={idea.mediaUrl} controls autoPlay className="w-full h-full object-contain" />
@@ -153,9 +158,9 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
                 )} 
               />
             </button>
-            <Link href={`/idea/${idea.id}`} className="text-foreground hover:text-primary transition-colors p-2">
+            <button className="text-foreground hover:text-primary transition-colors p-2">
               <MessageCircle size={26} />
-            </Link>
+            </button>
             <button 
               onClick={handleShare}
               className="text-foreground hover:text-primary transition-colors p-2"
