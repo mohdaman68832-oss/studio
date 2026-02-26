@@ -77,11 +77,6 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
               requestResourceData: { likes: 'decrement' },
             }));
           });
-          
-          toast({
-            title: "Support Removed",
-            description: "You retracted your upvote.",
-          });
         })
         .catch(async (error) => {
           errorEmitter.emit('permission-error', new FirestorePermissionError({
@@ -108,11 +103,6 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
               operation: 'update',
               requestResourceData: { likes: 'increment' },
             }));
-          });
-
-          toast({
-            title: "Upvoted!",
-            description: "Your support was registered.",
           });
         })
         .catch(async (error) => {
@@ -152,9 +142,6 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
           <span className="text-sm font-black text-foreground tracking-tight">
             @{userHandle}
           </span>
-          <span className="text-[10px] text-primary font-bold uppercase tracking-widest flex items-center gap-1">
-            {idea.category}
-          </span>
         </div>
       </Link>
       <button className="text-muted-foreground p-2 hover:bg-muted rounded-full transition-colors">
@@ -183,14 +170,6 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
           className="object-cover transition-transform group-hover:scale-105 duration-700"
         />
       )}
-      {!isMemeView && (
-        <div className="absolute top-4 left-4">
-          <Badge className="bg-primary/90 text-white border-none backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-1.5 shadow-lg">
-            <Lightbulb size={12} className="fill-current" />
-            <span className="text-[10px] font-black uppercase tracking-wider">Join Discussion</span>
-          </Badge>
-        </div>
-      )}
     </div>
   );
 
@@ -207,7 +186,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
           </DialogTrigger>
           <DialogContent className="max-w-screen h-screen w-full p-0 bg-black/95 border-none shadow-none flex items-center justify-center z-[200]">
             <DialogHeader className="sr-only">
-              <DialogTitle>{idea.title}</DialogTitle>
+              <DialogTitle>{idea.title || "Meme Preview"}</DialogTitle>
             </DialogHeader>
             <DialogClose className="absolute top-6 right-6 z-[210] bg-white/10 hover:bg-white/20 p-3 rounded-full text-white backdrop-blur-md transition-all">
               <X size={32} />
@@ -230,8 +209,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
           </DialogContent>
         </Dialog>
 
-        <div className="flex items-center justify-between mt-4">
-          <div className="flex items-center gap-6">
+        <div className="flex items-center justify-start mt-4 gap-6">
             <Link href={`/idea/${idea.id}`} className="text-foreground hover:text-primary transition-all p-2 flex items-center gap-2">
               <MessageCircle size={28} />
               <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Comment</span>
@@ -244,13 +222,6 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
               <Share2 size={26} />
               <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Share</span>
             </button>
-          </div>
-          
-          <div className="bg-muted/30 py-1.5 px-3 rounded-full border border-border/50">
-              <span className="text-[10px] font-black uppercase tracking-tighter text-foreground/50">
-                Meme
-              </span>
-          </div>
         </div>
       </div>
     );
@@ -326,12 +297,6 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
           >
             <Share2 size={24} />
           </button>
-        </div>
-        
-        <div className="flex items-center gap-3 bg-muted/30 py-1.5 px-3 rounded-full border border-border/50">
-            <span className="text-[11px] font-black uppercase tracking-tighter text-foreground/70">
-              {idea.category}
-            </span>
         </div>
       </div>
     </div>
