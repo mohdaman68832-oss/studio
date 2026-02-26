@@ -64,7 +64,11 @@
           "description": "Custom theme colors for profile sections.",
           "properties": {
             "header": { "type": "string" },
+            "userInfo": { "type": "string" },
             "bioCard": { "type": "string" },
+            "statsSection": { "type": "string" },
+            "tabsList": { "type": "string" },
+            "tabsContent": { "type": "string" },
             "background": { "type": "string" }
           }
         },
@@ -163,6 +167,17 @@
         "description",
         "innovationScore"
       ]
+    },
+    "Union": {
+      "title": "Union",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
+        "memberCount": { "type": "number" },
+        "avatarUrl": { "type": "string" }
+      }
     }
   },
   "auth": {
@@ -201,6 +216,22 @@
             {
               "name": "ideaId",
               "description": "The unique ID of the idea."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/unions/{unionId}",
+        "definition": {
+          "entityName": "Union",
+          "schema": {
+            "$ref": "#/backend/entities/Union"
+          },
+          "description": "Community groups for innovation.",
+          "params": [
+            {
+              "name": "unionId",
+              "description": "The unique ID of the union."
             }
           ]
         }
