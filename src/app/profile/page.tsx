@@ -76,7 +76,7 @@ export default function ProfilePage() {
   const profileInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
   const stickerInputRef = useRef<HTMLInputElement>(null);
-  const headerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -206,24 +206,11 @@ export default function ProfilePage() {
   };
 
   const handleStickerPointerMove = (e: React.PointerEvent, stickerId: string) => {
-    if (draggedStickerId !== stickerId || !headerRef.current) return;
+    if (draggedStickerId !== stickerId || !containerRef.current) return;
 
-    const rect = headerRef.current.getBoundingClientRect();
+    const rect = containerRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
-
-    // Boundary check
-    if (y > 100) return;
-
-    // Protected Element Check
-    const elementsAtPoint = document.elementsFromPoint(e.clientX, e.clientY);
-    const isProtected = elementsAtPoint.some(el => 
-      el.getAttribute('data-protected') === 'true' || 
-      el.tagName === 'BUTTON' || 
-      el.tagName === 'A'
-    );
-
-    if (isProtected) return;
 
     setFormData(prev => ({
       ...prev,
@@ -250,6 +237,7 @@ export default function ProfilePage() {
 
   return (
     <div 
+      ref={containerRef}
       className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden transition-colors duration-300"
       style={{ backgroundColor: formData.customColors.background || "var(--background)" }}
       onClick={(e) => handleZoneClick(e, 'background')}
@@ -292,27 +280,6 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
-
-      {/* ZONE: HEADER TOP BAR */}
-      <div 
-        onClick={(e) => handleZoneClick(e, 'header')}
-        className="px-6 flex justify-between items-center relative z-[60] py-4 transition-colors duration-300 cursor-pointer"
-        style={{ backgroundColor: formData.customColors.header }}
-      >
-        <h1 className="text-2xl font-black text-primary uppercase tracking-tighter" onClick={(e) => e.stopPropagation()}>Profile</h1>
-        <Sheet open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full" onClick={(e) => e.stopPropagation()}><Settings size={22} className="text-primary" /></Button>
-          </SheetTrigger>
-          <SheetContent side="bottom" className="rounded-t-[2.5rem] p-6 border-none shadow-none">
-            <SheetHeader className="mb-6"><SheetTitle className="text-center text-sm font-black uppercase">Menu</SheetTitle></SheetHeader>
-            <div className="space-y-2">
-              <Button variant="ghost" className="w-full justify-start h-14 rounded-2xl gap-4" onClick={() => { setIsSettingsOpen(false); setIsEditModalOpen(true); }}><Pencil size={18} /> Edit Profile</Button>
-              <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start h-14 rounded-2xl gap-4 text-secondary"><LogOut size={18} /> Logout</Button>
-            </div>
-          </SheetContent>
-        </Sheet>
-      </div>
 
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="max-w-md w-[95%] rounded-[2.5rem] p-6 max-h-[90vh] overflow-y-auto no-scrollbar border-none">
@@ -393,106 +360,126 @@ export default function ProfilePage() {
         </DialogContent>
       </Dialog>
 
-      <div ref={headerRef} className="relative select-none">
-        {formData.stickers.map((sticker) => (
-          <div 
-            key={sticker.id}
-            onPointerDown={(e) => handleStickerPointerDown(e, sticker.id)}
-            onPointerMove={(e) => handleStickerPointerMove(e, sticker.id)}
-            onPointerUp={(e) => handleStickerPointerUp(e, sticker.id)}
-            className={cn(
-              "absolute z-[45]",
-              activeStickerId === sticker.id ? "cursor-grab active:cursor-grabbing ring-2 ring-primary ring-offset-2 rounded-xl" : "pointer-events-none",
-            )}
-            style={{ 
-              left: `${sticker.x}%`, 
-              top: `${sticker.y}%`, 
-              transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`,
-              touchAction: 'none'
-            }}
-          >
-            <div className="relative w-16 h-16 sm:w-20 sm:h-20">
-              <Image src={sticker.url} alt="sticker" fill className="object-contain" draggable={false} />
-            </div>
-          </div>
-        ))}
-
-        {/* ZONE: USER INFO AREA (Includes Banner & Info) */}
+      {/* ZONE: STICKERS RENDERING */}
+      {formData.stickers.map((sticker) => (
         <div 
-          onClick={(e) => handleZoneClick(e, 'userInfo')}
-          className="transition-colors duration-300 pb-8 cursor-pointer"
-          style={{ backgroundColor: formData.customColors.userInfo || "var(--background)" }}
+          key={sticker.id}
+          onPointerDown={(e) => handleStickerPointerDown(e, sticker.id)}
+          onPointerMove={(e) => handleStickerPointerMove(e, sticker.id)}
+          onPointerUp={(e) => handleStickerPointerUp(e, sticker.id)}
+          className={cn(
+            "absolute z-[80]",
+            activeStickerId === sticker.id ? "cursor-grab active:cursor-grabbing ring-2 ring-primary ring-offset-2 rounded-xl" : "pointer-events-none",
+          )}
+          style={{ 
+            left: `${sticker.x}%`, 
+            top: `${sticker.y}%`, 
+            transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`,
+            touchAction: 'none'
+          }}
         >
-          <div data-protected="true" className="relative h-48 w-full bg-muted overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover" draggable={false} />
-          </div>
-
-          <div className="px-6 -mt-16 flex flex-col items-center relative z-50">
-            <div className="relative mb-4" onClick={(e) => e.stopPropagation()} data-protected="true">
-              <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-none">
-                <AvatarImage src={formData.profilePic} data-protected="true" />
-                <AvatarFallback data-protected="true">{user.displayName?.[0] || "U"}</AvatarFallback>
-              </Avatar>
-            </div>
-            <h2 className="text-2xl font-black text-foreground uppercase tracking-tighter mb-1" onClick={(e) => e.stopPropagation()}>{user.displayName || "Innovator"}</h2>
-            <p className="text-sm font-bold text-primary mb-4 tracking-widest uppercase" onClick={(e) => e.stopPropagation()}>@{profileData?.username || "user"}</p>
-            
-            {/* ZONE: BIO CARD */}
-            <div 
-              onClick={(e) => handleZoneClick(e, 'bioCard')}
-              className="p-6 rounded-[2.5rem] border shadow-none w-full transition-colors duration-300 bg-white cursor-pointer"
-              style={{ backgroundColor: formData.customColors.bioCard || "#FFFFFF" }}
-            >
-              <p className="text-center text-xs text-muted-foreground leading-relaxed font-medium italic" onClick={(e) => e.stopPropagation()}>
-                {formData.bio || "Just joined InnovateSphere!"}
-              </p>
-            </div>
+          <div className="relative w-16 h-16 sm:w-20 sm:h-20">
+            <Image src={sticker.url} alt="sticker" fill className="object-contain" draggable={false} />
           </div>
         </div>
+      ))}
 
-        {/* ZONE: STATS SECTION */}
-        <div className="px-6 mb-6">
+      {/* ZONE 1: HEADER TOP BAR */}
+      <div 
+        onClick={(e) => handleZoneClick(e, 'header')}
+        className="px-6 flex justify-between items-center relative z-[90] py-4 transition-colors duration-300 cursor-pointer"
+        style={{ backgroundColor: formData.customColors.header }}
+      >
+        <h1 className="text-2xl font-black text-primary uppercase tracking-tighter" onClick={(e) => e.stopPropagation()}>Profile</h1>
+        <Sheet open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon" className="rounded-full" onClick={(e) => e.stopPropagation()}><Settings size={22} className="text-primary" /></Button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="rounded-t-[2.5rem] p-6 border-none shadow-none">
+            <SheetHeader className="mb-6"><SheetTitle className="text-center text-sm font-black uppercase">Menu</SheetTitle></SheetHeader>
+            <div className="space-y-2">
+              <Button variant="ghost" className="w-full justify-start h-14 rounded-2xl gap-4" onClick={() => { setIsSettingsOpen(false); setIsEditModalOpen(true); }}><Pencil size={18} /> Edit Profile</Button>
+              <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start h-14 rounded-2xl gap-4 text-secondary"><LogOut size={18} /> Logout</Button>
+            </div>
+          </SheetContent>
+        </Sheet>
+      </div>
+
+      {/* ZONE 2: USER INFO AREA (Banner & Name) */}
+      <div 
+        onClick={(e) => handleZoneClick(e, 'userInfo')}
+        className="transition-colors duration-300 pb-8 cursor-pointer relative z-10"
+        style={{ backgroundColor: formData.customColors.userInfo }}
+      >
+        <div data-protected="true" className="relative h-48 w-full bg-muted overflow-hidden" onClick={(e) => e.stopPropagation()}>
+          <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover" draggable={false} />
+        </div>
+
+        <div className="px-6 -mt-16 flex flex-col items-center relative z-20">
+          <div className="relative mb-4" onClick={(e) => e.stopPropagation()} data-protected="true">
+            <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-none">
+              <AvatarImage src={formData.profilePic} data-protected="true" />
+              <AvatarFallback data-protected="true">{user.displayName?.[0] || "U"}</AvatarFallback>
+            </Avatar>
+          </div>
+          <h2 className="text-2xl font-black text-foreground uppercase tracking-tighter mb-1" onClick={(e) => e.stopPropagation()}>{user.displayName || "Innovator"}</h2>
+          <p className="text-sm font-bold text-primary mb-4 tracking-widest uppercase" onClick={(e) => e.stopPropagation()}>@{profileData?.username || "user"}</p>
+          
+          {/* ZONE 3: BIO CARD */}
           <div 
-            onClick={(e) => handleZoneClick(e, 'statsSection')}
-            className="grid grid-cols-3 gap-8 w-full py-6 px-4 rounded-[2rem] transition-colors duration-300 border bg-white cursor-pointer"
-            style={{ backgroundColor: formData.customColors.statsSection || "#FFFFFF" }}
+            onClick={(e) => handleZoneClick(e, 'bioCard')}
+            className="p-6 rounded-[2.5rem] border shadow-none w-full transition-colors duration-300 bg-white cursor-pointer"
+            style={{ backgroundColor: formData.customColors.bioCard || "#FFFFFF" }}
           >
-            <div className="text-center" onClick={(e) => e.stopPropagation()}>
-              <p className="text-xl font-black text-primary">{profileData?.totalIdeasPosted || 0}</p>
-              <p className="text-[10px] uppercase font-black text-muted-foreground">Ideas</p>
-            </div>
-            <div className="text-center border-x border-border/50" onClick={(e) => e.stopPropagation()}>
-              <p className="text-xl font-black text-primary">{(profileData?.totalViewsReceived || 0).toLocaleString()}</p>
-              <p className="text-[10px] uppercase font-black text-muted-foreground">Views</p>
-            </div>
-            <div className="text-center" onClick={(e) => e.stopPropagation()}>
-              <p className="text-xl font-black text-primary">{(profileData?.totalIdeasSaved || 0).toLocaleString()}</p>
-              <p className="text-[10px] uppercase font-black text-muted-foreground">Saves</p>
-            </div>
+            <p className="text-center text-xs text-muted-foreground leading-relaxed font-medium italic" onClick={(e) => e.stopPropagation()}>
+              {formData.bio || "Just joined InnovateSphere!"}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* ZONE 4: STATS SECTION */}
+      <div className="px-6 mb-6 relative z-10">
+        <div 
+          onClick={(e) => handleZoneClick(e, 'statsSection')}
+          className="grid grid-cols-3 gap-8 w-full py-6 px-4 rounded-[2rem] transition-colors duration-300 border bg-white cursor-pointer"
+          style={{ backgroundColor: formData.customColors.statsSection || "#FFFFFF" }}
+        >
+          <div className="text-center" onClick={(e) => e.stopPropagation()}>
+            <p className="text-xl font-black text-primary">{profileData?.totalIdeasPosted || 0}</p>
+            <p className="text-[10px] uppercase font-black text-muted-foreground">Ideas</p>
+          </div>
+          <div className="text-center border-x border-border/50" onClick={(e) => e.stopPropagation()}>
+            <p className="text-xl font-black text-primary">{(profileData?.totalViewsReceived || 0).toLocaleString()}</p>
+            <p className="text-[10px] uppercase font-black text-muted-foreground">Views</p>
+          </div>
+          <div className="text-center" onClick={(e) => e.stopPropagation()}>
+            <p className="text-xl font-black text-primary">{(profileData?.totalIdeasSaved || 0).toLocaleString()}</p>
+            <p className="text-[10px] uppercase font-black text-muted-foreground">Saves</p>
           </div>
         </div>
       </div>
 
       <div className="relative z-10">
         <Tabs defaultValue="my-ideas" className="w-full">
-          {/* ZONE: TABS LIST (Icons) */}
+          {/* ZONE 5: TABS LIST (Icons) */}
           <div 
             onClick={(e) => handleZoneClick(e, 'tabsList')}
             className="transition-colors duration-300 cursor-pointer border-b"
-            style={{ backgroundColor: formData.customColors.tabsList }}
+            style={{ backgroundColor: formData.customColors.tabsList || "transparent" }}
           >
             <TabsList className="w-full bg-transparent border-none rounded-none px-6 h-14" onClick={(e) => e.stopPropagation()}>
-              <TabsTrigger value="my-ideas" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary"><Grid size={22} /></TabsTrigger>
-              <TabsTrigger value="saved" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary"><Bookmark size={22} /></TabsTrigger>
-              <TabsTrigger value="liked" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary"><Heart size={22} /></TabsTrigger>
+              <TabsTrigger value="my-ideas" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"><Grid size={22} /></TabsTrigger>
+              <TabsTrigger value="saved" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"><Bookmark size={22} /></TabsTrigger>
+              <TabsTrigger value="liked" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"><Heart size={22} /></TabsTrigger>
             </TabsList>
           </div>
 
-          {/* ZONE: TABS CONTENT (Grid) */}
+          {/* ZONE 6: TABS CONTENT (Post Grid) */}
           <div 
             onClick={(e) => handleZoneClick(e, 'tabsContent')}
             className="min-h-[300px] transition-colors duration-300 cursor-pointer pb-20"
-            style={{ backgroundColor: formData.customColors.tabsContent }}
+            style={{ backgroundColor: formData.customColors.tabsContent || "transparent" }}
           >
             <TabsContent value="my-ideas" className="px-1 mt-0" onClick={(e) => e.stopPropagation()}>
               <div className="grid grid-cols-3 gap-1">
