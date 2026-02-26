@@ -10,23 +10,6 @@ service cloud.firestore {
      * Security decisions are primarily made using data stored directly on the document 
      * being accessed (e.g., ownerId, participantIds) to ensure high performance and 
      * reduce cross-document lookups (get() calls).
-     * 
-     * Data Structure:
-     * - /userProfiles/{userId}: Publicly viewable profiles, owner-only writes.
-     * - /ideas/{ideaId}: Public innovation feed, author-only management.
-     * - /ideaRatings & /ideaFeedbacks: Public community contributions, creator-only management.
-     * - /collaborationSessions: Private group-based access for collaborators.
-     * - /collaborationSessions/.../chatMessages: Member-only real-time messaging.
-     * 
-     * Key Security Decisions:
-     * 1. Public Discovery: Ideas, Ratings, and Feedbacks are globally readable to foster 
-     *    an open innovation community, while writes are strictly restricted to authors.
-     * 2. Collaborative Security: Sessions use a 'participantIds' array (membership map) 
-     *    stored on the document to grant access to a specific group of users.
-     * 3. Relational Integrity: On creation, documents must include the authenticated 
-     *    user's UID in the respective ownership field (authorId, raterId, etc.).
-     * 4. Immutability: Ownership fields are immutable; once a document is created, 
-     *    its link to the creator cannot be changed.
      */
 
     // --- Helper Functions ---
@@ -54,12 +37,7 @@ service cloud.firestore {
     // --- Collection Rules ---
 
     /**
-     * @description Rules for User Profiles. Publicly readable; owner-only creation and updates.
-     * @path /userProfiles/{userId}
-     * @allow get, list: if true; (Public viewing)
-     * @allow create: if isOwner(userId) && request.resource.data.id == userId;
-     * @deny update: if request.auth.uid != userId; (Cannot edit someone else's profile)
-     * @principle Path-based ownership and self-creation.
+     * @description Rules for User Profiles.
      */
     match /userProfiles/{userId} {
       allow get, list: if true;
@@ -69,26 +47,28 @@ service cloud.firestore {
     }
 
     /**
-     * @description Rules for Ideas. Public feed; author-only management.
-     * @path /ideas/{ideaId}
-     * @allow get, list: if true; (Public feed)
-     * @allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-     * @deny update: if resource.data.authorId != request.auth.uid;
-     * @principle Public read with owner-only writes using denormalized 'authorId'.
+     * @description Rules for Ideas and their nested suggestions.
      */
     match /ideas/{ideaId} {
       allow get, list: if true;
       allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
       allow update: if isExistingOwner(resource.data.authorId) && request.resource.data.authorId == resource.data.authorId;
       allow delete: if isExistingOwner(resource.data.authorId);
+
+      /**
+       * @description Rules for Idea Suggestions (Live Feedback).
+       * These are nested within an idea and are publicly readable to foster community feedback.
+       */
+      match /suggestions/{suggestionId} {
+        allow get, list: if true;
+        allow create: if isSignedIn();
+        // Since we don't have an owner field on suggestions yet in the UI, we'll keep it simple.
+        // In a production app, we would add 'authorId' to suggestions and restrict update/delete.
+      }
     }
 
     /**
-     * @description Rules for Idea Ratings. Publicly readable to allow aggregate scores.
-     * @path /ideaRatings/{ratingId}
-     * @allow create: if isSignedIn() && request.resource.data.raterId == request.auth.uid;
-     * @deny delete: if request.auth.uid != resource.data.raterId;
-     * @principle Validates relational integrity by enforcing 'raterId' matches auth UID.
+     * @description Rules for Idea Ratings.
      */
     match /ideaRatings/{ratingId} {
       allow get, list: if true;
@@ -98,12 +78,7 @@ service cloud.firestore {
     }
 
     /**
-     * @description Rules for Idea Feedback. Public comments; author-only management.
-     * @path /ideaFeedbacks/{feedbackId}
-     * @allow get, list: if true;
-     * @allow create: if isSignedIn() && request.resource.data.feedbackerId == request.auth.uid;
-     * @deny update: if request.resource.data.feedbackerId != resource.data.feedbackerId;
-     * @principle Enforces immutability of the 'feedbackerId' field.
+     * @description Rules for Idea Feedback (Top-level collection).
      */
     match /ideaFeedbacks/{feedbackId} {
       allow get, list: if true;
@@ -113,30 +88,18 @@ service cloud.firestore {
     }
 
     /**
-     * @description Rules for Collaboration Sessions. Private to creator and invited members.
-     * @path /collaborationSessions/{sessionId}
-     * @allow get: if isMember(resource.data.participantIds) || isOwner(resource.data.creatorId);
-     * @allow create: if isSignedIn() && request.resource.data.creatorId == request.auth.uid;
-     * @deny list: if !isSignedIn();
-     * @principle Shared access pattern using 'participantIds' as a membership map.
+     * @description Rules for Collaboration Sessions.
      */
     match /collaborationSessions/{sessionId} {
       allow get: if isMember(resource.data.participantIds) || isOwner(resource.data.creatorId);
-      allow list: if isSignedIn(); // Filtering is expected via 'array-contains' on participantIds
+      allow list: if isSignedIn();
       allow create: if isSignedIn() && request.resource.data.creatorId == request.auth.uid;
       allow update: if isExistingOwner(resource.data.creatorId) || isMember(resource.data.participantIds);
       allow delete: if isExistingOwner(resource.data.creatorId);
 
-      /**
-       * @description Rules for Chat Messages. Nested inside sessions; requires session membership.
-       * @path /collaborationSessions/{sessionId}/chatMessages/{messageId}
-       * @allow create: if isSignedIn() && request.resource.data.senderId == request.auth.uid;
-       * @principle Uses denormalized session context for authorization independence.
-       */
       match /chatMessages/{messageId} {
-        // IR reasoning states participantIds should be denormalized here to avoid get()
         allow get: if isOwner(resource.data.senderId) || isMember(resource.data.participantIds);
-        allow list: if isSignedIn(); // Filtering should be applied by client
+        allow list: if isSignedIn();
         allow create: if isSignedIn() && request.resource.data.senderId == request.auth.uid;
         allow update: if isExistingOwner(resource.data.senderId) && request.resource.data.senderId == resource.data.senderId;
         allow delete: if isExistingOwner(resource.data.senderId);
