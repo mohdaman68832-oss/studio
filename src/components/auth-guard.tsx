@@ -6,8 +6,7 @@ import { useEffect } from 'react';
 
 /**
  * AuthGuard handles the global authentication flow.
- * - Redirects unauthenticated users to /login if they try to access protected routes.
- * - Redirects authenticated users to / (home) if they try to access /login or /signup.
+ * Redirects unauthenticated users to /login and authenticated users away from auth pages.
  */
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
@@ -28,22 +27,21 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     }
   }, [user, isUserLoading, isAuthPage, router]);
 
-  // Show a clean loading state while checking authentication
-  if (isUserLoading) {
+  // Show nothing or a very minimal state while checking auth to feel faster
+  if (isUserLoading && !isAuthPage) {
     return (
-      <div className="h-screen w-full flex items-center justify-center bg-background">
-        <div className="animate-pulse flex flex-col items-center gap-4">
-          <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center">
-            <div className="h-8 w-8 bg-primary/20 rounded-full" />
+      <div className="h-screen w-full flex items-center justify-center bg-background/50">
+        <div className="flex flex-col items-center gap-2">
+          <div className="h-1 w-24 bg-primary/20 rounded-full overflow-hidden">
+            <div className="h-full bg-primary animate-progress-fast" />
           </div>
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/60 animate-bounce">
-            Initializing Sphere
+          <p className="text-[8px] font-black uppercase tracking-[0.2em] text-primary/40">
+            Syncing...
           </p>
         </div>
       </div>
     );
   }
 
-  // If not loading, render the actual content
   return <>{children}</>;
 }

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -262,14 +261,12 @@ export default function ProfilePage() {
         >
           <div className="w-4 h-4 rounded-full border shadow-sm" style={{ backgroundColor: activeColor }}></div>
           <p className="text-[10px] font-black uppercase tracking-widest text-primary">Paint Mode Active</p>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-6 w-6 p-0 rounded-full hover:bg-muted" 
+          <button 
+            className="h-6 w-6 p-0 rounded-full hover:bg-muted flex items-center justify-center" 
             onClick={(e) => { e.stopPropagation(); setIsPaintMode(false); setActiveColor(null); }}
           >
             <X size={14}/>
-          </Button>
+          </button>
         </div>
       )}
 

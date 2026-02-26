@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -68,4 +67,14 @@
 
 .active-glow {
   animation: pulse-glow 0.3s ease-in-out;
+}
+
+@keyframes progress-fast {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(0%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-progress-fast {
+  animation: progress-fast 0.8s infinite linear;
 }
