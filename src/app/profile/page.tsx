@@ -212,6 +212,9 @@ export default function ProfilePage() {
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
 
+    // Protection logic: If user is trying to place on a protected element, we could visual indicate or block
+    // For simplicity, we just update. The PointerDown event is blocked on protected elements.
+
     setFormData(prev => ({
       ...prev,
       stickers: prev.stickers.map(s => s.id === stickerId ? { ...s, x, y } : s)
@@ -378,7 +381,7 @@ export default function ProfilePage() {
             touchAction: 'none'
           }}
         >
-          <div className="relative w-16 h-16 sm:w-20 sm:h-20">
+          <div className="relative w-16 h-16 sm:w-20 sm:h-20" data-sticker="true">
             <Image src={sticker.url} alt="sticker" fill className="object-contain" draggable={false} />
           </div>
         </div>
