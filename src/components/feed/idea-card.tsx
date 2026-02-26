@@ -142,6 +142,33 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
     </div>
   );
 
+  const LikeButton = (
+    <button 
+      onClick={handleToggleLike}
+      className={cn(
+        "flex items-center gap-2 transition-all duration-300 transform active:scale-125 group/like",
+        isProcessing && "active-glow"
+      )}
+    >
+      <ArrowBigUp 
+        size={36} 
+        className={cn(
+          "transition-all duration-300",
+          isLiked ? "text-secondary fill-current drop-shadow-[0_0_8px_rgba(255,69,0,0.4)]" : "text-foreground/30"
+        )} 
+      />
+      <div className="flex flex-col items-start">
+        <span className={cn(
+          "text-sm font-black transition-colors leading-none",
+          isLiked ? "text-secondary" : "text-foreground/40"
+        )}>
+          {idea.likes || 0}
+        </span>
+        <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground/30">Support</span>
+      </div>
+    </button>
+  );
+
   if (isMemeView) {
     return (
       <div className="bg-card rounded-[2.5rem] idea-card-shadow overflow-hidden border border-border/50 p-5">
@@ -180,16 +207,15 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
         </Dialog>
 
         <div className="flex items-center justify-start mt-4 gap-6">
-            <Link href={`/idea/${idea.id}`} className="text-foreground hover:text-primary transition-all p-2 flex items-center gap-2">
+            {LikeButton}
+            <Link href={`/idea/${idea.id}`} className="text-foreground hover:text-primary transition-all p-2">
               <MessageCircle size={28} />
-              <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Comment</span>
             </Link>
             <button 
               onClick={handleShare}
-              className="text-foreground hover:text-primary transition-all p-2 flex items-center gap-2"
+              className="text-foreground hover:text-primary transition-all p-2"
             >
               <Share2 size={26} />
-              <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Share</span>
             </button>
         </div>
       </div>
@@ -222,30 +248,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
 
       <div className="flex items-center justify-between px-5 py-4">
         <div className="flex items-center gap-4">
-          <button 
-            onClick={handleToggleLike}
-            className={cn(
-              "flex items-center gap-2 transition-all duration-300 transform active:scale-125",
-              isProcessing && "active-glow"
-            )}
-          >
-            <ArrowBigUp 
-              size={36} 
-              className={cn(
-                "transition-all duration-300",
-                isLiked ? "text-secondary fill-current drop-shadow-[0_0_8px_rgba(255,69,0,0.4)]" : "text-foreground/30"
-              )} 
-            />
-            <div className="flex flex-col items-start">
-              <span className={cn(
-                "text-sm font-black transition-colors leading-none",
-                isLiked ? "text-secondary" : "text-foreground/40"
-              )}>
-                {idea.likes || 0}
-              </span>
-              <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground/50">Upvotes</span>
-            </div>
-          </button>
+          {LikeButton}
           <Link href={`/idea/${idea.id}`} className="text-foreground hover:text-primary transition-colors p-2">
             <MessageCircle size={24} />
           </Link>
