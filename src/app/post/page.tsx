@@ -29,8 +29,8 @@ import {
   SheetTrigger 
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { useFirestore, useUser } from "@/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { useFirestore, useUser, useDoc, useMemoFirebase } from "@/firebase";
+import { collection, addDoc, serverTimestamp, doc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 
 type Step = 1 | 2 | 3;
@@ -51,6 +51,10 @@ export default function PostPage() {
   const db = useFirestore();
   const { user } = useUser();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch current user's profile to get their unique username
+  const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [user, db]);
+  const { data: profileData } = useDoc(profileRef);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -76,7 +80,6 @@ export default function PostPage() {
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
       setMediaType(type);
-      // Auto-close drawer as requested
       if (type === "image") setIsImageSheetOpen(false);
       if (type === "video") setIsVideoSheetOpen(false);
     }
@@ -106,6 +109,7 @@ export default function PostPage() {
         userName: user.displayName || "Innovator",
         userAvatar: user.photoURL || "https://picsum.photos/seed/me/100/100",
         authorId: user.uid,
+        authorUsername: profileData?.username || "user",
         mediaUrl: mediaType === 'text' ? "" : (previewUrl || "https://picsum.photos/seed/placeholder/800/800"),
         innovationScore: 75,
         tags: [formData.targetUsers, "User-Generated"],
@@ -318,8 +322,7 @@ export default function PostPage() {
                       "rounded-full text-[10px] font-bold uppercase tracking-tighter transition-all",
                       formData.targetUsers === keyword 
                         ? "bg-primary text-white border-primary shadow-md" 
-                        : "bg-white border-muted-foreground/20 hover:border-primary/50",
-                      keyword === "Meme" && formData.targetUsers !== "Meme" && "border-primary text-primary"
+                        : "bg-white border-muted-foreground/20 hover:border-primary/50"
                     )}
                   >
                     {keyword}

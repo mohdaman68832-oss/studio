@@ -96,7 +96,7 @@ export default function ProfilePage() {
     customColors: {} as CustomColors
   });
 
-  const profileRef = useMemoFirebase(() => (user ? doc(db, "userProfiles", user.uid) : null), [db, user]);
+  const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [db, user]);
   const { data: profileData, isLoading: isProfileLoading } = useDoc(profileRef);
 
   useEffect(() => {
@@ -132,10 +132,7 @@ export default function ProfilePage() {
   const applyColor = async (zone: keyof CustomColors) => {
     if (!activeColor || !isPaintMode) return;
     const updatedColors = { ...formData.customColors, [zone]: activeColor };
-    setFormData(prev => ({
-      ...prev,
-      customColors: updatedColors
-    }));
+    setFormData(prev => ({ ...prev, customColors: updatedColors }));
     await saveToFirestore({ customColors: updatedColors });
   };
 
@@ -225,6 +222,10 @@ export default function ProfilePage() {
         setActiveStickerId(newStickerId);
         setIsEditModalOpen(false);
       }
+      toast({
+        title: "Session Image",
+        description: "Images are temporary in session. Real storage coming soon!",
+      });
     }
   };
 
@@ -308,7 +309,6 @@ export default function ProfilePage() {
             </p>
           </div>
           
-          {/* BIO CARD */}
           <div 
             onClick={(e) => handleZoneClick(e, 'bioCard')}
             className={cn(
@@ -324,7 +324,6 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* STATS SECTION */}
       <div 
         onClick={(e) => handleZoneClick(e, 'statsSection')}
         className={cn(
@@ -352,7 +351,6 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* TABS AND CONTENT */}
       <Tabs defaultValue="my-ideas" className="w-full relative z-10">
         <div 
           onClick={(e) => handleZoneClick(e, 'tabsList')}
@@ -401,7 +399,6 @@ export default function ProfilePage() {
         </div>
       </Tabs>
 
-      {/* STICKERS LAYER */}
       <div className="absolute inset-0 pointer-events-none z-[160]">
         {formData.stickers.map((sticker) => (
           <div 

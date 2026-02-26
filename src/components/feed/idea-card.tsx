@@ -4,10 +4,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowBigUp, MoreHorizontal, Lightbulb, Share2, Play, MessageCircle, X } from "lucide-react";
+import { ArrowBigUp, MoreHorizontal, Share2, Play, MessageCircle, X } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -21,6 +20,7 @@ import { useFirestore, useUser, useDoc, useMemoFirebase } from "@/firebase";
 import { doc, setDoc, deleteDoc, increment } from "firebase/firestore";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
+import { useRouter } from "next/navigation";
 
 interface IdeaCardProps {
   idea: {
@@ -31,6 +31,7 @@ interface IdeaCardProps {
     category: string;
     userName: string;
     userAvatar: string;
+    authorUsername?: string; // Correct property for profile navigation
     mediaUrl: string;
     innovationScore: number;
     tags: string[];
@@ -44,6 +45,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
   const { toast } = useToast();
   const db = useFirestore();
   const { user } = useUser();
+  const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Check if current user has already liked this post
@@ -64,53 +66,20 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
     const likeDocRef = doc(db, "ideas", idea.id, "likes", user.uid);
 
     if (isLiked) {
-      // UNDO LIKE (Toggle Off)
       deleteDoc(likeDocRef)
         .then(() => {
-          setDoc(ideaRef, { 
-            likes: increment(-1) 
-          }, { merge: true })
-          .catch(async (error) => {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({
-              path: ideaRef.path,
-              operation: 'update',
-              requestResourceData: { likes: 'decrement' },
-            }));
-          });
-        })
-        .catch(async (error) => {
-          errorEmitter.emit('permission-error', new FirestorePermissionError({
-            path: likeDocRef.path,
-            operation: 'delete',
-          }));
+          setDoc(ideaRef, { likes: increment(-1) }, { merge: true });
         })
         .finally(() => {
           setTimeout(() => setIsProcessing(false), 300);
         });
     } else {
-      // ADD LIKE (Toggle On)
       setDoc(likeDocRef, { 
         timestamp: new Date().toISOString(),
         userId: user.uid 
       })
         .then(() => {
-          setDoc(ideaRef, { 
-            likes: increment(1) 
-          }, { merge: true })
-          .catch(async (error) => {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({
-              path: ideaRef.path,
-              operation: 'update',
-              requestResourceData: { likes: 'increment' },
-            }));
-          });
-        })
-        .catch(async (error) => {
-          errorEmitter.emit('permission-error', new FirestorePermissionError({
-            path: likeDocRef.path,
-            operation: 'create',
-            requestResourceData: { userId: user.uid },
-          }));
+          setDoc(ideaRef, { likes: increment(1) }, { merge: true });
         })
         .finally(() => {
           setTimeout(() => setIsProcessing(false), 300);
@@ -127,13 +96,13 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
     });
   };
 
-  const userHandle = idea.userName.toLowerCase().replace(/\s/g, '');
+  const userHandle = idea.authorUsername || idea.userName.toLowerCase().replace(/\s/g, '');
   const isVideo = idea.mediaUrl && (idea.mediaUrl.includes('blob:') || idea.mediaUrl.endsWith('.mp4') || idea.mediaUrl.endsWith('.webm') || idea.mediaUrl.includes('gtv-videos-bucket'));
   const isTextPost = !idea.mediaUrl || idea.mediaUrl.includes('textpost') || idea.mediaUrl === "";
 
   const CardHeader = (
     <div className="flex items-center justify-between mb-1">
-      <Link href={`/profile/${userHandle}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+      <Link href={`/profile/${userHandle}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity z-10">
         <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
           <AvatarImage src={idea.userAvatar} />
           <AvatarFallback>{idea.userName[0]}</AvatarFallback>
@@ -175,7 +144,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
 
   if (isMemeView) {
     return (
-      <div className="bg-card rounded-[2.5rem] idea-card-shadow overflow-hidden border border-border/50 transition-all hover:shadow-2xl hover:border-primary/20 p-5">
+      <div className="bg-card rounded-[2.5rem] idea-card-shadow overflow-hidden border border-border/50 p-5">
         {CardHeader}
         
         <Dialog>
@@ -217,7 +186,6 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
             <button 
               onClick={handleShare}
               className="text-foreground hover:text-primary transition-all p-2 flex items-center gap-2"
-              aria-label="Share"
             >
               <Share2 size={26} />
               <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Share</span>
@@ -228,30 +196,20 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
   }
 
   return (
-    <div className="bg-card rounded-[2.5rem] idea-card-shadow overflow-hidden border border-border/50 transition-all hover:shadow-2xl hover:border-primary/20">
+    <div className="bg-card rounded-[2.5rem] idea-card-shadow overflow-hidden border border-border/50 transition-all">
       <div className="px-5 pt-5 pb-3 space-y-3">
         {CardHeader}
 
-        <Link href={`/idea/${idea.id}`} className="block space-y-2 cursor-pointer">
+        <Link href={`/idea/${idea.id}`} className="block space-y-2">
           <h3 className="text-lg font-black text-primary uppercase tracking-tighter leading-none">
             {idea.title}
           </h3>
-          
           <div className="space-y-1">
             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">The Challenge</p>
             <p className="text-sm text-foreground/80 leading-relaxed font-bold">
-              {idea.problem || "Solving common urban challenges with innovation."}
+              {idea.problem || "Solving urban challenges with innovation."}
             </p>
           </div>
-
-          {isTextPost && (
-            <div className="mt-2 pt-2 border-t border-muted/50">
-              <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">Detailed Brief</p>
-              <p className="text-sm text-foreground/70 leading-relaxed font-medium line-clamp-3">
-                {idea.description}
-              </p>
-            </div>
-          )}
         </Link>
       </div>
 
@@ -290,11 +248,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
           <Link href={`/idea/${idea.id}`} className="text-foreground hover:text-primary transition-colors p-2">
             <MessageCircle size={24} />
           </Link>
-          <button 
-            onClick={handleShare}
-            className="text-foreground hover:text-primary transition-colors p-2"
-            aria-label="Share"
-          >
+          <button onClick={handleShare} className="text-foreground hover:text-primary transition-colors p-2">
             <Share2 size={24} />
           </button>
         </div>
