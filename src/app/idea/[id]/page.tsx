@@ -8,12 +8,13 @@ import { collection, addDoc, query, orderBy, serverTimestamp, doc } from "fireba
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, Send, Sparkles, Lightbulb, MessageCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronLeft, Send, Sparkles, Lightbulb, MessageCircle, ChevronDown, ChevronUp, Maximize2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 const MOCK_IDEAS = [
   {
@@ -102,7 +103,6 @@ export default function IdeaDetailPage() {
 
     addDoc(collection(db, "ideas", ideaId, "suggestions"), commentData);
 
-    // Create notification for the author
     if (idea?.authorId && idea.authorId !== currentUser.uid) {
       addDoc(collection(db, "notifications"), {
         userId: idea.authorId,
@@ -158,19 +158,37 @@ export default function IdeaDetailPage() {
       <div className="flex-1 overflow-y-auto no-scrollbar" ref={scrollContainerRef}>
         <div className="p-4 space-y-6 pb-24">
           {!isTextPost && (
-            <div className="relative aspect-video w-full rounded-[2rem] overflow-hidden border shadow-xl bg-black">
-              {isVideo ? (
-                <video src={idea?.mediaUrl} controls autoPlay muted className="w-full h-full object-contain" />
-              ) : (
-                <Image src={idea?.mediaUrl || "https://picsum.photos/seed/placeholder/800/800"} alt={idea?.title} fill className="object-cover" />
-              )}
-              <div className="absolute top-4 right-4">
-                <Badge className="bg-secondary/90 text-white border-none backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-1.5">
-                  <Sparkles size={12} className="fill-current" />
-                  <span className="text-[10px] font-black uppercase tracking-wider">{idea?.innovationScore}</span>
-                </Badge>
-              </div>
-            </div>
+            <Dialog>
+              <DialogTrigger asChild>
+                <div className="relative aspect-video w-full rounded-[2rem] overflow-hidden border shadow-xl bg-black cursor-zoom-in group">
+                  {isVideo ? (
+                    <video src={idea?.mediaUrl} className="w-full h-full object-contain" />
+                  ) : (
+                    <Image src={idea?.mediaUrl || "https://picsum.photos/seed/placeholder/800/800"} alt={idea?.title} fill className="object-cover group-hover:scale-105 transition-transform" />
+                  )}
+                  <div className="absolute top-4 right-4 z-10">
+                    <Badge className="bg-secondary/90 text-white border-none backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-1.5">
+                      <Sparkles size={12} className="fill-current" />
+                      <span className="text-[10px] font-black uppercase tracking-wider">{idea?.innovationScore}</span>
+                    </Badge>
+                  </div>
+                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Maximize2 className="text-white" size={32} />
+                  </div>
+                </div>
+              </DialogTrigger>
+              <DialogContent className="max-w-[95vw] h-[80vh] p-0 overflow-hidden border-none bg-black/95 rounded-[2.5rem] flex items-center justify-center" onOpenAutoFocus={(e) => e.preventDefault()}>
+                 <div className="relative w-full h-full p-4 flex items-center justify-center">
+                    {isVideo ? (
+                      <video src={idea?.mediaUrl} controls autoPlay className="max-w-full max-h-full rounded-2xl" />
+                    ) : (
+                      <div className="relative w-full h-full flex items-center justify-center overflow-auto no-scrollbar">
+                        <img src={idea?.mediaUrl} alt={idea?.title} className="max-w-full max-h-full object-contain" />
+                      </div>
+                    )}
+                 </div>
+              </DialogContent>
+            </Dialog>
           )}
 
           <div className="space-y-4 bg-white/50 backdrop-blur-sm p-5 rounded-[2rem] border border-border/50">

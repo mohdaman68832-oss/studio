@@ -4,12 +4,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowBigUp, MoreHorizontal, Share2, Play, MessageCircle } from "lucide-react";
+import { ArrowBigUp, MoreHorizontal, Share2, Play, MessageCircle, Maximize2, X } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useUser, useDoc, useMemoFirebase } from "@/firebase";
 import { doc, setDoc, deleteDoc, increment } from "firebase/firestore";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 interface IdeaCardProps {
   idea: {
@@ -133,21 +134,42 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
   return (
     <div className="bg-card rounded-[2.5rem] idea-card-shadow overflow-hidden border border-border/50 p-5">
       {CardHeader}
-      <Link href={`/idea/${idea.id}`} className="block mt-4">
-        <h3 className="text-lg font-black text-primary uppercase tracking-tighter leading-none mb-2">{idea.title}</h3>
-        <p className="text-sm text-foreground/80 leading-relaxed font-bold">{idea.problem || "Solving challenges."}</p>
+      <div className="mt-4">
+        <Link href={`/idea/${idea.id}`} className="block">
+          <h3 className="text-lg font-black text-primary uppercase tracking-tighter leading-none mb-2">{idea.title}</h3>
+          <p className="text-sm text-foreground/80 leading-relaxed font-bold">{idea.problem || "Solving challenges."}</p>
+        </Link>
+        
         {!isTextPost && (
-          <div className="relative aspect-square w-full rounded-[1.5rem] overflow-hidden bg-muted mt-3">
-            {isVideo ? (
-               <div className="w-full h-full flex items-center justify-center bg-black">
-                 <Play className="text-white fill-white" size={32} />
+          <Dialog>
+            <DialogTrigger asChild>
+              <div className="relative aspect-square w-full rounded-[1.5rem] overflow-hidden bg-muted mt-3 cursor-zoom-in group">
+                {isVideo ? (
+                   <div className="w-full h-full flex items-center justify-center bg-black">
+                     <Play className="text-white fill-white" size={32} />
+                   </div>
+                ) : (
+                  <Image src={idea.mediaUrl} alt={idea.title} fill className="object-cover transition-transform group-hover:scale-105" />
+                )}
+                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <Maximize2 className="text-white" size={24} />
+                </div>
+              </div>
+            </DialogTrigger>
+            <DialogContent className="max-w-[95vw] h-[80vh] p-0 overflow-hidden border-none bg-black/90 rounded-[2rem] flex items-center justify-center" onOpenAutoFocus={(e) => e.preventDefault()}>
+               <div className="relative w-full h-full p-4 flex items-center justify-center">
+                  {isVideo ? (
+                    <video src={idea.mediaUrl} controls className="max-w-full max-h-full rounded-xl" />
+                  ) : (
+                    <div className="relative w-full h-full flex items-center justify-center overflow-auto no-scrollbar">
+                      <img src={idea.mediaUrl} alt={idea.title} className="max-w-full max-h-full object-contain" />
+                    </div>
+                  )}
                </div>
-            ) : (
-              <Image src={idea.mediaUrl} alt={idea.title} fill className="object-cover" />
-            )}
-          </div>
+            </DialogContent>
+          </Dialog>
         )}
-      </Link>
+      </div>
       <div className="flex items-center justify-start mt-4 gap-4">
         {LikeButton}
         <Link href={`/idea/${idea.id}`} className="p-2"><MessageCircle size={26} /></Link>

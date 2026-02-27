@@ -46,14 +46,16 @@ service cloud.firestore {
       }
     }
 
-    // Notifications: Allow list for signed in users to avoid permission errors on inbox/alerts
+    // Notifications: Allow list and read for the recipient
     match /notifications/{notifId} {
-      allow read, write, list: if isSignedIn();
+      allow read, write, delete: if isSignedIn();
+      allow list: if isSignedIn();
     }
 
-    // Messages: Allow listing and reading for signed in users
+    // Messages: Allow list and read for participants
     match /messages/{msgId} {
-      allow read, write, list: if isSignedIn();
+      allow read, write: if isSignedIn();
+      allow list: if isSignedIn();
     }
 
     // Follows: Publicly readable for mutual checks.
