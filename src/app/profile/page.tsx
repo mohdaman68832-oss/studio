@@ -8,7 +8,8 @@ import {
   Settings, Grid, Bookmark, Heart, LogOut, Camera, 
   Image as ImageIcon, Plus, RotateCw, Pencil, Loader2, 
   Tablet, ChevronLeft, PaintBucket,
-  X, Palette, Check, Layout, Square, User, List, Layers
+  X, Palette, Check, Layout, Square, User, List, Layers,
+  Move
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -183,7 +184,7 @@ export default function ProfilePage() {
         setShowBannerEditor(true);
         setIsEditModalOpen(false);
       } else if (type === 'sticker') {
-        const newSticker = { id: Math.random().toString(36).substr(2, 9), url: base64, x: 50, y: 20, rotation: 0, scale: 1 };
+        const newSticker = { id: Math.random().toString(36).substr(2, 9), url: base64, x: 50, y: 50, rotation: 0, scale: 1 };
         setFormData(prev => ({ ...prev, stickers: [...prev.stickers, newSticker] }));
       }
     }
@@ -217,6 +218,18 @@ export default function ProfilePage() {
       className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden transition-colors duration-300"
       style={{ backgroundColor: formData.customColors.background || "var(--background)" }}
     >
+      {/* FLOATING STICKER DONE BUTTON */}
+      {activeStickerId && !isEditModalOpen && !showBannerEditor && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[4000] animate-in fade-in slide-in-from-bottom-4">
+          <Button 
+            onClick={() => setIsEditModalOpen(true)}
+            className="rounded-full bg-primary text-white shadow-2xl px-8 h-12 font-black uppercase tracking-widest border-2 border-white/20"
+          >
+            <Check className="mr-2" /> Done Positioning
+          </Button>
+        </div>
+      )}
+
       {/* BANNER REPOSITION OVERLAY */}
       {showBannerEditor && (
         <div className="fixed inset-0 z-[2000] bg-background flex flex-col animate-in slide-in-from-bottom duration-300">
@@ -291,11 +304,11 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* STATS SECTION - Margin Removed for Seamless Connection */}
-      <div className="px-6 relative z-10 transition-colors duration-300" style={{ backgroundColor: formData.customColors.statsSection }}>
+      {/* STATS SECTION - Seamless Connection */}
+      <div className="relative z-10 transition-colors duration-300" style={{ backgroundColor: formData.customColors.statsSection }}>
         <div 
-          className="grid grid-cols-3 gap-8 w-full py-6 px-4 rounded-[2rem] border transition-colors shadow-sm"
-          style={{ backgroundColor: formData.customColors.statsSection || "#FFFFFF" }}
+          className="grid grid-cols-3 gap-8 w-full py-8 px-10 transition-colors border-y border-border/10"
+          style={{ backgroundColor: formData.customColors.statsSection }}
         >
           <div className="text-center">
             <p className="text-xl font-black" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{profileData?.totalIdeasPosted || 0}</p>
@@ -355,11 +368,43 @@ export default function ProfilePage() {
       {/* STICKERS LAYER */}
       <div className="absolute inset-0 pointer-events-none z-[30]">
         {formData.stickers.map((sticker) => (
-          <div key={sticker.id} className={cn("absolute pointer-events-auto", activeStickerId === sticker.id ? "ring-2 ring-primary rounded-xl" : "")} style={{ left: `${sticker.x}%`, top: `${sticker.y}%`, transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`, touchAction: 'none' }}>
-            <div className="relative w-24 h-24" 
-              onPointerDown={(e) => { if (activeStickerId === sticker.id) { setDraggedStickerId(sticker.id); try { (e.currentTarget as any).setPointerCapture(e.pointerId); } catch {} } }} 
-              onPointerMove={(e) => { if (draggedStickerId === sticker.id) { const rect = containerRef.current!.getBoundingClientRect(); setFormData(prev => ({ ...prev, stickers: prev.stickers.map(s => s.id === sticker.id ? { ...s, x: ((e.clientX - rect.left) / rect.width) * 100, y: ((e.clientY - rect.top) / rect.height) * 100 } : s) })); } }} 
-              onPointerUp={(e) => { setDraggedStickerId(null); try { (e.currentTarget as any).releasePointerCapture(e.pointerId); } catch {} }}>
+          <div 
+            key={sticker.id} 
+            className={cn(
+              "absolute pointer-events-auto cursor-move", 
+              activeStickerId === sticker.id ? "ring-4 ring-primary ring-offset-4 rounded-xl active-glow" : ""
+            )} 
+            style={{ 
+              left: `${sticker.x}%`, 
+              top: `${sticker.y}%`, 
+              transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`, 
+              touchAction: 'none' 
+            }}
+          >
+            <div className="relative w-28 h-28" 
+              onPointerDown={(e) => { 
+                if (activeStickerId === sticker.id) { 
+                  setDraggedStickerId(sticker.id); 
+                  try { (e.currentTarget as any).setPointerCapture(e.pointerId); } catch {} 
+                } 
+              }} 
+              onPointerMove={(e) => { 
+                if (draggedStickerId === sticker.id) { 
+                  const rect = containerRef.current!.getBoundingClientRect(); 
+                  setFormData(prev => ({ 
+                    ...prev, 
+                    stickers: prev.stickers.map(s => s.id === sticker.id ? { 
+                      ...s, 
+                      x: Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100)), 
+                      y: Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100)) 
+                    } : s) 
+                  })); 
+                } 
+              }} 
+              onPointerUp={(e) => { 
+                setDraggedStickerId(null); 
+                try { (e.currentTarget as any).releasePointerCapture(e.pointerId); } catch {} 
+              }}>
               <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized={true} />
             </div>
           </div>
@@ -376,7 +421,7 @@ export default function ProfilePage() {
             <DialogTitle className="text-sm font-black uppercase text-center text-primary tracking-[0.2em]">Optimize Profile</DialogTitle>
           </DialogHeader>
           <div className="space-y-8 py-4">
-            {/* PREVIEWS - Banner Top, Logo Below */}
+            {/* PREVIEWS */}
             <div className="space-y-4">
               <div 
                 className="relative h-28 w-full rounded-2xl overflow-hidden border-2 border-muted bg-muted group cursor-pointer"
@@ -412,65 +457,37 @@ export default function ProfilePage() {
                 <PaintBucket size={14} className="text-primary" /> Surface Themes
               </Label>
               <div className="grid grid-cols-2 gap-3">
-                <Button 
-                  variant="outline" 
-                  className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted"
-                  onClick={() => openPickerFor('header')}
-                >
+                <Button variant="outline" className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted" onClick={() => openPickerFor('header')}>
                   <Layout size={16} className="text-muted-foreground" />
                   <span className="text-[8px] font-black uppercase">Header bar</span>
                   <div className="w-8 h-1 rounded-full" style={{ backgroundColor: formData.customColors.header || 'transparent' }} />
                 </Button>
-                <Button 
-                  variant="outline" 
-                  className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted"
-                  onClick={() => openPickerFor('background')}
-                >
+                <Button variant="outline" className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted" onClick={() => openPickerFor('background')}>
                   <Square size={16} className="text-muted-foreground" />
                   <span className="text-[8px] font-black uppercase">Main Canvas</span>
                   <div className="w-8 h-1 rounded-full" style={{ backgroundColor: formData.customColors.background || 'transparent' }} />
                 </Button>
-                <Button 
-                  variant="outline" 
-                  className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted"
-                  onClick={() => openPickerFor('userInfo')}
-                >
+                <Button variant="outline" className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted" onClick={() => openPickerFor('userInfo')}>
                   <User size={16} className="text-muted-foreground" />
                   <span className="text-[8px] font-black uppercase">Profile Area</span>
                   <div className="w-8 h-1 rounded-full" style={{ backgroundColor: formData.customColors.userInfo || 'transparent' }} />
                 </Button>
-                <Button 
-                  variant="outline" 
-                  className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted"
-                  onClick={() => openPickerFor('bioCard')}
-                >
+                <Button variant="outline" className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted" onClick={() => openPickerFor('bioCard')}>
                   <Pencil size={16} className="text-muted-foreground" />
                   <span className="text-[8px] font-black uppercase">Bio Box</span>
                   <div className="w-8 h-1 rounded-full" style={{ backgroundColor: formData.customColors.bioCard || 'transparent' }} />
                 </Button>
-                <Button 
-                  variant="outline" 
-                  className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted"
-                  onClick={() => openPickerFor('statsSection')}
-                >
+                <Button variant="outline" className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted" onClick={() => openPickerFor('statsSection')}>
                   <Plus size={16} className="text-muted-foreground" />
                   <span className="text-[8px] font-black uppercase">Stats Box</span>
                   <div className="w-8 h-1 rounded-full" style={{ backgroundColor: formData.customColors.statsSection || 'transparent' }} />
                 </Button>
-                <Button 
-                  variant="outline" 
-                  className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted"
-                  onClick={() => openPickerFor('tabsList')}
-                >
+                <Button variant="outline" className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted" onClick={() => openPickerFor('tabsList')}>
                   <List size={16} className="text-muted-foreground" />
                   <span className="text-[8px] font-black uppercase">Tabs Line</span>
                   <div className="w-8 h-1 rounded-full" style={{ backgroundColor: formData.customColors.tabsList || 'transparent' }} />
                 </Button>
-                <Button 
-                  variant="outline" 
-                  className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted"
-                  onClick={() => openPickerFor('tabsContent')}
-                >
+                <Button variant="outline" className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted" onClick={() => openPickerFor('tabsContent')}>
                   <Layers size={16} className="text-muted-foreground" />
                   <span className="text-[8px] font-black uppercase">Posts Area</span>
                   <div className="w-8 h-1 rounded-full" style={{ backgroundColor: formData.customColors.tabsContent || 'transparent' }} />
@@ -484,8 +501,9 @@ export default function ProfilePage() {
                {formData.stickers.length > 0 && (
                  <div className="flex flex-wrap gap-2 pt-2">
                    {formData.stickers.map(s => (
-                     <button key={s.id} onClick={() => { setActiveStickerId(s.id === activeStickerId ? null : s.id); setIsEditModalOpen(false); }} className={cn("w-12 h-12 border rounded-xl p-1 relative", activeStickerId === s.id ? "border-primary bg-primary/10" : "border-muted")}>
-                       <Image src={s.url} alt="sticker" width={40} height={40} className="object-contain" unoptimized={true}/>
+                     <button key={s.id} onClick={() => { setActiveStickerId(s.id === activeStickerId ? null : s.id); setIsEditModalOpen(false); }} className={cn("w-14 h-14 border-2 rounded-2xl p-1 relative transition-all active:scale-95", activeStickerId === s.id ? "border-primary bg-primary/10 shadow-lg" : "border-muted")}>
+                       <Image src={s.url} alt="sticker" width={48} height={48} className="object-contain" unoptimized={true}/>
+                       {activeStickerId === s.id && <div className="absolute -top-2 -right-2 bg-primary text-white rounded-full p-0.5"><Move size={10} /></div>}
                      </button>
                    ))}
                  </div>
