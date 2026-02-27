@@ -89,7 +89,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-hidden flex flex-col m-0 p-0 no-scrollbar" 
       style={{ backgroundColor: colors.background || "var(--background)" }}
     >
-      {/* Layer 0: Background Sections - Seamless */}
+      {/* Layer 0: Background Sections - Truly Seamless */}
       <div className="flex flex-col m-0 p-0 relative z-0 shrink-0">
          <div className="h-16 w-full" style={{ backgroundColor: colors.header }} />
          <div className="h-[28rem] w-full" style={{ backgroundColor: colors.userInfo }} />
@@ -97,7 +97,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
          <div className="flex-1 w-full min-h-[50vh]" style={{ backgroundColor: colors.tabsContent }} />
       </div>
 
-      {/* Layer 1: Stickers - Behind main UI (Safe Area) */}
+      {/* Layer 1: Stickers (z-index 10) - Behind main UI content */}
       <div className="absolute inset-0 pointer-events-none z-10">
         {stickers.map((sticker) => (
           <div 
@@ -116,8 +116,8 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         ))}
       </div>
 
-      {/* Layer 2: UI Content - Higher z-index ensures text is ABOVE stickers */}
-      <div className="absolute inset-0 flex flex-col m-0 p-0 z-20 pointer-events-none overflow-y-auto no-scrollbar">
+      {/* Layer 2: UI Content (z-index 20) - Always ABOVE stickers */}
+      <div className="absolute inset-0 flex flex-col m-0 p-0 z-20 pointer-events-none no-scrollbar overflow-y-auto">
         <div className="px-6 flex justify-between items-center py-5 pointer-events-auto">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full"><ChevronLeft size={24} style={{ color: getContrastColor(colors.header) }} /></Button>
           <h1 className="text-lg font-black uppercase tracking-tighter" style={{ color: getContrastColor(colors.header) }}>@{profileData.username}</h1>
