@@ -201,6 +201,7 @@ export default function ProfilePage() {
       }
     }));
     setIsColorPickerOpen(false);
+    setIsEditModalOpen(false); // Closes both modals as requested
   };
 
   if (isUserLoading || isProfileLoading) return <div className="max-w-md mx-auto p-10 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>;
@@ -230,9 +231,9 @@ export default function ProfilePage() {
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-primary">
                 <Tablet size={20} />
-                <span className="text-xs font-black uppercase tracking-widest">Tablet Device Preview</span>
+                <span className="text-xs font-black uppercase tracking-widest">Device Preview</span>
               </div>
-              <div className="relative aspect-[4/3] w-full max-w-[90%] mx-auto bg-slate-900 rounded-[3rem] overflow-hidden border-[12px] border-slate-800 shadow-2xl">
+              <div className="relative aspect-[4/3] w-full bg-slate-900 rounded-[3rem] overflow-hidden border-[12px] border-slate-800 shadow-2xl">
                 <div 
                   className="h-full w-full relative cursor-grab active:cursor-grabbing touch-none flex flex-col rounded-[2.2rem] overflow-hidden bg-slate-800"
                   onPointerDown={(e) => { 
@@ -246,7 +247,7 @@ export default function ProfilePage() {
                   {tempBannerUrl && (
                     <Image 
                       src={tempBannerUrl} 
-                      alt="Tablet" 
+                      alt="Banner Preview" 
                       fill 
                       className="object-cover select-none pointer-events-none" 
                       style={{ objectPosition: `50% ${bannerOffset}%` }} 
@@ -322,7 +323,7 @@ export default function ProfilePage() {
             <DialogTitle className="text-sm font-black uppercase text-center text-primary tracking-[0.2em]">Optimize Profile</DialogTitle>
           </DialogHeader>
           <div className="space-y-8 py-4">
-            {/* Visual Previews: Banner then Logo Below */}
+            {/* Visual Previews: Banner sabse upar, Logo uske niche */}
             <div className="space-y-6">
                <div className="space-y-2">
                  <Label className="text-[10px] font-black uppercase tracking-widest ml-1 text-muted-foreground">Banner Preview</Label>
@@ -394,7 +395,7 @@ export default function ProfilePage() {
                  <div className="flex flex-wrap gap-2 pt-2">
                    {formData.stickers.map(s => (
                      <button key={s.id} onClick={() => { setActiveStickerId(s.id === activeStickerId ? null : s.id); setIsEditModalOpen(false); }} className={cn("w-12 h-12 border rounded-xl p-1 relative shadow-sm", activeStickerId === s.id ? "border-primary bg-primary/10 ring-2 ring-primary/20" : "border-muted bg-white")}>
-                       <Image src={s.url} alt="s" width={40} height={40} className="object-contain" unoptimized={true}/>
+                       <Image src={s.url} alt="sticker" width={40} height={40} className="object-contain" unoptimized={true}/>
                      </button>
                    ))}
                  </div>
