@@ -8,7 +8,7 @@ import {
   Settings, Grid, Bookmark, Heart, LogOut, Camera, 
   Image as ImageIcon, Plus, RotateCw, Pencil, Loader2, 
   Tablet, ChevronLeft, PaintBucket,
-  X
+  X, Palette, Check
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -43,14 +43,18 @@ interface CustomColors {
   background?: string;
 }
 
-const PALETTE = [
-  "#FFFFFF", "#F8FAFC", "#F0FDF4", "#ECFDF5", "#EFF6FF", "#F5F3FF", "#FDF2F8", "#FFF7ED", "#FFFBEB", "#FEF2F2",
-  "#DBEAFE", "#D1FAE5", "#E0E7FF", "#FCE7F3", "#FFEDD5", "#E9D5FF", "#CFFAFE", "#F2F3F5", "#ECFEFF", "#F5F5F5"
-];
+const COLOR_CATEGORIES = {
+  "Light": ["#FFFFFF", "#F8FAFC", "#F0FDF4", "#ECFDF5", "#EFF6FF", "#F5F3FF", "#FDF2F8", "#FFF7ED", "#FFFBEB", "#FEF2F2", "#ECFEFF", "#F5F5F5"],
+  "Vibrant": ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899", "#06B6D4", "#F97316", "#14B8A6", "#6366F1"],
+  "Dark": ["#0F172A", "#18181B", "#171717", "#1C1917", "#450A0A", "#422006", "#3F2E0E", "#064E3B", "#134E4A", "#1E1B4B", "#312E81", "#4C1D95", "#581C87", "#701A75", "#831843", "#7F1D1D"]
+};
 
 function getContrastColor(hexColor: string | undefined): string {
   if (!hexColor || !hexColor.startsWith('#')) return 'inherit';
-  const r = parseInt(hexColor.slice(1, 3), 16), g = parseInt(hexColor.slice(3, 5), 16), b = parseInt(hexColor.slice(5, 7), 16);
+  const hex = hexColor.replace('#', '');
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
   const brightness = (r * 299 + g * 587 + b * 114) / 1000;
   return brightness >= 128 ? '#1A1A1A' : '#FFFFFF';
 }
@@ -72,6 +76,7 @@ export default function ProfilePage() {
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [activeStickerId, setActiveStickerId] = useState<string | null>(null);
   const [draggedStickerId, setDraggedStickerId] = useState<string | null>(null);
@@ -201,7 +206,7 @@ export default function ProfilePage() {
           <div className="flex-1 p-6 space-y-12 pb-32">
             <div className="text-center bg-primary/5 p-4 rounded-3xl border border-primary/10">
               <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">Manual Adjustment</p>
-              <p className="text-[11px] font-bold text-muted-foreground">Click and drag inside the frame to set the banner focal point.</p>
+              <p className="text-[11px] font-bold text-muted-foreground">Click and drag the preview to set the banner focal point.</p>
             </div>
 
             <div className="space-y-4">
@@ -211,7 +216,7 @@ export default function ProfilePage() {
               </div>
               <div className="relative aspect-[4/3] w-full max-w-[90%] mx-auto bg-slate-900 rounded-[3rem] overflow-hidden border-[12px] border-slate-800 shadow-2xl">
                 <div 
-                  className="h-full w-full relative cursor-grab active:cursor-grabbing touch-none flex flex-col rounded-[2rem] overflow-hidden"
+                  className="h-full w-full relative cursor-grab active:cursor-grabbing touch-none flex flex-col rounded-[2.2rem] overflow-hidden bg-slate-800"
                   onPointerDown={(e) => { 
                     setIsDraggingBanner(true); 
                     setDragStartY(e.clientY); 
@@ -220,25 +225,18 @@ export default function ProfilePage() {
                   onPointerMove={handleBannerDragMove}
                   onPointerUp={handleBannerDragEnd}
                 >
-                  <div className="h-10 w-full bg-slate-900/80 backdrop-blur-sm border-b border-white/5 flex items-center px-4 gap-2 shrink-0">
-                    <div className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center text-[6px] font-black text-white">N</div>
-                    <div className="text-[6px] font-black text-white/40 uppercase tracking-widest">Profile</div>
-                  </div>
-
-                  <div className="flex-1 w-full relative bg-slate-800 overflow-hidden">
-                    {tempBannerUrl && (
-                      <Image 
-                        src={tempBannerUrl} 
-                        alt="Tablet" 
-                        fill 
-                        className="object-cover select-none pointer-events-none" 
-                        style={{ objectPosition: `50% ${bannerOffset}%` }} 
-                        unoptimized={true} 
-                      />
-                    )}
-                    <div className="absolute inset-0 bg-black/10 flex items-center justify-center pointer-events-none">
-                       <div className="bg-white/20 backdrop-blur-md rounded-full px-4 py-1 text-[8px] font-black uppercase text-white border border-white/30 shadow-lg">Drag Image to Reposition</div>
-                    </div>
+                  {tempBannerUrl && (
+                    <Image 
+                      src={tempBannerUrl} 
+                      alt="Tablet" 
+                      fill 
+                      className="object-cover select-none pointer-events-none" 
+                      style={{ objectPosition: `50% ${bannerOffset}%` }} 
+                      unoptimized={true} 
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-black/10 flex items-center justify-center pointer-events-none">
+                     <div className="bg-white/20 backdrop-blur-md rounded-full px-4 py-1 text-[8px] font-black uppercase text-white border border-white/30 shadow-lg">Drag Image to Reposition</div>
                   </div>
                 </div>
               </div>
@@ -306,36 +304,35 @@ export default function ProfilePage() {
             <DialogTitle className="text-sm font-black uppercase text-center text-primary">Optimize Profile</DialogTitle>
           </DialogHeader>
           <div className="space-y-8 py-4">
-            {/* Visual Preview Section - Stacking Banner Above Logo */}
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Current Banner</Label>
-                <div 
-                  className="relative h-28 w-full rounded-2xl overflow-hidden border bg-muted shadow-sm group cursor-pointer"
-                  onClick={() => bannerInputRef.current?.click()}
-                >
-                  <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="Banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized={true} />
-                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Camera className="text-white" />
-                  </div>
+            {/* Banner Section (Top) */}
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Profile Banner</Label>
+              <div 
+                className="relative h-28 w-full rounded-2xl overflow-hidden border bg-muted shadow-sm group cursor-pointer"
+                onClick={() => bannerInputRef.current?.click()}
+              >
+                <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="Banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized={true} />
+                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <Camera className="text-white" />
                 </div>
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Current Logo</Label>
-                <div className="flex justify-center">
-                  <div 
-                    className="relative h-24 w-24 rounded-full border-4 border-white bg-white shadow-md group cursor-pointer overflow-hidden"
-                    onClick={() => profileInputRef.current?.click()}
-                  >
-                    <Image src={formData.profilePic} alt="Logo" fill className="object-cover" unoptimized={true} />
-                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <Camera className="text-white" size={20} />
-                    </div>
+            {/* Logo Section (Below Banner) */}
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest ml-1 text-center block">Profile Logo</Label>
+              <div className="flex justify-center">
+                <div 
+                  className="relative h-24 w-24 rounded-full border-4 border-white bg-white shadow-md group cursor-pointer overflow-hidden"
+                  onClick={() => profileInputRef.current?.click()}
+                >
+                  <Image src={formData.profilePic} alt="Logo" fill className="object-cover" unoptimized={true} />
+                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Camera className="text-white" size={20} />
                   </div>
                 </div>
               </div>
-              <p className="text-[9px] text-muted-foreground font-bold text-center">Tap images above to change photos</p>
+              <p className="text-[9px] text-muted-foreground font-bold text-center">Tap Banner or Logo to change photos</p>
             </div>
 
             <div className="space-y-4">
@@ -350,10 +347,17 @@ export default function ProfilePage() {
             </div>
             
             <div className="space-y-3">
-              <Label className="text-[10px] font-black uppercase tracking-widest ml-1 flex items-center gap-2"><PaintBucket size={14} /> Soft Theme Colors</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest ml-1 flex items-center justify-between">
+                <span className="flex items-center gap-2"><PaintBucket size={14} /> Theme Colors</span>
+                <Button variant="ghost" className="h-auto p-0 text-[10px] font-black uppercase text-secondary hover:bg-transparent" onClick={() => setIsColorPickerOpen(true)}>
+                  Explore Palette <ChevronLeft className="w-3 h-3 rotate-180 ml-1" />
+                </Button>
+              </Label>
               <div className="flex flex-wrap gap-2 p-1">
-                {PALETTE.map(c => (
-                  <button key={c} onClick={() => setFormData(prev => ({ ...prev, customColors: { ...prev.customColors, background: c } }))} className="w-8 h-8 rounded-full border-2 border-white shadow-sm transition-transform active:scale-90" style={{ backgroundColor: c }} />
+                {COLOR_CATEGORIES.Light.slice(0, 6).map(c => (
+                  <button key={c} onClick={() => setFormData(prev => ({ ...prev, customColors: { ...prev.customColors, background: c } }))} className="w-8 h-8 rounded-full border-2 border-white shadow-sm transition-transform active:scale-90 relative" style={{ backgroundColor: c }}>
+                    {formData.customColors.background === c && <Check size={12} className="absolute inset-0 m-auto text-primary" />}
+                  </button>
                 ))}
               </div>
             </div>
@@ -383,6 +387,48 @@ export default function ProfilePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* FULL COLOR PICKER SHEET */}
+      <Sheet open={isColorPickerOpen} onOpenChange={setIsColorPickerOpen}>
+        <SheetContent side="bottom" className="rounded-t-[2.5rem] p-6 max-h-[85vh] overflow-y-auto no-scrollbar border-none z-[4000]">
+          <SheetHeader>
+            <SheetTitle className="text-sm font-black uppercase tracking-[0.2em] text-center text-primary flex items-center justify-center gap-2">
+              <Palette size={20} /> Theme Gallery
+            </SheetTitle>
+          </SheetHeader>
+          
+          <div className="space-y-8 mt-8 pb-12">
+            {Object.entries(COLOR_CATEGORIES).map(([category, colors]) => (
+              <div key={category} className="space-y-4">
+                <div className="flex items-center gap-3">
+                   <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{category} Palette</h3>
+                   <div className="flex-1 h-px bg-muted" />
+                </div>
+                <div className="grid grid-cols-5 gap-4">
+                  {colors.map(c => (
+                    <button 
+                      key={c} 
+                      onClick={() => {
+                        setFormData(prev => ({ ...prev, customColors: { ...prev.customColors, background: c } }));
+                        setIsColorPickerOpen(false);
+                      }} 
+                      className={cn(
+                        "aspect-square rounded-2xl border-4 transition-all active:scale-95 shadow-sm",
+                        formData.customColors.background === c ? "border-primary scale-110 shadow-lg" : "border-white"
+                      )} 
+                      style={{ backgroundColor: c }} 
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="sticky bottom-0 bg-background/80 backdrop-blur-md pt-4 -mx-6 px-6">
+            <Button className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase" onClick={() => setIsColorPickerOpen(false)}>Close Palette</Button>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* SETTINGS SHEET */}
       <Sheet open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
