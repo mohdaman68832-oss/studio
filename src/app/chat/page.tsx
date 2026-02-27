@@ -39,7 +39,7 @@ export default function ChatPage() {
         map.set(otherId, {
           ...msg,
           partnerId: otherId,
-          isOnline: Math.random() > 0.5 // Simulated for visual green indicator
+          isOnline: Math.random() > 0.4 // Simulated for visual indicator
         });
       }
     });
@@ -53,7 +53,8 @@ export default function ChatPage() {
   return (
     <div className="max-w-md mx-auto min-h-screen bg-background pt-8 pb-24">
       <div className="px-6 mb-8">
-        <h1 className="text-3xl font-black text-primary uppercase tracking-tighter">Messages</h1>
+        <h1 className="text-3xl font-black text-primary uppercase tracking-tighter">Inbox</h1>
+        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Direct Messages</p>
       </div>
 
       <div className="px-6 mb-8">
@@ -69,8 +70,6 @@ export default function ChatPage() {
       </div>
 
       <div className="space-y-1">
-        <p className="px-6 py-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-40">Recent Activity</p>
-        
         {uniqueConversations.length > 0 ? (
           <div className="divide-y divide-border/30">
             {uniqueConversations.map((msg) => (
@@ -81,16 +80,17 @@ export default function ChatPage() {
               >
                 <div className="relative">
                   <Avatar className={cn(
-                    "h-14 w-14 border-2 shadow-md transition-all",
-                    msg.isOnline ? "border-green-500 ring-4 ring-green-500/20" : "border-background"
+                    "h-14 w-14 border-2 transition-all duration-300",
+                    msg.isOnline ? "border-green-500 ring-4 ring-green-500/20" : "border-transparent"
                   )}>
                     <AvatarFallback className="bg-primary/5 text-primary font-black uppercase">{msg.partnerId[0]}</AvatarFallback>
                   </Avatar>
+                  {msg.isOnline && <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-white rounded-full" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <h3 className="font-black text-sm uppercase tracking-tight text-foreground truncate">@{msg.partnerId.substring(0, 8)}</h3>
-                    {msg.isOnline && <span className="text-[8px] text-green-500 font-bold uppercase tracking-widest">Online</span>}
+                    {msg.isOnline && <span className="text-[8px] text-green-500 font-bold uppercase tracking-widest">Active</span>}
                   </div>
                   <p className="text-[12px] text-muted-foreground line-clamp-1 mt-0.5 font-medium">{msg.text}</p>
                 </div>
@@ -102,13 +102,12 @@ export default function ChatPage() {
           <div className="py-24 text-center space-y-4 opacity-30 px-10">
             {isLoading ? (
               <div className="animate-pulse space-y-4">
-                <div className="h-14 w-full bg-muted rounded-2xl" />
-                <div className="h-14 w-full bg-muted rounded-2xl" />
+                {[1, 2, 3].map(i => <div key={i} className="h-14 w-full bg-muted rounded-2xl" />)}
               </div>
             ) : (
               <>
                 <MessageSquare size={48} className="mx-auto" />
-                <p className="text-[10px] font-black uppercase tracking-[0.2em]">No messages yet</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em]">No conversations yet</p>
               </>
             )}
           </div>

@@ -6,21 +6,20 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { 
   Settings, LogOut, Camera, 
-  Pencil, Loader2, 
+  Loader2, 
   PaintBucket,
   Image as LucideImage, Video, Type,
   X,
-  Trash2,
-  Check,
-  Plus
+  Plus,
+  Monitor,
+  Smartphone
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Slider } from "@/components/ui/slider";
 import Image from "next/image";
 import { useUser, useAuth, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { signOut, updateProfile } from "firebase/auth";
@@ -84,9 +83,6 @@ export default function ProfilePage() {
   const [isOptimizeModalOpen, setIsOptimizeModalOpen] = useState(false);
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [activeStickerId, setActiveStickerId] = useState<string | null>(null);
-  const [draggedStickerId, setDraggedStickerId] = useState<string | null>(null);
   const [activeColorSection, setActiveColorSection] = useState<ColorSection | null>(null);
 
   const profileInputRef = useRef<HTMLInputElement>(null);
@@ -144,8 +140,7 @@ export default function ProfilePage() {
       }, { merge: true });
 
       toast({ title: "Profile Optimized", description: "All changes saved successfully." });
-      setIsEditMode(false);
-      setActiveStickerId(null);
+      setIsOptimizeModalOpen(false);
     } catch (error: any) {
       toast({ variant: "destructive", title: "Update Failed", description: error.message });
     } finally {
@@ -162,8 +157,6 @@ export default function ProfilePage() {
       else if (type === 'sticker') {
         const newSticker = { id: Math.random().toString(36).substr(2, 9), url: base64, x: 50, y: 50, rotation: 0, scale: 1 };
         setFormData(prev => ({ ...prev, stickers: [...prev.stickers, newSticker] }));
-        setActiveStickerId(newSticker.id);
-        setIsEditMode(true);
       }
     }
   };
@@ -180,25 +173,8 @@ export default function ProfilePage() {
     setIsColorPickerOpen(true);
   };
 
-  const updateSticker = (id: string, updates: Partial<Sticker>) => {
-    setFormData(prev => ({
-      ...prev,
-      stickers: prev.stickers.map(s => s.id === id ? { ...s, ...updates } : s)
-    }));
-  };
-
-  const removeSticker = (id: string) => {
-    setFormData(prev => ({
-      ...prev,
-      stickers: prev.stickers.filter(s => s.id !== id)
-    }));
-    setActiveStickerId(null);
-  };
-
   if (isUserLoading || isProfileLoading) return <div className="max-w-md mx-auto min-h-screen flex items-center justify-center bg-background"><Loader2 className="animate-spin text-primary h-8 w-8" /></div>;
   if (!user) return null;
-
-  const activeSticker = formData.stickers.find(s => s.id === activeStickerId);
 
   return (
     <div 
@@ -219,33 +195,12 @@ export default function ProfilePage() {
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
-            className={cn(
-              "absolute pointer-events-auto", 
-              isEditMode ? "cursor-move" : "cursor-default",
-              activeStickerId === sticker.id && isEditMode ? "ring-2 ring-primary ring-offset-2 rounded-lg" : ""
-            )} 
+            className="absolute" 
             style={{ 
               left: `${sticker.x}%`, 
               top: `${sticker.y}%`, 
               transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`, 
-              touchAction: 'none',
             }}
-            onPointerDown={(e) => { 
-              if (!isEditMode) return;
-              setActiveStickerId(sticker.id);
-              setDraggedStickerId(sticker.id); 
-              (e.currentTarget as any).setPointerCapture(e.pointerId); 
-            }} 
-            onPointerMove={(e) => { 
-              if (draggedStickerId === sticker.id && isEditMode) { 
-                const rect = containerRef.current!.getBoundingClientRect(); 
-                updateSticker(sticker.id, { 
-                  x: Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100)), 
-                  y: Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100)) 
-                });
-              } 
-            }} 
-            onPointerUp={(e) => { setDraggedStickerId(null); (e.currentTarget as any).releasePointerCapture(e.pointerId); }}
           >
             <div className="relative w-24 h-24 select-none">
               <Image src={sticker.url} alt="sticker" fill className="object-contain pointer-events-none" unoptimized={true} />
@@ -258,19 +213,9 @@ export default function ProfilePage() {
       <div className="absolute inset-0 flex flex-col m-0 p-0 z-20 pointer-events-none no-scrollbar overflow-y-auto">
         <div className="px-6 flex justify-between items-center py-5 pointer-events-auto">
           <h1 className="text-2xl font-black uppercase tracking-tighter" style={{ color: getContrastColor(formData.customColors.header) }}>Sphere Profile</h1>
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className={cn("rounded-full transition-colors", isEditMode ? "bg-primary text-white" : "")} 
-              onClick={() => setIsEditMode(!isEditMode)}
-            >
-              <Pencil size={20} style={{ color: isEditMode ? 'white' : getContrastColor(formData.customColors.header) }} />
-            </Button>
-            <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setIsOptimizeModalOpen(true)}>
-              <Settings size={24} style={{ color: getContrastColor(formData.customColors.header) }} />
-            </Button>
-          </div>
+          <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setIsOptimizeModalOpen(true)}>
+            <Settings size={24} style={{ color: getContrastColor(formData.customColors.header) }} />
+          </Button>
         </div>
 
         <div className="relative">
@@ -337,47 +282,6 @@ export default function ProfilePage() {
         </Tabs>
       </div>
 
-      {/* Floating On-Screen Sticker Controls (Only in Edit Theme Mode) */}
-      {isEditMode && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 w-[90%] max-w-md z-[100] animate-in slide-in-from-bottom-5">
-           <div className="bg-white rounded-[2rem] p-4 shadow-2xl border-2 border-primary/20 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <PaintBucket className="text-primary w-4 h-4" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-primary">Sticker Studio</span>
-                </div>
-                <div className="flex items-center gap-2">
-                   <Button size="sm" className="h-8 rounded-full bg-green-500 text-white font-black px-4" onClick={handleSaveProfile} disabled={isSaving}>
-                    {isSaving ? <Loader2 className="animate-spin w-3 h-3" /> : <Check className="w-4 h-4" />}
-                  </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setIsEditMode(false)}><X size={16} /></Button>
-                </div>
-              </div>
-
-              {activeSticker && (
-                <div className="p-3 bg-primary/5 rounded-2xl border border-primary/10 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[9px] font-black uppercase text-primary">Edit Active Sticker</p>
-                    <Button variant="destructive" size="icon" className="h-6 w-6 rounded-full" onClick={() => removeSticker(activeSticker.id)}>
-                      <Trash2 size={12} />
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-[8px] font-bold uppercase"><span>Scale</span><span>{Math.round(activeSticker.scale * 100)}%</span></div>
-                      <Slider value={[activeSticker.scale]} min={0.2} max={2.5} step={0.1} onValueChange={([v]) => updateSticker(activeSticker.id, { scale: v })} />
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-[8px] font-bold uppercase"><span>Rotate</span><span>{activeSticker.rotation}°</span></div>
-                      <Slider value={[activeSticker.rotation]} min={0} max={360} step={5} onValueChange={([v]) => updateSticker(activeSticker.id, { rotation: v })} />
-                    </div>
-                  </div>
-                </div>
-              )}
-           </div>
-        </div>
-      )}
-
       {/* Hidden Inputs for Optimize Page */}
       <input type="file" ref={profileInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'profile')} />
       <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'banner')} />
@@ -394,28 +298,50 @@ export default function ProfilePage() {
           </DialogHeader>
 
           <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar">
-            {/* 1. Header & Logo Customization */}
+            {/* 1. Banner Preview (On Top) */}
             <div className="space-y-4">
-               <Label className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><LucideImage size={14} /> Logo & Branding</Label>
-               <div className="space-y-4">
+               <Label className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><LucideImage size={14} /> Banner & Preview</Label>
+               <div className="space-y-6">
                  <div className="relative h-32 bg-muted rounded-[2rem] overflow-hidden border-2 border-dashed border-primary/20 group cursor-pointer" onClick={() => bannerInputRef.current?.click()}>
                    {formData.banner ? <Image src={formData.banner} alt="banner" fill className="object-cover" unoptimized={true} /> : <div className="w-full h-full flex flex-col items-center justify-center gap-1"><Camera className="text-muted-foreground/40" /><span className="text-[9px] font-black uppercase opacity-40">Tap to Upload Banner</span></div>}
                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white"><Camera size={24} /></div>
                  </div>
-                 <div className="flex items-center gap-4">
-                    <div className="relative h-20 w-20 rounded-full bg-muted border-4 border-white shadow-xl overflow-hidden group cursor-pointer" onClick={() => profileInputRef.current?.click()}>
-                      <Avatar className="h-full w-full"><AvatarImage src={formData.profilePic} className="object-cover" /><AvatarFallback className="font-black">{formData.name?.[0]}</AvatarFallback></Avatar>
-                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white"><Camera size={16} /></div>
-                    </div>
-                    <div className="flex-1 space-y-1">
-                      <Label className="text-[9px] font-black uppercase tracking-widest opacity-60">Display Name</Label>
-                      <Input value={formData.name} onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))} className="rounded-xl h-10 bg-muted/30 border-none font-bold" placeholder="Innovator Name" />
-                    </div>
+                 
+                 <div className="grid grid-cols-2 gap-4">
+                   <div className="space-y-2">
+                     <p className="text-[8px] font-black uppercase tracking-widest opacity-50 flex items-center gap-1"><Monitor size={10} /> Desktop Preview</p>
+                     <div className="relative aspect-video rounded-xl overflow-hidden border bg-muted">
+                        <Image src={formData.banner || `https://picsum.photos/seed/banner/800/400`} alt="Desktop" fill className="object-cover" unoptimized={true} />
+                     </div>
+                   </div>
+                   <div className="space-y-2">
+                     <p className="text-[8px] font-black uppercase tracking-widest opacity-50 flex items-center gap-1"><Smartphone size={10} /> Mobile Preview</p>
+                     <div className="flex justify-center">
+                        <div className="relative w-full max-w-[80px] aspect-[4/3] rounded-xl overflow-hidden border bg-muted">
+                          <Image src={formData.banner || `https://picsum.photos/seed/banner/800/400`} alt="Mobile" fill className="object-cover" unoptimized={true} />
+                        </div>
+                     </div>
+                   </div>
                  </div>
                </div>
             </div>
 
-            {/* 2. Bio & Expertise */}
+            {/* 2. Logo & Branding (Below Banner) */}
+            <div className="space-y-4">
+               <Label className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><Camera size={14} /> Logo & Identity</Label>
+               <div className="flex items-center gap-4">
+                  <div className="relative h-20 w-20 rounded-full bg-muted border-4 border-white shadow-xl overflow-hidden group cursor-pointer" onClick={() => profileInputRef.current?.click()}>
+                    <Avatar className="h-full w-full"><AvatarImage src={formData.profilePic} className="object-cover" /><AvatarFallback className="font-black">{formData.name?.[0]}</AvatarFallback></Avatar>
+                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white"><Camera size={16} /></div>
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <Label className="text-[9px] font-black uppercase tracking-widest opacity-60">Display Name</Label>
+                    <Input value={formData.name} onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))} className="rounded-xl h-10 bg-muted/30 border-none font-bold" placeholder="Innovator Name" />
+                  </div>
+               </div>
+            </div>
+
+            {/* 3. Bio & Expertise */}
             <div className="space-y-3">
               <Label className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><Type size={14} /> Personal Bio</Label>
               <Textarea 
@@ -427,7 +353,7 @@ export default function ProfilePage() {
               />
             </div>
 
-            {/* 3. Theme Colors (Seamless Pickers) */}
+            {/* 4. Theme Colors (Seamless Pickers) */}
             <div className="space-y-4">
               <Label className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><PaintBucket size={14} /> Color Scheme</Label>
               <div className="grid grid-cols-2 gap-2">
@@ -447,7 +373,7 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* 4. Sticker Management */}
+            {/* 5. Sticker Management */}
             <div className="space-y-4 pb-4">
               <Label className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><Plus size={14} /> Add Stickers</Label>
               <div className="bg-primary/5 p-6 rounded-[2rem] border-2 border-dashed border-primary/20 flex flex-col items-center justify-center gap-3 cursor-pointer group hover:bg-primary/10 transition-all" onClick={() => stickerInputRef.current?.click()}>

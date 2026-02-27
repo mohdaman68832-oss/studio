@@ -28,10 +28,9 @@ interface IdeaCardProps {
     likes?: number;
   };
   priority?: boolean;
-  isMemeView?: boolean;
 }
 
-export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCardProps) {
+export function IdeaCard({ idea, priority = false }: IdeaCardProps) {
   const { toast } = useToast();
   const db = useFirestore();
   const { user } = useUser();
@@ -109,6 +108,7 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
       </div>
 
       <div className="mt-4">
+        {/* Click image/title to go to conversation (Detail Page) */}
         <Link href={`/idea/${idea.id}`} className="block group">
           <h3 className="text-lg font-black text-primary uppercase tracking-tighter leading-none mb-2">{idea.title}</h3>
           <p className="text-sm text-foreground/80 leading-relaxed font-bold">{idea.problem || "Solving challenges."}</p>

@@ -8,50 +8,13 @@ import { collection, addDoc, query, orderBy, serverTimestamp, doc } from "fireba
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, Send, Sparkles, Lightbulb, MessageCircle, ChevronDown, ChevronUp, Maximize2 } from "lucide-react";
+import { ChevronLeft, Send, Sparkles, MessageCircle, ChevronDown, ChevronUp, Maximize2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogHeader } from "@/components/ui/dialog";
-
-const MOCK_IDEAS = [
-  {
-    id: "1",
-    title: "EcoConnect: Smart Grid for Neighborhoods",
-    problem: "Rising energy costs and inefficient localized energy distribution.",
-    description: "A decentralized platform enabling neighbors to share excess solar energy with zero transaction fees using blockchain technology.",
-    category: "Technology",
-    userName: "Alex Rivera",
-    userAvatar: "https://picsum.photos/seed/user1/100/100",
-    mediaUrl: "https://picsum.photos/seed/tech/800/600",
-    innovationScore: 92,
-    authorId: "mock-1"
-  }
-];
-
-const getUnionMockPost = (ideaId: string) => {
-  if (!ideaId.startsWith('post-')) return null;
-  const i = parseInt(ideaId.replace('post-', ''));
-  return {
-    id: ideaId,
-    title: [
-      "Neural Mesh Network", "Smart Grid AI", "Bio-degradable Tech", "Solar Glass v2", 
-      "Haptic Learning", "Urban Wind Turbine", "Water Filter IoT", "Clean Air Necklace"
-    ][i % 8],
-    description: "Exploring the limits of what is possible with modern engineering and design.",
-    problem: "Traditional solutions are too slow and environmentally damaging.",
-    category: i % 2 === 0 ? "Technology" : "Sustainability",
-    userName: ["Alex Rivera", "Sarah Chen", "Marcus Vane", "Elena Gilbert"][i % 4],
-    userAvatar: `https://picsum.photos/seed/user${i % 4}/100/100`,
-    mediaUrl: i % 4 === 0 
-      ? "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" 
-      : `https://picsum.photos/seed/innovation${i}/800/800`,
-    innovationScore: 70 + (i % 30),
-    authorId: `mock-user-${i % 4}`
-  };
-};
 
 export default function IdeaDetailPage() {
   const params = useParams();
@@ -67,12 +30,7 @@ export default function IdeaDetailPage() {
   const ideaRef = useMemoFirebase(() => (db ? doc(db, "ideas", ideaId) : null), [db, ideaId]);
   const { data: firestoreIdea, isLoading: ideaLoading } = useDoc(ideaRef);
 
-  const idea = useMemo(() => {
-    if (firestoreIdea) return firestoreIdea;
-    const mainMock = MOCK_IDEAS.find(i => i.id === ideaId);
-    if (mainMock) return mainMock;
-    return getUnionMockPost(ideaId);
-  }, [firestoreIdea, ideaId]);
+  const idea = firestoreIdea;
 
   const suggestionsQuery = useMemoFirebase(() => {
     if (!db) return null;
@@ -125,7 +83,7 @@ export default function IdeaDetailPage() {
     );
   }
 
-  const isVideo = idea?.mediaUrl && (idea?.mediaUrl?.includes('blob:') || idea?.mediaUrl?.endsWith('.mp4') || idea?.mediaUrl?.endsWith('.webm') || idea?.mediaUrl?.includes('gtv-videos-bucket') || idea?.mediaUrl?.startsWith('data:video'));
+  const isVideo = idea?.mediaUrl && (idea?.mediaUrl?.endsWith('.mp4') || idea?.mediaUrl?.includes('gtv-videos-bucket') || idea?.mediaUrl?.startsWith('data:video'));
   const isTextPost = !idea?.mediaUrl || idea?.mediaUrl === "";
 
   return (
@@ -136,7 +94,7 @@ export default function IdeaDetailPage() {
         </Button>
         <div className="flex-1 min-w-0">
           <h1 className="font-black text-sm uppercase tracking-tighter truncate">{idea?.title}</h1>
-          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest leading-none mt-1">Innovation Discussion</p>
+          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest leading-none mt-1">Conversation</p>
         </div>
       </header>
 
@@ -164,7 +122,7 @@ export default function IdeaDetailPage() {
               </DialogTrigger>
               <DialogContent className="max-w-[95vw] h-[80vh] p-0 overflow-hidden border-none bg-black/95 rounded-[2.5rem] flex items-center justify-center" onOpenAutoFocus={(e) => e.preventDefault()}>
                  <DialogHeader className="sr-only">
-                    <DialogTitle>{idea?.title}</DialogTitle>
+                    <DialogTitle>{idea?.title} - Full Preview</DialogTitle>
                  </DialogHeader>
                  <div className="relative w-full h-full p-4 flex items-center justify-center">
                     {isVideo ? (
@@ -191,24 +149,18 @@ export default function IdeaDetailPage() {
                   <p className="text-[10px] text-primary font-bold uppercase tracking-widest">{idea?.category}</p>
                 </div>
               </div>
-              {isTextPost && (
-                <Badge className="bg-secondary/90 text-white border-none rounded-full px-3 py-1 flex items-center gap-1.5">
-                  <Sparkles size={12} className="fill-current" />
-                  <span className="text-[10px] font-black uppercase tracking-wider">{idea?.innovationScore}</span>
-                </Badge>
-              )}
             </div>
 
             <div className="space-y-1">
               <h2 className="text-lg font-black text-primary uppercase tracking-tighter leading-tight">{idea?.title}</h2>
               <div className="space-y-1 mt-2">
-                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Problem</p>
+                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Challenge</p>
                 <p className="text-sm text-foreground/80 font-bold leading-relaxed">{idea?.problem}</p>
               </div>
 
               {isTextPost || showFullDescription ? (
                 <div className="mt-4 pt-4 border-t border-muted animate-in fade-in slide-in-from-top-2">
-                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-primary mb-2">Description</p>
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-primary mb-2">Detailed Idea</p>
                   <p className="text-sm text-foreground/70 leading-relaxed font-medium">
                     {idea?.description}
                   </p>
@@ -223,9 +175,9 @@ export default function IdeaDetailPage() {
                   className="mt-2 h-auto p-0 text-[10px] font-black uppercase tracking-widest text-secondary hover:bg-transparent"
                 >
                   {showFullDescription ? (
-                    <span className="flex items-center gap-1">Show Less <ChevronUp size={12} /></span>
+                    <span className="flex items-center gap-1">Less <ChevronUp size={12} /></span>
                   ) : (
-                    <span className="flex items-center gap-1">See More <ChevronDown size={12} /></span>
+                    <span className="flex items-center gap-1">Full Description <ChevronDown size={12} /></span>
                   )}
                 </Button>
               )}

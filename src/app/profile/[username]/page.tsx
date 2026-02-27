@@ -89,7 +89,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-hidden flex flex-col m-0 p-0 no-scrollbar" 
       style={{ backgroundColor: colors.background || "var(--background)" }}
     >
-      {/* Layer 0: Background Sections - Truly Seamless */}
+      {/* Layer 0: Background Sections - Seamlessly Tiled */}
       <div className="flex flex-col m-0 p-0 relative z-0 shrink-0">
          <div className="h-16 w-full" style={{ backgroundColor: colors.header }} />
          <div className="h-[28rem] w-full" style={{ backgroundColor: colors.userInfo }} />
@@ -98,7 +98,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       </div>
 
       {/* Layer 1: Stickers (z-index 10) - Behind main UI content */}
-      <div className="absolute inset-0 pointer-events-none z-10">
+      <div className="absolute inset-0 z-10 pointer-events-none">
         {stickers.map((sticker) => (
           <div 
             key={sticker.id} 
@@ -106,11 +106,11 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
             style={{ 
               left: `${sticker.x}%`, 
               top: `${sticker.y}%`, 
-              transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`,
+              transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`, 
             }}
           >
-            <div className="relative w-24 h-24">
-              <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized={true} />
+            <div className="relative w-24 h-24 select-none">
+              <Image src={sticker.url} alt="sticker" fill className="object-contain pointer-events-none" unoptimized={true} />
             </div>
           </div>
         ))}
