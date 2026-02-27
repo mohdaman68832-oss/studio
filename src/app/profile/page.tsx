@@ -178,7 +178,7 @@ export default function ProfilePage() {
         const newId = Math.random().toString(36).substr(2, 9);
         const newSticker = { id: newId, url: base64, x: 50, y: 50, rotation: 0, scale: 1 };
         setFormData(prev => ({ ...prev, stickers: [...prev.stickers, newSticker] }));
-        setIsOptimizeModalOpen(false); // Close popup immediately
+        setIsOptimizeModalOpen(false); // Close popup to allow moving
         setEditingStickerId(newId); // Select for editing
       }
     }
@@ -191,9 +191,9 @@ export default function ProfilePage() {
   };
 
   const handleStickerPointerDown = (e: React.PointerEvent, id: string) => {
+    if (editingStickerId !== id) return; // Only allow dragging if already in edit mode
     e.stopPropagation();
     setIsDragging(true);
-    setEditingStickerId(id);
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   };
 
@@ -201,7 +201,6 @@ export default function ProfilePage() {
     if (!isDragging || !containerRef.current || id !== editingStickerId) return;
     
     const rect = containerRef.current.getBoundingClientRect();
-    // Calculate position relative to container
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
 
@@ -247,7 +246,7 @@ export default function ProfilePage() {
       style={{ backgroundColor: colors.background || "var(--background)" }}
       ref={containerRef}
     >
-      {/* Background Layer (z-0) - Seamless */}
+      {/* Seamless Color Background Layers (z-0) */}
       <div className="flex flex-col m-0 p-0 relative z-0 shrink-0">
          <div className="h-16 w-full" style={{ backgroundColor: colors.header }} />
          <div className="h-[28rem] w-full" style={{ backgroundColor: colors.userInfo }} />
@@ -255,33 +254,32 @@ export default function ProfilePage() {
          <div className="flex-1 w-full min-h-[50vh]" style={{ backgroundColor: colors.tabsContent }} />
       </div>
 
-      {/* Media Layer (Banner/Logo) (z-10) */}
+      {/* Layer: Banner & Identity (z-10) */}
       <div className="absolute inset-0 z-10 pointer-events-none">
         <div className="relative h-52 w-full overflow-hidden">
           <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized />
         </div>
         <div className="px-6 -mt-16 flex flex-col items-center">
-          <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl">
+          <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl pointer-events-auto">
             <AvatarImage src={formData.profilePic} className="object-cover" />
             <AvatarFallback className="text-2xl font-black uppercase">{formData.name?.[0] || "U"}</AvatarFallback>
           </Avatar>
         </div>
       </div>
 
-      {/* Sticker Studio Layer (z-20) - Above Banner/Logo, Below Interaction Layer */}
+      {/* Layer: Stickers (z-20) - On top of Banner/Logo, below UI */}
       <div className="absolute inset-0 z-20 pointer-events-none">
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
             className={cn(
-              "absolute pointer-events-auto select-none touch-none cursor-move transition-transform duration-75",
-              editingStickerId === sticker.id && "ring-2 ring-primary ring-offset-2 rounded-lg"
+              "absolute select-none touch-none",
+              editingStickerId === sticker.id ? "pointer-events-auto cursor-move ring-2 ring-primary ring-offset-2 rounded-lg z-30" : "pointer-events-none"
             )} 
             style={{ 
               left: `${sticker.x}%`, 
               top: `${sticker.y}%`, 
               transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`, 
-              zIndex: editingStickerId === sticker.id ? 25 : 20,
               touchAction: 'none'
             }}
             onPointerDown={(e) => handleStickerPointerDown(e, sticker.id)}
@@ -295,8 +293,8 @@ export default function ProfilePage() {
         ))}
       </div>
 
-      {/* Interactive UI Layer (z-30) - Safe Area Interactivity */}
-      <div className="absolute inset-0 flex flex-col m-0 p-0 z-30 pointer-events-none no-scrollbar overflow-y-auto">
+      {/* Layer: UI (z-40) - Interactive Elements */}
+      <div className="absolute inset-0 flex flex-col m-0 p-0 z-40 pointer-events-none no-scrollbar overflow-y-auto">
         <header className="px-6 flex justify-between items-center py-5 pointer-events-auto">
           <h1 className="text-2xl font-black uppercase tracking-tighter" style={{ color: getContrastColor(colors.header) }}>Sphere</h1>
           <div className="flex items-center gap-2">
@@ -381,7 +379,7 @@ export default function ProfilePage() {
 
       {/* STICKER STUDIO HUD (z-1000) - Floating Controls */}
       {editingStickerId && activeSticker && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[1000] w-[90%] max-w-sm bg-white/95 backdrop-blur-md rounded-[2.5rem] border shadow-2xl p-6 animate-in slide-in-from-bottom-4">
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[1000] w-[90%] max-w-sm bg-white/95 backdrop-blur-md rounded-[2.5rem] border shadow-2xl p-6 animate-in slide-in-from-bottom-4 pointer-events-auto">
           <div className="space-y-6">
             <header className="flex items-center justify-between">
               <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Sticker Studio</h4>
@@ -515,7 +513,17 @@ export default function ProfilePage() {
                 {formData.stickers.map(s => (
                   <div key={s.id} className="relative w-12 h-12 rounded-lg border overflow-hidden group">
                     <Image src={s.url} alt="s" fill className="object-contain" />
-                    <button onClick={() => { setEditingStickerId(s.id); setIsOptimizeModalOpen(false); }} className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white"><Plus size={12} /></button>
+                    {/* Only allow selecting stickers for editing from here */}
+                    <button 
+                      onClick={() => { 
+                        setEditingStickerId(s.id); 
+                        setIsOptimizeModalOpen(false); 
+                        toast({ title: "Edit Mode", description: "You can now move and resize the sticker." });
+                      }} 
+                      className="absolute inset-0 bg-primary/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white"
+                    >
+                      <Pencil size={12} />
+                    </button>
                   </div>
                 ))}
               </div>
@@ -586,3 +594,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+
