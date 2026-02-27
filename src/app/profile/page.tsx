@@ -283,7 +283,7 @@ export default function ProfilePage() {
           </DropdownMenu>
         </header>
 
-        {/* Stickers (z-[100]) - HIGHEST LAYER FOR VISIBILITY */}
+        {/* Stickers (z-[100]) - Sabse upar */}
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
@@ -319,7 +319,7 @@ export default function ProfilePage() {
               unoptimized 
             />
           </div>
-          {/* Logo (z-[50]) */}
+          {/* Logo (z-[50]) - Stickers ke niche, par text ke upar */}
           <div className="relative px-6 -mt-16 flex flex-col items-center z-[50]">
             <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl">
               <AvatarImage src={formData.profilePic} className="object-cover" />
@@ -328,7 +328,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* UI Content (z-[40]) */}
+        {/* UI Content (z-[40]) - Stickers ke niche */}
         <div className="relative z-[40] w-full -mt-1">
           <div style={{ backgroundColor: colors.userInfo || "transparent" }} className="w-full pb-8">
             <div className="px-6 flex flex-col items-center">

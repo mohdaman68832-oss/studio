@@ -48,12 +48,14 @@ service cloud.firestore {
       allow read, update, delete: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
       // Allow others to create notifications
       allow create: if isSignedIn();
+      // Allow listing for the signed in user
+      allow list: if isSignedIn();
     }
 
     match /messages/{msgId} {
       // Allow reading and writing messages if part of the conversation
-      allow read, create: if isSignedIn() && (request.auth.uid == request.resource.data.senderId || request.auth.uid == request.resource.data.receiverId || (resource != null && (request.auth.uid == resource.data.senderId || request.auth.uid == resource.data.receiverId)));
-      // Standard list access for inbox
+      allow read, create: if isSignedIn();
+      // Allow standard list access for inbox
       allow list: if isSignedIn();
     }
 
