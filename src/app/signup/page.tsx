@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef } from "react";
@@ -120,10 +121,9 @@ export default function SignupPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      await updateProfile(user, { 
-        displayName: name,
-        photoURL: profilePic || `https://picsum.photos/seed/${user.uid}/200/200`
-      });
+      // We do NOT update auth.photoURL if it's a large Base64 string to avoid Firebase errors.
+      // Firestore handles the large Base64 profile picture string.
+      await updateProfile(user, { displayName: name });
 
       await setDoc(doc(db, "userProfiles", user.uid), {
         id: user.uid,
@@ -162,89 +162,36 @@ export default function SignupPage() {
 
   return (
     <div className="max-w-md mx-auto min-h-screen flex flex-col p-6 space-y-8 bg-background justify-center">
-      
-      {/* Banner Preview Overlay (Simulated Separate Page) */}
       {showBannerEditor && (
         <div className="fixed inset-0 z-[100] bg-background flex flex-col animate-in slide-in-from-bottom duration-300">
           <header className="p-4 flex items-center justify-between border-b">
-            <Button variant="ghost" size="icon" onClick={() => setShowBannerEditor(false)} className="rounded-full">
-              <X size={20} />
-            </Button>
+            <Button variant="ghost" size="icon" onClick={() => setShowBannerEditor(false)} className="rounded-full"><X size={20} /></Button>
             <h2 className="text-sm font-black uppercase tracking-widest">Banner Customization</h2>
             <div className="w-10" />
           </header>
-
           <div className="flex-1 overflow-y-auto p-6 space-y-8">
             <div className="text-center space-y-2">
                <p className="text-[10px] font-black uppercase text-primary tracking-widest">Device Preview</p>
                <p className="text-xs text-muted-foreground font-medium">See how your banner looks across different platforms.</p>
             </div>
-
-            {/* PC Preview */}
             <div className="space-y-3">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Monitor size={16} />
-                <span className="text-[10px] font-bold uppercase">Desktop View (PC)</span>
-              </div>
+              <div className="flex items-center gap-2 text-muted-foreground"><Monitor size={16} /><span className="text-[10px] font-bold uppercase">Desktop View (PC)</span></div>
               <div className="relative aspect-[3/1] w-full bg-muted rounded-xl overflow-hidden border shadow-inner">
-                {banner ? (
-                  <Image 
-                    src={banner} 
-                    alt="PC Banner" 
-                    fill 
-                    className="object-cover" 
-                    unoptimized={banner.startsWith('data:')}
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center opacity-30">
-                    <ImageIcon size={40} />
-                  </div>
-                )}
+                {banner ? <Image src={banner} alt="PC Banner" fill className="object-cover" unoptimized={banner.startsWith('data:')} /> : <div className="w-full h-full flex items-center justify-center opacity-30"><ImageIcon size={40} /></div>}
               </div>
             </div>
-
-            {/* Mobile Preview */}
             <div className="space-y-3">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Smartphone size={16} />
-                <span className="text-[10px] font-bold uppercase">Mobile View</span>
-              </div>
+              <div className="flex items-center gap-2 text-muted-foreground"><Smartphone size={16} /><span className="text-[10px] font-bold uppercase">Mobile View</span></div>
               <div className="flex justify-center">
                 <div className="relative w-full max-w-[200px] aspect-[4/3] bg-muted rounded-xl overflow-hidden border shadow-inner">
-                  {banner ? (
-                    <Image 
-                      src={banner} 
-                      alt="Mobile Banner" 
-                      fill 
-                      className="object-cover" 
-                      unoptimized={banner.startsWith('data:')}
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center opacity-30">
-                      <ImageIcon size={30} />
-                    </div>
-                  )}
+                  {banner ? <Image src={banner} alt="Mobile Banner" fill className="object-cover" unoptimized={banner.startsWith('data:')} /> : <div className="w-full h-full flex items-center justify-center opacity-30"><ImageIcon size={30} /></div>}
                 </div>
               </div>
             </div>
-
             <div className="pt-6 space-y-4">
                <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'banner')} />
-               <Button 
-                onClick={() => bannerInputRef.current?.click()} 
-                className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase tracking-widest"
-               >
-                 {banner ? "Change Photo" : "Upload Banner Photo"}
-               </Button>
-               {banner && (
-                 <Button 
-                  variant="outline" 
-                  onClick={() => setShowBannerEditor(false)} 
-                  className="w-full h-12 rounded-2xl font-black uppercase tracking-widest border-primary text-primary"
-                 >
-                   Looks Good, Save
-                 </Button>
-               )}
+               <Button onClick={() => bannerInputRef.current?.click()} className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase tracking-widest">{banner ? "Change Photo" : "Upload Banner Photo"}</Button>
+               {banner && <Button variant="outline" onClick={() => setShowBannerEditor(false)} className="w-full h-12 rounded-2xl font-black uppercase tracking-widest border-primary text-primary">Looks Good, Save</Button>}
             </div>
           </div>
         </div>
@@ -270,41 +217,10 @@ export default function SignupPage() {
 
       {step === 1 && (
         <form onSubmit={handleNextStep1} className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-500">
-          <div className="space-y-2">
-            <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Full Name</Label>
-            <Input 
-              placeholder="John Innovator" 
-              className="rounded-2xl h-12 bg-white border-muted"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Email Address</Label>
-            <Input 
-              type="email" 
-              placeholder="innovator@sphere.com" 
-              className="rounded-2xl h-12 bg-white border-muted"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Password</Label>
-            <Input 
-              type="password" 
-              placeholder="••••••••" 
-              className="rounded-2xl h-12 bg-white border-muted"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <Button type="submit" className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase shadow-xl">
-            Next <ChevronRight size={18} className="ml-2" />
-          </Button>
+          <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest ml-1">Full Name</Label><Input placeholder="John Innovator" className="rounded-2xl h-12 bg-white border-muted" value={name} onChange={(e) => setName(e.target.value)} required /></div>
+          <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest ml-1">Email Address</Label><Input type="email" placeholder="innovator@sphere.com" className="rounded-2xl h-12 bg-white border-muted" value={email} onChange={(e) => setEmail(e.target.value)} required /></div>
+          <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest ml-1">Password</Label><Input type="password" placeholder="••••••••" className="rounded-2xl h-12 bg-white border-muted" value={password} onChange={(e) => setPassword(e.target.value)} required /></div>
+          <Button type="submit" className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase shadow-xl">Next <ChevronRight size={18} className="ml-2" /></Button>
         </form>
       )}
 
@@ -313,31 +229,16 @@ export default function SignupPage() {
           <div className="space-y-4">
             <div className="p-4 bg-primary/5 rounded-[2rem] border border-primary/10">
               <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-1">Identity Check</p>
-              <p className="text-xs text-muted-foreground font-medium leading-relaxed">
-                Your username is unique. Pick something that represents your brand of innovation.
-              </p>
+              <p className="text-xs text-muted-foreground font-medium leading-relaxed">Your username is unique. Pick something that represents your brand of innovation.</p>
             </div>
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Unique Username</Label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-primary font-black">@</span>
-                <Input 
-                  placeholder="innovator123" 
-                  className="rounded-2xl h-12 bg-white border-muted pl-8 font-bold lowercase"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value.replace(/\s/g, ""))}
-                  required
-                />
-              </div>
+              <div className="relative"><span className="absolute left-4 top-1/2 -translate-y-1/2 text-primary font-black">@</span><Input placeholder="innovator123" className="rounded-2xl h-12 bg-white border-muted pl-8 font-bold lowercase" value={username} onChange={(e) => setUsername(e.target.value.replace(/\s/g, ""))} required /></div>
             </div>
           </div>
           <div className="space-y-3">
-            <Button type="submit" className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase shadow-xl" disabled={loading}>
-              {loading ? <Loader2 className="animate-spin mr-2" /> : <>Next <ChevronRight size={18} className="ml-2" /></>}
-            </Button>
-            <Button type="button" variant="ghost" className="w-full h-10 font-bold uppercase text-[10px]" onClick={() => setStep(1)}>
-              <ChevronLeft size={14} className="mr-1" /> Back
-            </Button>
+            <Button type="submit" className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase shadow-xl" disabled={loading}>{loading ? <Loader2 className="animate-spin mr-2" /> : <>Next <ChevronRight size={18} className="ml-2" /></>}</Button>
+            <Button type="button" variant="ghost" className="w-full h-10 font-bold uppercase text-[10px]" onClick={() => setStep(1)}><ChevronLeft size={14} className="mr-1" /> Back</Button>
           </div>
         </form>
       )}
@@ -345,105 +246,28 @@ export default function SignupPage() {
       {step === 3 && (
         <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 pb-10">
           <div className="space-y-4">
-            {/* Banner Preview/Editor Trigger */}
-            <div 
-              onClick={() => setShowBannerEditor(true)}
-              className="relative h-24 bg-muted rounded-2xl overflow-hidden group border border-dashed border-primary/20 cursor-pointer"
-            >
-              {banner ? (
-                <Image 
-                  src={banner} 
-                  alt="Banner" 
-                  fill 
-                  className="object-cover" 
-                  unoptimized={banner.startsWith('data:')}
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                   <div className="flex flex-col items-center gap-1">
-                      <ImageIcon className="text-muted-foreground/40" />
-                      <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/40">Tap to Preview & Upload Banner</span>
-                   </div>
-                </div>
-              )}
-              <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
-                <Camera size={20} />
-              </div>
+            <div onClick={() => setShowBannerEditor(true)} className="relative h-24 bg-muted rounded-2xl overflow-hidden group border border-dashed border-primary/20 cursor-pointer">
+              {banner ? <Image src={banner} alt="Banner" fill className="object-cover" unoptimized={banner.startsWith('data:')} /> : <div className="w-full h-full flex items-center justify-center"><div className="flex flex-col items-center gap-1"><ImageIcon className="text-muted-foreground/40" /><span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/40">Tap to Preview & Upload Banner</span></div></div>}
+              <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"><Camera size={20} /></div>
             </div>
-
             <div className="relative -mt-12 ml-4 w-20 h-20 rounded-full border-4 border-background bg-muted overflow-hidden group shadow-lg">
-              {profilePic ? (
-                <Image 
-                  src={profilePic} 
-                  alt="Profile" 
-                  fill 
-                  className="object-cover" 
-                  unoptimized={profilePic.startsWith('data:')}
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Camera className="text-muted-foreground/40" />
-                </div>
-              )}
-              <button 
-                onClick={() => profileInputRef.current?.click()}
-                className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"
-              >
-                <Camera size={16} />
-              </button>
+              {profilePic ? <Image src={profilePic} alt="Profile" fill className="object-cover" unoptimized={profilePic.startsWith('data:')} /> : <div className="w-full h-full flex items-center justify-center"><Camera className="text-muted-foreground/40" /></div>}
+              <button onClick={() => profileInputRef.current?.click()} className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"><Camera size={16} /></button>
               <input type="file" ref={profileInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'profile')} />
             </div>
-
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest ml-1">About Your Expertise</Label>
-              <Textarea 
-                placeholder="Tell us about your background and skills..." 
-                className="rounded-2xl h-24 bg-white border-muted"
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-              />
-            </div>
-
+            <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest ml-1">About Your Expertise</Label><Textarea placeholder="Tell us about your background and skills..." className="rounded-2xl h-24 bg-white border-muted" value={bio} onChange={(e) => setBio(e.target.value)} /></div>
             <div className="space-y-3">
-              <Label className="text-[10px] font-black uppercase tracking-widest ml-1 flex items-center gap-1">
-                <Briefcase size={12} /> Choose Your Fields
-              </Label>
-              <div className="flex flex-wrap gap-2">
-                {EXPERTISE_OPTIONS.map((opt) => (
-                  <Button
-                    key={opt}
-                    variant="outline"
-                    size="sm"
-                    className={cn(
-                      "rounded-full text-[10px] font-bold uppercase tracking-widest transition-all",
-                      interests.includes(opt) ? "bg-primary text-white border-primary" : "bg-white"
-                    )}
-                    onClick={() => toggleInterest(opt)}
-                  >
-                    {opt}
-                  </Button>
-                ))}
-              </div>
+              <Label className="text-[10px] font-black uppercase tracking-widest ml-1 flex items-center gap-1"><Briefcase size={12} /> Choose Your Fields</Label>
+              <div className="flex flex-wrap gap-2">{EXPERTISE_OPTIONS.map((opt) => <Button key={opt} variant="outline" size="sm" className={cn("rounded-full text-[10px] font-bold uppercase tracking-widest transition-all", interests.includes(opt) ? "bg-primary text-white border-primary" : "bg-white")} onClick={() => toggleInterest(opt)}>{opt}</Button>)}</div>
             </div>
           </div>
-
           <div className="space-y-3 pt-4">
-            <Button onClick={handleSignup} className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase shadow-xl" disabled={loading}>
-              {loading ? <Loader2 className="animate-spin mr-2" /> : "Complete Account Creation"}
-            </Button>
-            <Button type="button" variant="ghost" className="w-full h-10 font-bold uppercase text-[10px]" onClick={() => setStep(2)}>
-              <ChevronLeft size={14} className="mr-1" /> Back
-            </Button>
+            <Button onClick={handleSignup} className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase shadow-xl" disabled={loading}>{loading ? <Loader2 className="animate-spin mr-2" /> : "Complete Account Creation"}</Button>
+            <Button type="button" variant="ghost" className="w-full h-10 font-bold uppercase text-[10px]" onClick={() => setStep(2)}><ChevronLeft size={14} className="mr-1" /> Back</Button>
           </div>
         </div>
       )}
-
-      <p className="text-center text-xs text-muted-foreground font-bold pb-4">
-        Already an innovator?{" "}
-        <Link href="/login" className="text-secondary font-black uppercase hover:underline">
-          Sign In
-        </Link>
-      </p>
+      <p className="text-center text-xs text-muted-foreground font-bold pb-4">Already an innovator? <Link href="/login" className="text-secondary font-black uppercase hover:underline">Sign In</Link></p>
     </div>
   );
 }
