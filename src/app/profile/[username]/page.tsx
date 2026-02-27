@@ -90,9 +90,9 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       style={{ backgroundColor: colors.background || "var(--background)" }}
     >
       <div className="relative w-full shrink-0">
-        <div className="h-16 w-full relative z-[50]" style={{ backgroundColor: colors.header }} />
+        <div className="h-16 w-full relative z-[70]" style={{ backgroundColor: colors.header }} />
         
-        <header className="absolute top-0 left-0 right-0 z-[60] px-6 flex justify-between items-center py-5">
+        <header className="absolute top-0 left-0 right-0 z-[80] px-6 flex justify-between items-center py-5">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full">
             <ChevronLeft size={24} style={{ color: getContrastColor(colors.header) }} />
           </Button>
@@ -100,11 +100,11 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
           <div className="w-10" />
         </header>
 
-        {/* STICKERS LAYER (Behind Text/Buttons, Above Banner/Logo) */}
+        {/* STICKERS LAYER (Top Layer: z-[100]) */}
         {stickers.map((sticker) => (
           <div 
             key={sticker.id} 
-            className="absolute pointer-events-none select-none z-[20]" 
+            className="absolute pointer-events-none select-none z-[100]" 
             style={{ 
               left: `${sticker.x}%`, 
               top: `${sticker.y}%`, 
@@ -117,20 +117,23 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
           </div>
         ))}
 
-        <div className="relative h-52 w-full overflow-hidden z-[10]">
-          <Image src={profileData.bannerUrl || `https://picsum.photos/seed/banner${profileData.id}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${profileData.bannerOffset || 50}%` }} unoptimized />
-        </div>
-        
-        <div className="relative px-6 -mt-16 flex flex-col items-center z-[30]">
-          <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl">
-            <AvatarImage src={profileData.profilePictureUrl} className="object-cover" />
-            <AvatarFallback className="text-2xl font-black uppercase">{profileData.username?.[0]}</AvatarFallback>
-          </Avatar>
+        <div className="relative w-full">
+          {/* Banner (z-[10]) */}
+          <div className="relative h-52 w-full overflow-hidden z-[10]">
+            <Image src={profileData.bannerUrl || `https://picsum.photos/seed/banner${profileData.id}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${profileData.bannerOffset || 50}%` }} unoptimized />
+          </div>
+          {/* Logo (z-[50]) - Below Stickers */}
+          <div className="relative px-6 -mt-16 flex flex-col items-center z-[50]">
+            <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl">
+              <AvatarImage src={profileData.profilePictureUrl} className="object-cover" />
+              <AvatarFallback className="text-2xl font-black uppercase">{profileData.username?.[0]}</AvatarFallback>
+            </Avatar>
+          </div>
         </div>
       </div>
 
-      {/* USER INFO SECTION */}
-      <div style={{ backgroundColor: colors.userInfo || "transparent" }} className="w-full relative -mt-1 z-[30]">
+      {/* USER INFO SECTION (z-[40]) - Below Stickers & Logo */}
+      <div style={{ backgroundColor: colors.userInfo || "transparent" }} className="w-full relative -mt-1 z-[40]">
         <div className="px-6 flex flex-col items-center pb-8">
           <div className="text-center mt-4">
             <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{profileData.name || profileData.username}</h2>
@@ -154,8 +157,8 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         </div>
       </div>
 
-      {/* STATS SECTION */}
-      <div style={{ backgroundColor: colors.statsSection || "transparent" }} className="w-full py-8 px-10 relative z-[30]">
+      {/* STATS SECTION (z-[40]) */}
+      <div style={{ backgroundColor: colors.statsSection || "transparent" }} className="w-full py-8 px-10 relative z-[40]">
         <div className="grid grid-cols-3 gap-6 w-full">
           <div className="text-center">
             <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{profileData.totalIdeasPosted || 0}</p>
@@ -172,8 +175,8 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         </div>
       </div>
 
-      {/* TABS SECTION */}
-      <div style={{ backgroundColor: colors.tabsContent || "transparent" }} className="w-full flex-1 relative z-[30]">
+      {/* TABS SECTION (z-[40]) */}
+      <div style={{ backgroundColor: colors.tabsContent || "transparent" }} className="w-full flex-1 relative z-[40]">
         <Tabs defaultValue="photo" className="w-full">
           <TabsList className="w-full bg-transparent border-none rounded-none px-6 h-14" style={{ backgroundColor: colors.tabsList }}>
             <TabsTrigger value="photo" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">

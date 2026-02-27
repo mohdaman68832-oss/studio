@@ -143,7 +143,9 @@ export default function ProfilePage() {
     if (!user || !profileRef) return;
     setIsSaving(true);
     try {
-      await updateProfile(user, { displayName: formData.name });
+      if (formData.name) {
+        await updateProfile(user, { displayName: formData.name });
+      }
       await setDoc(profileRef, {
         id: user.uid,
         name: formData.name,
@@ -235,17 +237,17 @@ export default function ProfilePage() {
     setEditingStickerId(null);
   };
 
-  const handleDoneSticker = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleDoneSticker = () => {
     setEditingStickerId(null);
+    // Automatically save after finishing sticker adjustment
+    handleSaveProfile();
   };
 
-  const handleDeleteSticker = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleDeleteSticker = () => {
     if (editingStickerId) {
       deleteSticker(editingStickerId);
+      // Automatically save after deleting a sticker
+      handleSaveProfile();
     }
   };
 
@@ -284,12 +286,12 @@ export default function ProfilePage() {
           </DropdownMenu>
         </header>
 
-        {/* Stickers (z-[50]) - ABOVE EVERYTHING (Logo & Text) */}
+        {/* Stickers (z-[100]) - HIGHEST LAYER IN HEADER */}
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
             className={cn(
-              "absolute select-none touch-none z-[50]",
+              "absolute select-none touch-none z-[100]",
               editingStickerId === sticker.id ? "pointer-events-auto cursor-move ring-4 ring-primary ring-offset-4 rounded-xl z-[150]" : "pointer-events-none"
             )} 
             style={{ 
@@ -320,8 +322,8 @@ export default function ProfilePage() {
               unoptimized 
             />
           </div>
-          {/* Logo (z-[40]) - Above Content, but Below Stickers */}
-          <div className="relative px-6 -mt-16 flex flex-col items-center z-[40]">
+          {/* Logo (z-[50]) - Above Content, Below Stickers */}
+          <div className="relative px-6 -mt-16 flex flex-col items-center z-[50]">
             <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl">
               <AvatarImage src={formData.profilePic} className="object-cover" />
               <AvatarFallback className="text-2xl font-black uppercase">{formData.name?.[0] || "U"}</AvatarFallback>
@@ -329,8 +331,8 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Text & UI Content (z-[30]) - Below Logo & Stickers */}
-        <div className="relative z-[30] w-full -mt-1">
+        {/* Text & UI Content (z-[40]) - Above Banner, Below Stickers & Logo */}
+        <div className="relative z-[40] w-full -mt-1">
           <div style={{ backgroundColor: colors.userInfo || "transparent" }} className="w-full pb-8">
             <div className="px-6 flex flex-col items-center">
               <div className="text-center mt-4">
@@ -395,62 +397,32 @@ export default function ProfilePage() {
       {/* Sticker Studio HUD (z-[3000]) */}
       {editingStickerId && activeSticker && (
         <div className="fixed bottom-20 left-4 right-4 z-[3000] bg-white/95 backdrop-blur-md rounded-[2.5rem] border shadow-2xl p-5 animate-in slide-in-from-bottom-4 pointer-events-auto">
-          <div className="space-y-5">
+          <div className="space-y-4">
             <header className="flex items-center justify-between px-1">
               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Sticker Studio</h4>
-              <button 
-                onClick={handleDoneSticker} 
-                className="p-1 hover:bg-muted rounded-full transition-colors"
-              >
-                <X size={18} />
-              </button>
+              <button onClick={handleDoneSticker} className="p-1 hover:bg-muted rounded-full transition-colors"><X size={18} /></button>
             </header>
             
-            <div className="grid grid-cols-2 gap-6">
-              <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
                 <div className="flex justify-between text-[8px] font-black uppercase opacity-40 px-1">
                   <span>Size</span>
                   <span>{Math.round(activeSticker.scale * 100)}%</span>
                 </div>
-                <Slider 
-                  value={[activeSticker.scale]} 
-                  min={0.2} 
-                  max={4} 
-                  step={0.01} 
-                  onValueChange={([v]) => updateSticker(activeSticker.id, { scale: v })} 
-                  className="py-2"
-                />
+                <Slider value={[activeSticker.scale]} min={0.2} max={4} step={0.01} onValueChange={([v]) => updateSticker(activeSticker.id, { scale: v })} className="py-2" />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <div className="flex justify-between text-[8px] font-black uppercase opacity-40 px-1">
                   <span>Rotation</span>
                   <span>{activeSticker.rotation}°</span>
                 </div>
-                <Slider 
-                  value={[activeSticker.rotation]} 
-                  min={0} 
-                  max={360} 
-                  step={1} 
-                  onValueChange={([v]) => updateSticker(activeSticker.id, { rotation: v })} 
-                  className="py-2"
-                />
+                <Slider value={[activeSticker.rotation]} min={0} max={360} step={1} onValueChange={([v]) => updateSticker(activeSticker.id, { rotation: v })} className="py-2" />
               </div>
             </div>
 
-            <div className="flex gap-3 pt-2">
-               <Button 
-                variant="destructive" 
-                className="flex-1 rounded-2xl font-black uppercase text-[10px] h-12 shadow-lg active:scale-95 transition-transform"
-                onClick={handleDeleteSticker}
-               >
-                 <Trash2 size={16} className="mr-2" /> Delete
-               </Button>
-               <Button 
-                className="flex-1 rounded-2xl font-black uppercase text-[10px] h-12 bg-primary text-white shadow-xl active:scale-95 transition-transform"
-                onClick={handleDoneSticker}
-               >
-                 <CheckCircle size={16} className="mr-2" /> Done
-               </Button>
+            <div className="flex gap-2 pt-1">
+               <Button variant="destructive" className="flex-1 rounded-2xl font-black uppercase text-[10px] h-11" onClick={handleDeleteSticker}><Trash2 size={16} className="mr-2" /> Delete</Button>
+               <Button className="flex-1 rounded-2xl font-black uppercase text-[10px] h-11 bg-primary text-white" onClick={handleDoneSticker}><CheckCircle size={16} className="mr-2" /> Done</Button>
             </div>
           </div>
         </div>
