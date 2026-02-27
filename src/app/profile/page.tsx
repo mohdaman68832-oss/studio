@@ -9,7 +9,7 @@ import {
   Image as ImageIcon, Plus, RotateCw, Pencil, Loader2, 
   Tablet, ChevronLeft, PaintBucket,
   X, Palette, Check, Layout, Square, User, List, Layers,
-  Move
+  Move, Maximize, Minimize, RotateCcw, Trash2
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -209,6 +209,21 @@ export default function ProfilePage() {
     setIsColorPickerOpen(true);
   };
 
+  const updateSticker = (id: string, updates: Partial<Sticker>) => {
+    setFormData(prev => ({
+      ...prev,
+      stickers: prev.stickers.map(s => s.id === id ? { ...s, ...updates } : s)
+    }));
+  };
+
+  const deleteSticker = (id: string) => {
+    setFormData(prev => ({
+      ...prev,
+      stickers: prev.stickers.filter(s => s.id !== id)
+    }));
+    setActiveStickerId(null);
+  };
+
   if (isUserLoading || isProfileLoading) return <div className="max-w-md mx-auto p-10 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>;
   if (!user) return null;
 
@@ -218,12 +233,77 @@ export default function ProfilePage() {
       className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden transition-colors duration-300"
       style={{ backgroundColor: formData.customColors.background || "var(--background)" }}
     >
-      {/* FLOATING STICKER DONE BUTTON */}
+      {/* STICKER CONTROL BAR */}
       {activeStickerId && !isEditModalOpen && !showBannerEditor && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[4000] animate-in fade-in slide-in-from-bottom-4">
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[4000] w-[90%] flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-4">
+          <div className="bg-white/80 backdrop-blur-md rounded-3xl p-4 shadow-2xl border border-primary/20 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="rounded-full h-10 w-10 border-primary/30"
+                onClick={() => {
+                  const s = formData.stickers.find(st => st.id === activeStickerId);
+                  if (s) updateSticker(activeStickerId, { scale: Math.max(0.2, s.scale - 0.1) });
+                }}
+              >
+                <Minimize size={18} />
+              </Button>
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="rounded-full h-10 w-10 border-primary/30"
+                onClick={() => {
+                  const s = formData.stickers.find(st => st.id === activeStickerId);
+                  if (s) updateSticker(activeStickerId, { scale: Math.min(3, s.scale + 0.1) });
+                }}
+              >
+                <Maximize size={18} />
+              </Button>
+            </div>
+
+            <div className="h-6 w-px bg-border" />
+
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="rounded-full h-10 w-10 border-primary/30"
+                onClick={() => {
+                  const s = formData.stickers.find(st => st.id === activeStickerId);
+                  if (s) updateSticker(activeStickerId, { rotation: (s.rotation - 15) % 360 });
+                }}
+              >
+                <RotateCcw size={18} />
+              </Button>
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="rounded-full h-10 w-10 border-primary/30"
+                onClick={() => {
+                  const s = formData.stickers.find(st => st.id === activeStickerId);
+                  if (s) updateSticker(activeStickerId, { rotation: (s.rotation + 15) % 360 });
+                }}
+              >
+                <RotateCw size={18} />
+              </Button>
+            </div>
+
+            <div className="h-6 w-px bg-border" />
+
+            <Button 
+              variant="destructive" 
+              size="icon" 
+              className="rounded-full h-10 w-10"
+              onClick={() => deleteSticker(activeStickerId)}
+            >
+              <Trash2 size={18} />
+            </Button>
+          </div>
+
           <Button 
-            onClick={() => setIsEditModalOpen(true)}
-            className="rounded-full bg-primary text-white shadow-2xl px-8 h-12 font-black uppercase tracking-widest border-2 border-white/20"
+            onClick={() => { setActiveStickerId(null); setIsEditModalOpen(true); }}
+            className="rounded-full bg-primary text-white shadow-2xl h-14 font-black uppercase tracking-widest border-2 border-white/20 active:scale-95 transition-transform"
           >
             <Check className="mr-2" /> Done Positioning
           </Button>
@@ -280,90 +360,103 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* NORMAL PROFILE HEADER */}
-      <div className="px-6 flex justify-between items-center py-4 relative z-20 transition-colors duration-300" style={{ backgroundColor: formData.customColors.header }}>
-        <h1 className="text-2xl font-black uppercase tracking-tighter" style={{ color: getContrastColor(formData.customColors.header) }}>Profile</h1>
-        <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setIsSettingsOpen(true)}><Settings size={22} style={{ color: getContrastColor(formData.customColors.header) }} /></Button>
-      </div>
-
-      <div className="pb-8 relative z-10 transition-colors duration-300" style={{ backgroundColor: formData.customColors.userInfo }}>
-        <div className="relative h-48 w-full bg-muted overflow-hidden">
-          <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized={true} />
-        </div>
-        <div className="px-6 -mt-16 flex flex-col items-center relative z-10">
-          <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-lg">
-            <AvatarImage src={formData.profilePic} className="object-cover" />
-            <AvatarFallback className="text-2xl font-black">{formData.name?.[0] || user.displayName?.[0] || "U"}</AvatarFallback>
-          </Avatar>
-          <div className="text-center mt-4">
-            <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(formData.customColors.userInfo) }}>{formData.name || user.displayName || "Innovator"}</h2>
-          </div>
-          <div className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-sm transition-colors duration-300" style={{ backgroundColor: formData.customColors.bioCard || "#FFFFFF" }}>
-            <p className="text-center text-xs leading-relaxed font-medium italic break-words overflow-hidden" style={{ color: getContrastColor(formData.customColors.bioCard) }}>{formData.bio || "Crafting new ideas daily in the sphere."}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* STATS SECTION - Seamless Connection */}
-      <div className="relative z-10 transition-colors duration-300" style={{ backgroundColor: formData.customColors.statsSection }}>
+      {/* PROFILE SECTIONS - REMOVED GAPS FOR SEAMLESS COLOR FLOW */}
+      <div className="flex flex-col">
+        {/* HEADER BAR */}
         <div 
-          className="grid grid-cols-3 gap-8 w-full py-8 px-10 transition-colors border-y border-border/10"
+          className="px-6 flex justify-between items-center py-4 relative z-20 transition-colors duration-300" 
+          style={{ backgroundColor: formData.customColors.header }}
+        >
+          <h1 className="text-2xl font-black uppercase tracking-tighter" style={{ color: getContrastColor(formData.customColors.header) }}>Profile</h1>
+          <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setIsSettingsOpen(true)}><Settings size={22} style={{ color: getContrastColor(formData.customColors.header) }} /></Button>
+        </div>
+
+        {/* USER INFO AREA */}
+        <div 
+          className="relative z-10 transition-colors duration-300 pb-8" 
+          style={{ backgroundColor: formData.customColors.userInfo }}
+        >
+          <div className="relative h-48 w-full bg-muted overflow-hidden">
+            <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized={true} />
+          </div>
+          <div className="px-6 -mt-16 flex flex-col items-center relative z-10">
+            <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-lg">
+              <AvatarImage src={formData.profilePic} className="object-cover" />
+              <AvatarFallback className="text-2xl font-black">{formData.name?.[0] || user.displayName?.[0] || "U"}</AvatarFallback>
+            </Avatar>
+            <div className="text-center mt-4">
+              <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(formData.customColors.userInfo) }}>{formData.name || user.displayName || "Innovator"}</h2>
+            </div>
+            
+            {/* BIO BOX */}
+            <div 
+              className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-sm transition-colors duration-300" 
+              style={{ backgroundColor: formData.customColors.bioCard || "#FFFFFF" }}
+            >
+              <p className="text-center text-xs leading-relaxed font-medium italic break-words overflow-hidden" style={{ color: getContrastColor(formData.customColors.bioCard) }}>{formData.bio || "Crafting new ideas daily in the sphere."}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* STATS SECTION */}
+        <div 
+          className="relative z-10 transition-colors duration-300 py-8 px-10 border-y border-border/10" 
           style={{ backgroundColor: formData.customColors.statsSection }}
         >
-          <div className="text-center">
-            <p className="text-xl font-black" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{profileData?.totalIdeasPosted || 0}</p>
-            <p className="text-[10px] uppercase font-black opacity-50" style={{ color: getContrastColor(formData.customColors.statsSection) }}>Ideas</p>
-          </div>
-          <div className="text-center border-x border-border/50">
-            <p className="text-xl font-black" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{(profileData?.totalViewsReceived || 0).toLocaleString()}</p>
-            <p className="text-[10px] uppercase font-black opacity-50" style={{ color: getContrastColor(formData.customColors.statsSection) }}>Views</p>
-          </div>
-          <div className="text-center">
-            <p className="text-xl font-black" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{(profileData?.totalIdeasSaved || 0).toLocaleString()}</p>
-            <p className="text-[10px] uppercase font-black opacity-50" style={{ color: getContrastColor(formData.customColors.statsSection) }}>Saves</p>
+          <div className="grid grid-cols-3 gap-8 w-full">
+            <div className="text-center">
+              <p className="text-xl font-black" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{profileData?.totalIdeasPosted || 0}</p>
+              <p className="text-[10px] uppercase font-black opacity-50" style={{ color: getContrastColor(formData.customColors.statsSection) }}>Ideas</p>
+            </div>
+            <div className="text-center border-x border-border/50">
+              <p className="text-xl font-black" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{(profileData?.totalViewsReceived || 0).toLocaleString()}</p>
+              <p className="text-[10px] uppercase font-black opacity-50" style={{ color: getContrastColor(formData.customColors.statsSection) }}>Views</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xl font-black" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{(profileData?.totalIdeasSaved || 0).toLocaleString()}</p>
+              <p className="text-[10px] uppercase font-black opacity-50" style={{ color: getContrastColor(formData.customColors.statsSection) }}>Saves</p>
+            </div>
           </div>
         </div>
-      </div>
 
-      <Tabs defaultValue="my-ideas" className="w-full relative z-10">
-        <div className="transition-colors duration-300" style={{ backgroundColor: formData.customColors.tabsList }}>
-          <TabsList className="w-full bg-transparent border-none rounded-none px-6 h-14">
-            <TabsTrigger value="my-ideas" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
-              <Grid size={22} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
-            </TabsTrigger>
-            <TabsTrigger value="saved" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
-              <Bookmark size={22} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
-            </TabsTrigger>
-            <TabsTrigger value="liked" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
-              <Heart size={22} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
-            </TabsTrigger>
-          </TabsList>
-        </div>
-        
-        <TabsContent 
-          value="my-ideas" 
-          className="mt-0 px-1 py-12 text-center transition-colors pb-32" 
-          style={{ backgroundColor: formData.customColors.tabsContent }}
-        >
-          <p className="opacity-30 text-[10px] font-black uppercase tracking-widest" style={{ color: getContrastColor(formData.customColors.tabsContent) }}>
-            Your Innovations Will Appear Here
-          </p>
-        </TabsContent>
-        <TabsContent 
-          value="saved" 
-          className="mt-0 px-1 py-12 text-center transition-colors pb-32" 
-          style={{ backgroundColor: formData.customColors.tabsContent }}
-        >
-          <Bookmark className="mx-auto opacity-10 mb-2" size={40} style={{ color: getContrastColor(formData.customColors.tabsContent) }} />
-        </TabsContent>
-        <TabsContent 
-          value="liked" 
-          className="mt-0 px-1 py-12 text-center transition-colors pb-32" 
-          style={{ backgroundColor: formData.customColors.tabsContent }}
-        >
-          <Heart className="mx-auto opacity-10 mb-2" size={40} style={{ color: getContrastColor(formData.customColors.tabsContent) }} />
-        </TabsContent>
-      </Tabs>
+        {/* TABS AREA */}
+        <Tabs defaultValue="my-ideas" className="w-full relative z-10">
+          <div 
+            className="transition-colors duration-300" 
+            style={{ backgroundColor: formData.customColors.tabsList }}
+          >
+            <TabsList className="w-full bg-transparent border-none rounded-none px-6 h-14">
+              <TabsTrigger value="my-ideas" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
+                <Grid size={22} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
+              </TabsTrigger>
+              <TabsTrigger value="saved" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
+                <Bookmark size={22} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
+              </TabsTrigger>
+              <TabsTrigger value="liked" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
+                <Heart size={22} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
+              </TabsTrigger>
+            </TabsList>
+          </div>
+          
+          {/* CONTENT AREA */}
+          <div 
+            className="transition-colors duration-300 min-h-[300px]" 
+            style={{ backgroundColor: formData.customColors.tabsContent }}
+          >
+            <TabsContent value="my-ideas" className="mt-0 px-1 py-12 text-center pb-32">
+              <p className="opacity-30 text-[10px] font-black uppercase tracking-widest" style={{ color: getContrastColor(formData.customColors.tabsContent) }}>
+                Your Innovations Will Appear Here
+              </p>
+            </TabsContent>
+            <TabsContent value="saved" className="mt-0 px-1 py-12 text-center pb-32">
+              <Bookmark className="mx-auto opacity-10 mb-2" size={40} style={{ color: getContrastColor(formData.customColors.tabsContent) }} />
+            </TabsContent>
+            <TabsContent value="liked" className="mt-0 px-1 py-12 text-center pb-32">
+              <Heart className="mx-auto opacity-10 mb-2" size={40} style={{ color: getContrastColor(formData.customColors.tabsContent) }} />
+            </TabsContent>
+          </div>
+        </Tabs>
+      </div>
 
       {/* STICKERS LAYER */}
       <div className="absolute inset-0 pointer-events-none z-[30]">
@@ -391,14 +484,10 @@ export default function ProfilePage() {
               onPointerMove={(e) => { 
                 if (draggedStickerId === sticker.id) { 
                   const rect = containerRef.current!.getBoundingClientRect(); 
-                  setFormData(prev => ({ 
-                    ...prev, 
-                    stickers: prev.stickers.map(s => s.id === sticker.id ? { 
-                      ...s, 
-                      x: Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100)), 
-                      y: Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100)) 
-                    } : s) 
-                  })); 
+                  updateSticker(sticker.id, { 
+                    x: Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100)), 
+                    y: Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100)) 
+                  });
                 } 
               }} 
               onPointerUp={(e) => { 
@@ -421,16 +510,21 @@ export default function ProfilePage() {
             <DialogTitle className="text-sm font-black uppercase text-center text-primary tracking-[0.2em]">Optimize Profile</DialogTitle>
           </DialogHeader>
           <div className="space-y-8 py-4">
-            {/* PREVIEWS */}
-            <div className="space-y-4">
-              <div 
-                className="relative h-28 w-full rounded-2xl overflow-hidden border-2 border-muted bg-muted group cursor-pointer"
-                onClick={() => bannerInputRef.current?.click()}
-              >
-                <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="Banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized={true} />
-                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-black uppercase text-center">Tap to Change Banner</div>
+            {/* PREVIEWS - BANNER ON TOP, LOGO BELOW */}
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Banner Area</Label>
+                <div 
+                  className="relative h-28 w-full rounded-2xl overflow-hidden border-2 border-muted bg-muted group cursor-pointer shadow-sm"
+                  onClick={() => bannerInputRef.current?.click()}
+                >
+                  <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="Banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized={true} />
+                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-black uppercase text-center px-4">Tap to Change & Position Banner</div>
+                </div>
               </div>
-              <div className="flex justify-center">
+
+              <div className="space-y-2 flex flex-col items-center">
+                <Label className="text-[10px] font-black uppercase tracking-widest">Logo / Profile Pic</Label>
                 <div 
                   className="relative h-24 w-24 rounded-full border-4 border-white bg-white shadow-lg group cursor-pointer overflow-hidden"
                   onClick={() => profileInputRef.current?.click()}
@@ -452,6 +546,7 @@ export default function ProfilePage() {
               </div>
             </div>
             
+            {/* SURGICAL COLOR CONTROLS */}
             <div className="space-y-4">
               <Label className="text-[10px] font-black uppercase tracking-widest ml-1 flex items-center gap-2">
                 <PaintBucket size={14} className="text-primary" /> Surface Themes
@@ -496,12 +591,19 @@ export default function ProfilePage() {
             </div>
 
             <div className="space-y-4">
-               <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Decals</Label>
+               <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Decals (Stickers)</Label>
                <Button variant="outline" className="w-full h-12 rounded-2xl flex items-center gap-2 font-black uppercase text-[10px] border-primary/20 text-primary bg-primary/5" onClick={() => stickerInputRef.current?.click()}><Plus size={16} /> Add Sticker</Button>
                {formData.stickers.length > 0 && (
                  <div className="flex flex-wrap gap-2 pt-2">
                    {formData.stickers.map(s => (
-                     <button key={s.id} onClick={() => { setActiveStickerId(s.id === activeStickerId ? null : s.id); setIsEditModalOpen(false); }} className={cn("w-14 h-14 border-2 rounded-2xl p-1 relative transition-all active:scale-95", activeStickerId === s.id ? "border-primary bg-primary/10 shadow-lg" : "border-muted")}>
+                     <button 
+                       key={s.id} 
+                       onClick={() => { setActiveStickerId(s.id); setIsEditModalOpen(false); }} 
+                       className={cn(
+                         "w-14 h-14 border-2 rounded-2xl p-1 relative transition-all active:scale-95", 
+                         activeStickerId === s.id ? "border-primary bg-primary/10 shadow-lg" : "border-muted"
+                       )}
+                     >
                        <Image src={s.url} alt="sticker" width={48} height={48} className="object-contain" unoptimized={true}/>
                        {activeStickerId === s.id && <div className="absolute -top-2 -right-2 bg-primary text-white rounded-full p-0.5"><Move size={10} /></div>}
                      </button>
