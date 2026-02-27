@@ -85,16 +85,16 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
   const stickers: Sticker[] = profileData.stickers || [];
 
   return (
-    <div className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden transition-colors duration-300" style={{ backgroundColor: colors.background || "var(--background)" }}>
+    <div className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden" style={{ backgroundColor: colors.background || "var(--background)" }}>
       {/* SEAMLESS HEADER */}
-      <div className="px-6 flex justify-between items-center relative z-[100] py-5 transition-colors duration-300" style={{ backgroundColor: colors.header }}>
+      <div className="px-6 flex justify-between items-center relative z-[100] py-5" style={{ backgroundColor: colors.header }}>
         <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full"><ChevronLeft size={24} style={{ color: getContrastColor(colors.header) }} /></Button>
         <h1 className="text-lg font-black uppercase tracking-tighter" style={{ color: getContrastColor(colors.header) }}>@{profileData.username}</h1>
         <div className="w-10" />
       </div>
 
       {/* SEAMLESS INFO SECTION */}
-      <div className="transition-colors duration-300 relative z-50" style={{ backgroundColor: colors.userInfo }}>
+      <div style={{ backgroundColor: colors.userInfo }}>
         <div className="relative h-56 w-full bg-muted overflow-hidden">
           <Image src={profileData.bannerUrl || `https://picsum.photos/seed/banner${profileData.id}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${profileData.bannerOffset || 50}%` }} unoptimized={true} />
           <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-transparent pointer-events-none" />
@@ -106,14 +106,14 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
             <p className="text-[10px] font-black tracking-[0.2em] uppercase opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>Sphere Innovator</p>
           </div>
           <div className="flex gap-3 w-full mt-8">
-            <Button className={cn("flex-1 rounded-2xl font-black uppercase text-[10px] h-12 shadow-xl active:scale-95 transition-transform", isFollowing ? "bg-muted text-foreground" : "bg-primary text-white shadow-primary/20")} onClick={handleFollowToggle} disabled={followLoading || profileData.id === currentUser?.uid}>
+            <Button className={cn("flex-1 rounded-2xl font-black uppercase text-[10px] h-12 shadow-xl", isFollowing ? "bg-muted text-foreground" : "bg-primary text-white shadow-primary/20")} onClick={handleFollowToggle} disabled={followLoading || profileData.id === currentUser?.uid}>
               {isFollowing ? <><UserCheck size={16} className="mr-2" /> Following</> : <><UserPlus size={16} className="mr-2" /> Follow</>}
             </Button>
-            <Button variant="outline" className="flex-1 rounded-2xl font-black uppercase text-[10px] h-12 border-primary/20 text-primary bg-white shadow-lg active:scale-95 transition-transform" onClick={() => router.push(`/chat/${profileData.id}`)}>
+            <Button variant="outline" className="flex-1 rounded-2xl font-black uppercase text-[10px] h-12 border-primary/20 text-primary bg-white shadow-lg" onClick={() => router.push(`/chat/${profileData.id}`)}>
               <MessageSquare size={16} className="mr-2" /> Message
             </Button>
           </div>
-          <div className="p-8 rounded-[3rem] border w-full mt-8 shadow-xl transition-colors duration-300" style={{ backgroundColor: colors.bioCard || "#FFFFFF" }}>
+          <div className="p-8 rounded-[3rem] border w-full mt-8 shadow-xl" style={{ backgroundColor: colors.bioCard || "#FFFFFF" }}>
             <p className="text-center text-[13px] leading-relaxed font-bold italic" style={{ color: getContrastColor(colors.bioCard) }}>
               {profileData.bio || "Innovating the future, one idea at a time."}
             </p>
@@ -122,7 +122,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       </div>
 
       {/* SEAMLESS STATS SECTION */}
-      <div className="relative z-40 transition-colors duration-300 py-12 px-10" style={{ backgroundColor: colors.statsSection }}>
+      <div className="relative z-40 py-12 px-10" style={{ backgroundColor: colors.statsSection }}>
         <div className="grid grid-cols-3 gap-8 w-full">
           <div className="text-center">
             <p className="text-2xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{profileData.totalIdeasPosted || 0}</p>
@@ -141,7 +141,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
 
       {/* SEAMLESS TABS SECTION */}
       <Tabs defaultValue="photo" className="w-full relative z-30">
-        <div className="transition-colors duration-300" style={{ backgroundColor: colors.tabsList }}>
+        <div style={{ backgroundColor: colors.tabsList }}>
           <TabsList className="w-full bg-transparent border-none rounded-none px-6 h-16">
             <TabsTrigger value="photo" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
               <LucideImage size={24} style={{ color: getContrastColor(colors.tabsList) }} />
@@ -154,7 +154,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
             </TabsTrigger>
           </TabsList>
         </div>
-        <div className="min-h-[400px] transition-colors duration-300 pb-32" style={{ backgroundColor: colors.tabsContent }}>
+        <div className="min-h-[400px] pb-32" style={{ backgroundColor: colors.tabsContent }}>
           <TabsContent value="photo" className="mt-0 py-20 text-center">
             <p className="opacity-20 text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(colors.tabsContent) }}>No Photo Innovations</p>
           </TabsContent>
@@ -167,7 +167,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         </div>
       </Tabs>
 
-      {/* STICKERS LAYER - PERSISTENT & PUBLIC */}
+      {/* STICKERS LAYER */}
       <div className="absolute inset-0 pointer-events-none z-[150]">
         {stickers.map((sticker) => (
           <div 

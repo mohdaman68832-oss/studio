@@ -20,7 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import Image from "next/image";
 import { useUser, useAuth, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { signOut, updateProfile } from "firebase/auth";
-import { doc, updateDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -148,7 +148,7 @@ export default function ProfilePage() {
         updatedAt: new Date().toISOString()
       }, { merge: true });
 
-      toast({ title: "Profile Published", description: "Your custom theme is now live for everyone." });
+      toast({ title: "Profile Published", description: "Your custom theme is now live." });
       setIsEditModalOpen(false);
     } catch (error: any) {
       toast({ variant: "destructive", title: "Update Failed", description: error.message });
@@ -233,80 +233,12 @@ export default function ProfilePage() {
   return (
     <div 
       ref={containerRef}
-      className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden transition-colors duration-300"
+      className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden"
       style={{ backgroundColor: formData.customColors.background || "var(--background)" }}
     >
-      {/* STICKER CONTROL BAR */}
-      {activeStickerId && !isEditModalOpen && !showBannerEditor && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[4000] w-[90%] flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-6">
-          <div className="bg-white/95 backdrop-blur-md rounded-[2.5rem] p-5 shadow-2xl border border-primary/20 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <Button variant="outline" size="icon" className="rounded-full h-11 w-11 border-primary/20 active:scale-90" onClick={() => {
-                  const s = formData.stickers.find(st => st.id === activeStickerId);
-                  if (s) updateSticker(activeStickerId, { scale: Math.max(0.2, s.scale - 0.1) });
-                }}><Minimize size={18} /></Button>
-              <Button variant="outline" size="icon" className="rounded-full h-11 w-11 border-primary/20 active:scale-90" onClick={() => {
-                  const s = formData.stickers.find(st => st.id === activeStickerId);
-                  if (s) updateSticker(activeStickerId, { scale: Math.min(3, s.scale + 0.1) });
-                }}><Maximize size={18} /></Button>
-            </div>
-            <div className="h-8 w-px bg-border" />
-            <div className="flex items-center gap-3">
-              <Button variant="outline" size="icon" className="rounded-full h-11 w-11 border-primary/20 active:scale-90" onClick={() => {
-                  const s = formData.stickers.find(st => st.id === activeStickerId);
-                  if (s) updateSticker(activeStickerId, { rotation: (s.rotation - 15) % 360 });
-                }}><RotateCcw size={18} /></Button>
-              <Button variant="outline" size="icon" className="rounded-full h-11 w-11 border-primary/20 active:scale-90" onClick={() => {
-                  const s = formData.stickers.find(st => st.id === activeStickerId);
-                  if (s) updateSticker(activeStickerId, { rotation: (s.rotation + 15) % 360 });
-                }}><RotateCw size={18} /></Button>
-            </div>
-            <div className="h-8 w-px bg-border" />
-            <Button variant="destructive" size="icon" className="rounded-full h-11 w-11 shadow-lg shadow-destructive/20 active:scale-90" onClick={() => deleteSticker(activeStickerId)}><Trash2 size={18} /></Button>
-          </div>
-          <Button onClick={() => { setActiveStickerId(null); setIsEditModalOpen(true); }} className="rounded-[2rem] bg-primary text-white shadow-2xl h-14 font-black uppercase tracking-widest border-2 border-white/30 active:scale-95 transition-transform"><Check className="mr-2" /> Done Positioning</Button>
-        </div>
-      )}
-
-      {/* BANNER EDITOR */}
-      {showBannerEditor && (
-        <div className="fixed inset-0 z-[2000] bg-background flex flex-col animate-in slide-in-from-bottom duration-300">
-          <header className="p-4 flex items-center justify-between border-b bg-white sticky top-0 z-[2100]">
-            <Button variant="ghost" size="icon" onClick={() => setShowBannerEditor(false)} className="rounded-full"><ChevronLeft size={24} /></Button>
-            <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary text-center flex-1">Position Banner</h2>
-            <div className="w-10" />
-          </header>
-          <div className="flex-1 p-6 space-y-10 overflow-y-auto no-scrollbar">
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 text-primary font-black uppercase text-[10px] tracking-widest"><Tablet size={20} /> Preview</div>
-              <div className="relative aspect-video w-full bg-slate-900 rounded-[3rem] overflow-hidden border-8 border-slate-800 shadow-2xl">
-                <div 
-                  className="h-full w-full relative cursor-grab active:cursor-grabbing touch-none flex flex-col overflow-hidden bg-slate-800"
-                  onPointerDown={(e) => { 
-                    setIsDraggingBanner(true); 
-                    setDragStartY(e.clientY); 
-                    try { (e.currentTarget as any).setPointerCapture(e.pointerId); } catch {}
-                  }}
-                  onPointerMove={handleBannerDragMove}
-                  onPointerUp={handleBannerDragEnd}
-                >
-                  {tempBannerUrl && <Image src={tempBannerUrl} alt="Banner Preview" fill className="object-cover select-none pointer-events-none" style={{ objectPosition: `50% ${bannerOffset}%` }} unoptimized={true} />}
-                  <div className="absolute inset-0 bg-black/10 flex items-center justify-center pointer-events-none">
-                     <div className="bg-white/20 backdrop-blur-md rounded-full px-5 py-2 text-[9px] font-black uppercase text-white border border-white/30 shadow-lg tracking-widest">Drag up/down to align</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="pt-8 pb-12">
-               <Button onClick={() => { setFormData(prev => ({ ...prev, banner: tempBannerUrl!, bannerOffset })); setShowBannerEditor(false); setIsEditModalOpen(true); }} className="w-full h-16 rounded-[2rem] bg-primary text-white font-black uppercase tracking-widest shadow-2xl shadow-primary/30">Apply Placement</Button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* SEAMLESS HEADER */}
       <div 
-        className="px-6 flex justify-between items-center py-5 relative z-[100] transition-colors duration-300" 
+        className="px-6 flex justify-between items-center py-5 relative z-[100]" 
         style={{ backgroundColor: formData.customColors.header }}
       >
         <h1 className="text-2xl font-black uppercase tracking-tighter" style={{ color: getContrastColor(formData.customColors.header) }}>Sphere Profile</h1>
@@ -315,7 +247,7 @@ export default function ProfilePage() {
 
       {/* SEAMLESS USER INFO */}
       <div 
-        className="relative z-50 transition-colors duration-300" 
+        className="relative z-50" 
         style={{ backgroundColor: formData.customColors.userInfo }}
       >
         <div className="relative h-56 w-full bg-muted overflow-hidden">
@@ -332,7 +264,7 @@ export default function ProfilePage() {
             <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(formData.customColors.userInfo) }}>Master of Innovations</p>
           </div>
           <div 
-            className="p-8 rounded-[3rem] border w-full mt-8 shadow-xl transition-colors duration-300" 
+            className="p-8 rounded-[3rem] border w-full mt-8 shadow-xl" 
             style={{ backgroundColor: formData.customColors.bioCard || "#FFFFFF" }}
           >
             <p className="text-center text-[13px] leading-relaxed font-bold italic break-words overflow-hidden" style={{ color: getContrastColor(formData.customColors.bioCard) }}>
@@ -344,7 +276,7 @@ export default function ProfilePage() {
 
       {/* SEAMLESS STATS SECTION */}
       <div 
-        className="relative z-40 transition-colors duration-300 py-12 px-10" 
+        className="relative z-40 py-12 px-10" 
         style={{ backgroundColor: formData.customColors.statsSection }}
       >
         <div className="grid grid-cols-3 gap-8 w-full">
@@ -365,7 +297,7 @@ export default function ProfilePage() {
 
       {/* SEAMLESS TABS SECTION */}
       <Tabs defaultValue="photo" className="w-full relative z-30">
-        <div className="transition-colors duration-300" style={{ backgroundColor: formData.customColors.tabsList }}>
+        <div style={{ backgroundColor: formData.customColors.tabsList }}>
           <TabsList className="w-full bg-transparent border-none rounded-none px-6 h-16">
             <TabsTrigger value="photo" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
               <LucideImage size={24} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
@@ -378,7 +310,7 @@ export default function ProfilePage() {
             </TabsTrigger>
           </TabsList>
         </div>
-        <div className="transition-colors duration-300 min-h-[400px] pb-32" style={{ backgroundColor: formData.customColors.tabsContent }}>
+        <div className="min-h-[400px] pb-32" style={{ backgroundColor: formData.customColors.tabsContent }}>
           <TabsContent value="photo" className="mt-0 py-20 text-center">
             <p className="opacity-20 text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(formData.customColors.tabsContent) }}>Empty Canvas</p>
           </TabsContent>
@@ -391,7 +323,7 @@ export default function ProfilePage() {
         </div>
       </Tabs>
 
-      {/* STICKERS LAYER - PERSISTENT */}
+      {/* STICKERS LAYER */}
       <div className="absolute inset-0 pointer-events-none z-[150]">
         {formData.stickers.map((sticker) => (
           <div 
@@ -438,6 +370,7 @@ export default function ProfilePage() {
           </DialogHeader>
           <div className="space-y-8 py-2">
             <div className="space-y-6">
+              {/* LAYOUT REORDER: Banner on top, Logo below */}
               <div className="space-y-3">
                 <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Banner Placement</Label>
                 <div className="relative h-32 w-full rounded-[2rem] overflow-hidden border-2 border-muted bg-muted group cursor-pointer shadow-lg" onClick={() => bannerInputRef.current?.click()}>
@@ -565,7 +498,7 @@ export default function ProfilePage() {
       {/* SETTINGS SHEET */}
       <Sheet open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
         <SheetContent side="bottom" className="rounded-t-[3.5rem] p-8 border-none z-[4100] shadow-2xl">
-          <SheetHeader><SheetTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-center mb-6">Management Hub</SheetTitle></SheetHeader>
+          <SheetHeader><SheetTitle className="text-[10px] font-black uppercase tracking-widest text-center mb-6">Management Hub</SheetTitle></SheetHeader>
           <div className="space-y-4 mt-4 pb-6">
             <Button 
               variant="outline" 
