@@ -178,8 +178,8 @@ export default function ProfilePage() {
         const newId = Math.random().toString(36).substr(2, 9);
         const newSticker = { id: newId, url: base64, x: 50, y: 50, rotation: 0, scale: 1 };
         setFormData(prev => ({ ...prev, stickers: [...prev.stickers, newSticker] }));
-        setIsOptimizeModalOpen(false); 
-        setEditingStickerId(newId);
+        setIsOptimizeModalOpen(false); // Close popup immediately
+        setEditingStickerId(newId); // Select for editing
       }
     }
   };
@@ -198,9 +198,10 @@ export default function ProfilePage() {
   };
 
   const handleStickerPointerMove = (e: React.PointerEvent, id: string) => {
-    if (!isDragging || !containerRef.current) return;
+    if (!isDragging || !containerRef.current || id !== editingStickerId) return;
     
     const rect = containerRef.current.getBoundingClientRect();
+    // Calculate position relative to container
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
 
@@ -246,7 +247,7 @@ export default function ProfilePage() {
       style={{ backgroundColor: colors.background || "var(--background)" }}
       ref={containerRef}
     >
-      {/* Background Sections (z-0) */}
+      {/* Background Layer (z-0) - Seamless */}
       <div className="flex flex-col m-0 p-0 relative z-0 shrink-0">
          <div className="h-16 w-full" style={{ backgroundColor: colors.header }} />
          <div className="h-[28rem] w-full" style={{ backgroundColor: colors.userInfo }} />
@@ -254,7 +255,7 @@ export default function ProfilePage() {
          <div className="flex-1 w-full min-h-[50vh]" style={{ backgroundColor: colors.tabsContent }} />
       </div>
 
-      {/* Layer: Media (Banner/Logo) (z-10) */}
+      {/* Media Layer (Banner/Logo) (z-10) */}
       <div className="absolute inset-0 z-10 pointer-events-none">
         <div className="relative h-52 w-full overflow-hidden">
           <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized />
@@ -267,13 +268,13 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Layer: Stickers (z-20) - Above Banner/Logo, Below Text/Buttons */}
+      {/* Sticker Studio Layer (z-20) - Above Banner/Logo, Below Interaction Layer */}
       <div className="absolute inset-0 z-20 pointer-events-none">
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
             className={cn(
-              "absolute pointer-events-auto select-none touch-none cursor-move",
+              "absolute pointer-events-auto select-none touch-none cursor-move transition-transform duration-75",
               editingStickerId === sticker.id && "ring-2 ring-primary ring-offset-2 rounded-lg"
             )} 
             style={{ 
@@ -294,7 +295,7 @@ export default function ProfilePage() {
         ))}
       </div>
 
-      {/* Layer: UI Content (z-30) - Safe Area Interactivity */}
+      {/* Interactive UI Layer (z-30) - Safe Area Interactivity */}
       <div className="absolute inset-0 flex flex-col m-0 p-0 z-30 pointer-events-none no-scrollbar overflow-y-auto">
         <header className="px-6 flex justify-between items-center py-5 pointer-events-auto">
           <h1 className="text-2xl font-black uppercase tracking-tighter" style={{ color: getContrastColor(colors.header) }}>Sphere</h1>
@@ -378,7 +379,7 @@ export default function ProfilePage() {
         </Tabs>
       </div>
 
-      {/* STICKER STUDIO HUD (z-1000) */}
+      {/* STICKER STUDIO HUD (z-1000) - Floating Controls */}
       {editingStickerId && activeSticker && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[1000] w-[90%] max-w-sm bg-white/95 backdrop-blur-md rounded-[2.5rem] border shadow-2xl p-6 animate-in slide-in-from-bottom-4">
           <div className="space-y-6">
