@@ -1,13 +1,15 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, Send, Phone, Info } from "lucide-react";
+import { ChevronLeft, Send, Phone, Info, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { doc } from "firebase/firestore";
 
 interface Message {
   id: string;
@@ -20,26 +22,18 @@ interface Message {
 export default function ChatDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const db = useFirestore();
+  const recipientId = params.id as string;
+
+  const recipientRef = useMemoFirebase(() => (db ? doc(db, "userProfiles", recipientId) : null), [db, recipientId]);
+  const { data: recipient, isLoading: isRecipientLoading } = useDoc(recipientRef);
+
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
-      senderId: "alex",
-      text: "Hi! I saw your EcoConnect idea. It's brilliant!",
+      senderId: "recipient",
+      text: "Hi! I saw your post. It's brilliant!",
       timestamp: new Date(Date.now() - 3600000),
-      isMe: false,
-    },
-    {
-      id: "2",
-      senderId: "me",
-      text: "Thanks Alex! I'm looking for a hardware partner.",
-      timestamp: new Date(Date.now() - 3500000),
-      isMe: true,
-    },
-    {
-      id: "3",
-      senderId: "alex",
-      text: "That's perfect. I specialize in smart meter IoT. We should talk about the grid interface.",
-      timestamp: new Date(Date.now() - 3400000),
       isMe: false,
     }
   ]);
@@ -66,6 +60,14 @@ export default function ChatDetailPage() {
     setNewMessage("");
   };
 
+  if (isRecipientLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-screen max-w-md mx-auto bg-background">
       <header className="flex items-center gap-3 px-4 py-3 border-b bg-white/80 backdrop-blur-md sticky top-0 z-10">
@@ -73,11 +75,11 @@ export default function ChatDetailPage() {
           <ChevronLeft size={24} />
         </Button>
         <Avatar className="h-10 w-10">
-          <AvatarImage src="https://picsum.photos/seed/user1/100/100" />
-          <AvatarFallback>A</AvatarFallback>
+          <AvatarImage src={recipient?.profilePictureUrl} />
+          <AvatarFallback>{recipient?.username?.[0]?.toUpperCase() || "U"}</AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
-          <h2 className="font-bold text-sm truncate">Alex Rivera</h2>
+          <h2 className="font-bold text-sm truncate">{recipient?.username || "Chat"}</h2>
           <span className="text-[10px] text-green-500 font-medium">Online</span>
         </div>
         <div className="flex items-center gap-1">

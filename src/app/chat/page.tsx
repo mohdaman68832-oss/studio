@@ -12,25 +12,16 @@ import Link from "next/link";
 import { useFirestore, useUser, useCollection, useMemoFirebase } from "@/firebase";
 import { useRouter } from "next/navigation";
 import { collection, query, where, orderBy } from "firebase/firestore";
+import { cn } from "@/lib/utils";
 
 const MOCK_CHATS = [
   {
-    id: "1",
-    name: "EcoConnect Team",
-    lastMessage: "Alex: I've updated the smart grid logic.",
+    id: "user-1",
+    name: "Alex Rivera",
+    lastMessage: "The grid interface logic is done.",
     time: "2m ago",
-    unread: 3,
-    avatar: "https://picsum.photos/seed/team1/100/100",
-    isGroup: true,
-    isJoined: true,
-  },
-  {
-    id: "2",
-    name: "Sarah Chen",
-    lastMessage: "The wearable design looks great!",
-    time: "1h ago",
-    unread: 0,
-    avatar: "https://picsum.photos/seed/user2/100/100",
+    unread: 1,
+    avatar: "https://picsum.photos/seed/user1/100/100",
     isGroup: false,
     isJoined: true,
   }
@@ -44,7 +35,7 @@ const MOCK_GROUPS = [
     category: "Technology",
     memberCount: 1240,
     avatar: "https://picsum.photos/seed/ai/100/100",
-    isJoined: false,
+    isJoined: true,
   },
   {
     id: "g2",
@@ -54,15 +45,6 @@ const MOCK_GROUPS = [
     memberCount: 856,
     avatar: "https://picsum.photos/seed/green/100/100",
     isJoined: false,
-  },
-  {
-    id: "g3",
-    name: "BioHackers",
-    description: "Exploring the intersection of biology and code.",
-    category: "Healthcare",
-    memberCount: 432,
-    avatar: "https://picsum.photos/seed/bio/100/100",
-    isJoined: true,
   }
 ];
 
@@ -161,7 +143,7 @@ export default function ChatPage() {
             {joinedChats.map((chat) => (
               <Link 
                 key={chat.id} 
-                href={`/chat/${chat.id}`}
+                href={chat.isGroup ? `/groups/${chat.id}` : `/chat/${chat.id}`}
                 className="flex items-center gap-4 px-6 py-4 hover:bg-white/50 transition-colors"
               >
                 <div className="relative">
@@ -197,11 +179,6 @@ export default function ChatPage() {
         </TabsContent>
 
         <TabsContent value="groups" className="mt-4 px-6 space-y-4">
-          <div className="bg-primary/5 p-4 rounded-[2rem] border border-primary/10 mb-6 text-center">
-            <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-1">New Communities</p>
-            <h4 className="text-sm font-bold text-foreground">Join a group to start collaborating and chatting with other innovators.</h4>
-          </div>
-
           <div className="space-y-4">
             {exploreGroups.map((group) => (
               <Link 
@@ -271,7 +248,6 @@ export default function ChatPage() {
               <div className="py-24 text-center space-y-4 opacity-30 px-10">
                 <Bell size={48} className="mx-auto" />
                 <p className="text-[10px] font-black uppercase tracking-[0.2em]">No notifications yet</p>
-                <p className="text-[10px] font-medium leading-relaxed">Activity from your posts and discussions will appear here.</p>
               </div>
             )}
           </div>
