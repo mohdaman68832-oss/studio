@@ -270,12 +270,12 @@ export default function ProfilePage() {
           </DropdownMenu>
         </header>
 
-        {/* Stickers (z-[100]) - Now Topmost Layer as requested */}
+        {/* Stickers (z-[30]) - Above Banner/Logo, Below Text */}
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
             className={cn(
-              "absolute select-none touch-none z-[100]",
+              "absolute select-none touch-none z-[30]",
               editingStickerId === sticker.id ? "pointer-events-auto cursor-move ring-4 ring-primary ring-offset-4 rounded-xl z-[150]" : "pointer-events-none"
             )} 
             style={{ 
@@ -295,7 +295,7 @@ export default function ProfilePage() {
         ))}
 
         <div className="relative w-full">
-          {/* Banner (z-10) */}
+          {/* Banner (z-[10]) */}
           <div className="relative h-52 w-full overflow-hidden z-[10]">
             <Image 
               src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} 
@@ -306,8 +306,8 @@ export default function ProfilePage() {
               unoptimized 
             />
           </div>
-          {/* Logo (z-50) */}
-          <div className="relative px-6 -mt-16 flex flex-col items-center z-[50]">
+          {/* Logo (z-[20]) */}
+          <div className="relative px-6 -mt-16 flex flex-col items-center z-[20]">
             <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl">
               <AvatarImage src={formData.profilePic} className="object-cover" />
               <AvatarFallback className="text-2xl font-black uppercase">{formData.name?.[0] || "U"}</AvatarFallback>
@@ -315,8 +315,8 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* UI Content (z-30) */}
-        <div className="relative z-[30] w-full -mt-1">
+        {/* UI Content (z-[40]) - Above Stickers */}
+        <div className="relative z-[40] w-full -mt-1">
           <div style={{ backgroundColor: colors.userInfo || "transparent" }} className="w-full pb-8">
             <div className="px-6 flex flex-col items-center">
               <div className="text-center mt-4">
@@ -351,7 +351,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <div style={{ backgroundColor: colors.tabsContent || "transparent" }} className="w-full flex-1 relative z-[30]">
+      <div style={{ backgroundColor: colors.tabsContent || "transparent" }} className="w-full flex-1 relative z-[40]">
         <Tabs defaultValue="photo" className="w-full">
           <TabsList className="w-full bg-transparent border-none rounded-none px-6 h-14" style={{ backgroundColor: colors.tabsList }}>
             <TabsTrigger value="photo" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
@@ -385,7 +385,7 @@ export default function ProfilePage() {
             <header className="flex items-center justify-between px-1">
               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Sticker Studio</h4>
               <button 
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditingStickerId(null); }} 
+                onClick={() => setEditingStickerId(null)} 
                 className="p-1 hover:bg-muted rounded-full transition-colors"
               >
                 <X size={18} />
@@ -427,21 +427,13 @@ export default function ProfilePage() {
                <Button 
                 variant="destructive" 
                 className="flex-1 rounded-2xl font-black uppercase text-[10px] h-12 shadow-lg active:scale-95 transition-transform"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  deleteSticker(activeSticker.id);
-                }}
+                onClick={() => deleteSticker(activeSticker.id)}
                >
                  <Trash2 size={16} className="mr-2" /> Delete
                </Button>
                <Button 
                 className="flex-1 rounded-2xl font-black uppercase text-[10px] h-12 bg-primary text-white shadow-xl active:scale-95 transition-transform"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setEditingStickerId(null);
-                }}
+                onClick={() => setEditingStickerId(null)}
                >
                  <CheckCircle size={16} className="mr-2" /> Done
                </Button>
