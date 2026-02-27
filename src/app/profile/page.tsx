@@ -270,13 +270,13 @@ export default function ProfilePage() {
           </DropdownMenu>
         </header>
 
-        {/* Stickers (z-20) - Above Banner (z-10), Behind UI (z-30) and Logo (z-50) */}
+        {/* Stickers (z-[100]) - Now Topmost Layer as requested */}
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
             className={cn(
-              "absolute select-none touch-none z-[20]",
-              editingStickerId === sticker.id ? "pointer-events-auto cursor-move ring-4 ring-primary ring-offset-4 rounded-xl z-[60]" : "pointer-events-none"
+              "absolute select-none touch-none z-[100]",
+              editingStickerId === sticker.id ? "pointer-events-auto cursor-move ring-4 ring-primary ring-offset-4 rounded-xl z-[150]" : "pointer-events-none"
             )} 
             style={{ 
               left: `${sticker.x}%`, 
@@ -306,7 +306,7 @@ export default function ProfilePage() {
               unoptimized 
             />
           </div>
-          {/* Logo sabse upar (z-50) */}
+          {/* Logo (z-50) */}
           <div className="relative px-6 -mt-16 flex flex-col items-center z-[50]">
             <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl">
               <AvatarImage src={formData.profilePic} className="object-cover" />
@@ -315,7 +315,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* UI Content (z-30) - Above Stickers, Below Logo */}
+        {/* UI Content (z-30) */}
         <div className="relative z-[30] w-full -mt-1">
           <div style={{ backgroundColor: colors.userInfo || "transparent" }} className="w-full pb-8">
             <div className="px-6 flex flex-col items-center">
