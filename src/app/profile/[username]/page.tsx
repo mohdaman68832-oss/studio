@@ -190,14 +190,14 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
           style={{ backgroundColor: colors.tabsList }}
         >
           <TabsList className="w-full bg-transparent border-none rounded-none px-6 h-14">
-            <TabsTrigger value="ideas" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent" style={{ color: getContrastColor(colors.tabsList) }}>
-              <Grid size={22} />
+            <TabsTrigger value="ideas" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
+              <Grid size={22} style={{ color: getContrastColor(colors.tabsList) }} />
             </TabsTrigger>
-            <TabsTrigger value="saved" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent" style={{ color: getContrastColor(colors.tabsList) }}>
-              <Bookmark size={22} />
+            <TabsTrigger value="saved" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
+              <Bookmark size={22} style={{ color: getContrastColor(colors.tabsList) }} />
             </TabsTrigger>
-            <TabsTrigger value="liked" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent" style={{ color: getContrastColor(colors.tabsList) }}>
-              <Heart size={22} />
+            <TabsTrigger value="liked" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
+              <Heart size={22} style={{ color: getContrastColor(colors.tabsList) }} />
             </TabsTrigger>
           </TabsList>
         </div>
