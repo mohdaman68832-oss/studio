@@ -235,6 +235,20 @@ export default function ProfilePage() {
     setEditingStickerId(null);
   };
 
+  const handleDoneSticker = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setEditingStickerId(null);
+  };
+
+  const handleDeleteSticker = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (editingStickerId) {
+      deleteSticker(editingStickerId);
+    }
+  };
+
   if (isUserLoading || isProfileLoading) return <div className="max-w-md mx-auto min-h-screen flex items-center justify-center bg-background"><Loader2 className="animate-spin text-primary h-8 w-8" /></div>;
   if (!user) return null;
 
@@ -270,12 +284,12 @@ export default function ProfilePage() {
           </DropdownMenu>
         </header>
 
-        {/* Stickers (z-[30]) - Above Banner/Logo, Below Text */}
+        {/* Stickers (z-[50]) - ABOVE EVERYTHING (Logo & Text) */}
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
             className={cn(
-              "absolute select-none touch-none z-[30]",
+              "absolute select-none touch-none z-[50]",
               editingStickerId === sticker.id ? "pointer-events-auto cursor-move ring-4 ring-primary ring-offset-4 rounded-xl z-[150]" : "pointer-events-none"
             )} 
             style={{ 
@@ -306,8 +320,8 @@ export default function ProfilePage() {
               unoptimized 
             />
           </div>
-          {/* Logo (z-[20]) */}
-          <div className="relative px-6 -mt-16 flex flex-col items-center z-[20]">
+          {/* Logo (z-[40]) - Above Content, but Below Stickers */}
+          <div className="relative px-6 -mt-16 flex flex-col items-center z-[40]">
             <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl">
               <AvatarImage src={formData.profilePic} className="object-cover" />
               <AvatarFallback className="text-2xl font-black uppercase">{formData.name?.[0] || "U"}</AvatarFallback>
@@ -315,8 +329,8 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* UI Content (z-[40]) - Above Stickers */}
-        <div className="relative z-[40] w-full -mt-1">
+        {/* Text & UI Content (z-[30]) - Below Logo & Stickers */}
+        <div className="relative z-[30] w-full -mt-1">
           <div style={{ backgroundColor: colors.userInfo || "transparent" }} className="w-full pb-8">
             <div className="px-6 flex flex-col items-center">
               <div className="text-center mt-4">
@@ -385,7 +399,7 @@ export default function ProfilePage() {
             <header className="flex items-center justify-between px-1">
               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Sticker Studio</h4>
               <button 
-                onClick={() => setEditingStickerId(null)} 
+                onClick={handleDoneSticker} 
                 className="p-1 hover:bg-muted rounded-full transition-colors"
               >
                 <X size={18} />
@@ -427,13 +441,13 @@ export default function ProfilePage() {
                <Button 
                 variant="destructive" 
                 className="flex-1 rounded-2xl font-black uppercase text-[10px] h-12 shadow-lg active:scale-95 transition-transform"
-                onClick={() => deleteSticker(activeSticker.id)}
+                onClick={handleDeleteSticker}
                >
                  <Trash2 size={16} className="mr-2" /> Delete
                </Button>
                <Button 
                 className="flex-1 rounded-2xl font-black uppercase text-[10px] h-12 bg-primary text-white shadow-xl active:scale-95 transition-transform"
-                onClick={() => setEditingStickerId(null)}
+                onClick={handleDoneSticker}
                >
                  <CheckCircle size={16} className="mr-2" /> Done
                </Button>
@@ -509,7 +523,8 @@ export default function ProfilePage() {
                   <div key={s.id} className="relative w-12 h-12 rounded-lg border overflow-hidden group">
                     <Image src={s.url} alt="s" fill className="object-contain" />
                     <button 
-                      onClick={() => { 
+                      onClick={(e) => { 
+                        e.stopPropagation();
                         setEditingStickerId(s.id); 
                         setIsOptimizeModalOpen(false); 
                       }} 
