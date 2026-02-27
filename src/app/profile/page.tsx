@@ -160,7 +160,6 @@ export default function ProfilePage() {
       }, { merge: true });
 
       toast({ title: "Profile Optimized", description: "All changes saved successfully." });
-      setIsOptimizeModalOpen(false);
     } catch (error: any) {
       toast({ variant: "destructive", title: "Update Failed", description: error.message });
     } finally {
@@ -284,7 +283,7 @@ export default function ProfilePage() {
           </DropdownMenu>
         </header>
 
-        {/* Stickers (z-[100]) - HIGHEST LAYER */}
+        {/* Stickers (z-[100]) - TOP MOST LAYER */}
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
