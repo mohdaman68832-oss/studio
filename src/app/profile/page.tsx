@@ -124,6 +124,8 @@ export default function ProfilePage() {
     if (!user || !profileRef) return;
     setIsSaving(true);
     try {
+      // Avoid updating Auth Profile Photo if Base64 is too long (Firebase Auth limit)
+      // We only update display name in Auth, and rely on Firestore for everything else.
       await updateProfile(user, { displayName: formData.name });
       
       await updateDoc(profileRef, {
@@ -201,7 +203,7 @@ export default function ProfilePage() {
           <div className="flex-1 p-6 space-y-12 pb-32">
             <div className="text-center bg-primary/5 p-4 rounded-3xl border border-primary/10">
               <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">Manual Adjustment</p>
-              <p className="text-[11px] font-bold text-muted-foreground">Click and drag the Tablet frame banner area to set the center point.</p>
+              <p className="text-[11px] font-bold text-muted-foreground">Click and drag inside the frame to set the banner focal point.</p>
             </div>
 
             {/* TABLET PREVIEW (Active Interaction) */}
@@ -212,7 +214,7 @@ export default function ProfilePage() {
               </div>
               <div className="relative aspect-[4/3] w-full max-w-[90%] mx-auto bg-muted rounded-[2rem] overflow-hidden border-8 border-slate-800 shadow-xl">
                 <div 
-                  className="h-24 w-full relative cursor-grab active:cursor-grabbing touch-none"
+                  className="h-32 w-full relative cursor-grab active:cursor-grabbing touch-none"
                   onPointerDown={(e) => { 
                     setIsDraggingBanner(true); 
                     setDragStartY(e.clientY); 
@@ -232,12 +234,8 @@ export default function ProfilePage() {
                     />
                   )}
                   <div className="absolute inset-0 bg-black/10 flex items-center justify-center pointer-events-none">
-                     <div className="bg-white/20 backdrop-blur-md rounded-full px-4 py-1 text-[8px] font-black uppercase text-white border border-white/30">Drag to Reposition</div>
+                     <div className="bg-white/20 backdrop-blur-md rounded-full px-4 py-1 text-[8px] font-black uppercase text-white border border-white/30">Drag Image to Reposition</div>
                   </div>
-                </div>
-                <div className="p-4 space-y-2">
-                  <div className="h-4 w-3/4 bg-slate-200 rounded-full" />
-                  <div className="h-3 w-1/2 bg-slate-200 rounded-full" />
                 </div>
               </div>
             </div>
