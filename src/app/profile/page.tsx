@@ -176,10 +176,10 @@ export default function ProfilePage() {
         setFormData(prev => ({ ...prev, banner: base64 }));
       } else if (type === 'sticker') {
         const newId = Math.random().toString(36).substr(2, 9);
-        const newSticker = { id: newId, url: base64, x: 50, y: 15, rotation: 0, scale: 1 };
+        const newSticker = { id: newId, url: base64, x: 50, y: 30, rotation: 0, scale: 1 };
         setFormData(prev => ({ ...prev, stickers: [...prev.stickers, newSticker] }));
-        setIsOptimizeModalOpen(false);
-        setEditingStickerId(newId);
+        setIsOptimizeModalOpen(false); // Auto-close modal
+        setEditingStickerId(newId); // Select for editing
       }
     }
   };
@@ -248,8 +248,7 @@ export default function ProfilePage() {
       style={{ backgroundColor: colors.background || "var(--background)" }}
     >
       {/* 
-        STICKER WRAPPER: Covers entire top area down to the tabs.
-        This allows stickers to be placed anywhere in the upper profile.
+        STICKER WRAPPER: Covers header area down to stats section.
       */}
       <div className="relative w-full flex flex-col" ref={studioContainerRef}>
         
@@ -279,8 +278,9 @@ export default function ProfilePage() {
         </header>
 
         {/* 
-          STICKER LAYER:
-          Z-[20] - Above Banner/Logo (Z-10) but below UI Content (Z-30)
+          STICKER LAYER (Z-20): 
+          ABOVE Banner & Logo (Z-10)
+          BEHIND Text & Buttons (Z-30)
         */}
         {formData.stickers.map((sticker) => (
           <div 
@@ -325,7 +325,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* UI CONTENT: Name, Handle, Bio Card, Stats (Z-[30]) */}
+        {/* UI CONTENT: Name, Handle, Bio Card, Stats (Z-[30] - ABOVE STICKERS) */}
         <div className="relative z-[30] w-full -mt-1">
           {/* USER INFO AREA */}
           <div style={{ backgroundColor: colors.userInfo || "transparent" }} className="w-full pb-8">
@@ -363,7 +363,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* TABS SECTION (Below Sticker Wrapper) */}
+      {/* TABS SECTION (Z-30) */}
       <div style={{ backgroundColor: colors.tabsContent || "transparent" }} className="w-full flex-1 relative z-[30]">
         <Tabs defaultValue="photo" className="w-full">
           <TabsList className="w-full bg-transparent border-none rounded-none px-6 h-14" style={{ backgroundColor: colors.tabsList }}>
@@ -391,9 +391,9 @@ export default function ProfilePage() {
         </Tabs>
       </div>
 
-      {/* STICKER STUDIO HUD: High Z-index to be on top of everything */}
+      {/* STICKER STUDIO HUD (Z-1000) */}
       {editingStickerId && activeSticker && (
-        <div className="fixed bottom-20 left-4 right-4 z-[2000] bg-white/95 backdrop-blur-md rounded-[2rem] border shadow-2xl p-5 animate-in slide-in-from-bottom-4">
+        <div className="fixed bottom-20 left-4 right-4 z-[1000] bg-white/95 backdrop-blur-md rounded-[2rem] border shadow-2xl p-5 animate-in slide-in-from-bottom-4">
           <div className="space-y-4">
             <header className="flex items-center justify-between">
               <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Sticker Studio</h4>
@@ -553,9 +553,7 @@ export default function ProfilePage() {
              </div>
              <div className="pt-6 space-y-4">
                 <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'banner')} />
-                <Button onClick={() => bannerInputRef.current?.click()} className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase tracking-widest">
-                  {formData.banner ? "Change Photo" : "Upload Banner Photo"}
-                </Button>
+                <Button onClick={() => bannerInputRef.current?.click()} className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase tracking-widest">{formData.banner ? "Change Photo" : "Upload Banner Photo"}</Button>
              </div>
           </div>
         </DialogContent>
