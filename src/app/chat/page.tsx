@@ -37,7 +37,7 @@ export default function ChatPage() {
   const db = useFirestore();
   const { user } = useUser();
 
-  // Fetch real-time notifications with filter that matches security rules.
+  // Fetch notifications with owner filter matching security rules.
   const notificationsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(
@@ -70,7 +70,7 @@ export default function ChatPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
           <Input 
             placeholder="Search discussions..." 
-            className="pl-10 h-12 bg-white border-none rounded-2xl shadow-sm focus-visible:ring-primary/20"
+            className="pl-10 h-12 bg-white border-none rounded-2xl shadow-sm"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -107,7 +107,7 @@ export default function ChatPage() {
         <TabsContent value="messages" className="mt-2">
           <div className="py-20 text-center space-y-3 opacity-30">
             <MessageSquare size={48} className="mx-auto" />
-            <p className="text-xs font-black uppercase tracking-widest px-10">Direct messages will appear here</p>
+            <p className="text-[10px] font-black uppercase tracking-widest">Direct messages will appear here</p>
           </div>
         </TabsContent>
 
@@ -117,7 +117,7 @@ export default function ChatPage() {
               <Link 
                 key={group.id} 
                 href={`/groups/${group.id}`}
-                className="bg-white p-5 rounded-[2.5rem] shadow-sm border border-border/50 flex items-center gap-4 hover:shadow-md transition-shadow cursor-pointer block"
+                className="bg-white p-5 rounded-[2.5rem] shadow-sm border border-border/50 flex items-center gap-4 hover:shadow-md transition-all cursor-pointer block"
               >
                 <Avatar className="h-16 w-16 rounded-3xl border-2 border-primary/5">
                   <AvatarImage src={group.avatar} className="object-cover" />

@@ -5,10 +5,9 @@ service cloud.firestore {
 
     /**
      * InnovateSphere Security Rules
-     * Optimized for public read access and authenticated private writes.
+     * Optimized for public read access and owner-based writes.
      */
 
-    // Helper functions
     function isSignedIn() {
       return request.auth != null;
     }
@@ -17,18 +16,18 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // User Profiles: Publicly readable for themes, owner can edit.
+    // User Profiles: Publicly readable, owner can write.
     match /userProfiles/{userId} {
       allow read: if true;
       allow create, update: if isOwner(userId);
       allow delete: if isOwner(userId);
     }
 
-    // Ideas: Publicly readable, authenticated users can create/update.
+    // Ideas: Publicly readable, authenticated users can create.
     match /ideas/{ideaId} {
       allow read: if true;
       allow create: if isSignedIn();
-      allow update: if isSignedIn();
+      allow update: if isSignedIn(); // Allow likes/comments updates
       allow delete: if isSignedIn() && (resource == null || resource.data.authorId == request.auth.uid);
 
       match /suggestions/{suggestionId} {
@@ -53,14 +52,14 @@ service cloud.firestore {
       }
     }
 
-    // Notifications: User can only list their own notifications.
+    // Notifications: CRITICAL FIX - Allow listing by owner.
     match /notifications/{notifId} {
-      allow read: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
+      allow read, list: if isSignedIn() && request.auth.uid == resource.data.userId;
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
 
-    // Follows: Publicly visible for mutual follow checks.
+    // Follows: Needed for mutual follow checks in Chat.
     match /follows/{followId} {
       allow read: if true;
       allow write: if isSignedIn() && (request.auth.uid == request.resource.data.followerId || followId.startsWith(request.auth.uid));
