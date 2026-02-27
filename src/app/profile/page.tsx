@@ -270,6 +270,7 @@ export default function ProfilePage() {
           </DropdownMenu>
         </header>
 
+        {/* Stickers (z-20) - Layered above Banner/Avatar (z-10), below Content (z-30) */}
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
@@ -312,6 +313,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
+        {/* Content sections (z-30) - Always on top of stickers */}
         <div className="relative z-[30] w-full -mt-1">
           <div style={{ backgroundColor: colors.userInfo || "transparent" }} className="w-full pb-8">
             <div className="px-6 flex flex-col items-center">
@@ -374,12 +376,18 @@ export default function ProfilePage() {
         </Tabs>
       </div>
 
+      {/* Sticker Studio HUD (z-3000) - Compact & Optimized for simple clicks */}
       {editingStickerId && activeSticker && (
-        <div className="fixed bottom-20 left-4 right-4 z-[2000] bg-white/95 backdrop-blur-md rounded-[2.5rem] border shadow-2xl p-5 animate-in slide-in-from-bottom-4">
+        <div className="fixed bottom-20 left-4 right-4 z-[3000] bg-white/95 backdrop-blur-md rounded-[2.5rem] border shadow-2xl p-5 animate-in slide-in-from-bottom-4 pointer-events-auto">
           <div className="space-y-5">
             <header className="flex items-center justify-between px-1">
               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Sticker Studio</h4>
-              <button onClick={() => setEditingStickerId(null)} className="p-1"><X size={18} /></button>
+              <button 
+                onClick={() => setEditingStickerId(null)} 
+                className="p-1 hover:bg-muted rounded-full transition-colors"
+              >
+                <X size={18} />
+              </button>
             </header>
             
             <div className="grid grid-cols-2 gap-6">
@@ -416,14 +424,20 @@ export default function ProfilePage() {
             <div className="flex gap-3 pt-2">
                <Button 
                 variant="destructive" 
-                className="flex-1 rounded-2xl font-black uppercase text-[10px] h-12 shadow-lg"
-                onClick={() => deleteSticker(activeSticker.id)}
+                className="flex-1 rounded-2xl font-black uppercase text-[10px] h-12 shadow-lg active:scale-95 transition-transform"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  deleteSticker(activeSticker.id);
+                }}
                >
                  <Trash2 size={16} className="mr-2" /> Delete
                </Button>
                <Button 
-                className="flex-1 rounded-2xl font-black uppercase text-[10px] h-12 bg-primary text-white shadow-xl"
-                onClick={() => setEditingStickerId(null)}
+                className="flex-1 rounded-2xl font-black uppercase text-[10px] h-12 bg-primary text-white shadow-xl active:scale-95 transition-transform"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setEditingStickerId(null);
+                }}
                >
                  <CheckCircle size={16} className="mr-2" /> Done
                </Button>
@@ -498,7 +512,13 @@ export default function ProfilePage() {
                 {formData.stickers.map(s => (
                   <div key={s.id} className="relative w-12 h-12 rounded-lg border overflow-hidden group">
                     <Image src={s.url} alt="s" fill className="object-contain" />
-                    <button onClick={() => { setEditingStickerId(s.id); setIsOptimizeModalOpen(false); }} className="absolute inset-0 bg-primary/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white">
+                    <button 
+                      onClick={() => { 
+                        setEditingStickerId(s.id); 
+                        setIsOptimizeModalOpen(false); 
+                      }} 
+                      className="absolute inset-0 bg-primary/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white"
+                    >
                       <Pencil size={12} />
                     </button>
                   </div>
