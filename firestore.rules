@@ -46,12 +46,12 @@ service cloud.firestore {
       }
     }
 
-    // Notifications: Simplified to prevent list errors
+    // Notifications: Simplified to allow querying own notifications
     match /notifications/{notifId} {
       allow read, write, list: if isSignedIn();
     }
 
-    // Messages: Simplified to allow chat listing without permission errors
+    // Messages: Simplified to allow chat listing and detail history without permission errors
     match /messages/{msgId} {
       allow read, write, list: if isSignedIn();
     }
