@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -86,9 +87,14 @@ export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [activeStickerId, setActiveStickerId] = useState<string | null>(null);
   const [draggedStickerId, setDraggedStickerId] = useState<string | null>(null);
+  
+  // Banner Repositioning States
   const [showBannerEditor, setShowBannerEditor] = useState(false);
   const [tempBannerUrl, setTempBannerUrl] = useState<string | null>(null);
-  
+  const [bannerOffset, setBannerOffset] = useState(50); // Default centered (50%)
+  const [isDraggingBanner, setIsDraggingBanner] = useState(false);
+  const [dragStartY, setDragStartY] = useState(0);
+
   const [activeColor, setActiveColor] = useState<string | null>(null);
   const [isPaintMode, setIsPaintMode] = useState(false);
 
@@ -102,6 +108,7 @@ export default function ProfilePage() {
     bio: "",
     profilePic: "",
     banner: "",
+    bannerOffset: 50,
     stickers: [] as Sticker[],
     customColors: {} as CustomColors
   });
@@ -116,9 +123,11 @@ export default function ProfilePage() {
         bio: profileData.bio || "",
         profilePic: profileData.profilePictureUrl || user?.photoURL || "",
         banner: profileData.bannerUrl || "",
+        bannerOffset: profileData.bannerOffset || 50,
         stickers: profileData.stickers || [],
         customColors: profileData.customColors || {}
       });
+      setBannerOffset(profileData.bannerOffset || 50);
     }
   }, [profileData, user]);
 
@@ -164,6 +173,7 @@ export default function ProfilePage() {
         bio: formData.bio,
         profilePictureUrl: formData.profilePic,
         bannerUrl: formData.banner,
+        bannerOffset: formData.bannerOffset,
         stickers: formData.stickers,
         customColors: formData.customColors,
         updatedAt: new Date().toISOString()
@@ -213,6 +223,24 @@ export default function ProfilePage() {
     }
   };
 
+  // Banner Dragging Handlers
+  const handleBannerDragStart = (e: React.PointerEvent) => {
+    setIsDraggingBanner(true);
+    setDragStartY(e.clientY);
+  };
+
+  const handleBannerDragMove = (e: React.PointerEvent) => {
+    if (!isDraggingBanner) return;
+    const deltaY = e.clientY - dragStartY;
+    const newOffset = Math.max(0, Math.min(100, bannerOffset - (deltaY / 2))); // Adjust sensitivity
+    setBannerOffset(newOffset);
+    setDragStartY(e.clientY);
+  };
+
+  const handleBannerDragEnd = () => {
+    setIsDraggingBanner(false);
+  };
+
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'banner' | 'sticker') => {
     const file = e.target.files?.[0];
     if (file) {
@@ -242,8 +270,8 @@ export default function ProfilePage() {
 
   const handleBannerSave = async () => {
     if (tempBannerUrl) {
-      setFormData(prev => ({ ...prev, banner: tempBannerUrl }));
-      await saveToFirestore({ bannerUrl: tempBannerUrl });
+      setFormData(prev => ({ ...prev, banner: tempBannerUrl, bannerOffset }));
+      await saveToFirestore({ bannerUrl: tempBannerUrl, bannerOffset });
       setShowBannerEditor(false);
       setIsEditModalOpen(true);
       toast({ title: "Banner Updated", description: "Your banner looks great!" });
@@ -279,33 +307,41 @@ export default function ProfilePage() {
             <Button variant="ghost" size="icon" onClick={() => setShowBannerEditor(false)} className="rounded-full">
               <ChevronLeft size={24} />
             </Button>
-            <h2 className="text-sm font-black uppercase tracking-widest text-primary">Preview Banner</h2>
+            <h2 className="text-sm font-black uppercase tracking-widest text-primary">Reposition Banner</h2>
             <div className="w-10" />
           </header>
 
           <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar">
             <div className="text-center space-y-2">
-               <p className="text-[10px] font-black uppercase text-secondary tracking-widest">Device Visualization</p>
-               <p className="text-xs text-muted-foreground font-medium leading-relaxed">Check how your new banner appears on various devices.</p>
+               <p className="text-[10px] font-black uppercase text-secondary tracking-widest">Select Area</p>
+               <p className="text-xs text-muted-foreground font-medium leading-relaxed">Drag the photo up or down to manually select the area you want to show.</p>
             </div>
 
             {/* PC/Desktop Visualization */}
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Monitor size={16} />
-                <span className="text-[10px] font-black uppercase">PC Desktop View</span>
+                <span className="text-[10px] font-black uppercase">PC Desktop Preview</span>
               </div>
-              <div className="relative aspect-[3/1] w-full bg-muted rounded-2xl overflow-hidden border-4 border-white shadow-2xl">
+              <div 
+                className="relative aspect-[3/1] w-full bg-black rounded-2xl overflow-hidden border-4 border-white shadow-2xl cursor-grab active:cursor-grabbing"
+                onPointerDown={handleBannerDragStart}
+                onPointerMove={handleBannerDragMove}
+                onPointerUp={handleBannerDragEnd}
+                onPointerLeave={handleBannerDragEnd}
+              >
                 {tempBannerUrl && (
                   <Image 
                     src={tempBannerUrl} 
                     alt="PC Preview" 
                     fill 
-                    className="object-cover" 
+                    className="object-cover select-none pointer-events-none" 
+                    style={{ objectPosition: `50% ${bannerOffset}%` }}
                     unoptimized={tempBannerUrl.startsWith('data:')}
                   />
                 )}
                 <div className="absolute inset-0 border-2 border-primary/20 pointer-events-none"></div>
+                <div className="absolute top-2 right-2 bg-black/50 text-white text-[8px] font-black uppercase px-2 py-1 rounded-full backdrop-blur-md">Drag to Move</div>
               </div>
             </div>
 
@@ -313,16 +349,23 @@ export default function ProfilePage() {
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Smartphone size={16} />
-                <span className="text-[10px] font-black uppercase">Mobile View</span>
+                <span className="text-[10px] font-black uppercase">Mobile Preview</span>
               </div>
               <div className="flex justify-center">
-                <div className="relative w-full max-w-[240px] aspect-[4/3] bg-muted rounded-3xl overflow-hidden border-8 border-white shadow-2xl">
+                <div 
+                  className="relative w-full max-w-[240px] aspect-[4/3] bg-black rounded-3xl overflow-hidden border-8 border-white shadow-2xl cursor-grab active:cursor-grabbing"
+                  onPointerDown={handleBannerDragStart}
+                  onPointerMove={handleBannerDragMove}
+                  onPointerUp={handleBannerDragEnd}
+                  onPointerLeave={handleBannerDragEnd}
+                >
                   {tempBannerUrl && (
                     <Image 
                       src={tempBannerUrl} 
                       alt="Mobile Preview" 
                       fill 
-                      className="object-cover" 
+                      className="object-cover select-none pointer-events-none" 
+                      style={{ objectPosition: `50% ${bannerOffset}%` }}
                       unoptimized={tempBannerUrl.startsWith('data:')}
                     />
                   )}
@@ -336,14 +379,14 @@ export default function ProfilePage() {
                 onClick={handleBannerSave}
                 className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase tracking-widest shadow-xl shadow-primary/20"
                >
-                 Confirm & Apply Photo
+                 Confirm & Apply Selection
                </Button>
                <Button 
                 variant="outline" 
                 onClick={() => bannerInputRef.current?.click()} 
                 className="w-full h-12 rounded-2xl font-black uppercase tracking-widest border-muted text-muted-foreground"
                >
-                 Choose Different Image
+                 Choose Different Photo
                </Button>
             </div>
           </div>
@@ -401,6 +444,7 @@ export default function ProfilePage() {
             alt="banner" 
             fill 
             className="object-cover" 
+            style={{ objectPosition: `50% ${formData.bannerOffset}%` }}
             draggable={false}
             unoptimized={!!formData.banner && formData.banner.startsWith('data:')}
           />
@@ -510,7 +554,7 @@ export default function ProfilePage() {
         </div>
       </Tabs>
 
-      {/* STICKERS LAYER: Using lower z-index than Sheet/Dialog (z-30) */}
+      {/* STICKERS LAYER: z-[30] ensures it's above content but below navigation/modals */}
       <div className="absolute inset-0 pointer-events-none z-[30]">
         {formData.stickers.map((sticker) => (
           <div 
@@ -626,7 +670,7 @@ export default function ProfilePage() {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest">Banner Photo</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest">Banner Image</Label>
               <div onClick={() => bannerInputRef.current?.click()} className="relative h-24 bg-muted rounded-2xl overflow-hidden cursor-pointer border group">
                 {formData.banner ? (
                   <Image 
@@ -634,6 +678,7 @@ export default function ProfilePage() {
                     alt="Banner" 
                     fill 
                     className="object-cover" 
+                    style={{ objectPosition: `50% ${formData.bannerOffset}%` }}
                     unoptimized={formData.banner.startsWith('data:')}
                   />
                 ) : (
@@ -685,3 +730,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+
