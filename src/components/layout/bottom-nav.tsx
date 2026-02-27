@@ -14,6 +14,7 @@ export function BottomNav() {
   const { user } = useUser();
   const db = useFirestore();
 
+  // Fetch real-time profile data for the bottom nav avatar
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [user, db]);
   const { data: profileData } = useDoc(profileRef);
 
@@ -28,6 +29,7 @@ export function BottomNav() {
     { label: "Profile", icon: User, href: "/profile" },
   ];
 
+  // Prioritize the Firestore profile picture URL, fallback to Auth photo, then empty
   const profilePic = profileData?.profilePictureUrl || user?.photoURL || "";
 
   return (
@@ -50,11 +52,11 @@ export function BottomNav() {
               <div className="relative flex flex-col items-center">
                 {isProfile ? (
                   <Avatar className={cn(
-                    "h-7 w-7 border-2 transition-all duration-300 shadow-sm",
-                    isActive ? "border-primary scale-110 shadow-md" : "border-transparent"
+                    "h-8 w-8 border-2 transition-all duration-300 shadow-sm",
+                    isActive ? "border-primary scale-110 shadow-md ring-2 ring-primary/20" : "border-transparent"
                   )}>
                     <AvatarImage src={profilePic} className="object-cover" />
-                    <AvatarFallback className="text-[8px] font-black uppercase bg-primary/10 text-primary">
+                    <AvatarFallback className="text-[10px] font-black uppercase bg-primary/10 text-primary">
                       {user?.displayName?.[0] || profileData?.username?.[0]?.toUpperCase() || "U"}
                     </AvatarFallback>
                   </Avatar>
