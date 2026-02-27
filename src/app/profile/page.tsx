@@ -199,7 +199,7 @@ export default function ProfilePage() {
       }
     }));
     setIsColorPickerOpen(false);
-    setIsEditModalOpen(false); // Close both popups as requested
+    setIsEditModalOpen(false); 
     setActiveColorSection(null);
   };
 
@@ -368,12 +368,15 @@ export default function ProfilePage() {
 
       {/* EDIT PROFILE MODAL */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="max-w-md w-[95%] rounded-[3rem] p-6 max-h-[90vh] overflow-y-auto z-[3000] no-scrollbar border-none shadow-2xl">
+        <DialogContent 
+          onOpenAutoFocus={(e) => e.preventDefault()}
+          className="max-w-md w-[95%] rounded-[3rem] p-6 max-h-[90vh] overflow-y-auto z-[3000] no-scrollbar border-none shadow-2xl"
+        >
           <DialogHeader>
             <DialogTitle className="text-sm font-black uppercase text-center text-primary tracking-[0.2em]">Optimize Profile</DialogTitle>
           </DialogHeader>
           <div className="space-y-8 py-4">
-            {/* PREVIEWS */}
+            {/* PREVIEWS - Banner Top, Logo Below */}
             <div className="space-y-4">
               <div 
                 className="relative h-28 w-full rounded-2xl overflow-hidden border-2 border-muted bg-muted group cursor-pointer"
