@@ -8,9 +8,10 @@ import { ChevronLeft, Grid, Bookmark, Heart, MessageSquare, Loader2, UserPlus, U
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
-import { collection, query, where, limit } from "firebase/firestore";
+import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from "@/firebase";
+import { collection, query, where, limit, doc, setDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 interface Sticker {
   id: string;
@@ -45,7 +46,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
   const router = useRouter();
   const db = useFirestore();
   const { user: currentUser } = useUser();
-  const [isFollowing, setIsFollowing] = useState(false);
+  const { toast } = useToast();
 
   // Query to find user profile by username
   const userQuery = useMemoFirebase(() => {
@@ -55,6 +56,34 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
 
   const { data: userProfiles, isLoading } = useCollection(userQuery);
   const profileData = userProfiles?.[0];
+
+  // Check if current user is following this profile
+  const followRef = useMemoFirebase(() => {
+    if (!db || !currentUser || !profileData) return null;
+    return doc(db, "follows", `${currentUser.uid}_${profileData.id}`);
+  }, [db, currentUser, profileData]);
+
+  const { data: followDoc, isLoading: followLoading } = useDoc(followRef);
+  const isFollowing = !!followDoc;
+
+  const handleFollowToggle = async () => {
+    if (!db || !currentUser || !profileData) return;
+
+    const docId = `${currentUser.uid}_${profileData.id}`;
+    const ref = doc(db, "follows", docId);
+
+    if (isFollowing) {
+      await deleteDoc(ref);
+      toast({ title: "Unfollowed", description: `You no longer follow @${profileData.username}` });
+    } else {
+      await setDoc(ref, {
+        followerId: currentUser.uid,
+        followedId: profileData.id,
+        createdAt: serverTimestamp()
+      });
+      toast({ title: "Following", description: `You are now following @${profileData.username}` });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -81,7 +110,6 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden transition-colors duration-300"
       style={{ backgroundColor: colors.background || "var(--background)" }}
     >
-      {/* HEADER BAR */}
       <div 
         className="px-6 flex justify-between items-center relative z-20 py-4 transition-colors duration-300"
         style={{ backgroundColor: colors.header }}
@@ -95,7 +123,6 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         <div className="w-10" />
       </div>
 
-      {/* USER INFO AREA */}
       <div 
         className="transition-colors duration-300 pb-8 relative z-10"
         style={{ backgroundColor: colors.userInfo }}
@@ -130,7 +157,8 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
                 "flex-1 rounded-2xl font-black uppercase text-[10px] h-11 shadow-lg transition-all",
                 isFollowing ? "bg-muted text-foreground" : "bg-primary text-white shadow-primary/20"
               )}
-              onClick={() => setIsFollowing(!isFollowing)}
+              onClick={handleFollowToggle}
+              disabled={followLoading || profileData.id === currentUser?.uid}
             >
               {isFollowing ? (
                 <><UserCheck size={14} className="mr-2" /> Following</>
@@ -147,7 +175,6 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
             </Button>
           </div>
 
-          {/* BIO CARD */}
           <div 
             className="p-6 rounded-[2.5rem] border w-full mt-6 transition-colors duration-300 shadow-sm"
             style={{ backgroundColor: colors.bioCard || "#FFFFFF" }}
@@ -159,7 +186,6 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         </div>
       </div>
 
-      {/* STATS SECTION */}
       <div 
         className="px-6 mb-6 relative z-10 transition-colors duration-300"
         style={{ backgroundColor: colors.statsSection }}
@@ -183,20 +209,19 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         </div>
       </div>
 
-      {/* TABS AND CONTENT */}
-      <Tabs defaultValue="ideas" className="w-full relative z-10">
+      <Tabs defaultValue="photo" className="w-full relative z-10">
         <div 
           className="transition-colors duration-300 border-b"
           style={{ backgroundColor: colors.tabsList }}
         >
           <TabsList className="w-full bg-transparent border-none rounded-none px-6 h-14">
-            <TabsTrigger value="ideas" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
+            <TabsTrigger value="photo" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
               <Grid size={22} style={{ color: getContrastColor(colors.tabsList) }} />
             </TabsTrigger>
-            <TabsTrigger value="saved" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
+            <TabsTrigger value="video" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
               <Bookmark size={22} style={{ color: getContrastColor(colors.tabsList) }} />
             </TabsTrigger>
-            <TabsTrigger value="liked" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
+            <TabsTrigger value="text" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
               <Heart size={22} style={{ color: getContrastColor(colors.tabsList) }} />
             </TabsTrigger>
           </TabsList>
@@ -206,7 +231,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
           className="min-h-[300px] transition-colors duration-300 pb-20"
           style={{ backgroundColor: colors.tabsContent }}
         >
-          <TabsContent value="ideas" className="px-1 mt-0">
+          <TabsContent value="photo" className="px-1 mt-0">
             <div className="grid grid-cols-3 gap-1">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="aspect-square relative overflow-hidden group">
@@ -215,16 +240,15 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
               ))}
             </div>
           </TabsContent>
-          <TabsContent value="saved" className="flex items-center justify-center py-20 opacity-30">
+          <TabsContent value="video" className="flex items-center justify-center py-20 opacity-30">
             <Bookmark size={40} style={{ color: getContrastColor(colors.tabsContent) }} />
           </TabsContent>
-          <TabsContent value="liked" className="flex items-center justify-center py-20 opacity-30">
+          <TabsContent value="text" className="flex items-center justify-center py-20 opacity-30">
             <Heart size={40} style={{ color: getContrastColor(colors.tabsContent) }} />
           </TabsContent>
         </div>
       </Tabs>
 
-      {/* STICKERS LAYER */}
       <div className="absolute inset-0 pointer-events-none z-[160]">
         {stickers.map((sticker) => (
           <div 

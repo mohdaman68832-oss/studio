@@ -61,6 +61,12 @@ service cloud.firestore {
       allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
 
+    // Follows: Users can follow/unfollow others
+    match /follows/{followId} {
+      allow read: if true;
+      allow write: if isSignedIn() && request.auth.uid == request.resource.data.followerId || (resource != null && request.auth.uid == resource.data.followerId);
+    }
+
     // Global catch-all for consistency during development
     match /{path=**} {
       allow read: if true;

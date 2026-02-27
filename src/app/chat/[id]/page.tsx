@@ -1,15 +1,17 @@
 
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, Send, Phone, Info, Loader2 } from "lucide-react";
+import { ChevronLeft, Send, Phone, Info, Loader2, Video, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { useFirestore, useDoc, useMemoFirebase, useUser } from "@/firebase";
 import { doc } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Message {
   id: string;
@@ -23,10 +25,26 @@ export default function ChatDetailPage() {
   const params = useParams();
   const router = useRouter();
   const db = useFirestore();
+  const { user: currentUser } = useUser();
+  const { toast } = useToast();
   const recipientId = params.id as string;
 
   const recipientRef = useMemoFirebase(() => (db ? doc(db, "userProfiles", recipientId) : null), [db, recipientId]);
   const { data: recipient, isLoading: isRecipientLoading } = useDoc(recipientRef);
+
+  // Check for mutual follow
+  const iFollowRef = useMemoFirebase(() => 
+    (db && currentUser && recipientId) ? doc(db, "follows", `${currentUser.uid}_${recipientId}`) : null
+  , [db, currentUser, recipientId]);
+  
+  const followsMeRef = useMemoFirebase(() => 
+    (db && currentUser && recipientId) ? doc(db, "follows", `${recipientId}_${currentUser.uid}`) : null
+  , [db, currentUser, recipientId]);
+
+  const { data: iFollow } = useDoc(iFollowRef);
+  const { data: followsMe } = useDoc(followsMeRef);
+
+  const isMutual = !!iFollow && !!followsMe;
 
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -60,6 +78,21 @@ export default function ChatDetailPage() {
     setNewMessage("");
   };
 
+  const handleCall = (type: 'voice' | 'video') => {
+    if (!isMutual) {
+      toast({
+        title: "Call Restricted",
+        description: "You can only call users who follow you back.",
+        variant: "destructive"
+      });
+      return;
+    }
+    toast({
+      title: "Initiating Call...",
+      description: `Starting a ${type} call with @${recipient?.username}...`
+    });
+  };
+
   if (isRecipientLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -83,7 +116,49 @@ export default function ChatDetailPage() {
           <span className="text-[10px] text-green-500 font-medium">Online</span>
         </div>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="rounded-full"><Phone size={18} /></Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="relative">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className={cn("rounded-full", !isMutual && "opacity-40 cursor-not-allowed")}
+                    onClick={() => handleCall('voice')}
+                  >
+                    <Phone size={18} />
+                  </Button>
+                  {!isMutual && <Lock size={8} className="absolute top-1 right-1 text-red-500" />}
+                </div>
+              </TooltipTrigger>
+              {!isMutual && (
+                <TooltipContent>
+                  <p className="text-[10px] font-bold uppercase">Mutual follow required</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="relative">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className={cn("rounded-full", !isMutual && "opacity-40 cursor-not-allowed")}
+                    onClick={() => handleCall('video')}
+                  >
+                    <Video size={18} />
+                  </Button>
+                  {!isMutual && <Lock size={8} className="absolute top-1 right-1 text-red-500" />}
+                </div>
+              </TooltipTrigger>
+              {!isMutual && (
+                <TooltipContent>
+                  <p className="text-[10px] font-bold uppercase">Mutual follow required</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
           <Button variant="ghost" size="icon" className="rounded-full"><Info size={18} /></Button>
         </div>
       </header>
@@ -92,6 +167,13 @@ export default function ChatDetailPage() {
         ref={scrollRef}
         className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar"
       >
+        {!isMutual && (
+          <div className="bg-primary/5 border border-primary/10 p-4 rounded-3xl text-center mb-4">
+             <Lock size={20} className="mx-auto text-primary mb-2 opacity-30" />
+             <p className="text-[10px] font-black uppercase tracking-widest text-primary/60">Call Restricted</p>
+             <p className="text-[9px] text-muted-foreground mt-1">You must follow each other to enable voice and video calls.</p>
+          </div>
+        )}
         {messages.map((msg) => (
           <div 
             key={msg.id} 
