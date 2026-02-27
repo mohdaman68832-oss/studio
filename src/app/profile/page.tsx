@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { 
   Settings, Grid, Bookmark, Heart, LogOut, Camera, 
   Image as ImageIcon, Plus, RotateCw, Pencil, Loader2, 
-  Monitor, Smartphone, Tablet, ChevronLeft, PaintBucket 
+  Monitor, Smartphone, Tablet, ChevronLeft, PaintBucket,
+  X
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -123,6 +124,7 @@ export default function ProfilePage() {
     if (!user || !profileRef) return;
     setIsSaving(true);
     try {
+      // Use shorter strings for auth profile to avoid invalid-profile-attribute (length limit)
       await updateProfile(user, { displayName: formData.name });
       
       await updateDoc(profileRef, {
@@ -147,6 +149,7 @@ export default function ProfilePage() {
   const handleBannerDragMove = (e: React.PointerEvent) => {
     if (!isDraggingBanner) return;
     const deltaY = e.clientY - dragStartY;
+    // Slow down the drag for more precision
     const newOffset = Math.max(0, Math.min(100, bannerOffset - (deltaY / 2.5)));
     setBannerOffset(newOffset);
     setDragStartY(e.clientY);
@@ -156,7 +159,7 @@ export default function ProfilePage() {
     setIsDraggingBanner(false);
     try {
       const el = e.currentTarget as HTMLElement;
-      if (el && el.hasPointerCapture && el.hasPointerCapture(e.pointerId)) {
+      if (el && el.releasePointerCapture) {
         el.releasePointerCapture(e.pointerId);
       }
     } catch (err) {}
@@ -198,11 +201,16 @@ export default function ProfilePage() {
           </header>
           
           <div className="flex-1 p-6 space-y-12 pb-32">
+            <div className="text-center bg-primary/5 p-4 rounded-3xl border border-primary/10">
+              <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">Manual Adjustment</p>
+              <p className="text-[11px] font-bold text-muted-foreground">Click and drag the PC Preview to set the center point.</p>
+            </div>
+
             {/* DESKTOP PC PREVIEW */}
             <div className="space-y-4">
                <div className="flex items-center gap-2 text-primary">
                  <Monitor size={20} />
-                 <span className="text-xs font-black uppercase tracking-widest">Desktop / PC Preview</span>
+                 <span className="text-xs font-black uppercase tracking-widest">PC Desktop View (Wide)</span>
                </div>
                <div 
                 className="relative aspect-[3/1] w-full bg-black rounded-[2rem] overflow-hidden cursor-grab active:cursor-grabbing touch-none shadow-2xl border-4 border-white"
@@ -223,32 +231,48 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* TABLET PREVIEW */}
+            {/* TABLET PREVIEW (Actual Scale) */}
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-primary">
                 <Tablet size={20} />
-                <span className="text-xs font-black uppercase tracking-widest">Tablet (768px - 1024px)</span>
+                <span className="text-xs font-black uppercase tracking-widest">Tablet Device Frame</span>
               </div>
               <div className="relative aspect-[4/3] w-full max-w-[80%] mx-auto bg-muted rounded-[2rem] overflow-hidden border-8 border-slate-800 shadow-xl">
-                {tempBannerUrl && <Image src={tempBannerUrl} alt="Tablet" fill className="object-cover" style={{ objectPosition: `50% ${bannerOffset}%` }} unoptimized={true} />}
+                <div className="h-24 w-full relative">
+                  {tempBannerUrl && <Image src={tempBannerUrl} alt="Tablet" fill className="object-cover" style={{ objectPosition: `50% ${bannerOffset}%` }} unoptimized={true} />}
+                </div>
+                <div className="p-4 space-y-2">
+                  <div className="h-4 w-3/4 bg-slate-200 rounded-full" />
+                  <div className="h-3 w-1/2 bg-slate-200 rounded-full" />
+                </div>
               </div>
             </div>
 
-            {/* MOBILE PREVIEW */}
+            {/* MOBILE PREVIEW (Actual Scale) */}
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-primary">
                 <Smartphone size={20} />
-                <span className="text-xs font-black uppercase tracking-widest">Mobile Device Preview</span>
+                <span className="text-xs font-black uppercase tracking-widest">Mobile Phone Frame</span>
               </div>
-              <div className="relative w-[180px] aspect-[9/19] mx-auto bg-muted rounded-[2.5rem] overflow-hidden border-[10px] border-slate-900 shadow-2xl">
-                {tempBannerUrl && <Image src={tempBannerUrl} alt="Mobile" fill className="object-cover" style={{ objectPosition: `50% ${bannerOffset}%` }} unoptimized={true} />}
-                <div className="absolute top-1 left-1/2 -translate-x-1/2 w-12 h-4 bg-slate-900 rounded-full" />
+              <div className="relative w-[180px] aspect-[9/19] mx-auto bg-white rounded-[2.5rem] overflow-hidden border-[10px] border-slate-900 shadow-2xl">
+                {/* Banner Area (Matching h-48 ratio approx) */}
+                <div className="h-32 w-full relative">
+                  {tempBannerUrl && <Image src={tempBannerUrl} alt="Mobile" fill className="object-cover" style={{ objectPosition: `50% ${bannerOffset}%` }} unoptimized={true} />}
+                </div>
+                {/* Simulated Content */}
+                <div className="p-4 space-y-4 flex flex-col items-center">
+                  <div className="w-16 h-16 rounded-full bg-slate-100 border-4 border-white -mt-12 relative z-10" />
+                  <div className="h-3 w-20 bg-slate-100 rounded-full" />
+                  <div className="h-10 w-full bg-slate-50 rounded-2xl" />
+                </div>
+                {/* Bottom Bar mockup */}
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-16 h-1 bg-slate-300 rounded-full" />
               </div>
             </div>
 
             <div className="pt-8 space-y-4 sticky bottom-0 bg-background/80 backdrop-blur-md p-4 -mx-6">
-               <Button onClick={() => { setFormData(prev => ({ ...prev, banner: tempBannerUrl!, bannerOffset })); setShowBannerEditor(false); setIsEditModalOpen(true); }} className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase shadow-xl">Confirm & Apply</Button>
-               <Button variant="ghost" onClick={() => setShowBannerEditor(false)} className="w-full font-bold uppercase text-[10px]">Discard Changes</Button>
+               <Button onClick={() => { setFormData(prev => ({ ...prev, banner: tempBannerUrl!, bannerOffset })); setShowBannerEditor(false); setIsEditModalOpen(true); }} className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase shadow-xl">Apply Changes</Button>
+               <Button variant="ghost" onClick={() => setShowBannerEditor(false)} className="w-full font-bold uppercase text-[10px]">Cancel</Button>
             </div>
           </div>
         </div>
@@ -273,7 +297,7 @@ export default function ProfilePage() {
             <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(formData.customColors.userInfo) }}>{formData.name || user.displayName || "Innovator"}</h2>
           </div>
           <div className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-sm" style={{ backgroundColor: formData.customColors.bioCard || "#FFFFFF" }}>
-            <p className="text-center text-xs leading-relaxed font-medium italic break-words overflow-hidden" style={{ color: getContrastColor(formData.customColors.bioCard) }}>{formData.bio || "Crafting new ideas daily in the sphere."}</p>
+            <p className="text-center text-xs leading-relaxed font-medium italic break-all overflow-hidden" style={{ color: getContrastColor(formData.customColors.bioCard) }}>{formData.bio || "Crafting new ideas daily in the sphere."}</p>
           </div>
         </div>
       </div>
@@ -308,6 +332,17 @@ export default function ProfilePage() {
             <DialogTitle className="text-sm font-black uppercase text-center text-primary">Optimize Profile</DialogTitle>
           </DialogHeader>
           <div className="space-y-8 py-4">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Display Name</Label>
+                <Input value={formData.name} onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))} className="rounded-2xl h-12 bg-muted/20 border-none" placeholder="Your Name"/>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Bio (max 160 characters)</Label>
+                <Textarea value={formData.bio} maxLength={160} onChange={(e) => setFormData(p => ({ ...p, bio: e.target.value }))} className="rounded-2xl min-h-[80px] bg-muted/20 border-none" placeholder="Share your journey..."/>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Banner Area</Label>
@@ -325,17 +360,6 @@ export default function ProfilePage() {
               </div>
             </div>
             
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Display Name</Label>
-                <Input value={formData.name} onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))} className="rounded-2xl h-12 bg-muted/20 border-none" placeholder="Your Name"/>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Bio Description</Label>
-                <Textarea value={formData.bio} maxLength={160} onChange={(e) => setFormData(p => ({ ...p, bio: e.target.value }))} className="rounded-2xl min-h-[80px] bg-muted/20 border-none" placeholder="Share your journey..."/>
-              </div>
-            </div>
-
             <div className="space-y-3">
               <Label className="text-[10px] font-black uppercase tracking-widest ml-1 flex items-center gap-2"><PaintBucket size={14} /> Soft Theme Colors</Label>
               <div className="flex flex-wrap gap-2 p-1">
@@ -384,4 +408,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
