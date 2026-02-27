@@ -191,7 +191,7 @@ export default function ProfilePage() {
       className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden flex flex-col m-0 p-0"
       style={{ backgroundColor: formData.customColors.background || "var(--background)" }}
     >
-      {/* Stickers Layer - Placed BEHIND UI elements using lower z-index */}
+      {/* Stickers Layer - Above Background but Below Content */}
       <div className="absolute inset-0 pointer-events-none z-[10]">
         {formData.stickers.map((sticker) => (
           <div 
@@ -222,19 +222,19 @@ export default function ProfilePage() {
         ))}
       </div>
 
-      {/* Header - Higher z-index to stay above stickers */}
-      <div className="px-6 flex justify-between items-center py-5 relative z-[100] m-0" style={{ backgroundColor: formData.customColors.header }}>
+      {/* Header - relative z-20 to stay above stickers */}
+      <div className="px-6 flex justify-between items-center py-5 relative z-[20] m-0" style={{ backgroundColor: formData.customColors.header }}>
         <h1 className="text-2xl font-black uppercase tracking-tighter" style={{ color: getContrastColor(formData.customColors.header) }}>Sphere Profile</h1>
         <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setIsSettingsOpen(true)}><Settings size={24} style={{ color: getContrastColor(formData.customColors.header) }} /></Button>
       </div>
 
-      {/* User Info Section - Higher z-index */}
-      <div className="relative z-[100] m-0" style={{ backgroundColor: formData.customColors.userInfo }}>
+      {/* User Info Section - relative z-20 */}
+      <div className="relative z-[20] m-0" style={{ backgroundColor: formData.customColors.userInfo }}>
         <div className="relative h-56 w-full bg-muted overflow-hidden">
           <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized={true} />
           <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-transparent pointer-events-none" />
         </div>
-        <div className="px-6 -mt-20 flex flex-col items-center relative z-[101] pb-10">
+        <div className="px-6 -mt-20 flex flex-col items-center relative z-[21] pb-10">
           <Avatar className="h-36 w-36 border-4 border-white bg-white shadow-2xl">
             <AvatarImage src={formData.profilePic} className="object-cover" />
             <AvatarFallback className="text-2xl font-black uppercase">{formData.name?.[0] || "U"}</AvatarFallback>
@@ -243,7 +243,7 @@ export default function ProfilePage() {
             <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(formData.customColors.userInfo) }}>{formData.name || user.displayName || "Innovator"}</h2>
             <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(formData.customColors.userInfo) }}>Master of Innovations</p>
           </div>
-          <div className="p-8 rounded-[3rem] border w-full mt-8 shadow-xl relative z-[102]" style={{ backgroundColor: formData.customColors.bioCard || "#FFFFFF" }}>
+          <div className="p-8 rounded-[3rem] border w-full mt-8 shadow-xl relative z-[22]" style={{ backgroundColor: formData.customColors.bioCard || "#FFFFFF" }}>
             <p className="text-center text-[13px] leading-relaxed font-bold italic" style={{ color: getContrastColor(formData.customColors.bioCard) }}>
               {formData.bio || "Building the future of shared intelligence in the sphere."}
             </p>
@@ -251,8 +251,8 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Impact Hub - Higher z-index */}
-      <div className="relative z-[100] py-12 px-10 m-0" style={{ backgroundColor: formData.customColors.statsSection }}>
+      {/* Impact Hub - relative z-20 */}
+      <div className="relative z-[20] py-12 px-10 m-0" style={{ backgroundColor: formData.customColors.statsSection }}>
         <div className="grid grid-cols-3 gap-8 w-full">
           <div className="text-center">
             <p className="text-2xl font-black tracking-tighter" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{profileData?.totalIdeasPosted || 0}</p>
@@ -269,8 +269,8 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Tabs - Higher z-index */}
-      <Tabs defaultValue="photo" className="w-full relative z-[100] m-0">
+      {/* Tabs - relative z-20 */}
+      <Tabs defaultValue="photo" className="w-full relative z-[20] m-0">
         <div style={{ backgroundColor: formData.customColors.tabsList }} className="m-0 p-0">
           <TabsList className="w-full bg-transparent border-none rounded-none px-6 h-16">
             <TabsTrigger value="photo" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
@@ -308,7 +308,6 @@ export default function ProfilePage() {
           </DialogHeader>
           <div className="space-y-6 py-2">
             <div className="space-y-6">
-              {/* Banner First */}
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Banner Placement</Label>
                 <div className="relative h-32 w-full rounded-[2rem] overflow-hidden border-2 border-muted bg-muted group cursor-pointer" onClick={() => bannerInputRef.current?.click()}>
@@ -317,7 +316,6 @@ export default function ProfilePage() {
                 </div>
               </div>
               
-              {/* Logo (Profile Pic) Below Banner */}
               <div className="flex flex-col items-center gap-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest">Brand Logo</Label>
                 <div className="relative h-24 w-24 rounded-full border-4 border-white bg-white shadow-xl group cursor-pointer overflow-hidden" onClick={() => profileInputRef.current?.click()}>

@@ -20,36 +20,41 @@ export default function ChatPage() {
     if (!db || !user) return null;
     return query(
       collection(db, "messages"),
-      where("receiverId", "==", user.uid),
       orderBy("createdAt", "desc"),
       limit(50)
     );
   }, [db, user]);
 
-  const { data: recentMessages, isLoading } = useCollection(recentMessagesQuery);
+  const { data: allMessages, isLoading } = useCollection(recentMessagesQuery);
 
-  // Group messages by senderId to show only one entry per person
+  // Group messages to show only one entry per person (Inbox)
   const uniqueConversations = useMemo(() => {
-    if (!recentMessages) return [];
+    if (!allMessages || !user) return [];
+    
     const map = new Map();
-    recentMessages.forEach(msg => {
-      if (!map.has(msg.senderId)) {
-        map.set(msg.senderId, {
+    allMessages.forEach(msg => {
+      // Find the "other" person in the conversation
+      const otherId = msg.senderId === user.uid ? msg.receiverId : msg.senderId;
+      
+      if (!map.has(otherId)) {
+        map.set(otherId, {
           ...msg,
+          partnerId: otherId,
           // Simulated online status - in a real app this would come from a presence system
-          isOnline: Math.random() > 0.5 
+          isOnline: Math.random() > 0.6 
         });
       }
     });
+
     return Array.from(map.values()).filter(conv => 
-       conv.senderId.toLowerCase().includes(searchQuery.toLowerCase()) || 
+       conv.partnerId.toLowerCase().includes(searchQuery.toLowerCase()) || 
        conv.text.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [recentMessages, searchQuery]);
+  }, [allMessages, user, searchQuery]);
 
   return (
     <div className="max-w-md mx-auto min-h-screen bg-background pt-8 pb-24">
-      <div className="px-6 mb-8 flex items-center justify-between">
+      <div className="px-6 mb-8">
         <h1 className="text-3xl font-black text-primary uppercase tracking-tighter">Sphere Inbox</h1>
       </div>
 
@@ -57,7 +62,7 @@ export default function ChatPage() {
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
           <Input 
-            placeholder="Search messages..." 
+            placeholder="Search conversations..." 
             className="pl-12 h-14 bg-white border-none rounded-2xl shadow-xl focus-visible:ring-primary/20 text-sm font-medium"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -73,15 +78,15 @@ export default function ChatPage() {
             {uniqueConversations.map((msg) => (
               <Link 
                 key={msg.id} 
-                href={`/chat/${msg.senderId}`}
+                href={`/chat/${msg.partnerId}`}
                 className="flex items-center gap-4 px-6 py-5 hover:bg-white transition-colors"
               >
                 <div className="relative">
                   <Avatar className={cn(
                     "h-14 w-14 border-2 shadow-md transition-all",
-                    msg.isOnline ? "border-green-500 ring-2 ring-green-500/20" : "border-background"
+                    msg.isOnline ? "border-green-500 ring-4 ring-green-500/20" : "border-background"
                   )}>
-                    <AvatarFallback className="bg-primary/5 text-primary font-black uppercase">{msg.senderId[0]}</AvatarFallback>
+                    <AvatarFallback className="bg-primary/5 text-primary font-black uppercase">{msg.partnerId[0]}</AvatarFallback>
                   </Avatar>
                   {msg.isOnline && (
                     <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-white rounded-full" />
@@ -90,7 +95,7 @@ export default function ChatPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <h3 className="font-black text-sm uppercase tracking-tight text-foreground truncate">Innovator</h3>
-                    <span className="text-[9px] text-muted-foreground/60 font-bold">RECENT</span>
+                    <span className="text-[9px] text-muted-foreground/60 font-bold uppercase">Active</span>
                   </div>
                   <p className="text-[12px] text-muted-foreground line-clamp-1 mt-0.5 font-medium">{msg.text}</p>
                 </div>
@@ -108,7 +113,7 @@ export default function ChatPage() {
             ) : (
               <>
                 <MessageSquare size={48} className="mx-auto" />
-                <p className="text-[10px] font-black uppercase tracking-[0.2em]">Your inbox is empty. Start a conversation from a profile!</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em]">No conversations found. Share your ideas to start chatting!</p>
               </>
             )}
           </div>
