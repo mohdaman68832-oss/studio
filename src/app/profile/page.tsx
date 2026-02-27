@@ -227,6 +227,7 @@ export default function ProfilePage() {
   const handleBannerDragStart = (e: React.PointerEvent) => {
     setIsDraggingBanner(true);
     setDragStartY(e.clientY);
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   };
 
   const handleBannerDragMove = (e: React.PointerEvent) => {
@@ -237,8 +238,9 @@ export default function ProfilePage() {
     setDragStartY(e.clientY);
   };
 
-  const handleBannerDragEnd = () => {
+  const handleBannerDragEnd = (e: React.PointerEvent) => {
     setIsDraggingBanner(false);
+    (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
   };
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'banner' | 'sticker') => {
@@ -324,7 +326,7 @@ export default function ProfilePage() {
                 <span className="text-[10px] font-black uppercase">PC Desktop Preview</span>
               </div>
               <div 
-                className="relative aspect-[3/1] w-full bg-black rounded-2xl overflow-hidden border-4 border-white shadow-2xl cursor-grab active:cursor-grabbing"
+                className="relative aspect-[3/1] w-full bg-black rounded-2xl overflow-hidden border-4 border-white shadow-2xl cursor-grab active:cursor-grabbing touch-none"
                 onPointerDown={handleBannerDragStart}
                 onPointerMove={handleBannerDragMove}
                 onPointerUp={handleBannerDragEnd}
@@ -353,7 +355,7 @@ export default function ProfilePage() {
               </div>
               <div className="flex justify-center">
                 <div 
-                  className="relative w-full max-w-[240px] aspect-[4/3] bg-black rounded-3xl overflow-hidden border-8 border-white shadow-2xl cursor-grab active:cursor-grabbing"
+                  className="relative w-full max-w-[240px] aspect-[4/3] bg-black rounded-3xl overflow-hidden border-8 border-white shadow-2xl cursor-grab active:cursor-grabbing touch-none"
                   onPointerDown={handleBannerDragStart}
                   onPointerMove={handleBannerDragMove}
                   onPointerUp={handleBannerDragEnd}
@@ -730,4 +732,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
