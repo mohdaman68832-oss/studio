@@ -123,7 +123,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       </div>
 
       <div 
-        className="transition-colors duration-300 pb-8 relative z-10"
+        className="transition-colors duration-300 relative z-10"
         style={{ backgroundColor: colors.userInfo }}
       >
         <div className="relative h-48 w-full bg-muted overflow-hidden">
@@ -137,7 +137,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
           />
         </div>
 
-        <div className="px-6 -mt-16 flex flex-col items-center relative z-10">
+        <div className="px-6 -mt-16 flex flex-col items-center relative z-10 pb-6">
           <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-lg">
             <AvatarImage src={profileData.profilePictureUrl} />
             <AvatarFallback>{profileData.username?.[0]?.toUpperCase()}</AvatarFallback>
@@ -187,7 +187,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       </div>
 
       <div 
-        className="relative z-10 transition-colors duration-300 py-8 px-10 border-y border-border/10"
+        className="relative z-10 transition-colors duration-300 py-6 px-10"
         style={{ backgroundColor: colors.statsSection }}
       >
         <div className="grid grid-cols-3 gap-8 w-full">
@@ -195,7 +195,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
             <p className="text-xl font-black" style={{ color: getContrastColor(colors.statsSection) }}>{profileData.totalIdeasPosted || 0}</p>
             <p className="text-[10px] uppercase font-black opacity-50" style={{ color: getContrastColor(colors.statsSection) }}>Ideas</p>
           </div>
-          <div className="text-center border-x border-border/50">
+          <div className="text-center">
             <p className="text-xl font-black" style={{ color: getContrastColor(colors.statsSection) }}>{(profileData.totalViewsReceived || 0).toLocaleString()}</p>
             <p className="text-[10px] uppercase font-black opacity-50" style={{ color: getContrastColor(colors.statsSection) }}>Views</p>
           </div>

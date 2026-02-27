@@ -372,13 +372,13 @@ export default function ProfilePage() {
 
       {/* INFO SECTION */}
       <div 
-        className="relative z-10 transition-colors duration-300 pb-8" 
+        className="relative z-10 transition-colors duration-300" 
         style={{ backgroundColor: formData.customColors.userInfo }}
       >
         <div className="relative h-48 w-full bg-muted overflow-hidden">
           <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized={true} />
         </div>
-        <div className="px-6 -mt-16 flex flex-col items-center relative z-10">
+        <div className="px-6 -mt-16 flex flex-col items-center relative z-10 pb-6">
           <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-lg">
             <AvatarImage src={formData.profilePic} className="object-cover" />
             <AvatarFallback className="text-2xl font-black">{formData.name?.[0] || user.displayName?.[0] || "U"}</AvatarFallback>
@@ -397,7 +397,7 @@ export default function ProfilePage() {
 
       {/* STATS SECTION */}
       <div 
-        className="relative z-10 transition-colors duration-300 py-8 px-10 border-y border-border/10" 
+        className="relative z-10 transition-colors duration-300 py-6 px-10" 
         style={{ backgroundColor: formData.customColors.statsSection }}
       >
         <div className="grid grid-cols-3 gap-8 w-full">
@@ -405,7 +405,7 @@ export default function ProfilePage() {
             <p className="text-xl font-black" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{profileData?.totalIdeasPosted || 0}</p>
             <p className="text-[10px] uppercase font-black opacity-50" style={{ color: getContrastColor(formData.customColors.statsSection) }}>Ideas</p>
           </div>
-          <div className="text-center border-x border-border/50">
+          <div className="text-center">
             <p className="text-xl font-black" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{(profileData?.totalViewsReceived || 0).toLocaleString()}</p>
             <p className="text-[10px] uppercase font-black opacity-50" style={{ color: getContrastColor(formData.customColors.statsSection) }}>Views</p>
           </div>
