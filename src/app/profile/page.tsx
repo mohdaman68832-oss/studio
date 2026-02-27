@@ -6,9 +6,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { 
   Settings, Grid, Bookmark, Heart, LogOut, Camera, 
-  Image as ImageIcon, Plus, RotateCw, Pencil, Loader2, 
+  Plus, RotateCw, Pencil, Loader2, 
   Tablet, ChevronLeft, PaintBucket,
-  X, Palette, Check, Layout, Square, User, List, Layers,
+  X, Check, Layout, Square, User, List, Layers,
   Move, Maximize, Minimize, RotateCcw, Trash2, Video, Type, Image as LucideImage
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -146,7 +146,7 @@ export default function ProfilePage() {
         customColors: formData.customColors,
         updatedAt: new Date().toISOString()
       });
-      toast({ title: "Success", description: "Profile updated!" });
+      toast({ title: "Success", description: "Profile layout published!" });
       setIsEditModalOpen(false);
     } catch (error: any) {
       toast({ variant: "destructive", title: "Update Failed", description: error.message });
@@ -200,13 +200,14 @@ export default function ProfilePage() {
       }
     }));
     setIsColorPickerOpen(false);
-    setIsEditModalOpen(false); 
+    setIsEditModalOpen(true); // Return to main edit modal
     setActiveColorSection(null);
   };
 
   const openPickerFor = (section: ColorSection) => {
     setActiveColorSection(section);
     setIsColorPickerOpen(true);
+    setIsEditModalOpen(false); // Hide main modal to show picker clearly
   };
 
   const updateSticker = (id: string, updates: Partial<Sticker>) => {
@@ -236,7 +237,7 @@ export default function ProfilePage() {
       {/* STICKER CONTROL BAR */}
       {activeStickerId && !isEditModalOpen && !showBannerEditor && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[4000] w-[90%] flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-4">
-          <div className="bg-white/80 backdrop-blur-md rounded-3xl p-4 shadow-2xl border border-primary/20 flex items-center justify-between gap-4">
+          <div className="bg-white/90 backdrop-blur-md rounded-3xl p-4 shadow-2xl border border-primary/20 flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Button 
                 variant="outline" 
@@ -315,11 +316,11 @@ export default function ProfilePage() {
         <div className="fixed inset-0 z-[2000] bg-background flex flex-col animate-in slide-in-from-bottom duration-300">
           <header className="p-4 flex items-center justify-between border-b bg-white sticky top-0 z-50">
             <Button variant="ghost" size="icon" onClick={() => setShowBannerEditor(false)} className="rounded-full"><ChevronLeft size={24} /></Button>
-            <h2 className="text-sm font-black uppercase tracking-widest text-primary">Reposition Banner</h2>
+            <h2 className="text-sm font-black uppercase tracking-widest text-primary text-center flex-1">Position Banner</h2>
             <div className="w-10" />
           </header>
           
-          <div className="flex-1 p-6 space-y-12">
+          <div className="flex-1 p-6 space-y-12 overflow-y-auto no-scrollbar">
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-primary">
                 <Tablet size={20} />
@@ -327,7 +328,7 @@ export default function ProfilePage() {
               </div>
               <div className="relative aspect-[4/3] w-full bg-slate-900 rounded-[3rem] overflow-hidden border-8 border-slate-800 shadow-2xl">
                 <div 
-                  className="h-full w-full relative cursor-grab active:cursor-grabbing touch-none flex flex-col rounded-[2.2rem] overflow-hidden bg-slate-800"
+                  className="h-full w-full relative cursor-grab active:cursor-grabbing touch-none flex flex-col overflow-hidden bg-slate-800"
                   onPointerDown={(e) => { 
                     setIsDraggingBanner(true); 
                     setDragStartY(e.clientY); 
@@ -353,7 +354,7 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className="pt-8 space-y-4">
+            <div className="pt-8 pb-12">
                <Button onClick={() => { setFormData(prev => ({ ...prev, banner: tempBannerUrl!, bannerOffset })); setShowBannerEditor(false); setIsEditModalOpen(true); }} className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase shadow-xl">Apply Changes</Button>
             </div>
           </div>
@@ -400,7 +401,7 @@ export default function ProfilePage() {
 
         {/* STATS SECTION */}
         <div 
-          className="relative z-10 transition-colors duration-300 py-8 px-10 border-y border-border/10" 
+          className="relative z-10 transition-colors duration-300 py-8 px-10" 
           style={{ backgroundColor: formData.customColors.statsSection }}
         >
           <div className="grid grid-cols-3 gap-8 w-full">
@@ -445,17 +446,17 @@ export default function ProfilePage() {
           >
             <TabsContent value="photo" className="mt-0 px-1 py-12 text-center pb-32">
               <p className="opacity-30 text-[10px] font-black uppercase tracking-widest" style={{ color: getContrastColor(formData.customColors.tabsContent) }}>
-                Photo Posts Will Appear Here
+                Photo Innovations Will Appear Here
               </p>
             </TabsContent>
             <TabsContent value="video" className="mt-0 px-1 py-12 text-center pb-32">
               <p className="opacity-30 text-[10px] font-black uppercase tracking-widest" style={{ color: getContrastColor(formData.customColors.tabsContent) }}>
-                Video Posts Will Appear Here
+                Video Innovations Will Appear Here
               </p>
             </TabsContent>
             <TabsContent value="text" className="mt-0 px-1 py-12 text-center pb-32">
               <p className="opacity-30 text-[10px] font-black uppercase tracking-widest" style={{ color: getContrastColor(formData.customColors.tabsContent) }}>
-                Text Posts Will Appear Here
+                Text-Based Ideas Will Appear Here
               </p>
             </TabsContent>
           </div>
@@ -511,19 +512,19 @@ export default function ProfilePage() {
           className="max-w-md w-[95%] rounded-[3rem] p-6 max-h-[90vh] overflow-y-auto z-[3000] no-scrollbar border-none shadow-2xl"
         >
           <DialogHeader>
-            <DialogTitle className="text-sm font-black uppercase text-center text-primary tracking-[0.2em]">Optimize Profile</DialogTitle>
+            <DialogTitle className="text-sm font-black uppercase text-center text-primary tracking-[0.2em]">Customize Profile</DialogTitle>
           </DialogHeader>
           <div className="space-y-8 py-4">
             {/* PREVIEWS - BANNER ON TOP, LOGO BELOW */}
             <div className="space-y-6">
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Banner Area</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Banner (Header)</Label>
                 <div 
                   className="relative h-28 w-full rounded-2xl overflow-hidden border-2 border-muted bg-muted group cursor-pointer shadow-sm"
                   onClick={() => bannerInputRef.current?.click()}
                 >
                   <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="Banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized={true} />
-                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-black uppercase text-center px-4">Tap to Change & Position Banner</div>
+                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-black uppercase text-center px-4">Tap to Change & Position</div>
                 </div>
               </div>
 
@@ -563,7 +564,7 @@ export default function ProfilePage() {
                 </Button>
                 <Button variant="outline" className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted" onClick={() => openPickerFor('background')}>
                   <Square size={16} className="text-muted-foreground" />
-                  <span className="text-[8px] font-black uppercase">Main Canvas</span>
+                  <span className="text-[8px] font-black uppercase">Canvas Canvas</span>
                   <div className="w-8 h-1 rounded-full" style={{ backgroundColor: formData.customColors.background || 'transparent' }} />
                 </Button>
                 <Button variant="outline" className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted" onClick={() => openPickerFor('userInfo')}>
@@ -622,7 +623,7 @@ export default function ProfilePage() {
           </div>
           <DialogFooter className="mt-4 pt-4 border-t">
             <Button className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase shadow-xl" onClick={handleSaveProfile} disabled={isSaving}>
-              {isSaving ? <Loader2 className="animate-spin mr-2" /> : "Publish Profile Changes"}
+              {isSaving ? <Loader2 className="animate-spin mr-2" /> : "Publish Profile"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -669,7 +670,7 @@ export default function ProfilePage() {
         <SheetContent side="bottom" className="rounded-t-[3rem] p-6 border-none z-[4000]">
           <SheetHeader><SheetTitle className="text-[10px] font-black uppercase tracking-widest text-center">Settings</SheetTitle></SheetHeader>
           <div className="space-y-3 mt-8">
-            <Button variant="outline" className="w-full justify-start h-14 rounded-2xl px-6 gap-4 border-primary/20 text-primary font-black uppercase tracking-widest" onClick={() => { setIsSettingsOpen(false); setIsEditModalOpen(true); }}><Pencil size={18} /> Edit Sphere Profile</Button>
+            <Button variant="outline" className="w-full justify-start h-14 rounded-2xl px-6 gap-4 border-primary/20 text-primary font-black uppercase tracking-widest" onClick={() => { setIsSettingsOpen(false); setIsEditModalOpen(true); }}><Pencil size={18} /> Edit Profile Layout</Button>
             <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start h-14 rounded-2xl px-6 gap-4 text-secondary font-black uppercase tracking-widest hover:bg-secondary/10"><LogOut size={18} /> Sign Out</Button>
           </div>
         </SheetContent>

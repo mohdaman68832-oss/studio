@@ -32,7 +32,7 @@ export default function ChatDetailPage() {
   const recipientRef = useMemoFirebase(() => (db ? doc(db, "userProfiles", recipientId) : null), [db, recipientId]);
   const { data: recipient, isLoading: isRecipientLoading } = useDoc(recipientRef);
 
-  // Check for mutual follow
+  // Mutual follow logic
   const iFollowRef = useMemoFirebase(() => 
     (db && currentUser && recipientId) ? doc(db, "follows", `${currentUser.uid}_${recipientId}`) : null
   , [db, currentUser, recipientId]);
@@ -50,7 +50,7 @@ export default function ChatDetailPage() {
     {
       id: "1",
       senderId: "recipient",
-      text: "Hi! I saw your post. It's brilliant!",
+      text: "Hi! Let's discuss your latest innovation.",
       timestamp: new Date(Date.now() - 3600000),
       isMe: false,
     }
@@ -78,17 +78,17 @@ export default function ChatDetailPage() {
     setNewMessage("");
   };
 
-  const handleCall = (type: 'voice' | 'video') => {
+  const handleCallAttempt = (type: 'voice' | 'video') => {
     if (!isMutual) {
       toast({
         title: "Call Restricted",
-        description: "You can only call users who follow you back.",
+        description: "You must follow each other to start a call.",
         variant: "destructive"
       });
       return;
     }
     toast({
-      title: "Initiating Call...",
+      title: "Calling...",
       description: `Starting a ${type} call with @${recipient?.username}...`
     });
   };
@@ -112,7 +112,7 @@ export default function ChatDetailPage() {
           <AvatarFallback>{recipient?.username?.[0]?.toUpperCase() || "U"}</AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
-          <h2 className="font-bold text-sm truncate">{recipient?.username || "Chat"}</h2>
+          <h2 className="font-bold text-sm truncate">{recipient?.username || "Innovator"}</h2>
           <span className="text-[10px] text-green-500 font-medium">Online</span>
         </div>
         <div className="flex items-center gap-1">
@@ -123,19 +123,15 @@ export default function ChatDetailPage() {
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className={cn("rounded-full", !isMutual && "opacity-40 cursor-not-allowed")}
-                    onClick={() => handleCall('voice')}
+                    className={cn("rounded-full", !isMutual && "opacity-40")}
+                    onClick={() => handleCallAttempt('voice')}
                   >
                     <Phone size={18} />
                   </Button>
-                  {!isMutual && <Lock size={8} className="absolute top-1 right-1 text-red-500" />}
+                  {!isMutual && <Lock size={10} className="absolute -top-1 -right-1 text-red-500 bg-white rounded-full p-0.5" />}
                 </div>
               </TooltipTrigger>
-              {!isMutual && (
-                <TooltipContent>
-                  <p className="text-[10px] font-bold uppercase">Mutual follow required</p>
-                </TooltipContent>
-              )}
+              {!isMutual && <TooltipContent><p className="text-[10px]">Mutual follow required</p></TooltipContent>}
             </Tooltip>
 
             <Tooltip>
@@ -144,19 +140,15 @@ export default function ChatDetailPage() {
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className={cn("rounded-full", !isMutual && "opacity-40 cursor-not-allowed")}
-                    onClick={() => handleCall('video')}
+                    className={cn("rounded-full", !isMutual && "opacity-40")}
+                    onClick={() => handleCallAttempt('video')}
                   >
                     <Video size={18} />
                   </Button>
-                  {!isMutual && <Lock size={8} className="absolute top-1 right-1 text-red-500" />}
+                  {!isMutual && <Lock size={10} className="absolute -top-1 -right-1 text-red-500 bg-white rounded-full p-0.5" />}
                 </div>
               </TooltipTrigger>
-              {!isMutual && (
-                <TooltipContent>
-                  <p className="text-[10px] font-bold uppercase">Mutual follow required</p>
-                </TooltipContent>
-              )}
+              {!isMutual && <TooltipContent><p className="text-[10px]">Mutual follow required</p></TooltipContent>}
             </Tooltip>
           </TooltipProvider>
           <Button variant="ghost" size="icon" className="rounded-full"><Info size={18} /></Button>
@@ -170,8 +162,8 @@ export default function ChatDetailPage() {
         {!isMutual && (
           <div className="bg-primary/5 border border-primary/10 p-4 rounded-3xl text-center mb-4">
              <Lock size={20} className="mx-auto text-primary mb-2 opacity-30" />
-             <p className="text-[10px] font-black uppercase tracking-widest text-primary/60">Call Restricted</p>
-             <p className="text-[9px] text-muted-foreground mt-1">You must follow each other to enable voice and video calls.</p>
+             <p className="text-[10px] font-black uppercase tracking-widest text-primary/60">Restricted Mode</p>
+             <p className="text-[9px] text-muted-foreground mt-1">Both users must follow each other to enable calling features.</p>
           </div>
         )}
         {messages.map((msg) => (

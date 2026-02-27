@@ -4,7 +4,7 @@
 import { use, useState, useEffect, useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Grid, Bookmark, Heart, MessageSquare, Loader2, UserPlus, UserCheck } from "lucide-react";
+import { ChevronLeft, Grid, Bookmark, Heart, MessageSquare, Loader2, UserPlus, UserCheck, Image as LucideImage, Video, Type } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -133,7 +133,8 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
             alt="banner" 
             fill 
             className="object-cover" 
-            unoptimized={!!profileData.bannerUrl && profileData.bannerUrl.startsWith('data:')}
+            style={{ objectPosition: `50% ${profileData.bannerOffset || 50}%` }}
+            unoptimized={true}
           />
         </div>
 
@@ -187,12 +188,11 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       </div>
 
       <div 
-        className="px-6 mb-6 relative z-10 transition-colors duration-300"
+        className="relative z-10 transition-colors duration-300"
         style={{ backgroundColor: colors.statsSection }}
       >
         <div 
-          className="grid grid-cols-3 gap-8 w-full py-6 px-4 rounded-[2rem] border transition-colors shadow-sm"
-          style={{ backgroundColor: colors.statsSection || "#FFFFFF" }}
+          className="grid grid-cols-3 gap-8 w-full py-8 px-10 border-y border-border/10"
         >
           <div className="text-center">
             <p className="text-xl font-black" style={{ color: getContrastColor(colors.statsSection) }}>{profileData.totalIdeasPosted || 0}</p>
@@ -211,18 +211,18 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
 
       <Tabs defaultValue="photo" className="w-full relative z-10">
         <div 
-          className="transition-colors duration-300 border-b"
+          className="transition-colors duration-300"
           style={{ backgroundColor: colors.tabsList }}
         >
           <TabsList className="w-full bg-transparent border-none rounded-none px-6 h-14">
             <TabsTrigger value="photo" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
-              <Grid size={22} style={{ color: getContrastColor(colors.tabsList) }} />
+              <LucideImage size={22} style={{ color: getContrastColor(colors.tabsList) }} />
             </TabsTrigger>
             <TabsTrigger value="video" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
-              <Bookmark size={22} style={{ color: getContrastColor(colors.tabsList) }} />
+              <Video size={22} style={{ color: getContrastColor(colors.tabsList) }} />
             </TabsTrigger>
             <TabsTrigger value="text" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
-              <Heart size={22} style={{ color: getContrastColor(colors.tabsList) }} />
+              <Type size={22} style={{ color: getContrastColor(colors.tabsList) }} />
             </TabsTrigger>
           </TabsList>
         </div>
@@ -231,20 +231,20 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
           className="min-h-[300px] transition-colors duration-300 pb-20"
           style={{ backgroundColor: colors.tabsContent }}
         >
-          <TabsContent value="photo" className="px-1 mt-0">
-            <div className="grid grid-cols-3 gap-1">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="aspect-square relative overflow-hidden group">
-                  <Image src={`https://picsum.photos/seed/idea${profileData.id}${i}/400/400`} alt="idea" fill className="object-cover" />
-                </div>
-              ))}
-            </div>
+          <TabsContent value="photo" className="px-1 mt-0 py-12 text-center">
+             <p className="opacity-30 text-[10px] font-black uppercase tracking-widest" style={{ color: getContrastColor(colors.tabsContent) }}>
+               No Photo Innovations Shared
+             </p>
           </TabsContent>
-          <TabsContent value="video" className="flex items-center justify-center py-20 opacity-30">
-            <Bookmark size={40} style={{ color: getContrastColor(colors.tabsContent) }} />
+          <TabsContent value="video" className="px-1 mt-0 py-12 text-center">
+             <p className="opacity-30 text-[10px] font-black uppercase tracking-widest" style={{ color: getContrastColor(colors.tabsContent) }}>
+               No Video Innovations Shared
+             </p>
           </TabsContent>
-          <TabsContent value="text" className="flex items-center justify-center py-20 opacity-30">
-            <Heart size={40} style={{ color: getContrastColor(colors.tabsContent) }} />
+          <TabsContent value="text" className="px-1 mt-0 py-12 text-center">
+             <p className="opacity-30 text-[10px] font-black uppercase tracking-widest" style={{ color: getContrastColor(colors.tabsContent) }}>
+               No Text-Based Ideas Shared
+             </p>
           </TabsContent>
         </div>
       </Tabs>
@@ -266,7 +266,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
                 alt="sticker" 
                 fill 
                 className="object-contain" 
-                unoptimized={sticker.url.startsWith('data:')}
+                unoptimized={true}
               />
             </div>
           </div>

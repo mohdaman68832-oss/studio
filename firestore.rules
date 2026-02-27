@@ -55,16 +55,20 @@ service cloud.firestore {
     }
 
     // Notifications: Only owner can read/write their own.
+    // Fixed "list" permission by handling null resource during query evaluation
     match /notifications/{notifId} {
-      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow read: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
       allow create: if isSignedIn();
-      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow update, delete: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
     }
 
     // Follows: Users can follow/unfollow others
     match /follows/{followId} {
       allow read: if true;
-      allow write: if isSignedIn() && request.auth.uid == request.resource.data.followerId || (resource != null && request.auth.uid == resource.data.followerId);
+      allow write: if isSignedIn() && (
+        (request.resource != null && request.auth.uid == request.resource.data.followerId) || 
+        (resource != null && request.auth.uid == resource.data.followerId)
+      );
     }
 
     // Global catch-all for consistency during development
