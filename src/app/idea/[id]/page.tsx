@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useDoc, useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { useDoc, useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, addDoc, query, orderBy, serverTimestamp, doc } from "firebase/firestore";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -26,54 +26,10 @@ const MOCK_IDEAS = [
     userAvatar: "https://picsum.photos/seed/user1/100/100",
     mediaUrl: "https://picsum.photos/seed/tech/800/600",
     innovationScore: 92,
-  },
-  {
-    id: "2",
-    title: "NeuroFocus: AI-Driven ADHD Support",
-    problem: "Difficulty maintaining concentration during complex work tasks.",
-    description: "Wearable device that monitors focus levels and provides subtle haptic feedback to help individuals with ADHD maintain deep work states.",
-    category: "Healthcare",
-    userName: "Sarah Chen",
-    userAvatar: "https://picsum.photos/seed/user2/100/100",
-    mediaUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-    innovationScore: 88,
-  },
-  {
-    id: "3",
-    title: "Minimalist Productivity System",
-    problem: "App overload and digital distraction.",
-    description: "A text-based, ultra-fast productivity system that works in the terminal or as a simple web app. No distractions, just focus.",
-    category: "Business",
-    userName: "Marcus Vane",
-    userAvatar: "https://picsum.photos/seed/user3/100/100",
-    mediaUrl: "", 
-    innovationScore: 76,
-  },
-  {
-    id: "m1",
-    title: "When the code finally works",
-    problem: "Coding is hard, debugging is harder.",
-    description: "That feeling when you find the missing semicolon after 3 hours of searching.",
-    category: "Meme",
-    userName: "Kaelen Voss",
-    userAvatar: "https://picsum.photos/seed/kaelen/100/100",
-    mediaUrl: "https://picsum.photos/seed/meme1/800/800",
-    innovationScore: 99,
-  },
-  {
-    id: "m2",
-    title: "AI taking over the world",
-    problem: "AI hype vs reality.",
-    description: "Expectation: Robots everywhere. Reality: My vacuum cleaner is stuck under the sofa again.",
-    category: "Meme",
-    userName: "Maya Artiste",
-    userAvatar: "https://picsum.photos/seed/maya/100/100",
-    mediaUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-    innovationScore: 95,
+    authorId: "mock-1"
   }
 ];
 
-// Re-creating Union Mock Data Logic
 const getUnionMockPost = (ideaId: string) => {
   if (!ideaId.startsWith('post-')) return null;
   const i = parseInt(ideaId.replace('post-', ''));
@@ -83,8 +39,8 @@ const getUnionMockPost = (ideaId: string) => {
       "Neural Mesh Network", "Smart Grid AI", "Bio-degradable Tech", "Solar Glass v2", 
       "Haptic Learning", "Urban Wind Turbine", "Water Filter IoT", "Clean Air Necklace"
     ][i % 8],
-    description: "Exploring the limits of what is possible with modern engineering and design. This project focuses on high-impact scalability for urban environments.",
-    problem: "Traditional solutions are too slow, expensive, and environmentally damaging.",
+    description: "Exploring the limits of what is possible with modern engineering and design.",
+    problem: "Traditional solutions are too slow and environmentally damaging.",
     category: i % 2 === 0 ? "Technology" : "Sustainability",
     userName: ["Alex Rivera", "Sarah Chen", "Marcus Vane", "Elena Gilbert"][i % 4],
     userAvatar: `https://picsum.photos/seed/user${i % 4}/100/100`,
@@ -92,6 +48,7 @@ const getUnionMockPost = (ideaId: string) => {
       ? "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" 
       : `https://picsum.photos/seed/innovation${i}/800/800`,
     innovationScore: 70 + (i % 30),
+    authorId: `mock-user-${i % 4}`
   };
 };
 
@@ -100,6 +57,7 @@ export default function IdeaDetailPage() {
   const router = useRouter();
   const ideaId = params.id as string;
   const db = useFirestore();
+  const { user: currentUser } = useUser();
 
   const [commentText, setCommentText] = useState("");
   const [showFullDescription, setShowFullDescription] = useState(false);
@@ -131,15 +89,33 @@ export default function IdeaDetailPage() {
     }
   }, [suggestions]);
 
-  const handlePostSuggestion = () => {
-    if (!commentText.trim() || !db) return;
+  const handlePostSuggestion = async () => {
+    if (!commentText.trim() || !db || !currentUser) return;
 
-    addDoc(collection(db, "ideas", ideaId, "suggestions"), {
+    const commentData = {
       text: commentText,
-      userName: "Guest Innovator",
-      userAvatar: "https://picsum.photos/seed/guest/100/100",
+      userName: currentUser.displayName || "Innovator",
+      userAvatar: currentUser.photoURL || `https://picsum.photos/seed/${currentUser.uid}/100/100`,
+      userId: currentUser.uid,
       createdAt: serverTimestamp(),
-    });
+    };
+
+    addDoc(collection(db, "ideas", ideaId, "suggestions"), commentData);
+
+    // Create notification for the author
+    if (idea?.authorId && idea.authorId !== currentUser.uid) {
+      addDoc(collection(db, "notifications"), {
+        userId: idea.authorId,
+        fromUserName: commentData.userName,
+        fromUserAvatar: commentData.userAvatar,
+        type: "comment",
+        ideaId: ideaId,
+        ideaTitle: idea.title,
+        text: commentText,
+        createdAt: new Date().toISOString(),
+        read: false
+      });
+    }
 
     setCommentText("");
   };
@@ -165,7 +141,7 @@ export default function IdeaDetailPage() {
   }
 
   const isVideo = idea?.mediaUrl && (idea?.mediaUrl?.includes('blob:') || idea?.mediaUrl?.endsWith('.mp4') || idea?.mediaUrl?.endsWith('.webm') || idea?.mediaUrl?.includes('gtv-videos-bucket') || idea?.mediaUrl?.startsWith('data:video'));
-  const isTextPost = !idea?.mediaUrl || idea?.mediaUrl?.includes('textpost') || idea?.mediaUrl === "";
+  const isTextPost = !idea?.mediaUrl || idea?.mediaUrl === "";
 
   return (
     <div className="max-w-md mx-auto h-screen bg-background flex flex-col">
@@ -290,7 +266,7 @@ export default function IdeaDetailPage() {
       <div className="shrink-0 p-4 bg-background/80 backdrop-blur-md border-t z-30">
         <div className="max-w-md mx-auto flex items-center gap-3 bg-white p-2 rounded-3xl border border-primary/20 shadow-lg">
           <Avatar className="h-10 w-10 shadow-sm shrink-0">
-            <AvatarImage src="https://picsum.photos/seed/me/100/100" />
+            <AvatarImage src={currentUser?.photoURL || "https://picsum.photos/seed/me/100/100"} />
             <AvatarFallback>U</AvatarFallback>
           </Avatar>
           <div className="flex-1 flex items-center pr-1">

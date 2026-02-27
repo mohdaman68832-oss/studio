@@ -5,12 +5,13 @@ import { useState, useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, MessageSquare, Users, Globe, ChevronRight } from "lucide-react";
+import { Search, MessageSquare, Users, Globe, Bell, ChevronRight, Activity } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { useFirestore } from "@/firebase";
+import { useFirestore, useUser, useCollection, useMemoFirebase } from "@/firebase";
 import { useRouter } from "next/navigation";
+import { collection, query, where, orderBy } from "firebase/firestore";
 
 const MOCK_CHATS = [
   {
@@ -21,7 +22,7 @@ const MOCK_CHATS = [
     unread: 3,
     avatar: "https://picsum.photos/seed/team1/100/100",
     isGroup: true,
-    isJoined: true, // Only show if joined
+    isJoined: true,
   },
   {
     id: "2",
@@ -61,14 +62,26 @@ const MOCK_GROUPS = [
     category: "Healthcare",
     memberCount: 432,
     avatar: "https://picsum.photos/seed/bio/100/100",
-    isJoined: true, // This one will show in Messages
+    isJoined: true,
   }
 ];
 
 export default function ChatPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const db = useFirestore();
+  const { user } = useUser();
   const router = useRouter();
+
+  const notificationsQuery = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return query(
+      collection(db, "notifications"),
+      where("userId", "==", user.uid),
+      orderBy("createdAt", "desc")
+    );
+  }, [db, user]);
+
+  const { data: notifications } = useCollection(notificationsQuery);
 
   const joinedChats = useMemo(() => {
     const directMessages = MOCK_CHATS.filter(c => !c.isGroup);
@@ -96,6 +109,8 @@ export default function ChatPage() {
     );
   }, [searchQuery]);
 
+  const unreadNotificationsCount = notifications?.filter(n => !n.read).length || 0;
+
   return (
     <div className="max-w-md mx-auto min-h-screen bg-background pt-6 pb-24">
       <div className="px-6 flex items-center justify-between mb-6">
@@ -115,18 +130,29 @@ export default function ChatPage() {
       </div>
 
       <Tabs defaultValue="messages" className="w-full">
-        <TabsList className="w-full bg-transparent border-b rounded-none px-6 h-auto p-0 gap-6">
+        <TabsList className="w-full bg-transparent border-b rounded-none px-6 h-auto p-0 gap-4 flex overflow-x-auto no-scrollbar">
           <TabsTrigger 
             value="messages" 
-            className="rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-0 py-3 text-xs font-black uppercase tracking-widest"
+            className="rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-0 py-3 text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shrink-0"
           >
-            Messages
+            <MessageSquare size={14} /> Messages
           </TabsTrigger>
           <TabsTrigger 
             value="groups" 
-            className="rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-0 py-3 text-xs font-black uppercase tracking-widest"
+            className="rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-0 py-3 text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shrink-0"
           >
-            Explore Groups
+            <Users size={14} /> Groups
+          </TabsTrigger>
+          <TabsTrigger 
+            value="notifications" 
+            className="rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-0 py-3 text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shrink-0 relative"
+          >
+            <Bell size={14} /> Notifications
+            {unreadNotificationsCount > 0 && (
+              <span className="absolute -top-1 -right-2 bg-secondary text-white text-[8px] h-4 w-4 rounded-full flex items-center justify-center font-black animate-pulse">
+                {unreadNotificationsCount}
+              </span>
+            )}
           </TabsTrigger>
         </TabsList>
 
@@ -164,7 +190,7 @@ export default function ChatPage() {
             {joinedChats.length === 0 && (
               <div className="py-20 text-center space-y-3 opacity-30">
                 <MessageSquare size={48} className="mx-auto" />
-                <p className="text-xs font-black uppercase tracking-widest px-10">No messages or joined groups yet</p>
+                <p className="text-xs font-black uppercase tracking-widest px-10">No messages yet</p>
               </div>
             )}
           </div>
@@ -207,23 +233,47 @@ export default function ChatPage() {
                 </div>
               </Link>
             ))}
+          </div>
+        </TabsContent>
 
-            {exploreGroups.length === 0 && (
-              <div className="py-20 text-center space-y-3 opacity-30">
-                <Globe size={48} className="mx-auto" />
-                <p className="text-xs font-black uppercase tracking-widest">No new groups to explore</p>
+        <TabsContent value="notifications" className="mt-2">
+          <div className="divide-y divide-border/30">
+            {notifications && notifications.length > 0 ? (
+              notifications.map((notif) => (
+                <Link 
+                  key={notif.id} 
+                  href={`/idea/${notif.ideaId}`}
+                  className={cn(
+                    "flex items-start gap-4 px-6 py-5 hover:bg-white/50 transition-colors",
+                    !notif.read && "bg-primary/5"
+                  )}
+                >
+                  <Avatar className="h-12 w-12 border-2 border-background shadow-sm shrink-0">
+                    <AvatarImage src={notif.fromUserAvatar} />
+                    <AvatarFallback>{notif.fromUserName[0]}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0 pt-0.5">
+                    <p className="text-[12px] leading-tight text-foreground/90">
+                      <span className="font-black text-primary uppercase text-[10px] mr-1">@{notif.fromUserName.toLowerCase().replace(/\s/g, '')}</span>
+                      commented on your idea: <span className="font-black text-foreground">"{notif.ideaTitle}"</span>
+                    </p>
+                    <div className="mt-2 bg-white/50 p-2.5 rounded-2xl border border-border/30">
+                      <p className="text-[11px] italic text-muted-foreground line-clamp-2">"{notif.text}"</p>
+                    </div>
+                    <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest mt-2">
+                      {new Date(notif.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                  <ChevronRight size={16} className="text-muted-foreground shrink-0 mt-1" />
+                </Link>
+              ))
+            ) : (
+              <div className="py-24 text-center space-y-4 opacity-30 px-10">
+                <Bell size={48} className="mx-auto" />
+                <p className="text-[10px] font-black uppercase tracking-[0.2em]">No notifications yet</p>
+                <p className="text-[10px] font-medium leading-relaxed">Activity from your posts and discussions will appear here.</p>
               </div>
             )}
-          </div>
-          
-          <div className="pt-4">
-             <Button 
-                variant="outline" 
-                className="w-full h-12 rounded-2xl border-dashed border-2 border-primary/30 text-primary font-black uppercase text-[10px] tracking-widest"
-                onClick={() => router.push("/groups/create")}
-              >
-                + Form New Group
-              </Button>
           </div>
         </TabsContent>
       </Tabs>

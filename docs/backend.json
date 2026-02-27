@@ -189,6 +189,23 @@
         "memberCount": { "type": "number" },
         "avatarUrl": { "type": "string" }
       }
+    },
+    "Notification": {
+      "title": "Notification",
+      "type": "object",
+      "description": "In-app notifications for social interactions.",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string", "description": "The user receiving the notification." },
+        "fromUserName": { "type": "string" },
+        "fromUserAvatar": { "type": "string" },
+        "type": { "type": "string", "enum": ["comment", "like", "follow"] },
+        "ideaId": { "type": "string" },
+        "ideaTitle": { "type": "string" },
+        "text": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "read": { "type": "boolean" }
+      }
     }
   },
   "auth": {
@@ -243,6 +260,22 @@
             {
               "name": "groupId",
               "description": "The unique ID of the group."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/notifications/{notifId}",
+        "definition": {
+          "entityName": "Notification",
+          "schema": {
+            "$ref": "#/backend/entities/Notification"
+          },
+          "description": "User notifications.",
+          "params": [
+            {
+              "name": "notifId",
+              "description": "The unique ID of the notification."
             }
           ]
         }

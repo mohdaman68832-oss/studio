@@ -54,6 +54,13 @@ service cloud.firestore {
       }
     }
 
+    // Notifications: Only owner can read/write their own.
+    match /notifications/{notifId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn();
+      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
     // Global catch-all for consistency during development
     match /{path=**} {
       allow read: if true;
