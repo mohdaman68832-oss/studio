@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -20,7 +19,7 @@ import Image from "next/image";
 import { useUser, useAuth, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { signOut, updateProfile } from "firebase/auth";
 import { doc, updateDoc } from "firebase/firestore";
-import { useRouter } from "navigation";
+import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -130,7 +129,6 @@ export default function ProfilePage() {
     if (!user || !profileRef) return;
     setIsSaving(true);
     try {
-      // Avoid saving Base64 to Firebase Auth if it's too long
       await updateProfile(user, { displayName: formData.name });
       
       await updateDoc(profileRef, {
@@ -198,7 +196,7 @@ export default function ProfilePage() {
         tabsContent: hex,
         userInfo: hex,
         statsSection: hex,
-        bioCard: hex === '#FFFFFF' ? '#FFFFFF' : hex // Adjust bio card logic if needed
+        bioCard: hex
       }
     }));
     setIsColorPickerOpen(false);
