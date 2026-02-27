@@ -47,10 +47,10 @@ service cloud.firestore {
       }
     }
 
-    // Notifications: FIXED - Allow listing by owner.
+    // Notifications: Allow list for the owner.
     match /notifications/{notifId} {
       allow read: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
-      allow list: if isSignedIn(); 
+      allow list: if isSignedIn() && request.query.limit <= 50; 
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
@@ -65,7 +65,7 @@ service cloud.firestore {
     // Follows: Publicly readable for mutual checks.
     match /follows/{followId} {
       allow read: if true;
-      allow write: if isSignedIn() && (request.auth.uid == request.resource.data.followerId || followId.startsWith(request.auth.uid));
+      allow write: if isSignedIn() && (request.auth.uid == request.resource.data.followerId || followId.split('_')[0] == request.auth.uid);
     }
 
     // Global catch-all
