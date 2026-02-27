@@ -262,7 +262,7 @@ export default function ProfilePage() {
       onClick={(e) => handleZoneClick(e, 'background')}
     >
       {isPaintMode && activeColor && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[500] bg-white px-6 py-2 rounded-full shadow-2xl border-2 border-primary flex items-center gap-3 animate-in fade-in slide-in-from-top-4">
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[1000] bg-white px-6 py-2 rounded-full shadow-2xl border-2 border-primary flex items-center gap-3 animate-in fade-in slide-in-from-top-4">
           <div className="w-4 h-4 rounded-full border shadow-sm" style={{ backgroundColor: activeColor }}></div>
           <p className="text-[10px] font-black uppercase tracking-widest text-primary">Paint Mode Active</p>
           <button className="h-6 w-6 p-0 rounded-full hover:bg-muted flex items-center justify-center" onClick={() => { setIsPaintMode(false); setActiveColor(null); }}><X size={14}/></button>
@@ -285,7 +285,7 @@ export default function ProfilePage() {
               <Settings size={22} style={{ color: getContrastColor(formData.customColors.header) }} />
             </Button>
           </SheetTrigger>
-          <SheetContent side="bottom" className="rounded-t-[2.5rem] p-6 border-none z-[400]">
+          <SheetContent side="bottom" className="rounded-t-[2.5rem] p-6 border-none z-[500]">
             <SheetHeader className="mb-4 text-center">
               <SheetTitle className="text-sm font-black uppercase tracking-widest text-center">Profile Options</SheetTitle>
             </SheetHeader>
@@ -421,8 +421,8 @@ export default function ProfilePage() {
         </div>
       </Tabs>
 
-      {/* STICKERS LAYER: Adjusted z-index to show above content but below modals */}
-      <div className="absolute inset-0 pointer-events-none z-[160]">
+      {/* STICKERS LAYER: Using lower z-index than Sheet/Dialog (z-30) */}
+      <div className="absolute inset-0 pointer-events-none z-[30]">
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id}
@@ -485,11 +485,32 @@ export default function ProfilePage() {
       )}
 
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="max-w-md w-[95%] rounded-[2.5rem] p-6 max-h-[90vh] overflow-y-auto no-scrollbar border-none z-[500]">
+        <DialogContent className="max-w-md w-[95%] rounded-[2.5rem] p-6 max-h-[90vh] overflow-y-auto no-scrollbar border-none z-[600]">
           <DialogHeader>
             <DialogTitle className="text-sm font-black uppercase text-center">Customize Profile</DialogTitle>
           </DialogHeader>
           <div className="space-y-6 py-4">
+            <div className="space-y-4">
+               <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest">Display Name</Label>
+                  <Input 
+                    value={formData.name} 
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))} 
+                    className="rounded-2xl h-12 bg-muted/20 border-none" 
+                    placeholder="Update your name..."
+                  />
+               </div>
+               <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest">Bio Description</Label>
+                  <Textarea 
+                    value={formData.bio} 
+                    onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))} 
+                    placeholder="Tell your story..."
+                    className="rounded-2xl bg-muted/20 border-none min-h-[100px]" 
+                  />
+               </div>
+            </div>
+
             <div className="space-y-3">
               <Label className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
                 <PaintBucket size={12} /> Paint Tool
@@ -512,27 +533,6 @@ export default function ProfilePage() {
                   />
                 ))}
               </div>
-            </div>
-
-            <div className="space-y-4">
-               <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest">Display Name</Label>
-                  <Input 
-                    value={formData.name} 
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))} 
-                    className="rounded-2xl h-12 bg-muted/20 border-none" 
-                    placeholder="Update your name..."
-                  />
-               </div>
-               <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest">Bio Description</Label>
-                  <Textarea 
-                    value={formData.bio} 
-                    onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))} 
-                    placeholder="Tell your story..."
-                    className="rounded-2xl bg-muted/20 border-none min-h-[100px]" 
-                  />
-               </div>
             </div>
 
             <div className="space-y-2">
