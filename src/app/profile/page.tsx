@@ -16,7 +16,8 @@ import {
   ChevronRight,
   UserCog,
   Trash2,
-  CheckCircle
+  CheckCircle,
+  Pencil
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -96,6 +97,7 @@ export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [activeColorSection, setActiveColorSection] = useState<ColorSection | null>(null);
   
+  const [isEditMode, setIsEditMode] = useState(false);
   const [editingStickerId, setEditingStickerId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -178,6 +180,7 @@ export default function ProfilePage() {
         const newSticker = { id: newId, url: base64, x: 50, y: 50, rotation: 0, scale: 1 };
         setFormData(prev => ({ ...prev, stickers: [...prev.stickers, newSticker] }));
         setIsOptimizeModalOpen(false); 
+        setIsEditMode(true);
         setTimeout(() => {
           setEditingStickerId(newId);
         }, 300);
@@ -192,15 +195,15 @@ export default function ProfilePage() {
   };
 
   const handleStickerPointerDown = (e: React.PointerEvent, id: string) => {
+    if (!isEditMode) return;
     e.stopPropagation();
     setIsDragging(true);
     setEditingStickerId(id);
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   };
 
   const handleStickerPointerMove = (e: React.PointerEvent, id: string) => {
-    if (!isDragging || !containerRef.current) return;
-    e.stopPropagation();
+    if (!isDragging || !containerRef.current || !isEditMode) return;
     
     const rect = containerRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
@@ -218,7 +221,7 @@ export default function ProfilePage() {
 
   const handleStickerPointerUp = (e: React.PointerEvent) => {
     setIsDragging(false);
-    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
   };
 
   const updateSticker = (id: string, updates: Partial<Sticker>) => {
@@ -248,7 +251,7 @@ export default function ProfilePage() {
       style={{ backgroundColor: colors.background || "var(--background)" }}
       ref={containerRef}
     >
-      {/* Background Sections (z-0) - These are the colored areas */}
+      {/* Background Sections (z-0) */}
       <div className="flex flex-col m-0 p-0 relative z-0 shrink-0">
          <div className="h-16 w-full" style={{ backgroundColor: colors.header }} />
          <div className="h-[28rem] w-full" style={{ backgroundColor: colors.userInfo }} />
@@ -256,7 +259,7 @@ export default function ProfilePage() {
          <div className="flex-1 w-full min-h-[50vh]" style={{ backgroundColor: colors.tabsContent }} />
       </div>
 
-      {/* Media Layer (z-10): Banner and Logo - User wants stickers ABOVE these */}
+      {/* Media Layer (z-10): Banner and Logo */}
       <div className="absolute inset-0 z-10 pointer-events-none">
         <div className="relative h-52 w-full overflow-hidden">
           <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized />
@@ -269,20 +272,21 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Stickers Layer (z-20): Above media, but below interactive text/buttons */}
+      {/* Stickers Layer (z-20): Above banner/logo, but below text/buttons */}
       <div className="absolute inset-0 z-20 pointer-events-none">
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
             className={cn(
-              "absolute pointer-events-auto cursor-move select-none touch-none",
-              editingStickerId === sticker.id && "ring-2 ring-primary ring-offset-2 rounded-lg"
+              "absolute pointer-events-auto select-none touch-none",
+              isEditMode ? "cursor-move" : "cursor-default",
+              isEditMode && editingStickerId === sticker.id && "ring-2 ring-primary ring-offset-2 rounded-lg"
             )} 
             style={{ 
               left: `${sticker.x}%`, 
               top: `${sticker.y}%`, 
               transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`, 
-              zIndex: editingStickerId === sticker.id ? 21 : 20
+              zIndex: editingStickerId === sticker.id ? 25 : 20
             }}
             onPointerDown={(e) => handleStickerPointerDown(e, sticker.id)}
             onPointerMove={(e) => handleStickerPointerMove(e, sticker.id)}
@@ -295,33 +299,46 @@ export default function ProfilePage() {
         ))}
       </div>
 
-      {/* UI Content (z-30): Interactive Layer - Above Stickers */}
+      {/* UI Content (z-30): Interactive Layer */}
       <div className="absolute inset-0 flex flex-col m-0 p-0 z-30 pointer-events-none no-scrollbar overflow-y-auto">
         <header className="px-6 flex justify-between items-center py-5 pointer-events-auto">
           <h1 className="text-2xl font-black uppercase tracking-tighter" style={{ color: getContrastColor(colors.header) }}>Sphere</h1>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <Settings size={24} style={{ color: getContrastColor(colors.header) }} />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="rounded-2xl border-none shadow-2xl p-2 min-w-[160px]">
-              <DropdownMenuItem onClick={() => setIsOptimizeModalOpen(true)} className="rounded-xl h-11 cursor-pointer flex items-center gap-3">
-                <UserCog size={18} className="text-primary" />
-                <span className="text-xs font-black uppercase tracking-widest">Optimize</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleSignOut} className="rounded-xl h-11 cursor-pointer flex items-center gap-3 text-secondary">
-                <LogOut size={18} />
-                <span className="text-xs font-black uppercase tracking-widest">Logout</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setIsEditMode(!isEditMode)}
+              className={cn(
+                "rounded-full transition-colors",
+                isEditMode ? "bg-primary text-white shadow-lg shadow-primary/30" : "bg-transparent"
+              )}
+            >
+              <Pencil size={20} style={{ color: isEditMode ? "#FFF" : getContrastColor(colors.header) }} />
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full">
+                  <Settings size={24} style={{ color: getContrastColor(colors.header) }} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="rounded-2xl border-none shadow-2xl p-2 min-w-[160px]">
+                <DropdownMenuItem onClick={() => setIsOptimizeModalOpen(true)} className="rounded-xl h-11 cursor-pointer flex items-center gap-3">
+                  <UserCog size={18} className="text-primary" />
+                  <span className="text-xs font-black uppercase tracking-widest">Optimize</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSignOut} className="rounded-xl h-11 cursor-pointer flex items-center gap-3 text-secondary">
+                  <LogOut size={18} />
+                  <span className="text-xs font-black uppercase tracking-widest">Logout</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </header>
 
         <section className="relative">
-          <div className="h-52 w-full" /> {/* Banner Space */}
+          <div className="h-52 w-full" /> {/* Spacer for Banner */}
           <div className="px-6 -mt-16 flex flex-col items-center pb-4">
-            <div className="h-32 w-32" /> {/* Logo Space */}
+            <div className="h-32 w-32" /> {/* Spacer for Logo */}
             <div className="text-center mt-4">
               <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{formData.name || "Innovator"}</h2>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>@{formData.username || "handle"}</p>
@@ -377,8 +394,8 @@ export default function ProfilePage() {
         </Tabs>
       </div>
 
-      {/* STICKER STUDIO HUD (z-1000) - Responsive Manipulation Controls */}
-      {editingStickerId && activeSticker && (
+      {/* STICKER STUDIO HUD */}
+      {isEditMode && editingStickerId && activeSticker && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[1000] w-[90%] max-w-sm bg-white/95 backdrop-blur-md rounded-[2.5rem] border shadow-2xl p-6 animate-in slide-in-from-bottom-4">
           <div className="space-y-6">
             <header className="flex items-center justify-between">
@@ -513,7 +530,7 @@ export default function ProfilePage() {
                 {formData.stickers.map(s => (
                   <div key={s.id} className="relative w-12 h-12 rounded-lg border overflow-hidden group">
                     <Image src={s.url} alt="s" fill className="object-contain" />
-                    <button onClick={() => { setEditingStickerId(s.id); setIsOptimizeModalOpen(false); }} className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white"><Plus size={12} /></button>
+                    <button onClick={() => { setEditingStickerId(s.id); setIsOptimizeModalOpen(false); setIsEditMode(true); }} className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white"><Plus size={12} /></button>
                   </div>
                 ))}
               </div>
@@ -555,7 +572,7 @@ export default function ProfilePage() {
              </div>
              <div className="pt-6 space-y-4">
                 <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'banner')} />
-                <Button onClick={() => bannerInputRef.current?.click()} className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase tracking-widest">{banner ? "Change Photo" : "Upload Banner Photo"}</Button>
+                <Button onClick={() => bannerInputRef.current?.click()} className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase tracking-widest">{formData.banner ? "Change Photo" : "Upload Banner Photo"}</Button>
              </div>
           </div>
         </DialogContent>
