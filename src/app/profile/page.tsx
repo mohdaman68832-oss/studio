@@ -99,7 +99,7 @@ export default function ProfilePage() {
   
   const [editingStickerId, setEditingStickerId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
 
   const profileInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
@@ -178,8 +178,8 @@ export default function ProfilePage() {
         const newId = Math.random().toString(36).substr(2, 9);
         const newSticker = { id: newId, url: base64, x: 50, y: 50, rotation: 0, scale: 1 };
         setFormData(prev => ({ ...prev, stickers: [...prev.stickers, newSticker] }));
-        setIsOptimizeModalOpen(false); // Close popup when sticker chosen
-        setEditingStickerId(newId); // Enter studio mode
+        setIsOptimizeModalOpen(false);
+        setEditingStickerId(newId);
       }
     }
   };
@@ -198,9 +198,9 @@ export default function ProfilePage() {
   };
 
   const handleStickerPointerMove = (e: React.PointerEvent, id: string) => {
-    if (!isDragging || !containerRef.current || id !== editingStickerId) return;
+    if (!isDragging || !headerRef.current || id !== editingStickerId) return;
     
-    const rect = containerRef.current.getBoundingClientRect();
+    const rect = headerRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
 
@@ -244,10 +244,9 @@ export default function ProfilePage() {
     <div 
       className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden flex flex-col no-scrollbar"
       style={{ backgroundColor: colors.background || "var(--background)" }}
-      ref={containerRef}
     >
       {/* HEADER SECTION (Banner + Logo + Stickers) */}
-      <div className="relative w-full shrink-0 z-10">
+      <div className="relative w-full shrink-0 z-10" ref={headerRef}>
         <div className="h-16 w-full" style={{ backgroundColor: colors.header }} />
         
         <header className="absolute top-0 left-0 right-0 z-[50] px-6 flex justify-between items-center py-5">
@@ -276,7 +275,7 @@ export default function ProfilePage() {
           <div 
             key={sticker.id} 
             className={cn(
-              "absolute select-none touch-none z-[20]", // Higher than Banner (10), Lower than UI (30)
+              "absolute select-none touch-none z-[20]",
               editingStickerId === sticker.id ? "pointer-events-auto cursor-move ring-2 ring-primary ring-offset-2 rounded-lg z-[40]" : "pointer-events-none"
             )} 
             style={{ 
@@ -369,9 +368,9 @@ export default function ProfilePage() {
         </Tabs>
       </div>
 
-      {/* STICKER STUDIO HUD (z-1000) - FIXED SLIDERS */}
+      {/* STICKER STUDIO HUD (z-2000) */}
       {editingStickerId && activeSticker && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[1000] w-[90%] max-w-sm bg-white/95 backdrop-blur-md rounded-[2.5rem] border shadow-2xl p-6 animate-in slide-in-from-bottom-4">
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[2000] w-[90%] max-w-sm bg-white/95 backdrop-blur-md rounded-[2.5rem] border shadow-2xl p-6 animate-in slide-in-from-bottom-4">
           <div className="space-y-6">
             <header className="flex items-center justify-between">
               <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Sticker Studio</h4>
@@ -491,17 +490,17 @@ export default function ProfilePage() {
       <Dialog open={showBannerDetail} onOpenChange={setShowBannerDetail}>
         <DialogContent className="max-w-md w-[95%] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl h-[85vh] flex flex-col">
           <DialogHeader className="p-6 shrink-0 border-b">
-            <DialogTitle className="text-sm font-black uppercase tracking-widest text-center">Banner Customization</DialogTitle>
+            <DialogTitle className="text-sm font-black uppercase tracking-widest text-center">Banner Preview</DialogTitle>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto p-6 space-y-10 no-scrollbar">
              <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-widest opacity-50 flex items-center gap-2"><Monitor size={14} /> Desktop Preview</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest opacity-50 flex items-center gap-2"><Monitor size={14} /> Desktop View</Label>
                 <div className="relative aspect-[3/1] w-full bg-muted rounded-2xl overflow-hidden border shadow-inner">
                    {formData.banner ? <Image src={formData.banner} alt="PC" fill className="object-cover" unoptimized /> : <div className="w-full h-full flex items-center justify-center opacity-30"><LucideImage size={40} /></div>}
                 </div>
              </div>
              <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-widest opacity-50 flex items-center gap-2"><Smartphone size={14} /> Mobile Preview</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest opacity-50 flex items-center gap-2"><Smartphone size={14} /> Mobile View</Label>
                 <div className="flex justify-center">
                   <div className="relative w-full max-w-[220px] aspect-[4/3] bg-muted rounded-2xl overflow-hidden border shadow-inner">
                     {formData.banner ? <Image src={formData.banner} alt="Mobile" fill className="object-cover" unoptimized /> : <div className="w-full h-full flex items-center justify-center opacity-30"><LucideImage size={30} /></div>}
