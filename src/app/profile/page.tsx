@@ -177,8 +177,10 @@ export default function ProfilePage() {
         const newId = Math.random().toString(36).substr(2, 9);
         const newSticker = { id: newId, url: base64, x: 50, y: 50, rotation: 0, scale: 1 };
         setFormData(prev => ({ ...prev, stickers: [...prev.stickers, newSticker] }));
-        setIsOptimizeModalOpen(false); // Close modal automatically as requested
-        setEditingStickerId(newId); // Open studio mode immediately
+        setIsOptimizeModalOpen(false); 
+        setTimeout(() => {
+          setEditingStickerId(newId);
+        }, 300);
       }
     }
   };
@@ -190,12 +192,15 @@ export default function ProfilePage() {
   };
 
   const handleStickerPointerDown = (e: React.PointerEvent, id: string) => {
+    e.stopPropagation();
     setIsDragging(true);
+    setEditingStickerId(id);
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
   };
 
   const handleStickerPointerMove = (e: React.PointerEvent, id: string) => {
     if (!isDragging || !containerRef.current) return;
+    e.stopPropagation();
     
     const rect = containerRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
@@ -203,12 +208,17 @@ export default function ProfilePage() {
 
     setFormData(prev => ({
       ...prev,
-      stickers: prev.stickers.map(s => s.id === id ? { ...s, x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) } : s)
+      stickers: prev.stickers.map(s => s.id === id ? { 
+        ...s, 
+        x: Math.max(0, Math.min(100, x)), 
+        y: Math.max(0, Math.min(100, y)) 
+      } : s)
     }));
   };
 
-  const handleStickerPointerUp = () => {
+  const handleStickerPointerUp = (e: React.PointerEvent) => {
     setIsDragging(false);
+    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
   };
 
   const updateSticker = (id: string, updates: Partial<Sticker>) => {
@@ -238,7 +248,7 @@ export default function ProfilePage() {
       style={{ backgroundColor: colors.background || "var(--background)" }}
       ref={containerRef}
     >
-      {/* Background Sections (z-0) */}
+      {/* Background Sections (z-0) - These are the colored areas */}
       <div className="flex flex-col m-0 p-0 relative z-0 shrink-0">
          <div className="h-16 w-full" style={{ backgroundColor: colors.header }} />
          <div className="h-[28rem] w-full" style={{ backgroundColor: colors.userInfo }} />
@@ -246,7 +256,7 @@ export default function ProfilePage() {
          <div className="flex-1 w-full min-h-[50vh]" style={{ backgroundColor: colors.tabsContent }} />
       </div>
 
-      {/* Media Layer (z-10): Banner and Logo */}
+      {/* Media Layer (z-10): Banner and Logo - User wants stickers ABOVE these */}
       <div className="absolute inset-0 z-10 pointer-events-none">
         <div className="relative h-52 w-full overflow-hidden">
           <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized />
@@ -259,24 +269,24 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Stickers Layer (z-20): Above media, below interactive UI */}
+      {/* Stickers Layer (z-20): Above media, but below interactive text/buttons */}
       <div className="absolute inset-0 z-20 pointer-events-none">
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
             className={cn(
-              "absolute pointer-events-auto cursor-move select-none",
+              "absolute pointer-events-auto cursor-move select-none touch-none",
               editingStickerId === sticker.id && "ring-2 ring-primary ring-offset-2 rounded-lg"
             )} 
             style={{ 
               left: `${sticker.x}%`, 
               top: `${sticker.y}%`, 
               transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`, 
+              zIndex: editingStickerId === sticker.id ? 21 : 20
             }}
             onPointerDown={(e) => handleStickerPointerDown(e, sticker.id)}
             onPointerMove={(e) => handleStickerPointerMove(e, sticker.id)}
             onPointerUp={handleStickerPointerUp}
-            onClick={() => setEditingStickerId(sticker.id)}
           >
             <div className="relative w-24 h-24">
               <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized />
@@ -285,7 +295,7 @@ export default function ProfilePage() {
         ))}
       </div>
 
-      {/* UI Content (z-30): Name, Handle, Bio Card, Buttons */}
+      {/* UI Content (z-30): Interactive Layer - Above Stickers */}
       <div className="absolute inset-0 flex flex-col m-0 p-0 z-30 pointer-events-none no-scrollbar overflow-y-auto">
         <header className="px-6 flex justify-between items-center py-5 pointer-events-auto">
           <h1 className="text-2xl font-black uppercase tracking-tighter" style={{ color: getContrastColor(colors.header) }}>Sphere</h1>
@@ -309,10 +319,9 @@ export default function ProfilePage() {
         </header>
 
         <section className="relative">
-          {/* Spacer for banner and avatar background height */}
-          <div className="h-52 w-full" />
+          <div className="h-52 w-full" /> {/* Banner Space */}
           <div className="px-6 -mt-16 flex flex-col items-center pb-4">
-            <div className="h-32 w-32" /> {/* Spacer for avatar */}
+            <div className="h-32 w-32" /> {/* Logo Space */}
             <div className="text-center mt-4">
               <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{formData.name || "Innovator"}</h2>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>@{formData.username || "handle"}</p>
@@ -368,7 +377,7 @@ export default function ProfilePage() {
         </Tabs>
       </div>
 
-      {/* STICKER STUDIO HUD (High z-index: 1000) */}
+      {/* STICKER STUDIO HUD (z-1000) - Responsive Manipulation Controls */}
       {editingStickerId && activeSticker && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[1000] w-[90%] max-w-sm bg-white/95 backdrop-blur-md rounded-[2.5rem] border shadow-2xl p-6 animate-in slide-in-from-bottom-4">
           <div className="space-y-6">
@@ -387,7 +396,7 @@ export default function ProfilePage() {
                 </div>
                 <Slider 
                   value={[activeSticker.scale]} 
-                  min={0.2} max={3} step={0.1} 
+                  min={0.2} max={3} step={0.01} 
                   onValueChange={([v]) => updateSticker(activeSticker.id, { scale: v })} 
                 />
               </div>
@@ -399,7 +408,7 @@ export default function ProfilePage() {
                 </div>
                 <Slider 
                   value={[activeSticker.rotation]} 
-                  min={-180} max={180} step={5} 
+                  min={-180} max={180} step={1} 
                   onValueChange={([v]) => updateSticker(activeSticker.id, { rotation: v })} 
                 />
               </div>
@@ -545,14 +554,14 @@ export default function ProfilePage() {
                 </div>
              </div>
              <div className="pt-6 space-y-4">
-                <Button onClick={() => bannerInputRef.current?.click()} className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase tracking-widest">Change Banner Image</Button>
+                <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'banner')} />
+                <Button onClick={() => bannerInputRef.current?.click()} className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase tracking-widest">{banner ? "Change Photo" : "Upload Banner Photo"}</Button>
              </div>
           </div>
         </DialogContent>
       </Dialog>
 
       <input type="file" ref={profileInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'profile')} />
-      <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'banner')} />
       <input type="file" ref={stickerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'sticker')} />
 
       <Dialog open={isColorPickerOpen} onOpenChange={setIsColorPickerOpen}>
@@ -575,4 +584,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
