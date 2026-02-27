@@ -91,7 +91,7 @@ export default function ChatPage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="messages" className="mt-2">
+        <TabsContent value="messages" className="mt-0">
           {recentMessages && recentMessages.length > 0 ? (
             <div className="divide-y divide-border/30">
               <p className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-40">Recent Conversations</p>
@@ -120,7 +120,7 @@ export default function ChatPage() {
           )}
         </TabsContent>
 
-        <TabsContent value="groups" className="mt-4 px-6 space-y-4">
+        <TabsContent value="groups" className="mt-0 px-6 space-y-4 py-6">
           <div className="space-y-4">
             {exploreGroups.map((group) => (
               <Link 

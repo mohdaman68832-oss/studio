@@ -322,7 +322,7 @@ export default function ProfilePage() {
           <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized={true} />
           <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-transparent pointer-events-none" />
         </div>
-        <div className="px-6 -mt-20 flex flex-col items-center relative z-10 pb-8">
+        <div className="px-6 -mt-20 flex flex-col items-center relative z-10 pb-10">
           <Avatar className="h-36 w-36 border-4 border-white bg-white shadow-2xl transition-transform active:scale-105">
             <AvatarImage src={formData.profilePic} className="object-cover" />
             <AvatarFallback className="text-2xl font-black uppercase">{formData.name?.[0] || "U"}</AvatarFallback>
@@ -344,7 +344,7 @@ export default function ProfilePage() {
 
       {/* SEAMLESS STATS SECTION */}
       <div 
-        className="relative z-40 transition-colors duration-300 py-10 px-10" 
+        className="relative z-40 transition-colors duration-300 py-12 px-10" 
         style={{ backgroundColor: formData.customColors.statsSection }}
       >
         <div className="grid grid-cols-3 gap-8 w-full">
@@ -436,8 +436,7 @@ export default function ProfilePage() {
           <DialogHeader>
             <DialogTitle className="text-xs font-black uppercase text-center text-primary tracking-[0.2em] mb-4">Personalize Theme</DialogTitle>
           </DialogHeader>
-          <div className="space-y-8 py-2 overflow-y-visible">
-            {/* LAYOUT FIX: BANNER ON TOP, LOGO BELOW */}
+          <div className="space-y-8 py-2">
             <div className="space-y-6">
               <div className="space-y-3">
                 <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Banner Placement</Label>

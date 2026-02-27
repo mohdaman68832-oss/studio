@@ -87,7 +87,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
   return (
     <div className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden transition-colors duration-300" style={{ backgroundColor: colors.background || "var(--background)" }}>
       {/* SEAMLESS HEADER */}
-      <div className="px-6 flex justify-between items-center relative z-[100] py-4" style={{ backgroundColor: colors.header }}>
+      <div className="px-6 flex justify-between items-center relative z-[100] py-5 transition-colors duration-300" style={{ backgroundColor: colors.header }}>
         <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full"><ChevronLeft size={24} style={{ color: getContrastColor(colors.header) }} /></Button>
         <h1 className="text-lg font-black uppercase tracking-tighter" style={{ color: getContrastColor(colors.header) }}>@{profileData.username}</h1>
         <div className="w-10" />
@@ -99,7 +99,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
           <Image src={profileData.bannerUrl || `https://picsum.photos/seed/banner${profileData.id}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${profileData.bannerOffset || 50}%` }} unoptimized={true} />
           <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-transparent pointer-events-none" />
         </div>
-        <div className="px-6 -mt-20 flex flex-col items-center pb-8">
+        <div className="px-6 -mt-20 flex flex-col items-center pb-10 relative z-10">
           <Avatar className="h-36 w-36 border-4 border-white bg-white shadow-2xl"><AvatarImage src={profileData.profilePictureUrl} className="object-cover" /><AvatarFallback className="text-3xl font-black uppercase">{profileData.username?.[0]}</AvatarFallback></Avatar>
           <div className="text-center mt-6">
             <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{profileData.username}</h2>
@@ -122,7 +122,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       </div>
 
       {/* SEAMLESS STATS SECTION */}
-      <div className="relative z-40 transition-colors duration-300 py-10 px-10" style={{ backgroundColor: colors.statsSection }}>
+      <div className="relative z-40 transition-colors duration-300 py-12 px-10" style={{ backgroundColor: colors.statsSection }}>
         <div className="grid grid-cols-3 gap-8 w-full">
           <div className="text-center">
             <p className="text-2xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{profileData.totalIdeasPosted || 0}</p>

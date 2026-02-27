@@ -47,10 +47,10 @@ service cloud.firestore {
       }
     }
 
-    // Notifications: Allow list for the owner.
+    // Notifications: Fixed list permission.
     match /notifications/{notifId} {
       allow read: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
-      allow list: if isSignedIn() && request.query.limit <= 50; 
+      allow list: if isSignedIn(); 
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
