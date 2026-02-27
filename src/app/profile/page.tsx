@@ -262,7 +262,7 @@ export default function ProfilePage() {
       onClick={(e) => handleZoneClick(e, 'background')}
     >
       {isPaintMode && activeColor && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[300] bg-white px-6 py-2 rounded-full shadow-2xl border-2 border-primary flex items-center gap-3 animate-in fade-in slide-in-from-top-4">
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[500] bg-white px-6 py-2 rounded-full shadow-2xl border-2 border-primary flex items-center gap-3 animate-in fade-in slide-in-from-top-4">
           <div className="w-4 h-4 rounded-full border shadow-sm" style={{ backgroundColor: activeColor }}></div>
           <p className="text-[10px] font-black uppercase tracking-widest text-primary">Paint Mode Active</p>
           <button className="h-6 w-6 p-0 rounded-full hover:bg-muted flex items-center justify-center" onClick={() => { setIsPaintMode(false); setActiveColor(null); }}><X size={14}/></button>
@@ -285,7 +285,7 @@ export default function ProfilePage() {
               <Settings size={22} style={{ color: getContrastColor(formData.customColors.header) }} />
             </Button>
           </SheetTrigger>
-          <SheetContent side="bottom" className="rounded-t-[2.5rem] p-6 border-none z-[100]">
+          <SheetContent side="bottom" className="rounded-t-[2.5rem] p-6 border-none z-[400]">
             <SheetHeader className="mb-4 text-center">
               <SheetTitle className="text-sm font-black uppercase tracking-widest text-center">Profile Options</SheetTitle>
             </SheetHeader>
@@ -421,8 +421,8 @@ export default function ProfilePage() {
         </div>
       </Tabs>
 
-      {/* STICKERS LAYER: Lower z-index so UI is on top */}
-      <div className="absolute inset-0 pointer-events-none z-[5]">
+      {/* STICKERS LAYER: Adjusted z-index to show above content but below modals */}
+      <div className="absolute inset-0 pointer-events-none z-[160]">
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id}
@@ -485,7 +485,7 @@ export default function ProfilePage() {
       )}
 
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="max-w-md w-[95%] rounded-[2.5rem] p-6 max-h-[90vh] overflow-y-auto no-scrollbar border-none z-[200]">
+        <DialogContent className="max-w-md w-[95%] rounded-[2.5rem] p-6 max-h-[90vh] overflow-y-auto no-scrollbar border-none z-[500]">
           <DialogHeader>
             <DialogTitle className="text-sm font-black uppercase text-center">Customize Profile</DialogTitle>
           </DialogHeader>
@@ -514,8 +514,29 @@ export default function ProfilePage() {
               </div>
             </div>
 
+            <div className="space-y-4">
+               <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest">Display Name</Label>
+                  <Input 
+                    value={formData.name} 
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))} 
+                    className="rounded-2xl h-12 bg-muted/20 border-none" 
+                    placeholder="Update your name..."
+                  />
+               </div>
+               <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest">Bio Description</Label>
+                  <Textarea 
+                    value={formData.bio} 
+                    onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))} 
+                    placeholder="Tell your story..."
+                    className="rounded-2xl bg-muted/20 border-none min-h-[100px]" 
+                  />
+               </div>
+            </div>
+
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest">Banner Image</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest">Banner Photo</Label>
               <div onClick={() => bannerInputRef.current?.click()} className="relative h-24 bg-muted rounded-2xl overflow-hidden cursor-pointer border">
                 {formData.banner ? (
                   <Image 
@@ -537,25 +558,15 @@ export default function ProfilePage() {
                  <Image src={formData.profilePic || `https://picsum.photos/seed/${user.uid}/200/200`} alt="Profile" fill className="object-cover" />
                  <button onClick={() => profileInputRef.current?.click()} className="absolute inset-0 bg-black/10 flex items-center justify-center opacity-0 hover:opacity-100"><Camera className="text-white" size={16} /></button>
                </div>
-               <div className="flex-1 space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest">Name</Label>
-                  <Input value={formData.name} onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))} className="rounded-xl h-10 bg-muted/20 border-none" />
+               <div className="flex-1">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Profile Picture</p>
+                  <Button variant="outline" size="sm" className="mt-1 rounded-full text-[9px] uppercase font-black" onClick={() => profileInputRef.current?.click()}>Change Photo</Button>
                </div>
                <input type="file" min="1" max="1" ref={profileInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'profile')} />
             </div>
 
             <div className="space-y-2">
-               <Label className="text-[10px] font-black uppercase tracking-widest">Bio</Label>
-               <Textarea 
-                 value={formData.bio} 
-                 onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))} 
-                 placeholder="Tell something about yourself..."
-                 className="rounded-xl bg-muted/20 border-none min-h-[80px]" 
-               />
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest">Stickers</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest">Stickers Collection</Label>
               <div className="flex flex-wrap gap-2">
                 <Button variant="outline" size="sm" className="rounded-full h-12 w-12 border-2 border-dashed border-primary/20" onClick={() => stickerInputRef.current?.click()}><Plus size={20} /></Button>
                 {formData.stickers.map(s => (
@@ -575,11 +586,10 @@ export default function ProfilePage() {
             </div>
           </div>
           <DialogFooter className="flex-row gap-2 mt-4">
-            <Button className="flex-1 rounded-2xl h-12 uppercase font-black text-[10px] bg-primary text-white" onClick={handleSaveProfile} disabled={isSaving}>{isSaving ? <Loader2 className="animate-spin h-4 w-4" /> : "Save Profile"}</Button>
+            <Button className="flex-1 rounded-2xl h-12 uppercase font-black text-[10px] bg-primary text-white" onClick={handleSaveProfile} disabled={isSaving}>{isSaving ? <Loader2 className="animate-spin h-4 w-4" /> : "Apply All Changes"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
   );
 }
-
