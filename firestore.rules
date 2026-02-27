@@ -14,8 +14,7 @@ service cloud.firestore {
     // User Profiles: Publicly readable, owner can write.
     match /userProfiles/{userId} {
       allow read: if true;
-      allow create, update: if isOwner(userId);
-      allow delete: if isOwner(userId);
+      allow create, update, delete: if isOwner(userId);
     }
 
     // Ideas: Publicly readable, authenticated users can create.
@@ -47,14 +46,14 @@ service cloud.firestore {
       }
     }
 
-    // Notifications: Allow users to list their own notifications.
+    // Notifications: Users can list and read their own notifications.
     match /notifications/{notifId} {
       allow read, list: if isSignedIn();
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
     }
 
-    // Messages: Allow users to list and read their own messages.
+    // Messages: Allow users to list and read messages they are part of.
     match /messages/{msgId} {
       allow read, list: if isSignedIn();
       allow create: if isSignedIn() && request.resource.data.senderId == request.auth.uid;

@@ -7,9 +7,9 @@ import { Button } from "@/components/ui/button";
 import { 
   Settings, LogOut, Camera, 
   Plus, RotateCw, Pencil, Loader2, 
-  Tablet, ChevronLeft, PaintBucket,
-  Check, Layout, Square, User, List, Layers,
-  Minimize, Maximize, RotateCcw, Trash2, Video, Type, Image as LucideImage
+  ChevronLeft, PaintBucket,
+  Check, Layout, Square, User, List,
+  Image as LucideImage, Video, Type
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -20,7 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import Image from "next/image";
 import { useUser, useAuth, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { signOut, updateProfile } from "firebase/auth";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -83,13 +83,6 @@ export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [activeStickerId, setActiveStickerId] = useState<string | null>(null);
   const [draggedStickerId, setDraggedStickerId] = useState<string | null>(null);
-  
-  const [showBannerEditor, setShowBannerEditor] = useState(false);
-  const [tempBannerUrl, setTempBannerUrl] = useState<string | null>(null);
-  const [bannerOffset, setBannerOffset] = useState(50);
-  const [isDraggingBanner, setIsDraggingBanner] = useState(false);
-  const [dragStartY, setDragStartY] = useState(0);
-
   const [activeColorSection, setActiveColorSection] = useState<ColorSection | null>(null);
 
   const profileInputRef = useRef<HTMLInputElement>(null);
@@ -121,7 +114,6 @@ export default function ProfilePage() {
         stickers: profileData.stickers || [],
         customColors: profileData.customColors || {}
       });
-      setBannerOffset(profileData.bannerOffset || 50);
     }
   }, [profileData, user]);
 
@@ -135,14 +127,13 @@ export default function ProfilePage() {
     setIsSaving(true);
     try {
       await updateProfile(user, { displayName: formData.name });
-      
       await setDoc(profileRef, {
         id: user.uid,
         username: formData.name.toLowerCase().replace(/\s/g, ''),
         bio: formData.bio,
         profilePictureUrl: formData.profilePic,
         bannerUrl: formData.banner,
-        bannerOffset: bannerOffset,
+        bannerOffset: formData.bannerOffset,
         stickers: formData.stickers,
         customColors: formData.customColors,
         updatedAt: new Date().toISOString()
@@ -157,35 +148,13 @@ export default function ProfilePage() {
     }
   };
 
-  const handleBannerDragMove = (e: React.PointerEvent) => {
-    if (!isDraggingBanner) return;
-    const deltaY = e.clientY - dragStartY;
-    const newOffset = Math.max(0, Math.min(100, bannerOffset - (deltaY / 2.5)));
-    setBannerOffset(newOffset);
-    setDragStartY(e.clientY);
-  };
-
-  const handleBannerDragEnd = (e: React.PointerEvent) => {
-    setIsDraggingBanner(false);
-    try {
-      const el = e.currentTarget as HTMLElement;
-      if (el && el.releasePointerCapture) {
-        el.releasePointerCapture(e.pointerId);
-      }
-    } catch (err) {}
-  };
-
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'banner' | 'sticker') => {
     const file = e.target.files?.[0];
     if (file) {
       const base64 = await toBase64(file);
-      if (type === 'profile') {
-        setFormData(prev => ({ ...prev, profilePic: base64 }));
-      } else if (type === 'banner') {
-        setTempBannerUrl(base64);
-        setShowBannerEditor(true);
-        setIsEditModalOpen(false);
-      } else if (type === 'sticker') {
+      if (type === 'profile') setFormData(prev => ({ ...prev, profilePic: base64 }));
+      else if (type === 'banner') setFormData(prev => ({ ...prev, banner: base64 }));
+      else if (type === 'sticker') {
         const newSticker = { id: Math.random().toString(36).substr(2, 9), url: base64, x: 50, y: 50, rotation: 0, scale: 1 };
         setFormData(prev => ({ ...prev, stickers: [...prev.stickers, newSticker] }));
       }
@@ -194,13 +163,7 @@ export default function ProfilePage() {
 
   const applyColor = (hex: string) => {
     if (!activeColorSection) return;
-    setFormData(prev => ({
-      ...prev,
-      customColors: {
-        ...prev.customColors,
-        [activeColorSection]: hex
-      }
-    }));
+    setFormData(prev => ({ ...prev, customColors: { ...prev.customColors, [activeColorSection]: hex } }));
     setIsColorPickerOpen(false);
     setIsEditModalOpen(true); 
     setActiveColorSection(null);
@@ -219,14 +182,6 @@ export default function ProfilePage() {
     }));
   };
 
-  const deleteSticker = (id: string) => {
-    setFormData(prev => ({
-      ...prev,
-      stickers: prev.stickers.filter(s => s.id !== id)
-    }));
-    setActiveStickerId(null);
-  };
-
   if (isUserLoading || isProfileLoading) return <div className="max-w-md mx-auto min-h-screen flex items-center justify-center bg-background"><Loader2 className="animate-spin text-primary h-8 w-8" /></div>;
   if (!user) return null;
 
@@ -236,26 +191,18 @@ export default function ProfilePage() {
       className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden"
       style={{ backgroundColor: formData.customColors.background || "var(--background)" }}
     >
-      {/* SEAMLESS HEADER */}
-      <div 
-        className="px-6 flex justify-between items-center py-5 relative z-[100]" 
-        style={{ backgroundColor: formData.customColors.header }}
-      >
+      <div className="px-6 flex justify-between items-center py-5 relative z-[100]" style={{ backgroundColor: formData.customColors.header }}>
         <h1 className="text-2xl font-black uppercase tracking-tighter" style={{ color: getContrastColor(formData.customColors.header) }}>Sphere Profile</h1>
-        <Button variant="ghost" size="icon" className="rounded-full active:scale-90 transition-transform" onClick={() => setIsSettingsOpen(true)}><Settings size={24} style={{ color: getContrastColor(formData.customColors.header) }} /></Button>
+        <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setIsSettingsOpen(true)}><Settings size={24} style={{ color: getContrastColor(formData.customColors.header) }} /></Button>
       </div>
 
-      {/* SEAMLESS USER INFO */}
-      <div 
-        className="relative z-50" 
-        style={{ backgroundColor: formData.customColors.userInfo }}
-      >
+      <div className="relative z-50" style={{ backgroundColor: formData.customColors.userInfo }}>
         <div className="relative h-56 w-full bg-muted overflow-hidden">
           <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized={true} />
           <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-transparent pointer-events-none" />
         </div>
         <div className="px-6 -mt-20 flex flex-col items-center relative z-10 pb-10">
-          <Avatar className="h-36 w-36 border-4 border-white bg-white shadow-2xl transition-transform active:scale-105">
+          <Avatar className="h-36 w-36 border-4 border-white bg-white shadow-2xl">
             <AvatarImage src={formData.profilePic} className="object-cover" />
             <AvatarFallback className="text-2xl font-black uppercase">{formData.name?.[0] || "U"}</AvatarFallback>
           </Avatar>
@@ -263,22 +210,15 @@ export default function ProfilePage() {
             <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(formData.customColors.userInfo) }}>{formData.name || user.displayName || "Innovator"}</h2>
             <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(formData.customColors.userInfo) }}>Master of Innovations</p>
           </div>
-          <div 
-            className="p-8 rounded-[3rem] border w-full mt-8 shadow-xl" 
-            style={{ backgroundColor: formData.customColors.bioCard || "#FFFFFF" }}
-          >
-            <p className="text-center text-[13px] leading-relaxed font-bold italic break-words overflow-hidden" style={{ color: getContrastColor(formData.customColors.bioCard) }}>
+          <div className="p-8 rounded-[3rem] border w-full mt-8 shadow-xl" style={{ backgroundColor: formData.customColors.bioCard || "#FFFFFF" }}>
+            <p className="text-center text-[13px] leading-relaxed font-bold italic" style={{ color: getContrastColor(formData.customColors.bioCard) }}>
               {formData.bio || "Building the future of shared intelligence in the sphere."}
             </p>
           </div>
         </div>
       </div>
 
-      {/* SEAMLESS STATS SECTION */}
-      <div 
-        className="relative z-40 py-12 px-10" 
-        style={{ backgroundColor: formData.customColors.statsSection }}
-      >
+      <div className="relative z-40 py-12 px-10" style={{ backgroundColor: formData.customColors.statsSection }}>
         <div className="grid grid-cols-3 gap-8 w-full">
           <div className="text-center">
             <p className="text-2xl font-black tracking-tighter" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{profileData?.totalIdeasPosted || 0}</p>
@@ -295,7 +235,6 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* SEAMLESS TABS SECTION */}
       <Tabs defaultValue="photo" className="w-full relative z-30">
         <div style={{ backgroundColor: formData.customColors.tabsList }}>
           <TabsList className="w-full bg-transparent border-none rounded-none px-6 h-16">
@@ -323,12 +262,11 @@ export default function ProfilePage() {
         </div>
       </Tabs>
 
-      {/* STICKERS LAYER */}
       <div className="absolute inset-0 pointer-events-none z-[150]">
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
-            className={cn("absolute pointer-events-auto cursor-move", activeStickerId === sticker.id ? "ring-4 ring-primary ring-offset-4 rounded-2xl active-glow" : "")} 
+            className={cn("absolute pointer-events-auto cursor-move", activeStickerId === sticker.id ? "ring-2 ring-primary rounded-xl" : "")} 
             style={{ 
               left: `${sticker.x}%`, 
               top: `${sticker.y}%`, 
@@ -336,13 +274,8 @@ export default function ProfilePage() {
               touchAction: 'none' 
             }}
           >
-            <div className="relative w-32 h-32" 
-              onPointerDown={(e) => { 
-                if (activeStickerId === sticker.id) { 
-                  setDraggedStickerId(sticker.id); 
-                  try { (e.currentTarget as any).setPointerCapture(e.pointerId); } catch {} 
-                } 
-              }} 
+            <div className="relative w-24 h-24" 
+              onPointerDown={(e) => { if (activeStickerId === sticker.id) { setDraggedStickerId(sticker.id); (e.currentTarget as any).setPointerCapture(e.pointerId); } }} 
               onPointerMove={(e) => { 
                 if (draggedStickerId === sticker.id) { 
                   const rect = containerRef.current!.getBoundingClientRect(); 
@@ -352,106 +285,88 @@ export default function ProfilePage() {
                   });
                 } 
               }} 
-              onPointerUp={(e) => { setDraggedStickerId(null); try { (e.currentTarget as any).releasePointerCapture(e.pointerId); } catch {} }}>
+              onPointerUp={(e) => { setDraggedStickerId(null); (e.currentTarget as any).releasePointerCapture(e.pointerId); }}>
               <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized={true} />
             </div>
           </div>
         ))}
       </div>
 
-      {/* EDIT DIALOG */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <DialogContent 
-          onOpenAutoFocus={(e) => e.preventDefault()} 
-          className="max-w-md w-[95%] rounded-[3rem] p-7 max-h-[92vh] overflow-y-auto z-[3000] no-scrollbar border-none shadow-2xl flex flex-col"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+          className="max-w-md w-[95%] rounded-[3rem] p-7 max-h-[90vh] overflow-y-auto z-[3000] no-scrollbar border-none shadow-2xl flex flex-col"
         >
           <DialogHeader>
             <DialogTitle className="text-xs font-black uppercase text-center text-primary tracking-[0.2em] mb-4">Personalize Theme</DialogTitle>
           </DialogHeader>
-          <div className="space-y-8 py-2">
-            <div className="space-y-6">
-              {/* LAYOUT REORDER: Banner on top, Logo below */}
-              <div className="space-y-3">
+          <div className="space-y-6 py-2">
+            <div className="space-y-4">
+              <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Banner Placement</Label>
-                <div className="relative h-32 w-full rounded-[2rem] overflow-hidden border-2 border-muted bg-muted group cursor-pointer shadow-lg" onClick={() => bannerInputRef.current?.click()}>
+                <div className="relative h-32 w-full rounded-[2rem] overflow-hidden border-2 border-muted bg-muted group cursor-pointer" onClick={() => bannerInputRef.current?.click()}>
                   <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="Banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized={true} />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white p-4">
-                     <Camera size={24} className="mb-1" />
-                     <span className="text-[8px] font-black uppercase tracking-widest text-center">Update & Reposition</span>
-                  </div>
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"><Camera size={24} /></div>
                 </div>
               </div>
               
-              <div className="flex flex-col items-center gap-3">
+              <div className="flex flex-col items-center gap-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest">Brand Logo</Label>
-                <div className="relative h-28 w-28 rounded-full border-4 border-white bg-white shadow-2xl group cursor-pointer overflow-hidden active:scale-95 transition-transform" onClick={() => profileInputRef.current?.click()}>
+                <div className="relative h-24 w-24 rounded-full border-4 border-white bg-white shadow-xl group cursor-pointer overflow-hidden" onClick={() => profileInputRef.current?.click()}>
                   <Image src={formData.profilePic} alt="Logo" fill className="object-cover" unoptimized={true} />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"><Camera size={24} /></div>
                 </div>
               </div>
             </div>
 
-            <div className="space-y-5">
+            <div className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Innovator Handle</Label>
-                <Input value={formData.name} onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))} className="rounded-2xl h-14 bg-muted/30 border-none font-bold" />
+                <Input value={formData.name} onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))} className="rounded-2xl h-12 bg-muted/30 border-none font-bold" />
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Mission Brief</Label>
-                <Textarea value={formData.bio} maxLength={160} onChange={(e) => setFormData(p => ({ ...p, bio: e.target.value }))} className="rounded-2xl min-h-[100px] bg-muted/30 border-none font-medium leading-relaxed" />
+                <Textarea value={formData.bio} maxLength={160} onChange={(e) => setFormData(p => ({ ...p, bio: e.target.value }))} className="rounded-2xl min-h-[80px] bg-muted/30 border-none font-medium" />
               </div>
             </div>
 
-            <div className="space-y-5">
+            <div className="space-y-4">
               <Label className="text-[10px] font-black uppercase tracking-widest ml-1 flex items-center gap-2 text-primary"><PaintBucket size={16} /> Surface Themes</Label>
-              <div className="grid grid-cols-2 gap-4">
-                <Button variant="outline" className="h-16 rounded-[1.5rem] flex flex-col items-center justify-center gap-1 border-muted shadow-sm" onClick={() => openPickerFor('header')}>
-                  <Layout size={18} className="text-muted-foreground" />
+              <div className="grid grid-cols-2 gap-3">
+                <Button variant="outline" className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted" onClick={() => openPickerFor('header')}>
                   <span className="text-[8px] font-black uppercase tracking-widest">Header</span>
-                  <div className="w-10 h-1.5 rounded-full border shadow-inner" style={{ backgroundColor: formData.customColors.header || '#F3F4F6' }} />
+                  <div className="w-8 h-2 rounded-full border" style={{ backgroundColor: formData.customColors.header || '#F3F4F6' }} />
                 </Button>
-                <Button variant="outline" className="h-16 rounded-[1.5rem] flex flex-col items-center justify-center gap-1 border-muted shadow-sm" onClick={() => openPickerFor('background')}>
-                  <Square size={18} className="text-muted-foreground" />
+                <Button variant="outline" className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted" onClick={() => openPickerFor('background')}>
                   <span className="text-[8px] font-black uppercase tracking-widest">Canvas</span>
-                  <div className="w-10 h-1.5 rounded-full border shadow-inner" style={{ backgroundColor: formData.customColors.background || '#F3F4F6' }} />
+                  <div className="w-8 h-2 rounded-full border" style={{ backgroundColor: formData.customColors.background || '#F3F4F6' }} />
                 </Button>
-                <Button variant="outline" className="h-16 rounded-[1.5rem] flex flex-col items-center justify-center gap-1 border-muted shadow-sm" onClick={() => openPickerFor('userInfo')}>
-                  <User size={18} className="text-muted-foreground" />
+                <Button variant="outline" className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted" onClick={() => openPickerFor('userInfo')}>
                   <span className="text-[8px] font-black uppercase tracking-widest">Profile Box</span>
-                  <div className="w-10 h-1.5 rounded-full border shadow-inner" style={{ backgroundColor: formData.customColors.userInfo || '#F3F4F6' }} />
+                  <div className="w-8 h-2 rounded-full border" style={{ backgroundColor: formData.customColors.userInfo || '#F3F4F6' }} />
                 </Button>
-                <Button variant="outline" className="h-16 rounded-[1.5rem] flex flex-col items-center justify-center gap-1 border-muted shadow-sm" onClick={() => openPickerFor('bioCard')}>
-                  <Pencil size={18} className="text-muted-foreground" />
+                <Button variant="outline" className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted" onClick={() => openPickerFor('bioCard')}>
                   <span className="text-[8px] font-black uppercase tracking-widest">Bio Area</span>
-                  <div className="w-10 h-1.5 rounded-full border shadow-inner" style={{ backgroundColor: formData.customColors.bioCard || '#F3F4F6' }} />
+                  <div className="w-8 h-2 rounded-full border" style={{ backgroundColor: formData.customColors.bioCard || '#F3F4F6' }} />
                 </Button>
-                <Button variant="outline" className="h-16 rounded-[1.5rem] flex flex-col items-center justify-center gap-1 border-muted shadow-sm" onClick={() => openPickerFor('statsSection')}>
-                  <Plus size={18} className="text-muted-foreground" />
+                <Button variant="outline" className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted" onClick={() => openPickerFor('statsSection')}>
                   <span className="text-[8px] font-black uppercase tracking-widest">Impact Hub</span>
-                  <div className="w-10 h-1.5 rounded-full border shadow-inner" style={{ backgroundColor: formData.customColors.statsSection || '#F3F4F6' }} />
+                  <div className="w-8 h-2 rounded-full border" style={{ backgroundColor: formData.customColors.statsSection || '#F3F4F6' }} />
                 </Button>
-                <Button variant="outline" className="h-16 rounded-[1.5rem] flex flex-col items-center justify-center gap-1 border-muted shadow-sm" onClick={() => openPickerFor('tabsList')}>
-                  <List size={18} className="text-muted-foreground" />
+                <Button variant="outline" className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted" onClick={() => openPickerFor('tabsList')}>
                   <span className="text-[8px] font-black uppercase tracking-widest">Tab Bar</span>
-                  <div className="w-10 h-1.5 rounded-full border shadow-inner" style={{ backgroundColor: formData.customColors.tabsList || '#F3F4F6' }} />
+                  <div className="w-8 h-2 rounded-full border" style={{ backgroundColor: formData.customColors.tabsList || '#F3F4F6' }} />
                 </Button>
               </div>
             </div>
 
-            <div className="space-y-4 pb-4">
-               <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Innovation Stickers</Label>
-               <Button variant="outline" className="w-full h-14 rounded-2xl flex items-center gap-2 font-black uppercase text-[10px] border-primary/30 text-primary bg-primary/5 active:scale-95 transition-transform" onClick={() => stickerInputRef.current?.click()}><Plus size={18} /> Add New Sticker</Button>
-               <div className="flex flex-wrap gap-3 pt-2">
+            <div className="space-y-3">
+               <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Stickers</Label>
+               <Button variant="outline" className="w-full h-12 rounded-2xl flex items-center gap-2 font-black uppercase text-[10px]" onClick={() => stickerInputRef.current?.click()}><Plus size={18} /> Add New Sticker</Button>
+               <div className="flex flex-wrap gap-2">
                  {formData.stickers.map(s => (
-                   <button 
-                    key={s.id} 
-                    onClick={() => { setActiveStickerId(s.id); setIsEditModalOpen(false); }} 
-                    className={cn(
-                      "w-16 h-16 border-2 rounded-2xl p-2 relative active:scale-90 transition-all", 
-                      activeStickerId === s.id ? "border-primary bg-primary/10 shadow-xl" : "border-muted bg-white"
-                    )}
-                   >
-                     <Image src={s.url} alt="sticker" width={64} height={64} className="object-contain" unoptimized={true}/>
+                   <button key={s.id} onClick={() => { setActiveStickerId(s.id); setIsEditModalOpen(false); }} className={cn("w-12 h-12 border rounded-xl p-1", activeStickerId === s.id ? "border-primary bg-primary/10" : "border-muted")}>
+                     <Image src={s.url} alt="sticker" width={48} height={48} className="object-contain" unoptimized={true}/>
                    </button>
                  ))}
                </div>
@@ -460,33 +375,24 @@ export default function ProfilePage() {
             <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'banner')} />
             <input type="file" ref={stickerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'sticker')} />
           </div>
-          <DialogFooter className="mt-6 pt-5 border-t">
-            <Button className="w-full h-16 rounded-[2.5rem] bg-primary text-white font-black uppercase tracking-widest shadow-2xl shadow-primary/30 active:scale-95 transition-transform" onClick={handleSaveProfile} disabled={isSaving}>
+          <DialogFooter className="mt-4 pt-4 border-t">
+            <Button className="w-full h-14 rounded-[2rem] bg-primary text-white font-black uppercase tracking-widest shadow-xl" onClick={handleSaveProfile} disabled={isSaving}>
               {isSaving ? <Loader2 className="animate-spin mr-2" /> : "Publish Theme"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* COLOR PICKER SHEET */}
       <Sheet open={isColorPickerOpen} onOpenChange={setIsColorPickerOpen}>
-        <SheetContent side="bottom" className="rounded-t-[3.5rem] p-8 max-h-[75vh] overflow-y-auto no-scrollbar border-none z-[4100] shadow-2xl">
-          <SheetHeader><SheetTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-center text-primary mb-8">Surface Palette</SheetTitle></SheetHeader>
-          <div className="space-y-10 pb-20">
+        <SheetContent side="bottom" className="rounded-t-[3rem] p-8 max-h-[70vh] overflow-y-auto no-scrollbar border-none z-[4100]">
+          <SheetHeader><SheetTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-center text-primary mb-6">Surface Palette</SheetTitle></SheetHeader>
+          <div className="space-y-8 pb-10">
             {Object.entries(COLOR_CATEGORIES).map(([category, colors]) => (
-              <div key={category} className="space-y-4">
-                <h3 className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60 ml-2">{category}</h3>
-                <div className="grid grid-cols-6 gap-4">
+              <div key={category} className="space-y-3">
+                <h3 className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">{category}</h3>
+                <div className="grid grid-cols-6 gap-3">
                   {colors.map(c => (
-                    <button 
-                      key={c} 
-                      onClick={() => applyColor(c)} 
-                      className={cn(
-                        "aspect-square rounded-full border-2 transition-all active:scale-75 shadow-sm", 
-                        formData.customColors[activeColorSection!] === c ? "border-primary scale-125 shadow-xl z-10" : "border-white"
-                      )} 
-                      style={{ backgroundColor: c }} 
-                    />
+                    <button key={c} onClick={() => applyColor(c)} className={cn("aspect-square rounded-full border-2 transition-all active:scale-75", formData.customColors[activeColorSection!] === c ? "border-primary scale-110" : "border-white")} style={{ backgroundColor: c }} />
                   ))}
                 </div>
               </div>
@@ -495,25 +401,12 @@ export default function ProfilePage() {
         </SheetContent>
       </Sheet>
 
-      {/* SETTINGS SHEET */}
       <Sheet open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-        <SheetContent side="bottom" className="rounded-t-[3.5rem] p-8 border-none z-[4100] shadow-2xl">
-          <SheetHeader><SheetTitle className="text-[10px] font-black uppercase tracking-widest text-center mb-6">Management Hub</SheetTitle></SheetHeader>
-          <div className="space-y-4 mt-4 pb-6">
-            <Button 
-              variant="outline" 
-              className="w-full justify-start h-16 rounded-[2rem] px-8 gap-5 border-primary/30 text-primary font-black uppercase tracking-widest shadow-md hover:bg-primary/5 active:scale-95 transition-all" 
-              onClick={() => { setIsSettingsOpen(false); setIsEditModalOpen(true); }}
-            >
-              <Pencil size={20} /> Edit Profile Theme
-            </Button>
-            <Button 
-              variant="ghost" 
-              onClick={handleSignOut} 
-              className="w-full justify-start h-16 rounded-[2rem] px-8 gap-5 text-secondary font-black uppercase tracking-widest hover:bg-secondary/10 active:scale-95 transition-all"
-            >
-              <LogOut size={20} /> Terminate Session
-            </Button>
+        <SheetContent side="bottom" className="rounded-t-[3rem] p-8 border-none z-[4100]">
+          <SheetHeader><SheetTitle className="text-[10px] font-black uppercase tracking-widest text-center mb-4">Management Hub</SheetTitle></SheetHeader>
+          <div className="space-y-3 mt-4">
+            <Button variant="outline" className="w-full justify-start h-14 rounded-2xl px-6 gap-4 border-primary/20 text-primary font-black uppercase tracking-widest" onClick={() => { setIsSettingsOpen(false); setIsEditModalOpen(true); }}><Pencil size={18} /> Edit Theme</Button>
+            <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start h-14 rounded-2xl px-6 gap-4 text-secondary font-black uppercase tracking-widest hover:bg-secondary/10"><LogOut size={18} /> Sign Out</Button>
           </div>
         </SheetContent>
       </Sheet>
