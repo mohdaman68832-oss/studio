@@ -191,7 +191,7 @@ export default function ProfilePage() {
   };
 
   const handleStickerPointerDown = (e: React.PointerEvent, id: string) => {
-    if (editingStickerId !== id) return; // Only allow dragging if already in edit mode
+    if (editingStickerId !== id) return;
     e.stopPropagation();
     setIsDragging(true);
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
@@ -242,11 +242,11 @@ export default function ProfilePage() {
 
   return (
     <div 
-      className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-hidden flex flex-col m-0 p-0 no-scrollbar"
+      className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden flex flex-col m-0 p-0 no-scrollbar"
       style={{ backgroundColor: colors.background || "var(--background)" }}
       ref={containerRef}
     >
-      {/* Seamless Color Background Layers (z-0) */}
+      {/* SEAMLESS BACKGROUND LAYERS (z-0) */}
       <div className="flex flex-col m-0 p-0 relative z-0 shrink-0">
          <div className="h-16 w-full" style={{ backgroundColor: colors.header }} />
          <div className="h-[28rem] w-full" style={{ backgroundColor: colors.userInfo }} />
@@ -254,7 +254,7 @@ export default function ProfilePage() {
          <div className="flex-1 w-full min-h-[50vh]" style={{ backgroundColor: colors.tabsContent }} />
       </div>
 
-      {/* Layer: Banner & Identity (z-10) */}
+      {/* IDENTITY LAYER (z-10) - Banner & Logo */}
       <div className="absolute inset-0 z-10 pointer-events-none">
         <div className="relative h-52 w-full overflow-hidden">
           <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized />
@@ -267,7 +267,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Layer: Stickers (z-20) - On top of Banner/Logo, below UI */}
+      {/* STICKERS LAYER (z-20) - On top of Banner/Logo, but behind UI elements */}
       <div className="absolute inset-0 z-20 pointer-events-none">
         {formData.stickers.map((sticker) => (
           <div 
@@ -293,8 +293,8 @@ export default function ProfilePage() {
         ))}
       </div>
 
-      {/* Layer: UI (z-40) - Interactive Elements */}
-      <div className="absolute inset-0 flex flex-col m-0 p-0 z-40 pointer-events-none no-scrollbar overflow-y-auto">
+      {/* UI INTERACTIVE LAYER (z-30) - Name, Bio, Stats, Tabs */}
+      <div className="absolute inset-0 flex flex-col m-0 p-0 z-30 pointer-events-none no-scrollbar overflow-y-auto">
         <header className="px-6 flex justify-between items-center py-5 pointer-events-auto">
           <h1 className="text-2xl font-black uppercase tracking-tighter" style={{ color: getContrastColor(colors.header) }}>Sphere</h1>
           <div className="flex items-center gap-2">
@@ -513,7 +513,6 @@ export default function ProfilePage() {
                 {formData.stickers.map(s => (
                   <div key={s.id} className="relative w-12 h-12 rounded-lg border overflow-hidden group">
                     <Image src={s.url} alt="s" fill className="object-contain" />
-                    {/* Only allow selecting stickers for editing from here */}
                     <button 
                       onClick={() => { 
                         setEditingStickerId(s.id); 
@@ -594,4 +593,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-

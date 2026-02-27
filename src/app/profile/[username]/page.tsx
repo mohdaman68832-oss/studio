@@ -86,10 +86,10 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
 
   return (
     <div 
-      className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-hidden flex flex-col m-0 p-0 no-scrollbar" 
+      className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden flex flex-col m-0 p-0 no-scrollbar" 
       style={{ backgroundColor: colors.background || "var(--background)" }}
     >
-      {/* Background Sections (Seamless) */}
+      {/* SEAMLESS BACKGROUND LAYERS (z-0) */}
       <div className="flex flex-col m-0 p-0 relative z-0 shrink-0">
          <div className="h-16 w-full" style={{ backgroundColor: colors.header }} />
          <div className="h-[28rem] w-full" style={{ backgroundColor: colors.userInfo }} />
@@ -97,12 +97,25 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
          <div className="flex-1 w-full min-h-[50vh]" style={{ backgroundColor: colors.tabsContent }} />
       </div>
 
-      {/* Layer: Stickers (z-index 40) - On top of Banner/Logo */}
-      <div className="absolute inset-0 z-40 pointer-events-none">
+      {/* IDENTITY LAYER (z-10) - Banner & Logo */}
+      <div className="absolute inset-0 z-10 pointer-events-none">
+        <div className="relative h-52 w-full bg-muted overflow-hidden">
+          <Image src={profileData.bannerUrl || `https://picsum.photos/seed/banner${profileData.id}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${profileData.bannerOffset || 50}%` }} unoptimized />
+        </div>
+        <div className="px-6 -mt-16 flex flex-col items-center pb-4">
+          <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl pointer-events-auto">
+            <AvatarImage src={profileData.profilePictureUrl} className="object-cover" />
+            <AvatarFallback className="text-2xl font-black uppercase">{profileData.username?.[0]}</AvatarFallback>
+          </Avatar>
+        </div>
+      </div>
+
+      {/* STICKERS LAYER (z-20) - On top of Banner/Logo, but behind UI elements */}
+      <div className="absolute inset-0 z-20 pointer-events-none">
         {stickers.map((sticker) => (
           <div 
             key={sticker.id} 
-            className="absolute" 
+            className="absolute pointer-events-none select-none" 
             style={{ 
               left: `${sticker.x}%`, 
               top: `${sticker.y}%`, 
@@ -116,8 +129,8 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         ))}
       </div>
 
-      {/* Layer: UI Content (z-index 50) */}
-      <div className="absolute inset-0 flex flex-col m-0 p-0 z-50 pointer-events-none no-scrollbar overflow-y-auto">
+      {/* UI INTERACTIVE LAYER (z-30) - Name, Bio, Stats, Tabs */}
+      <div className="absolute inset-0 flex flex-col m-0 p-0 z-30 pointer-events-none no-scrollbar overflow-y-auto">
         <div className="px-6 flex justify-between items-center py-5 pointer-events-auto">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full"><ChevronLeft size={24} style={{ color: getContrastColor(colors.header) }} /></Button>
           <h1 className="text-lg font-black uppercase tracking-tighter" style={{ color: getContrastColor(colors.header) }}>@{profileData.username}</h1>
@@ -125,11 +138,9 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         </div>
 
         <section className="relative">
-          <div className="relative h-52 w-full bg-muted overflow-hidden">
-            <Image src={profileData.bannerUrl || `https://picsum.photos/seed/banner${profileData.id}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${profileData.bannerOffset || 50}%` }} unoptimized />
-          </div>
+          <div className="h-52 w-full" />
           <div className="px-6 -mt-16 flex flex-col items-center pb-4">
-            <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl pointer-events-auto"><AvatarImage src={profileData.profilePictureUrl} className="object-cover" /><AvatarFallback className="text-2xl font-black uppercase">{profileData.username?.[0]}</AvatarFallback></Avatar>
+            <div className="h-32 w-32" />
             <div className="text-center mt-4">
               <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{profileData.name || profileData.username}</h2>
               <p className="text-[10px] font-black tracking-[0.2em] uppercase opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>Sphere Innovator</p>
