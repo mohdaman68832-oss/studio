@@ -178,7 +178,7 @@ export default function ProfilePage() {
         const newId = Math.random().toString(36).substr(2, 9);
         const newSticker = { id: newId, url: base64, x: 50, y: 30, rotation: 0, scale: 1 };
         setFormData(prev => ({ ...prev, stickers: [...prev.stickers, newSticker] }));
-        setIsOptimizeModalOpen(false);
+        setIsOptimizeModalOpen(false); // Auto-close popup for editing
         setEditingStickerId(newId);
       }
     }
@@ -246,9 +246,9 @@ export default function ProfilePage() {
       style={{ backgroundColor: colors.background || "var(--background)" }}
     >
       <div className="relative w-full shrink-0" ref={containerRef}>
-        <div className="h-16 w-full relative z-30" style={{ backgroundColor: colors.header }} />
+        <div className="h-16 w-full relative z-[50]" style={{ backgroundColor: colors.header }} />
         
-        <header className="absolute top-0 left-0 right-0 z-[50] px-6 flex justify-between items-center py-5">
+        <header className="absolute top-0 left-0 right-0 z-[60] px-6 flex justify-between items-center py-5">
           <h1 className="text-2xl font-black uppercase tracking-tighter" style={{ color: getContrastColor(colors.header) }}>Sphere</h1>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -297,7 +297,7 @@ export default function ProfilePage() {
           <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized />
         </div>
         
-        <div className="relative px-6 -mt-16 flex flex-col items-center z-[15]">
+        <div className="relative px-6 -mt-16 flex flex-col items-center z-[30]">
           <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl z-[10]">
             <AvatarImage src={formData.profilePic} className="object-cover" />
             <AvatarFallback className="text-2xl font-black uppercase">{formData.name?.[0] || "U"}</AvatarFallback>
@@ -305,7 +305,8 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <div style={{ backgroundColor: colors.userInfo || "transparent" }} className="w-full z-[30] relative">
+      {/* SEAMLESS USER INFO */}
+      <div style={{ backgroundColor: colors.userInfo || "transparent" }} className="w-full z-[30] relative -mt-1">
         <div className="px-6 flex flex-col items-center pb-8">
           <div className="text-center mt-4">
             <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{formData.name || "Innovator"}</h2>
@@ -320,6 +321,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {/* SEAMLESS STATS SECTION */}
       <div style={{ backgroundColor: colors.statsSection || "transparent" }} className="w-full py-8 px-10 relative z-[30]">
         <div className="grid grid-cols-3 gap-6 w-full">
           <div className="text-center">
@@ -337,6 +339,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {/* SEAMLESS TABS SECTION */}
       <div style={{ backgroundColor: colors.tabsContent || "transparent" }} className="w-full flex-1 relative z-[30]">
         <Tabs defaultValue="photo" className="w-full">
           <TabsList className="w-full bg-transparent border-none rounded-none px-6 h-14" style={{ backgroundColor: colors.tabsList }}>
@@ -364,7 +367,7 @@ export default function ProfilePage() {
         </Tabs>
       </div>
 
-      {/* STICKER STUDIO HUD (z-2000) */}
+      {/* COMPACT STICKER STUDIO HUD (z-[2000] for top layer) */}
       {editingStickerId && activeSticker && (
         <div className="fixed bottom-20 left-4 right-4 z-[2000] bg-white/95 backdrop-blur-md rounded-[2rem] border shadow-2xl p-5 animate-in slide-in-from-bottom-4">
           <div className="space-y-4">

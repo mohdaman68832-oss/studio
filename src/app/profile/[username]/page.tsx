@@ -89,11 +89,10 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden flex flex-col no-scrollbar" 
       style={{ backgroundColor: colors.background || "var(--background)" }}
     >
-      {/* HEADER SECTION (Banner + Logo + Stickers) */}
       <div className="relative w-full shrink-0">
-        <div className="h-16 w-full" style={{ backgroundColor: colors.header }} />
+        <div className="h-16 w-full relative z-[50]" style={{ backgroundColor: colors.header }} />
         
-        <header className="absolute top-0 left-0 right-0 z-[50] px-6 flex justify-between items-center py-5">
+        <header className="absolute top-0 left-0 right-0 z-[60] px-6 flex justify-between items-center py-5">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full">
             <ChevronLeft size={24} style={{ color: getContrastColor(colors.header) }} />
           </Button>
@@ -131,8 +130,8 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       </div>
 
       {/* USER INFO SECTION */}
-      <div style={{ backgroundColor: colors.userInfo || "transparent" }} className="w-full">
-        <div className="px-6 flex flex-col items-center pb-8 z-[30] relative">
+      <div style={{ backgroundColor: colors.userInfo || "transparent" }} className="w-full relative -mt-1 z-[30]">
+        <div className="px-6 flex flex-col items-center pb-8">
           <div className="text-center mt-4">
             <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{profileData.name || profileData.username}</h2>
             <p className="text-[10px] font-black tracking-[0.2em] uppercase opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>Sphere Innovator</p>
