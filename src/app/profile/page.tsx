@@ -220,8 +220,9 @@ export default function ProfilePage() {
   const handleStickerPointerUp = async (e: React.PointerEvent, stickerId: string) => {
     if (draggedStickerId === stickerId) {
       try {
-        if ((e.currentTarget as HTMLElement).hasPointerCapture(e.pointerId)) {
-          (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+        const el = e.currentTarget as HTMLElement;
+        if (el.hasPointerCapture(e.pointerId)) {
+          el.releasePointerCapture(e.pointerId);
         }
       } catch (err) {}
       setDraggedStickerId(null);
@@ -248,8 +249,9 @@ export default function ProfilePage() {
   const handleBannerDragEnd = (e: React.PointerEvent) => {
     setIsDraggingBanner(false);
     try {
-      if ((e.currentTarget as HTMLElement).hasPointerCapture(e.pointerId)) {
-        (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+      const el = e.currentTarget as HTMLElement;
+      if (el.hasPointerCapture(e.pointerId)) {
+        el.releasePointerCapture(e.pointerId);
       }
     } catch (err) {}
   };
@@ -481,7 +483,7 @@ export default function ProfilePage() {
             )}
             style={{ backgroundColor: formData.customColors.bioCard || "#FFFFFF" }}
           >
-            <p className="text-center text-xs leading-relaxed font-medium italic" style={{ color: getContrastColor(formData.customColors.bioCard) }}>
+            <p className="text-center text-xs leading-relaxed font-medium italic break-words overflow-hidden" style={{ color: getContrastColor(formData.customColors.bioCard) }}>
               {formData.bio || "Crafting new ideas daily."}
             </p>
           </div>

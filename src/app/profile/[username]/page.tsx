@@ -152,7 +152,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
             className="p-6 rounded-[2.5rem] border w-full mt-6 transition-colors duration-300 shadow-sm"
             style={{ backgroundColor: colors.bioCard || "#FFFFFF" }}
           >
-            <p className="text-center text-xs leading-relaxed font-medium italic" style={{ color: getContrastColor(colors.bioCard) }}>
+            <p className="text-center text-xs leading-relaxed font-medium italic break-words overflow-hidden" style={{ color: getContrastColor(colors.bioCard) }}>
               {profileData.bio || "Crafting new ideas daily in the sphere."}
             </p>
           </div>

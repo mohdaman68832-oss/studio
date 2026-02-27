@@ -5,12 +5,18 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, PlusSquare, Search, MessageCircle, User } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useUser } from "@/firebase";
+import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { doc } from "firebase/firestore";
 
 export function BottomNav() {
   const pathname = usePathname();
   const { user } = useUser();
+  const db = useFirestore();
+
+  // Fetch the latest profile data from Firestore for real-time updates in the nav
+  const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [user, db]);
+  const { data: profileData } = useDoc(profileRef);
 
   // Don't show the bottom nav on login/signup pages or if the user isn't logged in
   const isAuthPage = pathname === '/login' || pathname === '/signup';
@@ -24,8 +30,10 @@ export function BottomNav() {
     { label: "Profile", icon: User, href: "/profile" },
   ];
 
+  const profilePic = profileData?.profilePictureUrl || user?.photoURL || "";
+
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bottom-nav-blur h-16 safe-area-inset-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 z-[1000] border-t bottom-nav-blur h-16 safe-area-inset-bottom">
       <div className="flex items-center justify-around h-full max-w-md mx-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -47,7 +55,7 @@ export function BottomNav() {
                     "h-7 w-7 border-2 transition-all duration-300 shadow-sm",
                     isActive ? "border-primary scale-110 shadow-md" : "border-transparent"
                   )}>
-                    <AvatarImage src={user?.photoURL || ""} className="object-cover" />
+                    <AvatarImage src={profilePic} className="object-cover" />
                     <AvatarFallback className="text-[8px] font-black uppercase bg-primary/10 text-primary">
                       {user?.displayName?.[0] || "U"}
                     </AvatarFallback>
