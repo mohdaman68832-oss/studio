@@ -39,11 +39,10 @@ interface CustomColors {
   background?: string;
 }
 
-// Added more light/pastel colors as requested
+// Extended light/pastel color palette
 const PALETTE = [
   "#FFFFFF", // White
   "#F8FAFC", // Slate Light
-  "#F1F5F9", // Slate
   "#F0FDF4", // Mint Light
   "#ECFDF5", // Emerald Light
   "#EFF6FF", // Blue Light
@@ -53,13 +52,15 @@ const PALETTE = [
   "#FFFBEB", // Amber Light
   "#FEF2F2", // Red Light
   "#DBEAFE", // Baby Blue
-  "#D1FAE5", // Mint
+  "#D1FAE5", // Pale Mint
   "#E0E7FF", // Lavender
-  "#FCE7F3", // Pale Pink
+  "#FCE7F3", // Soft Pink
   "#FFEDD5", // Peach
-  "#008080", // Original Teal
-  "#FF4500", // Original Coral
-  "#F2F3F5"  // App Gray
+  "#E9D5FF", // Soft Purple
+  "#CFFAFE", // Light Cyan
+  "#F2F3F5", // App Gray
+  "#008080", // Teal
+  "#FF4500"  // Coral
 ];
 
 function getContrastColor(hexColor: string | undefined): string {
@@ -144,7 +145,7 @@ export default function ProfilePage() {
     try {
       await updateProfile(user, { displayName: formData.name, photoURL: formData.profilePic });
       await updateDoc(profileRef, {
-        username: formData.name, // Keep username in sync
+        username: formData.name,
         bio: formData.bio,
         profilePictureUrl: formData.profilePic,
         bannerUrl: formData.banner,
@@ -165,7 +166,6 @@ export default function ProfilePage() {
   const handleBannerDragMove = (e: React.PointerEvent) => {
     if (!isDraggingBanner) return;
     const deltaY = e.clientY - dragStartY;
-    // Adjust sensitivity and bounds
     const newOffset = Math.max(0, Math.min(100, bannerOffset - (deltaY / 2.5)));
     setBannerOffset(newOffset);
     setDragStartY(e.clientY);
@@ -245,20 +245,6 @@ export default function ProfilePage() {
               </div>
             </div>
             
-            <div className="space-y-4">
-               <div className="flex items-center gap-2 text-muted-foreground justify-center">
-                  <Smartphone size={16} />
-                  <span className="text-[10px] font-bold uppercase">Mobile & App View</span>
-               </div>
-               <div className="flex justify-center">
-                  <div className="relative w-full max-w-[200px] aspect-[4/3] bg-muted rounded-2xl overflow-hidden border-4 border-white shadow-xl">
-                    {tempBannerUrl && (
-                      <Image src={tempBannerUrl} alt="Mobile Preview" fill className="object-cover" style={{ objectPosition: `50% ${bannerOffset}%` }} unoptimized={true} />
-                    )}
-                  </div>
-               </div>
-            </div>
-
             <Button 
               onClick={() => { 
                 setFormData(prev => ({ ...prev, banner: tempBannerUrl!, bannerOffset })); 
@@ -303,7 +289,7 @@ export default function ProfilePage() {
             </h2>
           </div>
           <div className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-sm" style={{ backgroundColor: formData.customColors.bioCard || "#FFFFFF" }}>
-            <p className="text-center text-xs leading-relaxed font-medium italic break-words" style={{ color: getContrastColor(formData.customColors.bioCard) }}>
+            <p className="text-center text-xs leading-relaxed font-medium italic break-words overflow-hidden" style={{ color: getContrastColor(formData.customColors.bioCard) }}>
               {formData.bio || "Crafting new ideas daily in the sphere."}
             </p>
           </div>
@@ -321,7 +307,7 @@ export default function ProfilePage() {
         </TabsContent>
       </Tabs>
 
-      {/* Stickers Layer (Below Modals) */}
+      {/* Stickers Layer */}
       <div className="absolute inset-0 pointer-events-none z-[30]">
         {formData.stickers.map((sticker) => (
           <div 
@@ -367,13 +353,37 @@ export default function ProfilePage() {
         ))}
       </div>
 
-      {/* Edit Modal (The "Optimize" Trigger) */}
+      {/* Optimize Profile Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="max-w-md w-[95%] rounded-[2.5rem] p-6 max-h-[90vh] overflow-y-auto z-[600]">
+        <DialogContent className="max-w-md w-[95%] rounded-[2.5rem] p-6 max-h-[90vh] overflow-y-auto z-[600] no-scrollbar">
           <DialogHeader>
             <DialogTitle className="text-sm font-black uppercase text-center text-primary">Optimize Profile</DialogTitle>
           </DialogHeader>
+          
           <div className="space-y-6 py-4">
+            {/* Visual Preview Section */}
+            <div className="relative h-28 bg-muted rounded-[1.5rem] overflow-hidden border border-muted-foreground/10 group shadow-sm">
+              {formData.banner && (
+                <Image 
+                  src={formData.banner} 
+                  alt="Banner Preview" 
+                  fill 
+                  className="object-cover opacity-60" 
+                  style={{ objectPosition: `50% ${formData.bannerOffset}%` }}
+                  unoptimized={true} 
+                />
+              )}
+              <div className="absolute inset-0 flex items-center justify-center bg-black/5">
+                <Avatar className="h-16 w-16 border-2 border-white shadow-md">
+                  <AvatarImage src={formData.profilePic} className="object-cover" />
+                  <AvatarFallback className="text-xl font-black">{formData.name?.[0] || "U"}</AvatarFallback>
+                </Avatar>
+              </div>
+              <div className="absolute bottom-2 right-4 flex items-center gap-1">
+                <span className="text-[8px] font-black uppercase tracking-widest text-foreground/40">Visual Preview</span>
+              </div>
+            </div>
+
             {/* Identity Fields */}
             <div className="space-y-4">
               <div className="space-y-2">
@@ -391,7 +401,7 @@ export default function ProfilePage() {
                   value={formData.bio} 
                   maxLength={160} 
                   onChange={(e) => setFormData(p => ({ ...p, bio: e.target.value }))} 
-                  className="rounded-2xl min-h-[100px] bg-muted/20 border-none" 
+                  className="rounded-2xl min-h-[80px] bg-muted/20 border-none" 
                   placeholder="Share your innovation journey..."
                 />
               </div>
@@ -404,18 +414,18 @@ export default function ProfilePage() {
                 className="rounded-2xl h-12 flex items-center gap-2 border-primary/20 text-primary font-bold uppercase text-[10px]" 
                 onClick={() => profileInputRef.current?.click()}
               >
-                <Camera size={16} /> Change Logo
+                <Camera size={16} /> Update Logo
               </Button>
               <Button 
                 variant="outline" 
                 className="rounded-2xl h-12 flex items-center gap-2 border-primary/20 text-primary font-bold uppercase text-[10px]" 
                 onClick={() => bannerInputRef.current?.click()}
               >
-                <ImageIcon size={16} /> Change Banner
+                <ImageIcon size={16} /> Update Banner
               </Button>
             </div>
 
-            {/* Paint Palette */}
+            {/* Theme Colors */}
             <div className="space-y-3">
               <Label className="text-[10px] font-black uppercase tracking-widest ml-1 flex items-center gap-2">
                 <PaintBucket size={14} /> Theme Palette
@@ -425,7 +435,6 @@ export default function ProfilePage() {
                   <button 
                     key={c} 
                     onClick={() => {
-                      // Apply to background or current active section
                       setFormData(prev => ({ 
                         ...prev, 
                         customColors: { ...prev.customColors, background: c } 
@@ -477,7 +486,7 @@ export default function ProfilePage() {
 
           <DialogFooter className="mt-4">
             <Button className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase shadow-xl" onClick={handleSaveProfile} disabled={isSaving}>
-              {isSaving ? <Loader2 className="animate-spin mr-2" /> : "Save Profile Updates"}
+              {isSaving ? <Loader2 className="animate-spin mr-2" /> : "Apply Profile Updates"}
             </Button>
           </DialogFooter>
         </DialogContent>
