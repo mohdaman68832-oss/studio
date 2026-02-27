@@ -345,7 +345,7 @@ export default function ProfilePage() {
                   <span className="text-[8px] font-black uppercase tracking-widest">Profile Box</span>
                   <div className="w-8 h-2 rounded-full border" style={{ backgroundColor: formData.customColors.userInfo || '#F3F4F6' }} />
                 </Button>
-                <Button variant="outline" className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted" onClick={() => openPickerFor('bioCard')}>
+                <Button variant="outline" className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted" onClick={() => openPickerFor('bioArea')}>
                   <span className="text-[8px] font-black uppercase tracking-widest">Bio Area</span>
                   <div className="w-8 h-2 rounded-full border" style={{ backgroundColor: formData.customColors.bioCard || '#F3F4F6' }} />
                 </Button>

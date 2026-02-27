@@ -48,14 +48,15 @@ service cloud.firestore {
 
     // Notifications: Users can list and read their own notifications.
     match /notifications/{notifId} {
-      allow read, list: if isSignedIn();
-      allow create: if isSignedIn();
+      allow read, create: if isSignedIn();
+      allow list: if isSignedIn() && request.query.limit <= 50; 
       allow update, delete: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
     }
 
     // Messages: Allow users to list and read messages they are part of.
     match /messages/{msgId} {
-      allow read, list: if isSignedIn();
+      allow read: if isSignedIn() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid);
+      allow list: if isSignedIn();
       allow create: if isSignedIn() && request.resource.data.senderId == request.auth.uid;
     }
 
@@ -67,7 +68,7 @@ service cloud.firestore {
 
     // Global catch-all
     match /{path=**} {
-      allow read: if true;
+      allow read: if isSignedIn();
       allow write: if isSignedIn();
     }
   }
