@@ -199,14 +199,13 @@ export default function ProfilePage() {
       }
     }));
     setIsColorPickerOpen(false);
-    setIsEditModalOpen(true); // Return to modal after choosing
+    setIsEditModalOpen(false); // Close both popups as requested
     setActiveColorSection(null);
   };
 
   const openPickerFor = (section: ColorSection) => {
     setActiveColorSection(section);
     setIsColorPickerOpen(true);
-    setIsEditModalOpen(false);
   };
 
   if (isUserLoading || isProfileLoading) return <div className="max-w-md mx-auto p-10 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>;
@@ -269,12 +268,12 @@ export default function ProfilePage() {
       )}
 
       {/* NORMAL PROFILE HEADER */}
-      <div className="px-6 flex justify-between items-center py-4 relative z-20" style={{ backgroundColor: formData.customColors.header }}>
+      <div className="px-6 flex justify-between items-center py-4 relative z-20 transition-colors duration-300" style={{ backgroundColor: formData.customColors.header }}>
         <h1 className="text-2xl font-black uppercase tracking-tighter" style={{ color: getContrastColor(formData.customColors.header) }}>Profile</h1>
         <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setIsSettingsOpen(true)}><Settings size={22} style={{ color: getContrastColor(formData.customColors.header) }} /></Button>
       </div>
 
-      <div className="pb-8 relative z-10" style={{ backgroundColor: formData.customColors.userInfo }}>
+      <div className="pb-8 relative z-10 transition-colors duration-300" style={{ backgroundColor: formData.customColors.userInfo }}>
         <div className="relative h-48 w-full bg-muted overflow-hidden">
           <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized={true} />
         </div>
@@ -286,13 +285,14 @@ export default function ProfilePage() {
           <div className="text-center mt-4">
             <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(formData.customColors.userInfo) }}>{formData.name || user.displayName || "Innovator"}</h2>
           </div>
-          <div className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-sm" style={{ backgroundColor: formData.customColors.bioCard || "#FFFFFF" }}>
+          <div className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-sm transition-colors duration-300" style={{ backgroundColor: formData.customColors.bioCard || "#FFFFFF" }}>
             <p className="text-center text-xs leading-relaxed font-medium italic break-words overflow-hidden" style={{ color: getContrastColor(formData.customColors.bioCard) }}>{formData.bio || "Crafting new ideas daily in the sphere."}</p>
           </div>
         </div>
       </div>
 
-      <div className="px-6 mb-6 relative z-10" style={{ backgroundColor: formData.customColors.statsSection }}>
+      {/* STATS SECTION - Margin Removed for Seamless Connection */}
+      <div className="px-6 relative z-10 transition-colors duration-300" style={{ backgroundColor: formData.customColors.statsSection }}>
         <div 
           className="grid grid-cols-3 gap-8 w-full py-6 px-4 rounded-[2rem] border transition-colors shadow-sm"
           style={{ backgroundColor: formData.customColors.statsSection || "#FFFFFF" }}
@@ -312,16 +312,43 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <Tabs defaultValue="my-ideas" className="w-full relative z-10 pb-24">
-        <TabsList className="w-full bg-transparent border-none rounded-none px-6 h-14" style={{ backgroundColor: formData.customColors.tabsList }}>
-          <TabsTrigger value="my-ideas" className="flex-1 rounded-none"><Grid size={22} style={{ color: getContrastColor(formData.customColors.tabsList) }} /></TabsTrigger>
-          <TabsTrigger value="saved" className="flex-1 rounded-none"><Bookmark size={22} style={{ color: getContrastColor(formData.customColors.tabsList) }} /></TabsTrigger>
-          <TabsTrigger value="liked" className="flex-1 rounded-none"><Heart size={22} style={{ color: getContrastColor(formData.customColors.tabsList) }} /></TabsTrigger>
-        </TabsList>
-        <TabsContent value="my-ideas" className="px-1 py-12 text-center transition-colors" style={{ backgroundColor: formData.customColors.tabsContent }}>
+      <Tabs defaultValue="my-ideas" className="w-full relative z-10">
+        <div className="transition-colors duration-300" style={{ backgroundColor: formData.customColors.tabsList }}>
+          <TabsList className="w-full bg-transparent border-none rounded-none px-6 h-14">
+            <TabsTrigger value="my-ideas" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
+              <Grid size={22} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
+            </TabsTrigger>
+            <TabsTrigger value="saved" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
+              <Bookmark size={22} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
+            </TabsTrigger>
+            <TabsTrigger value="liked" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
+              <Heart size={22} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
+            </TabsTrigger>
+          </TabsList>
+        </div>
+        
+        <TabsContent 
+          value="my-ideas" 
+          className="mt-0 px-1 py-12 text-center transition-colors pb-32" 
+          style={{ backgroundColor: formData.customColors.tabsContent }}
+        >
           <p className="opacity-30 text-[10px] font-black uppercase tracking-widest" style={{ color: getContrastColor(formData.customColors.tabsContent) }}>
             Your Innovations Will Appear Here
           </p>
+        </TabsContent>
+        <TabsContent 
+          value="saved" 
+          className="mt-0 px-1 py-12 text-center transition-colors pb-32" 
+          style={{ backgroundColor: formData.customColors.tabsContent }}
+        >
+          <Bookmark className="mx-auto opacity-10 mb-2" size={40} style={{ color: getContrastColor(formData.customColors.tabsContent) }} />
+        </TabsContent>
+        <TabsContent 
+          value="liked" 
+          className="mt-0 px-1 py-12 text-center transition-colors pb-32" 
+          style={{ backgroundColor: formData.customColors.tabsContent }}
+        >
+          <Heart className="mx-auto opacity-10 mb-2" size={40} style={{ color: getContrastColor(formData.customColors.tabsContent) }} />
         </TabsContent>
       </Tabs>
 
@@ -346,14 +373,14 @@ export default function ProfilePage() {
             <DialogTitle className="text-sm font-black uppercase text-center text-primary tracking-[0.2em]">Optimize Profile</DialogTitle>
           </DialogHeader>
           <div className="space-y-8 py-4">
-            {/* PREVIEWS: Banner Sabse Upar, Logo Niche */}
+            {/* PREVIEWS */}
             <div className="space-y-4">
               <div 
                 className="relative h-28 w-full rounded-2xl overflow-hidden border-2 border-muted bg-muted group cursor-pointer"
                 onClick={() => bannerInputRef.current?.click()}
               >
                 <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="Banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized={true} />
-                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-black uppercase">Change Banner Photo</div>
+                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-black uppercase text-center">Tap to Change Banner</div>
               </div>
               <div className="flex justify-center">
                 <div 
@@ -377,7 +404,6 @@ export default function ProfilePage() {
               </div>
             </div>
             
-            {/* HAR CHOTI JAGAH KA COLOR OPTION */}
             <div className="space-y-4">
               <Label className="text-[10px] font-black uppercase tracking-widest ml-1 flex items-center gap-2">
                 <PaintBucket size={14} className="text-primary" /> Surface Themes
