@@ -1,10 +1,9 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Settings, Grid, Bookmark, Heart, LogOut, Camera, Image as ImageIcon, Plus, Trash2, RotateCw, Maximize, X, PaintBucket, Pencil, Loader2 } from "lucide-react";
+import { Settings, Grid, Bookmark, Heart, LogOut, Camera, Image as ImageIcon, Plus, Trash2, RotateCw, Maximize, X, PaintBucket, Pencil, Loader2, Monitor, Smartphone, ChevronLeft } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Sheet, 
@@ -87,6 +86,8 @@ export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [activeStickerId, setActiveStickerId] = useState<string | null>(null);
   const [draggedStickerId, setDraggedStickerId] = useState<string | null>(null);
+  const [showBannerEditor, setShowBannerEditor] = useState(false);
+  const [tempBannerUrl, setTempBannerUrl] = useState<string | null>(null);
   
   const [activeColor, setActiveColor] = useState<string | null>(null);
   const [isPaintMode, setIsPaintMode] = useState(false);
@@ -221,8 +222,9 @@ export default function ProfilePage() {
           setFormData(prev => ({ ...prev, profilePic: base64 }));
           await saveToFirestore({ profilePictureUrl: base64 });
         } else if (type === 'banner') {
-          setFormData(prev => ({ ...prev, banner: base64 }));
-          await saveToFirestore({ bannerUrl: base64 });
+          setTempBannerUrl(base64);
+          setShowBannerEditor(true);
+          setIsEditModalOpen(false);
         } else if (type === 'sticker') {
           const newStickerId = Math.random().toString(36).substr(2, 9);
           const newSticker: Sticker = { id: newStickerId, url: base64, x: 50, y: 20, rotation: 0, scale: 1 };
@@ -232,10 +234,19 @@ export default function ProfilePage() {
           setActiveStickerId(newStickerId);
           setIsEditModalOpen(false);
         }
-        toast({ title: "Image Uploaded", description: "Your photo is now permanently saved." });
       } catch (err) {
         toast({ variant: "destructive", title: "Upload Failed", description: "Could not process image." });
       }
+    }
+  };
+
+  const handleBannerSave = async () => {
+    if (tempBannerUrl) {
+      setFormData(prev => ({ ...prev, banner: tempBannerUrl }));
+      await saveToFirestore({ bannerUrl: tempBannerUrl });
+      setShowBannerEditor(false);
+      setIsEditModalOpen(true);
+      toast({ title: "Banner Updated", description: "Your banner looks great!" });
     }
   };
 
@@ -261,8 +272,86 @@ export default function ProfilePage() {
       style={{ backgroundColor: formData.customColors.background || "var(--background)" }}
       onClick={(e) => handleZoneClick(e, 'background')}
     >
+      {/* FULL SCREEN BANNER EDITOR OVERLAY */}
+      {showBannerEditor && (
+        <div className="fixed inset-0 z-[1000] bg-background flex flex-col animate-in slide-in-from-bottom duration-300">
+          <header className="p-4 flex items-center justify-between border-b bg-white">
+            <Button variant="ghost" size="icon" onClick={() => setShowBannerEditor(false)} className="rounded-full">
+              <ChevronLeft size={24} />
+            </Button>
+            <h2 className="text-sm font-black uppercase tracking-widest text-primary">Preview Banner</h2>
+            <div className="w-10" />
+          </header>
+
+          <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar">
+            <div className="text-center space-y-2">
+               <p className="text-[10px] font-black uppercase text-secondary tracking-widest">Device Visualization</p>
+               <p className="text-xs text-muted-foreground font-medium leading-relaxed">Check how your new banner appears on various devices.</p>
+            </div>
+
+            {/* PC/Desktop Visualization */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Monitor size={16} />
+                <span className="text-[10px] font-black uppercase">PC Desktop View</span>
+              </div>
+              <div className="relative aspect-[3/1] w-full bg-muted rounded-2xl overflow-hidden border-4 border-white shadow-2xl">
+                {tempBannerUrl && (
+                  <Image 
+                    src={tempBannerUrl} 
+                    alt="PC Preview" 
+                    fill 
+                    className="object-cover" 
+                    unoptimized={tempBannerUrl.startsWith('data:')}
+                  />
+                )}
+                <div className="absolute inset-0 border-2 border-primary/20 pointer-events-none"></div>
+              </div>
+            </div>
+
+            {/* Mobile Visualization */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Smartphone size={16} />
+                <span className="text-[10px] font-black uppercase">Mobile View</span>
+              </div>
+              <div className="flex justify-center">
+                <div className="relative w-full max-w-[240px] aspect-[4/3] bg-muted rounded-3xl overflow-hidden border-8 border-white shadow-2xl">
+                  {tempBannerUrl && (
+                    <Image 
+                      src={tempBannerUrl} 
+                      alt="Mobile Preview" 
+                      fill 
+                      className="object-cover" 
+                      unoptimized={tempBannerUrl.startsWith('data:')}
+                    />
+                  )}
+                  <div className="absolute inset-0 border-2 border-primary/20 pointer-events-none"></div>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-8 space-y-4">
+               <Button 
+                onClick={handleBannerSave}
+                className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase tracking-widest shadow-xl shadow-primary/20"
+               >
+                 Confirm & Apply Photo
+               </Button>
+               <Button 
+                variant="outline" 
+                onClick={() => bannerInputRef.current?.click()} 
+                className="w-full h-12 rounded-2xl font-black uppercase tracking-widest border-muted text-muted-foreground"
+               >
+                 Choose Different Image
+               </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {isPaintMode && activeColor && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[1000] bg-white px-6 py-2 rounded-full shadow-2xl border-2 border-primary flex items-center gap-3 animate-in fade-in slide-in-from-top-4">
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[800] bg-white px-6 py-2 rounded-full shadow-2xl border-2 border-primary flex items-center gap-3 animate-in fade-in slide-in-from-top-4">
           <div className="w-4 h-4 rounded-full border shadow-sm" style={{ backgroundColor: activeColor }}></div>
           <p className="text-[10px] font-black uppercase tracking-widest text-primary">Paint Mode Active</p>
           <button className="h-6 w-6 p-0 rounded-full hover:bg-muted flex items-center justify-center" onClick={() => { setIsPaintMode(false); setActiveColor(null); }}><X size={14}/></button>
@@ -290,7 +379,7 @@ export default function ProfilePage() {
               <SheetTitle className="text-sm font-black uppercase tracking-widest text-center">Profile Options</SheetTitle>
             </SheetHeader>
             <div className="space-y-2">
-              <Button variant="ghost" className="w-full justify-start h-14 rounded-2xl gap-4" onClick={() => { setIsSettingsOpen(false); setIsEditModalOpen(true); }}><Pencil size={18} /> Customize</Button>
+              <Button variant="ghost" className="w-full justify-start h-14 rounded-2xl gap-4" onClick={() => { setIsSettingsOpen(false); setIsEditModalOpen(true); }}><Pencil size={18} /> Customize Profile</Button>
               <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start h-14 rounded-2xl gap-4 text-secondary"><LogOut size={18} /> Sign Out</Button>
             </div>
           </SheetContent>
@@ -355,7 +444,7 @@ export default function ProfilePage() {
         style={{ backgroundColor: formData.customColors.statsSection }}
       >
         <div 
-          className="grid grid-cols-3 gap-8 w-full py-6 px-4 rounded-[2rem] border transition-colors"
+          className="grid grid-cols-3 gap-8 w-full py-6 px-4 rounded-[2rem] border transition-colors shadow-sm"
           style={{ backgroundColor: formData.customColors.statsSection || "#FFFFFF" }}
         >
           <div className="text-center">
@@ -490,6 +579,7 @@ export default function ProfilePage() {
             <DialogTitle className="text-sm font-black uppercase text-center">Customize Profile</DialogTitle>
           </DialogHeader>
           <div className="space-y-6 py-4">
+            {/* NAME & BIO FIELDS - PROMINENTLY AT TOP */}
             <div className="space-y-4">
                <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest">Display Name</Label>
@@ -513,7 +603,7 @@ export default function ProfilePage() {
 
             <div className="space-y-3">
               <Label className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                <PaintBucket size={12} /> Paint Tool
+                <PaintBucket size={12} /> Theme Painter
               </Label>
               <div className="flex flex-wrap gap-2 justify-center bg-muted/30 p-4 rounded-3xl">
                 {PALETTE.map(color => (
@@ -537,7 +627,7 @@ export default function ProfilePage() {
 
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-widest">Banner Photo</Label>
-              <div onClick={() => bannerInputRef.current?.click()} className="relative h-24 bg-muted rounded-2xl overflow-hidden cursor-pointer border">
+              <div onClick={() => bannerInputRef.current?.click()} className="relative h-24 bg-muted rounded-2xl overflow-hidden cursor-pointer border group">
                 {formData.banner ? (
                   <Image 
                     src={formData.banner} 
@@ -549,8 +639,9 @@ export default function ProfilePage() {
                 ) : (
                   <div className="w-full h-full flex items-center justify-center opacity-30"><ImageIcon /></div>
                 )}
+                <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[10px] font-black uppercase">Change Photo</div>
               </div>
-              <input type="file" min="1" max="1" ref={bannerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'banner')} />
+              <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'banner')} />
             </div>
 
             <div className="flex items-center gap-4">
@@ -560,13 +651,13 @@ export default function ProfilePage() {
                </div>
                <div className="flex-1">
                   <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Profile Picture</p>
-                  <Button variant="outline" size="sm" className="mt-1 rounded-full text-[9px] uppercase font-black" onClick={() => profileInputRef.current?.click()}>Change Photo</Button>
+                  <Button variant="outline" size="sm" className="mt-1 rounded-full text-[9px] uppercase font-black" onClick={() => profileInputRef.current?.click()}>Update Photo</Button>
                </div>
-               <input type="file" min="1" max="1" ref={profileInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'profile')} />
+               <input type="file" ref={profileInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'profile')} />
             </div>
 
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest">Stickers Collection</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest">Sticker Collection</Label>
               <div className="flex flex-wrap gap-2">
                 <Button variant="outline" size="sm" className="rounded-full h-12 w-12 border-2 border-dashed border-primary/20" onClick={() => stickerInputRef.current?.click()}><Plus size={20} /></Button>
                 {formData.stickers.map(s => (
@@ -582,14 +673,15 @@ export default function ProfilePage() {
                   </div>
                 ))}
               </div>
-              <input type="file" min="1" max="1" ref={stickerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'sticker')} />
+              <input type="file" ref={stickerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'sticker')} />
             </div>
           </div>
           <DialogFooter className="flex-row gap-2 mt-4">
-            <Button className="flex-1 rounded-2xl h-12 uppercase font-black text-[10px] bg-primary text-white" onClick={handleSaveProfile} disabled={isSaving}>{isSaving ? <Loader2 className="animate-spin h-4 w-4" /> : "Apply All Changes"}</Button>
+            <Button className="flex-1 rounded-2xl h-12 uppercase font-black text-[10px] bg-primary text-white shadow-xl shadow-primary/10" onClick={handleSaveProfile} disabled={isSaving}>{isSaving ? <Loader2 className="animate-spin h-4 w-4" /> : "Save All Changes"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'banner')} />
     </div>
   );
 }

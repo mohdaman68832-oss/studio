@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef } from "react";
@@ -346,6 +345,7 @@ export default function SignupPage() {
       {step === 3 && (
         <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 pb-10">
           <div className="space-y-4">
+            {/* Banner Preview/Editor Trigger */}
             <div 
               onClick={() => setShowBannerEditor(true)}
               className="relative h-24 bg-muted rounded-2xl overflow-hidden group border border-dashed border-primary/20 cursor-pointer"
