@@ -246,10 +246,7 @@ export default function ProfilePage() {
       className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden flex flex-col no-scrollbar"
       style={{ backgroundColor: colors.background || "var(--background)" }}
     >
-      {/* SEAMLESS PROFILE STRUCTURE */}
       <div className="relative w-full flex flex-col" ref={studioContainerRef}>
-        
-        {/* HEADER AREA - Layer 3 (Top) */}
         <div className="h-16 w-full relative z-[60]" style={{ backgroundColor: colors.header }} />
         
         <header className="absolute top-0 left-0 right-0 z-[70] px-6 flex justify-between items-center py-5">
@@ -273,7 +270,6 @@ export default function ProfilePage() {
           </DropdownMenu>
         </header>
 
-        {/* STICKERS - Layer 2 (Middle) */}
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
@@ -297,7 +293,6 @@ export default function ProfilePage() {
           </div>
         ))}
 
-        {/* BANNER & AVATAR - Layer 1 (Bottom) */}
         <div className="relative w-full z-[10]">
           <div className="relative h-52 w-full overflow-hidden">
             <Image 
@@ -317,7 +312,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* UI CONTENT - Layer 3 (Top - Safe Area) */}
         <div className="relative z-[30] w-full -mt-1">
           <div style={{ backgroundColor: colors.userInfo || "transparent" }} className="w-full pb-8">
             <div className="px-6 flex flex-col items-center">
@@ -338,7 +332,7 @@ export default function ProfilePage() {
             <div className="grid grid-cols-3 gap-6 w-full">
               <div className="text-center">
                 <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{profileData?.totalIdeasPosted || 0}</p>
-                <p className="text-[8px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(colors.statsSection) }>Ideas</p>
+                <p className="text-[8px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(colors.statsSection) }}>Ideas</p>
               </div>
               <div className="text-center">
                 <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{(profileData?.totalViewsReceived || 0).toLocaleString()}</p>
@@ -353,7 +347,6 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* TABS SECTION - Layer 3 (Top) */}
       <div style={{ backgroundColor: colors.tabsContent || "transparent" }} className="w-full flex-1 relative z-[30]">
         <Tabs defaultValue="photo" className="w-full">
           <TabsList className="w-full bg-transparent border-none rounded-none px-6 h-14" style={{ backgroundColor: colors.tabsList }}>
@@ -381,7 +374,6 @@ export default function ProfilePage() {
         </Tabs>
       </div>
 
-      {/* STICKER STUDIO HUD - Compact & Interactive */}
       {editingStickerId && activeSticker && (
         <div className="fixed bottom-20 left-4 right-4 z-[2000] bg-white/95 backdrop-blur-md rounded-[2.5rem] border shadow-2xl p-5 animate-in slide-in-from-bottom-4">
           <div className="space-y-5">
@@ -440,7 +432,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* OPTIMIZE PROFILE DIALOG */}
       <Dialog open={isOptimizeModalOpen} onOpenChange={setIsOptimizeModalOpen}>
         <DialogContent onOpenAutoFocus={(e) => e.preventDefault()} className="max-w-md w-[95%] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col z-[2000]">
           <DialogHeader className="p-6 shrink-0 border-b">
