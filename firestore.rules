@@ -11,13 +11,11 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // User Profiles: Publicly readable, owner can write.
     match /userProfiles/{userId} {
       allow read: if true;
       allow create, update, delete: if isOwner(userId);
     }
 
-    // Ideas: Publicly readable, authenticated users can create.
     match /ideas/{ideaId} {
       allow read: if true;
       allow create: if isSignedIn();
@@ -35,7 +33,6 @@ service cloud.firestore {
       }
     }
 
-    // Groups: Publicly discoverable community groups.
     match /groups/{groupId} {
       allow read: if true;
       allow create, update: if isSignedIn();
@@ -46,23 +43,19 @@ service cloud.firestore {
       }
     }
 
-    // Notifications: Allow list and read for the recipient
     match /notifications/{notifId} {
       allow read, write, delete, list: if isSignedIn();
     }
 
-    // Messages: Allow list and read for participants
     match /messages/{msgId} {
       allow read, write, list: if isSignedIn();
     }
 
-    // Follows: Publicly readable for mutual checks.
     match /follows/{followId} {
       allow read, list: if true;
       allow write: if isSignedIn();
     }
 
-    // Global catch-all
     match /{path=**} {
       allow read: if isSignedIn();
       allow write: if isSignedIn();

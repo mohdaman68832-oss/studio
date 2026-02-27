@@ -191,7 +191,6 @@ export default function ProfilePage() {
       className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden flex flex-col m-0 p-0"
       style={{ backgroundColor: formData.customColors.background || "var(--background)" }}
     >
-      {/* Background Colors Layer (Seamless) */}
       <div className="flex flex-col m-0 p-0 relative z-[10]">
          <div className="h-16 w-full" style={{ backgroundColor: formData.customColors.header }} />
          <div className="h-96 w-full" style={{ backgroundColor: formData.customColors.userInfo }} />
@@ -199,7 +198,6 @@ export default function ProfilePage() {
          <div className="flex-1 w-full" style={{ backgroundColor: formData.customColors.tabsContent }} />
       </div>
 
-      {/* Stickers Layer - Above Seamless Background, Below UI Content */}
       <div className="absolute inset-0 pointer-events-none z-[15]">
         {formData.stickers.map((sticker) => (
           <div 
@@ -230,7 +228,6 @@ export default function ProfilePage() {
         ))}
       </div>
 
-      {/* UI Content Layer - Above Stickers */}
       <div className="absolute inset-0 flex flex-col m-0 p-0 z-[20]">
         <div className="px-6 flex justify-between items-center py-5">
           <h1 className="text-2xl font-black uppercase tracking-tighter" style={{ color: getContrastColor(formData.customColors.header) }}>Sphere Profile</h1>
@@ -311,7 +308,6 @@ export default function ProfilePage() {
           </DialogHeader>
           <div className="space-y-6 py-2">
             <div className="space-y-6">
-              {/* Banner at Top */}
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Banner Image</Label>
                 <div className="relative h-32 w-full rounded-[2rem] overflow-hidden border-2 border-muted bg-muted group cursor-pointer" onClick={() => bannerInputRef.current?.click()}>
@@ -320,7 +316,6 @@ export default function ProfilePage() {
                 </div>
               </div>
               
-              {/* Profile Logo below Banner */}
               <div className="flex flex-col items-center gap-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest">Profile Logo</Label>
                 <div className="relative h-24 w-24 rounded-full border-4 border-white bg-white shadow-xl group cursor-pointer overflow-hidden" onClick={() => profileInputRef.current?.click()}>

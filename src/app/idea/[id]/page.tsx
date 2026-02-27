@@ -14,7 +14,7 @@ import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogHeader } from "@/components/ui/dialog";
 
 const MOCK_IDEAS = [
   {
@@ -163,6 +163,9 @@ export default function IdeaDetailPage() {
                 </div>
               </DialogTrigger>
               <DialogContent className="max-w-[95vw] h-[80vh] p-0 overflow-hidden border-none bg-black/95 rounded-[2.5rem] flex items-center justify-center" onOpenAutoFocus={(e) => e.preventDefault()}>
+                 <DialogHeader className="sr-only">
+                    <DialogTitle>{idea?.title}</DialogTitle>
+                 </DialogHeader>
                  <div className="relative w-full h-full p-4 flex items-center justify-center">
                     {isVideo ? (
                       <video src={idea?.mediaUrl} controls autoPlay className="max-w-full max-h-full rounded-2xl" />
@@ -254,13 +257,6 @@ export default function IdeaDetailPage() {
                   </div>
                 </div>
               ))}
-
-              {suggestions?.length === 0 && !suggestionsLoading && (
-                <div className="py-12 text-center space-y-2 opacity-30">
-                  <Lightbulb size={32} className="mx-auto" />
-                  <p className="text-[10px] font-black uppercase tracking-widest">No messages yet</p>
-                </div>
-              )}
             </div>
           </div>
         </div>

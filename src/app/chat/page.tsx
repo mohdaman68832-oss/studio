@@ -39,7 +39,7 @@ export default function ChatPage() {
         map.set(otherId, {
           ...msg,
           partnerId: otherId,
-          isOnline: Math.random() > 0.5 // Simulated for display
+          isOnline: Math.random() > 0.5 // Simulated for visual green indicator
         });
       }
     });

@@ -93,46 +93,21 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
   const isVideo = idea.mediaUrl && (idea.mediaUrl.endsWith('.mp4') || idea.mediaUrl.includes('gtv-videos-bucket'));
   const isTextPost = !idea.mediaUrl || idea.mediaUrl === "";
 
-  const CardHeader = (
-    <div className="flex items-center justify-between mb-1">
-      <Link href={`/profile/${userHandle}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity z-10" onClick={(e) => e.stopPropagation()}>
-        <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
-          <AvatarImage src={idea.userAvatar} />
-          <AvatarFallback>{(idea.userName || 'U')[0]}</AvatarFallback>
-        </Avatar>
-        <div className="flex flex-col">
-          <span className="text-sm font-black text-foreground tracking-tight">@{userHandle}</span>
-        </div>
-      </Link>
-      <MoreHorizontal size={20} className="text-muted-foreground" />
-    </div>
-  );
-
-  const LikeButton = (
-    <button 
-      type="button"
-      onClick={handleToggleLike}
-      className={cn(
-        "flex items-center gap-2 transition-all duration-300 transform active:scale-125 outline-none",
-        isProcessing && "opacity-50"
-      )}
-    >
-      <ArrowBigUp 
-        size={32} 
-        className={cn(
-          "transition-all duration-300",
-          isLiked ? "text-secondary fill-current drop-shadow-[0_0_8px_rgba(255,69,0,0.4)]" : "text-foreground/30"
-        )} 
-      />
-      <span className={cn("text-sm font-black", isLiked ? "text-secondary" : "text-foreground/40")}>
-        {likesCount}
-      </span>
-    </button>
-  );
-
   return (
     <div className="bg-card rounded-[2.5rem] idea-card-shadow overflow-hidden border border-border/50 p-5">
-      {CardHeader}
+      <div className="flex items-center justify-between mb-1">
+        <Link href={`/profile/${userHandle}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity z-10" onClick={(e) => e.stopPropagation()}>
+          <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
+            <AvatarImage src={idea.userAvatar} />
+            <AvatarFallback>{(idea.userName || 'U')[0]}</AvatarFallback>
+          </Avatar>
+          <div className="flex flex-col">
+            <span className="text-sm font-black text-foreground tracking-tight">@{userHandle}</span>
+          </div>
+        </Link>
+        <MoreHorizontal size={20} className="text-muted-foreground" />
+      </div>
+
       <div className="mt-4">
         <Link href={`/idea/${idea.id}`} className="block group">
           <h3 className="text-lg font-black text-primary uppercase tracking-tighter leading-none mb-2">{idea.title}</h3>
@@ -147,13 +122,31 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
               ) : (
                 <Image src={idea.mediaUrl} alt={idea.title} fill className="object-cover transition-transform group-hover:scale-105" />
               )}
-              <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
           )}
         </Link>
       </div>
+
       <div className="flex items-center justify-start mt-4 gap-4">
-        {LikeButton}
+        <button 
+          type="button"
+          onClick={handleToggleLike}
+          className={cn(
+            "flex items-center gap-2 transition-all duration-300 transform active:scale-125 outline-none",
+            isProcessing && "opacity-50"
+          )}
+        >
+          <ArrowBigUp 
+            size={32} 
+            className={cn(
+              "transition-all duration-300",
+              isLiked ? "text-secondary fill-current drop-shadow-[0_0_8px_rgba(255,69,0,0.4)]" : "text-foreground/30"
+            )} 
+          />
+          <span className={cn("text-sm font-black", isLiked ? "text-secondary" : "text-foreground/40")}>
+            {likesCount}
+          </span>
+        </button>
         <Link href={`/idea/${idea.id}`} className="p-2"><MessageCircle size={26} /></Link>
         <button type="button" onClick={handleShare} className="p-2"><Share2 size={24} /></button>
       </div>
