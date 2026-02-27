@@ -14,11 +14,9 @@ export function BottomNav() {
   const { user } = useUser();
   const db = useFirestore();
 
-  // Fetch the latest profile data from Firestore for real-time updates in the nav
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [user, db]);
   const { data: profileData } = useDoc(profileRef);
 
-  // Don't show the bottom nav on login/signup pages or if the user isn't logged in
   const isAuthPage = pathname === '/login' || pathname === '/signup';
   if (!user || isAuthPage) return null;
 
@@ -30,7 +28,6 @@ export function BottomNav() {
     { label: "Profile", icon: User, href: "/profile" },
   ];
 
-  // Robust profile picture selection logic
   const profilePic = profileData?.profilePictureUrl || user?.photoURL || "";
 
   return (

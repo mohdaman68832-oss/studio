@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/dialog";
 import { useFirestore, useUser, useDoc, useMemoFirebase } from "@/firebase";
 import { doc, setDoc, deleteDoc, increment, serverTimestamp } from "firebase/firestore";
-import { useRouter } from "next/navigation";
 
 interface IdeaCardProps {
   idea: {
@@ -44,7 +43,6 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
   const { toast } = useToast();
   const db = useFirestore();
   const { user } = useUser();
-  const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
 
   const userLikeRef = useMemoFirebase(() => 
@@ -80,14 +78,11 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
         });
     } else {
       setDoc(likeDocRef, { 
-        timestamp: serverTimestamp(),
         userId: user.uid 
       })
         .then(() => {
           setDoc(ideaRef, { 
-            likes: increment(1),
-            title: idea.title || "Untitled",
-            authorId: idea.authorId || 'system',
+            likes: increment(1)
           }, { merge: true });
         })
         .finally(() => {
@@ -99,15 +94,12 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
   const handleShare = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    toast({
-      title: "Shared!",
-      description: "Link copied to clipboard.",
-    });
+    toast({ title: "Shared!", description: "Link copied to clipboard." });
   };
 
   const userHandle = idea.authorUsername || (idea.userName || 'user').toLowerCase().replace(/\s/g, '');
-  const isVideo = idea.mediaUrl && (idea.mediaUrl.includes('blob:') || idea.mediaUrl.endsWith('.mp4') || idea.mediaUrl.endsWith('.webm') || idea.mediaUrl.includes('gtv-videos-bucket') || idea.mediaUrl.startsWith('data:video'));
-  const isTextPost = !idea.mediaUrl || idea.mediaUrl.includes('textpost') || idea.mediaUrl === "";
+  const isVideo = idea.mediaUrl && (idea.mediaUrl.endsWith('.mp4') || idea.mediaUrl.includes('gtv-videos-bucket'));
+  const isTextPost = !idea.mediaUrl || idea.mediaUrl === "";
 
   const CardHeader = (
     <div className="flex items-center justify-between mb-1">
@@ -117,38 +109,10 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
           <AvatarFallback>{(idea.userName || 'U')[0]}</AvatarFallback>
         </Avatar>
         <div className="flex flex-col">
-          <span className="text-sm font-black text-foreground tracking-tight">
-            @{userHandle}
-          </span>
+          <span className="text-sm font-black text-foreground tracking-tight">@{userHandle}</span>
         </div>
       </Link>
-      <button type="button" className="text-muted-foreground p-2 hover:bg-muted rounded-full transition-colors" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
-        <MoreHorizontal size={20} />
-      </button>
-    </div>
-  );
-
-  const MediaContent = (
-    <div className="block relative aspect-square w-full mx-auto overflow-hidden bg-muted rounded-[1.5rem] mt-2 group cursor-zoom-in">
-      {isVideo ? (
-        <div className="relative w-full h-full flex items-center justify-center bg-black">
-          <video src={idea.mediaUrl} className="w-full h-full object-cover opacity-80" muted />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="bg-white/20 backdrop-blur-md p-4 rounded-full">
-              <Play className="text-white fill-white" size={32} />
-            </div>
-          </div>
-        </div>
-      ) : (
-        <Image
-          src={idea.mediaUrl || "https://picsum.photos/seed/placeholder/800/800"}
-          alt={idea.title}
-          fill
-          priority={priority}
-          className="object-cover transition-transform group-hover:scale-105 duration-700"
-          unoptimized={!!idea.mediaUrl && (idea.mediaUrl.startsWith('data:') || idea.mediaUrl.startsWith('blob:'))}
-        />
-      )}
+      <MoreHorizontal size={20} className="text-muted-foreground" />
     </div>
   );
 
@@ -157,8 +121,8 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
       type="button"
       onClick={handleToggleLike}
       className={cn(
-        "flex items-center gap-2 transition-all duration-300 transform active:scale-125 group/like outline-none",
-        isProcessing && "active-glow"
+        "flex items-center gap-2 transition-all duration-300 transform active:scale-125 outline-none",
+        isProcessing && "opacity-50"
       )}
     >
       <ArrowBigUp 
@@ -168,102 +132,34 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
           isLiked ? "text-secondary fill-current drop-shadow-[0_0_8px_rgba(255,69,0,0.4)]" : "text-foreground/30"
         )} 
       />
-      <span className={cn(
-        "text-sm font-black transition-colors leading-none",
-        isLiked ? "text-secondary" : "text-foreground/40"
-      )}>
+      <span className={cn("text-sm font-black", isLiked ? "text-secondary" : "text-foreground/40")}>
         {likesCount}
       </span>
     </button>
   );
 
-  if (isMemeView) {
-    return (
-      <div className="bg-card rounded-[2.5rem] idea-card-shadow overflow-hidden border border-border/50 p-5">
-        {CardHeader}
-        
-        <Dialog>
-          <DialogTrigger asChild>
-            <div className="mt-4">
-              {MediaContent}
-            </div>
-          </DialogTrigger>
-          <DialogContent className="max-w-screen h-screen w-full p-0 bg-black/95 border-none shadow-none flex items-center justify-center z-[200]">
-            <DialogHeader className="sr-only">
-              <DialogTitle>{idea.title || "Meme Viewer"}</DialogTitle>
-            </DialogHeader>
-            <DialogClose className="absolute top-6 right-6 z-[210] bg-white/10 hover:bg-white/20 p-3 rounded-full text-white backdrop-blur-md transition-all">
-              <X size={32} />
-            </DialogClose>
-            <div className="relative w-full h-full p-4 flex items-center justify-center">
-              {isVideo ? (
-                <video src={idea.mediaUrl} controls autoPlay className="max-w-full max-h-full object-contain" />
-              ) : (
-                <div className="relative w-full h-full">
-                  <Image
-                    src={idea.mediaUrl || "https://picsum.photos/seed/placeholder/800/800"}
-                    alt={idea.title}
-                    fill
-                    className="object-contain"
-                    unoptimized={!!idea.mediaUrl && (idea.mediaUrl.startsWith('data:') || idea.mediaUrl.startsWith('blob:'))}
-                  />
-                </div>
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        <div className="flex items-center justify-start mt-4 gap-4">
-            {LikeButton}
-            <Link href={`/idea/${idea.id}`} className="text-foreground hover:text-primary transition-all p-2" onClick={(e) => e.stopPropagation()}>
-              <MessageCircle size={26} />
-            </Link>
-            <button 
-              type="button"
-              onClick={handleShare}
-              className="text-foreground hover:text-primary transition-all p-2"
-            >
-              <Share2 size={24} />
-            </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="bg-card rounded-[2.5rem] idea-card-shadow overflow-hidden border border-border/50 transition-all">
-      <div className="px-5 pt-5 pb-3 space-y-3">
-        {CardHeader}
-
-        <Link href={`/idea/${idea.id}`} className="block space-y-2" onClick={(e) => e.stopPropagation()}>
-          <h3 className="text-lg font-black text-primary uppercase tracking-tighter leading-none">
-            {idea.title}
-          </h3>
-          <div className="space-y-1">
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">The Challenge</p>
-            <p className="text-sm text-foreground/80 leading-relaxed font-bold">
-              {idea.problem || "Solving urban challenges with innovation."}
-            </p>
+    <div className="bg-card rounded-[2.5rem] idea-card-shadow overflow-hidden border border-border/50 p-5">
+      {CardHeader}
+      <Link href={`/idea/${idea.id}`} className="block mt-4">
+        <h3 className="text-lg font-black text-primary uppercase tracking-tighter leading-none mb-2">{idea.title}</h3>
+        <p className="text-sm text-foreground/80 leading-relaxed font-bold">{idea.problem || "Solving challenges."}</p>
+        {!isTextPost && (
+          <div className="relative aspect-square w-full rounded-[1.5rem] overflow-hidden bg-muted mt-3">
+            {isVideo ? (
+               <div className="w-full h-full flex items-center justify-center bg-black">
+                 <Play className="text-white fill-white" size={32} />
+               </div>
+            ) : (
+              <Image src={idea.mediaUrl} alt={idea.title} fill className="object-cover" />
+            )}
           </div>
-        </Link>
-      </div>
-
-      {!isTextPost && (
-        <Link href={`/idea/${idea.id}`} className="block" onClick={(e) => e.stopPropagation()}>
-          {MediaContent}
-        </Link>
-      )}
-
-      <div className="flex items-center justify-between px-5 py-4">
-        <div className="flex items-center gap-4">
-          {LikeButton}
-          <Link href={`/idea/${idea.id}`} className="text-foreground hover:text-primary transition-colors p-2" onClick={(e) => e.stopPropagation()}>
-            <MessageCircle size={24} />
-          </Link>
-          <button type="button" onClick={handleShare} className="text-foreground hover:text-primary transition-colors p-2">
-            <Share2 size={24} />
-          </button>
-        </div>
+        )}
+      </Link>
+      <div className="flex items-center justify-start mt-4 gap-4">
+        {LikeButton}
+        <Link href={`/idea/${idea.id}`} className="p-2"><MessageCircle size={26} /></Link>
+        <button type="button" onClick={handleShare} className="p-2"><Share2 size={24} /></button>
       </div>
     </div>
   );

@@ -49,45 +49,6 @@ const MOCK_IDEAS = [
     innovationScore: 76,
     tags: ["Focus", "Minimalism"],
     likes: 45,
-  },
-  {
-    id: "m1",
-    title: "When the code finally works",
-    problem: "Coding is hard, debugging is harder.",
-    description: "That feeling when you find the missing semicolon after 3 hours of searching.",
-    category: "Meme",
-    userName: "Kaelen Voss",
-    userAvatar: "https://picsum.photos/seed/kaelen/100/100",
-    mediaUrl: "https://picsum.photos/seed/meme1/800/800",
-    innovationScore: 99,
-    tags: ["DevLife", "Relatable"],
-    likes: 2450,
-  },
-  {
-    id: "m2",
-    title: "AI taking over the world",
-    problem: "AI hype vs reality.",
-    description: "Expectation: Robots everywhere. Reality: My vacuum cleaner is stuck under the sofa again.",
-    category: "Meme",
-    userName: "Maya Artiste",
-    userAvatar: "https://picsum.photos/seed/maya/100/100",
-    mediaUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-    innovationScore: 95,
-    tags: ["AI", "Funny"],
-    likes: 1800,
-  },
-  {
-    id: "m3",
-    title: "The Innovation Cycle",
-    problem: "Startup life is a roller coaster.",
-    description: "99% perspiration, 1% inspiration, and 100% coffee.",
-    category: "Meme",
-    userName: "Tony Stark",
-    userAvatar: "https://picsum.photos/seed/tony/100/100",
-    mediaUrl: "https://picsum.photos/seed/meme2/800/800",
-    innovationScore: 82,
-    tags: ["Startups", "Hustle"],
-    likes: 720,
   }
 ];
 
@@ -99,8 +60,8 @@ export default function FeedPage() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showRefresh, setShowRefresh] = useState(false);
+  const [touchStart, setTouchStart] = useState(0);
 
-  // Fetch current user profile to get interests
   const userProfileRef = useMemoFirebase(() => (db && user ? doc(db, "userProfiles", user.uid) : null), [db, user]);
   const { data: profile } = useDoc(userProfileRef);
 
@@ -113,37 +74,49 @@ export default function FeedPage() {
 
   const ideasToDisplay = useMemo(() => {
     const base = firestoreIdeas && firestoreIdeas.length > 0 ? [...firestoreIdeas, ...MOCK_IDEAS] : MOCK_IDEAS;
-    
-    // Deduplicate by ID if both mock and firestore have same IDs
     const unique = Array.from(new Map(base.map(item => [item.id, item])).values());
-
-    if (activeCategory === "Meme") {
-      return unique.filter(i => i.category?.toLowerCase() === "meme");
-    }
-
-    if (activeCategory === "All") {
-      return unique;
-    }
-
+    if (activeCategory === "Meme") return unique.filter(i => i.category?.toLowerCase() === "meme");
     return unique;
   }, [firestoreIdeas, activeCategory]);
 
   useEffect(() => {
-    const handleScroll = () => {
-      // Show refresh button only when at the very top
-      if (window.scrollY === 0) {
-        setShowRefresh(true);
-      } else if (window.scrollY > 50) {
-        setShowRefresh(false);
+    const handleTouchStart = (e: TouchEvent) => {
+      if (window.scrollY === 0) setTouchStart(e.touches[0].pageY);
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (window.scrollY === 0 && touchStart > 0) {
+        const pullDistance = e.touches[0].pageY - touchStart;
+        if (pullDistance > 80) setShowRefresh(true);
       }
     };
+
+    const handleTouchEnd = () => {
+      setTouchStart(0);
+      // Automatically hide button after 5 seconds if not used
+      setTimeout(() => {
+        if (window.scrollY > 100) setShowRefresh(false);
+      }, 5000);
+    };
+
+    const handleScroll = () => {
+      if (window.scrollY > 300) setShowRefresh(false);
+    };
+
+    window.addEventListener('touchstart', handleTouchStart);
+    window.addEventListener('touchmove', handleTouchMove);
+    window.addEventListener('touchend', handleTouchEnd);
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    return () => {
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [touchStart]);
 
   const handleReload = () => {
     setIsRefreshing(true);
-    // Simulate reload for user feedback
     setTimeout(() => {
       window.location.reload();
     }, 800);
@@ -151,9 +124,8 @@ export default function FeedPage() {
 
   return (
     <div className="max-w-md mx-auto min-h-screen bg-background px-4 pt-8 pb-24 relative">
-      {/* Deliberate Refresh Trigger Button */}
       <div className={cn(
-        "fixed top-4 left-1/2 -translate-x-1/2 z-[100] transition-all duration-300 transform",
+        "fixed top-4 left-1/2 -translate-x-1/2 z-[100] transition-all duration-500 transform",
         showRefresh ? "translate-y-0 opacity-100" : "-translate-y-20 opacity-0"
       )}>
         <Button 
@@ -163,7 +135,7 @@ export default function FeedPage() {
         >
           <RefreshCcw size={16} className={cn(isRefreshing && "animate-spin")} />
           <span className="text-[10px] font-black uppercase tracking-widest">
-            {isRefreshing ? "Refreshing..." : "Reload Feed"}
+            {isRefreshing ? "Refreshing..." : "Release to Refresh"}
           </span>
         </Button>
       </div>
@@ -175,7 +147,6 @@ export default function FeedPage() {
         </div>
       </header>
 
-      {/* Category Bar: Not sticky anymore */}
       <div className="flex w-full gap-2 -mx-4 px-4 pt-2 pb-4 mb-2 border-b border-border/50">
         {CATEGORIES.map((cat) => (
           <Button 
@@ -197,13 +168,7 @@ export default function FeedPage() {
           <div className="space-y-12">
             {[1, 2].map(i => (
               <div key={i} className="space-y-4">
-                <div className="flex items-center gap-3">
-                   <Skeleton className="h-10 w-10 rounded-full" />
-                   <div className="space-y-2">
-                     <Skeleton className="h-3 w-24" />
-                     <Skeleton className="h-2 w-16" />
-                   </div>
-                </div>
+                <Skeleton className="h-10 w-10 rounded-full" />
                 <Skeleton className="h-80 w-full rounded-[2.5rem]" />
               </div>
             ))}
@@ -212,19 +177,13 @@ export default function FeedPage() {
           <>
             {ideasToDisplay.length > 0 ? (
               ideasToDisplay.map((idea, index) => (
-                <div key={idea.id} className="animate-in fade-in slide-in-from-bottom-4 duration-300" style={{ animationDelay: `${index * 50}ms` }}>
+                <div key={idea.id} className="animate-in fade-in slide-in-from-bottom-4 duration-300">
                   <IdeaCard idea={idea as any} priority={index < 2} isMemeView={activeCategory === "Meme"} />
                 </div>
               ))
             ) : (
-              <div className="py-20 text-center space-y-4 opacity-30">
-                <div className="bg-muted w-16 h-16 rounded-full flex items-center justify-center mx-auto">
-                   <span className="text-2xl">🌍</span>
-                </div>
+              <div className="py-20 text-center opacity-30">
                 <p className="text-xs font-black uppercase tracking-widest">No innovations found</p>
-                <Button variant="ghost" size="sm" onClick={() => setActiveCategory("All")} className="text-[10px] font-black uppercase">
-                  View All Feed
-                </Button>
               </div>
             )}
           </>
