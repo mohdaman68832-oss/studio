@@ -55,8 +55,11 @@ service cloud.firestore {
 
     // Notifications: Fixed permission error for listing with owner check.
     match /notifications/{notifId} {
-      // Allow read (get/list) if the user is the recipient.
-      allow read: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
+      // Allow list if the query filters by the recipient's userId
+      allow read: if isSignedIn() && (
+        (resource == null && request.query.limit <= 100) || 
+        resource.data.userId == request.auth.uid
+      );
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
