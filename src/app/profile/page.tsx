@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { 
@@ -246,21 +246,21 @@ export default function ProfilePage() {
       className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden flex flex-col no-scrollbar"
       style={{ backgroundColor: colors.background || "var(--background)" }}
     >
+      {/* SEAMLESS PROFILE STRUCTURE */}
       <div className="relative w-full flex flex-col" ref={studioContainerRef}>
         
-        {/* STICKY HEADER BACKGROUND */}
+        {/* HEADER AREA - Layer 3 (Top) */}
         <div className="h-16 w-full relative z-[60]" style={{ backgroundColor: colors.header }} />
         
-        {/* FLOATING HEADER ACTIONS */}
         <header className="absolute top-0 left-0 right-0 z-[70] px-6 flex justify-between items-center py-5">
           <h1 className="text-2xl font-black uppercase tracking-tighter" style={{ color: getContrastColor(colors.header) }}>Sphere</h1>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full pointer-events-auto">
+              <Button variant="ghost" size="icon" className="rounded-full">
                 <Settings size={24} style={{ color: getContrastColor(colors.header) }} />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="rounded-2xl border-none shadow-2xl p-2 min-w-[160px]">
+            <DropdownMenuContent align="end" className="rounded-2xl border-none shadow-2xl p-2 min-w-[160px] z-[2000]">
               <DropdownMenuItem onClick={() => setIsOptimizeModalOpen(true)} className="rounded-xl h-11 cursor-pointer flex items-center gap-3">
                 <UserCog size={18} className="text-primary" />
                 <span className="text-xs font-black uppercase tracking-widest">Optimize</span>
@@ -273,7 +273,7 @@ export default function ProfilePage() {
           </DropdownMenu>
         </header>
 
-        {/* STICKER LAYER: z-20 (ABOVE BANNER/LOGO, BEHIND TEXT/UI) */}
+        {/* STICKERS - Layer 2 (Middle) */}
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
@@ -297,7 +297,7 @@ export default function ProfilePage() {
           </div>
         ))}
 
-        {/* BANNER & LOGO: z-10 (BEHIND STICKERS) */}
+        {/* BANNER & AVATAR - Layer 1 (Bottom) */}
         <div className="relative w-full z-[10]">
           <div className="relative h-52 w-full overflow-hidden">
             <Image 
@@ -317,7 +317,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* INTERACTIVE UI CONTENT: z-30 (ABOVE STICKERS) */}
+        {/* UI CONTENT - Layer 3 (Top - Safe Area) */}
         <div className="relative z-[30] w-full -mt-1">
           <div style={{ backgroundColor: colors.userInfo || "transparent" }} className="w-full pb-8">
             <div className="px-6 flex flex-col items-center">
@@ -338,7 +338,7 @@ export default function ProfilePage() {
             <div className="grid grid-cols-3 gap-6 w-full">
               <div className="text-center">
                 <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{profileData?.totalIdeasPosted || 0}</p>
-                <p className="text-[8px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(colors.statsSection) }}>Ideas</p>
+                <p className="text-[8px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(colors.statsSection) }>Ideas</p>
               </div>
               <div className="text-center">
                 <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{(profileData?.totalViewsReceived || 0).toLocaleString()}</p>
@@ -353,7 +353,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* TABS SECTION: z-30 */}
+      {/* TABS SECTION - Layer 3 (Top) */}
       <div style={{ backgroundColor: colors.tabsContent || "transparent" }} className="w-full flex-1 relative z-[30]">
         <Tabs defaultValue="photo" className="w-full">
           <TabsList className="w-full bg-transparent border-none rounded-none px-6 h-14" style={{ backgroundColor: colors.tabsList }}>
@@ -381,19 +381,18 @@ export default function ProfilePage() {
         </Tabs>
       </div>
 
-      {/* STICKER STUDIO HUD: z-1000 */}
+      {/* STICKER STUDIO HUD - Compact & Interactive */}
       {editingStickerId && activeSticker && (
-        <div className="fixed bottom-20 left-4 right-4 z-[1000] bg-white/95 backdrop-blur-md rounded-[2rem] border shadow-2xl p-5 animate-in slide-in-from-bottom-4">
-          <div className="space-y-4">
-            <header className="flex items-center justify-between">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Sticker Studio</h4>
-              <Button variant="ghost" size="icon" className="rounded-full h-8 w-8" onClick={() => setEditingStickerId(null)}>
-                <X size={16} />
-              </Button>
+        <div className="fixed bottom-20 left-4 right-4 z-[2000] bg-white/95 backdrop-blur-md rounded-[2.5rem] border shadow-2xl p-5 animate-in slide-in-from-bottom-4">
+          <div className="space-y-5">
+            <header className="flex items-center justify-between px-1">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Sticker Studio</h4>
+              <button onClick={() => setEditingStickerId(null)} className="p-1"><X size={18} /></button>
             </header>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-[8px] font-black uppercase opacity-50 mb-1">
+            
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <div className="flex justify-between text-[8px] font-black uppercase opacity-40 px-1">
                   <span>Size</span>
                   <span>{Math.round(activeSticker.scale * 100)}%</span>
                 </div>
@@ -403,28 +402,38 @@ export default function ProfilePage() {
                   max={4} 
                   step={0.01} 
                   onValueChange={([v]) => updateSticker(activeSticker.id, { scale: v })} 
+                  className="py-2"
                 />
               </div>
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-[8px] font-black uppercase opacity-50 mb-1">
+              <div className="space-y-2">
+                <div className="flex justify-between text-[8px] font-black uppercase opacity-40 px-1">
                   <span>Rotation</span>
                   <span>{activeSticker.rotation}°</span>
                 </div>
                 <Slider 
                   value={[activeSticker.rotation]} 
-                  min={-180} 
-                  max={180} 
+                  min={0} 
+                  max={360} 
                   step={1} 
                   onValueChange={([v]) => updateSticker(activeSticker.id, { rotation: v })} 
+                  className="py-2"
                 />
               </div>
             </div>
-            <div className="flex gap-2 pt-1">
-               <Button variant="destructive" className="flex-1 rounded-xl font-black uppercase text-[10px] h-10" onClick={() => deleteSticker(activeSticker.id)}>
-                 <Trash2 size={14} className="mr-2" /> Delete
+
+            <div className="flex gap-3 pt-2">
+               <Button 
+                variant="destructive" 
+                className="flex-1 rounded-2xl font-black uppercase text-[10px] h-12 shadow-lg"
+                onClick={() => deleteSticker(activeSticker.id)}
+               >
+                 <Trash2 size={16} className="mr-2" /> Delete
                </Button>
-               <Button className="flex-1 rounded-xl font-black uppercase text-[10px] h-10 bg-primary text-white" onClick={() => setEditingStickerId(null)}>
-                 <CheckCircle size={14} className="mr-2" /> Done
+               <Button 
+                className="flex-1 rounded-2xl font-black uppercase text-[10px] h-12 bg-primary text-white shadow-xl"
+                onClick={() => setEditingStickerId(null)}
+               >
+                 <CheckCircle size={16} className="mr-2" /> Done
                </Button>
             </div>
           </div>
@@ -433,7 +442,7 @@ export default function ProfilePage() {
 
       {/* OPTIMIZE PROFILE DIALOG */}
       <Dialog open={isOptimizeModalOpen} onOpenChange={setIsOptimizeModalOpen}>
-        <DialogContent onOpenAutoFocus={(e) => e.preventDefault()} className="max-w-md w-[95%] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col">
+        <DialogContent onOpenAutoFocus={(e) => e.preventDefault()} className="max-w-md w-[95%] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col z-[2000]">
           <DialogHeader className="p-6 shrink-0 border-b">
             <DialogTitle className="text-xl font-black uppercase tracking-tighter text-primary">Optimize Profile</DialogTitle>
           </DialogHeader>
@@ -515,7 +524,7 @@ export default function ProfilePage() {
       </Dialog>
 
       <Dialog open={showBannerDetail} onOpenChange={setShowBannerDetail}>
-        <DialogContent className="max-w-md w-[95%] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl h-[85vh] flex flex-col">
+        <DialogContent className="max-w-md w-[95%] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl h-[85vh] flex flex-col z-[2000]">
           <DialogHeader className="p-6 shrink-0 border-b">
             <DialogTitle className="text-sm font-black uppercase tracking-widest text-center">Banner Preview</DialogTitle>
           </DialogHeader>
@@ -546,7 +555,7 @@ export default function ProfilePage() {
       <input type="file" ref={stickerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'sticker')} />
 
       <Dialog open={isColorPickerOpen} onOpenChange={setIsColorPickerOpen}>
-        <DialogContent className="max-w-xs w-[90%] rounded-[2.5rem] p-6 border-none shadow-2xl">
+        <DialogContent className="max-w-xs w-[90%] rounded-[2.5rem] p-6 border-none shadow-2xl z-[3000]">
           <DialogHeader><DialogTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-center mb-6">Pick a Vibe</DialogTitle></DialogHeader>
           <div className="space-y-8 max-h-[50vh] overflow-y-auto no-scrollbar pb-6">
             {Object.entries(COLOR_CATEGORIES).map(([category, colors]) => (
@@ -565,4 +574,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
