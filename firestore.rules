@@ -4,7 +4,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * InnovateSphere Security Rules
+     * InnovateSphere Security Rules - Updated for explicit public read access
      */
 
     // --- Helper Functions ---
@@ -26,6 +26,7 @@ service cloud.firestore {
     }
 
     match /ideas/{ideaId} {
+      // Explicitly allow public reading for the collection and documents
       allow get, list: if true;
       allow create: if isSignedIn();
       // Allow any signed in user to update (increment/decrement likes)
@@ -49,7 +50,7 @@ service cloud.firestore {
       allow update: if isSignedIn();
     }
 
-    // Catch-all for other collections
+    // Global catch-all for consistency
     match /{path=**} {
       allow get, list: if true;
       allow write: if isSignedIn();

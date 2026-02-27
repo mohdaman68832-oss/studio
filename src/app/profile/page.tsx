@@ -483,7 +483,7 @@ export default function ProfilePage() {
             )}
             style={{ backgroundColor: formData.customColors.bioCard || "#FFFFFF" }}
           >
-            <p className="text-center text-xs leading-relaxed font-medium italic break-words overflow-hidden" style={{ color: getContrastColor(formData.customColors.bioCard) }}>
+            <p className="text-center text-xs leading-relaxed font-medium italic break-all overflow-hidden" style={{ color: getContrastColor(formData.customColors.bioCard) }}>
               {formData.bio || "Crafting new ideas daily."}
             </p>
           </div>

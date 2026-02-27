@@ -30,6 +30,7 @@ export function BottomNav() {
     { label: "Profile", icon: User, href: "/profile" },
   ];
 
+  // Robust profile picture selection logic
   const profilePic = profileData?.profilePictureUrl || user?.photoURL || "";
 
   return (
@@ -57,7 +58,7 @@ export function BottomNav() {
                   )}>
                     <AvatarImage src={profilePic} className="object-cover" />
                     <AvatarFallback className="text-[8px] font-black uppercase bg-primary/10 text-primary">
-                      {user?.displayName?.[0] || "U"}
+                      {user?.displayName?.[0] || profileData?.username?.[0]?.toUpperCase() || "U"}
                     </AvatarFallback>
                   </Avatar>
                 ) : (
