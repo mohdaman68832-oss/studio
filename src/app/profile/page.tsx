@@ -170,16 +170,16 @@ export default function ProfilePage() {
     const file = e.target.files?.[0];
     if (file) {
       const base64 = await toBase64(file);
-      if (type === 'profile') setFormData(prev => ({ ...prev, profilePic: base64 }));
-      else if (type === 'banner') {
+      if (type === 'profile') {
+        setFormData(prev => ({ ...prev, profilePic: base64 }));
+      } else if (type === 'banner') {
         setFormData(prev => ({ ...prev, banner: base64 }));
-      }
-      else if (type === 'sticker') {
+      } else if (type === 'sticker') {
         const newId = Math.random().toString(36).substr(2, 9);
         const newSticker = { id: newId, url: base64, x: 50, y: 50, rotation: 0, scale: 1 };
         setFormData(prev => ({ ...prev, stickers: [...prev.stickers, newSticker] }));
-        setIsOptimizeModalOpen(false);
-        setEditingStickerId(newId);
+        setIsOptimizeModalOpen(false); // Close popup when sticker chosen
+        setEditingStickerId(newId); // Enter studio mode
       }
     }
   };
@@ -247,7 +247,7 @@ export default function ProfilePage() {
       ref={containerRef}
     >
       {/* HEADER SECTION (Banner + Logo + Stickers) */}
-      <div className="relative w-full shrink-0">
+      <div className="relative w-full shrink-0 z-10">
         <div className="h-16 w-full" style={{ backgroundColor: colors.header }} />
         
         <header className="absolute top-0 left-0 right-0 z-[50] px-6 flex justify-between items-center py-5">
@@ -271,13 +271,13 @@ export default function ProfilePage() {
           </DropdownMenu>
         </header>
 
-        {/* STICKERS LAYER (Behind Text/Buttons, Above Banner/Logo) */}
+        {/* STICKERS LAYER (ON TOP of Banner/Logo, BEHIND interactive UI) */}
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
             className={cn(
-              "absolute select-none touch-none z-[20]",
-              editingStickerId === sticker.id ? "pointer-events-auto cursor-move ring-2 ring-primary ring-offset-2 rounded-lg z-[60]" : "pointer-events-none"
+              "absolute select-none touch-none z-[20]", // Higher than Banner (10), Lower than UI (30)
+              editingStickerId === sticker.id ? "pointer-events-auto cursor-move ring-2 ring-primary ring-offset-2 rounded-lg z-[40]" : "pointer-events-none"
             )} 
             style={{ 
               left: `${sticker.x}%`, 
@@ -299,7 +299,7 @@ export default function ProfilePage() {
           <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized />
         </div>
         
-        <div className="relative px-6 -mt-16 flex flex-col items-center z-[30]">
+        <div className="relative px-6 -mt-16 flex flex-col items-center z-[15]">
           <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl">
             <AvatarImage src={formData.profilePic} className="object-cover" />
             <AvatarFallback className="text-2xl font-black uppercase">{formData.name?.[0] || "U"}</AvatarFallback>
@@ -307,9 +307,9 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* USER INFO SECTION */}
-      <div style={{ backgroundColor: colors.userInfo || "transparent" }} className="w-full">
-        <div className="px-6 flex flex-col items-center pb-8 z-[30] relative">
+      {/* USER INFO SECTION - SEAMLESS (z-30 to stay above stickers) */}
+      <div style={{ backgroundColor: colors.userInfo || "transparent" }} className="w-full z-[30] relative">
+        <div className="px-6 flex flex-col items-center pb-8">
           <div className="text-center mt-4">
             <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{formData.name || "Innovator"}</h2>
             <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>@{formData.username || "handle"}</p>
@@ -323,7 +323,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* STATS SECTION */}
+      {/* STATS SECTION - SEAMLESS */}
       <div style={{ backgroundColor: colors.statsSection || "transparent" }} className="w-full py-8 px-10 relative z-[30]">
         <div className="grid grid-cols-3 gap-6 w-full">
           <div className="text-center">
@@ -341,7 +341,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* TABS SECTION */}
+      {/* TABS SECTION - SEAMLESS */}
       <div style={{ backgroundColor: colors.tabsContent || "transparent" }} className="w-full flex-1 relative z-[30]">
         <Tabs defaultValue="photo" className="w-full">
           <TabsList className="w-full bg-transparent border-none rounded-none px-6 h-14" style={{ backgroundColor: colors.tabsList }}>
@@ -369,7 +369,7 @@ export default function ProfilePage() {
         </Tabs>
       </div>
 
-      {/* STICKER STUDIO HUD (z-1000) */}
+      {/* STICKER STUDIO HUD (z-1000) - FIXED SLIDERS */}
       {editingStickerId && activeSticker && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[1000] w-[90%] max-w-sm bg-white/95 backdrop-blur-md rounded-[2.5rem] border shadow-2xl p-6 animate-in slide-in-from-bottom-4">
           <div className="space-y-6">
@@ -385,14 +385,26 @@ export default function ProfilePage() {
                   <span>Scale (Size)</span>
                   <span>{Math.round(activeSticker.scale * 100)}%</span>
                 </div>
-                <Slider value={[activeSticker.scale]} min={0.2} max={3} step={0.01} onValueChange={([v]) => updateSticker(activeSticker.id, { scale: v })} />
+                <Slider 
+                  value={[activeSticker.scale]} 
+                  min={0.2} 
+                  max={3} 
+                  step={0.01} 
+                  onValueChange={([v]) => updateSticker(activeSticker.id, { scale: v })} 
+                />
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-[8px] font-black uppercase opacity-50">
                   <span>Rotation</span>
                   <span>{activeSticker.rotation}°</span>
                 </div>
-                <Slider value={[activeSticker.rotation]} min={-180} max={180} step={1} onValueChange={([v]) => updateSticker(activeSticker.id, { rotation: v })} />
+                <Slider 
+                  value={[activeSticker.rotation]} 
+                  min={-180} 
+                  max={180} 
+                  step={1} 
+                  onValueChange={([v]) => updateSticker(activeSticker.id, { rotation: v })} 
+                />
               </div>
             </div>
             <div className="flex gap-2 pt-2">
