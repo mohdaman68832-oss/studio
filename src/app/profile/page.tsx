@@ -16,8 +16,6 @@ import {
   ChevronRight,
   UserCog,
   Trash2,
-  RotateCcw,
-  Maximize,
   CheckCircle
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -98,7 +96,6 @@ export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [activeColorSection, setActiveColorSection] = useState<ColorSection | null>(null);
   
-  // Sticker Studio State
   const [editingStickerId, setEditingStickerId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -180,8 +177,8 @@ export default function ProfilePage() {
         const newId = Math.random().toString(36).substr(2, 9);
         const newSticker = { id: newId, url: base64, x: 50, y: 50, rotation: 0, scale: 1 };
         setFormData(prev => ({ ...prev, stickers: [...prev.stickers, newSticker] }));
-        setIsOptimizeModalOpen(false); // Close modal automatically
-        setEditingStickerId(newId); // Open studio mode
+        setIsOptimizeModalOpen(false); // Close modal automatically as requested
+        setEditingStickerId(newId); // Open studio mode immediately
       }
     }
   };
@@ -192,7 +189,6 @@ export default function ProfilePage() {
     setIsColorPickerOpen(false);
   };
 
-  // Sticker Interaction Handlers
   const handleStickerPointerDown = (e: React.PointerEvent, id: string) => {
     setIsDragging(true);
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
@@ -242,7 +238,7 @@ export default function ProfilePage() {
       style={{ backgroundColor: colors.background || "var(--background)" }}
       ref={containerRef}
     >
-      {/* Background Sections (Seamless) */}
+      {/* Background Sections (z-0) */}
       <div className="flex flex-col m-0 p-0 relative z-0 shrink-0">
          <div className="h-16 w-full" style={{ backgroundColor: colors.header }} />
          <div className="h-[28rem] w-full" style={{ backgroundColor: colors.userInfo }} />
@@ -250,8 +246,21 @@ export default function ProfilePage() {
          <div className="flex-1 w-full min-h-[50vh]" style={{ backgroundColor: colors.tabsContent }} />
       </div>
 
-      {/* Layer: Stickers (z-index 40) - On top of Banner/Logo, behind UI text */}
-      <div className="absolute inset-0 z-40 pointer-events-none">
+      {/* Media Layer (z-10): Banner and Logo */}
+      <div className="absolute inset-0 z-10 pointer-events-none">
+        <div className="relative h-52 w-full overflow-hidden">
+          <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized />
+        </div>
+        <div className="px-6 -mt-16 flex flex-col items-center">
+          <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl">
+            <AvatarImage src={formData.profilePic} className="object-cover" />
+            <AvatarFallback className="text-2xl font-black uppercase">{formData.name?.[0] || "U"}</AvatarFallback>
+          </Avatar>
+        </div>
+      </div>
+
+      {/* Stickers Layer (z-20): Above media, below interactive UI */}
+      <div className="absolute inset-0 z-20 pointer-events-none">
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
@@ -276,8 +285,8 @@ export default function ProfilePage() {
         ))}
       </div>
 
-      {/* Layer: UI Content (z-index 50) */}
-      <div className="absolute inset-0 flex flex-col m-0 p-0 z-50 pointer-events-none no-scrollbar overflow-y-auto">
+      {/* UI Content (z-30): Name, Handle, Bio Card, Buttons */}
+      <div className="absolute inset-0 flex flex-col m-0 p-0 z-30 pointer-events-none no-scrollbar overflow-y-auto">
         <header className="px-6 flex justify-between items-center py-5 pointer-events-auto">
           <h1 className="text-2xl font-black uppercase tracking-tighter" style={{ color: getContrastColor(colors.header) }}>Sphere</h1>
           <DropdownMenu>
@@ -300,14 +309,10 @@ export default function ProfilePage() {
         </header>
 
         <section className="relative">
-          <div className="relative h-52 w-full bg-muted overflow-hidden">
-            <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized />
-          </div>
+          {/* Spacer for banner and avatar background height */}
+          <div className="h-52 w-full" />
           <div className="px-6 -mt-16 flex flex-col items-center pb-4">
-            <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl pointer-events-auto">
-              <AvatarImage src={formData.profilePic} className="object-cover" />
-              <AvatarFallback className="text-2xl font-black uppercase">{formData.name?.[0] || "U"}</AvatarFallback>
-            </Avatar>
+            <div className="h-32 w-32" /> {/* Spacer for avatar */}
             <div className="text-center mt-4">
               <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{formData.name || "Innovator"}</h2>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>@{formData.username || "handle"}</p>
@@ -363,7 +368,7 @@ export default function ProfilePage() {
         </Tabs>
       </div>
 
-      {/* STICKER STUDIO HUD (Scale/Rotate Controls) */}
+      {/* STICKER STUDIO HUD (High z-index: 1000) */}
       {editingStickerId && activeSticker && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[1000] w-[90%] max-w-sm bg-white/95 backdrop-blur-md rounded-[2.5rem] border shadow-2xl p-6 animate-in slide-in-from-bottom-4">
           <div className="space-y-6">
@@ -423,7 +428,6 @@ export default function ProfilePage() {
           </DialogHeader>
 
           <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar">
-            {/* Banner Section (Preview on Top) */}
             <div className="space-y-4">
                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Profile Banner</Label>
                <div 
@@ -435,7 +439,6 @@ export default function ProfilePage() {
                </div>
             </div>
 
-            {/* Logo Section (Logo Below Banner) */}
             <div className="space-y-4">
                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Identity Logo</Label>
                <div className="flex items-center gap-4">
@@ -446,27 +449,25 @@ export default function ProfilePage() {
                   <div className="flex-1 space-y-4">
                     <div className="space-y-1">
                       <Label className="text-[8px] font-black uppercase tracking-widest opacity-60">Display Name</Label>
-                      <Input value={formData.name} onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))} className="rounded-xl h-10 bg-muted/20 border-none font-bold text-xs" />
+                      <Input value={formData.name} onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))} className="rounded-xl h-10 bg-muted/20 border-none font-bold text-xs shadow-none focus-visible:ring-0" />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-[8px] font-black uppercase tracking-widest opacity-60">Unique Handle</Label>
-                      <Input value={formData.username} onChange={(e) => setFormData(p => ({ ...p, username: e.target.value }))} className="rounded-xl h-10 bg-muted/20 border-none font-bold text-xs" />
+                      <Input value={formData.username} onChange={(e) => setFormData(p => ({ ...p, username: e.target.value }))} className="rounded-xl h-10 bg-muted/20 border-none font-bold text-xs shadow-none focus-visible:ring-0" />
                     </div>
                   </div>
                </div>
             </div>
 
-            {/* Bio Section */}
             <div className="space-y-3">
               <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Bio/Objective</Label>
               <Textarea 
                 value={formData.bio} 
                 onChange={(e) => setFormData(p => ({ ...p, bio: e.target.value }))} 
-                className="rounded-[1.5rem] min-h-[80px] bg-muted/20 border-none font-medium text-xs p-4" 
+                className="rounded-[1.5rem] min-h-[80px] bg-muted/20 border-none font-medium text-xs p-4 shadow-none focus-visible:ring-0" 
               />
             </div>
 
-            {/* Colors Section */}
             <div className="space-y-4">
               <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Interface Colors</Label>
               <div className="grid grid-cols-2 gap-3">
@@ -491,7 +492,6 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Sticker Management */}
             <div className="space-y-4 pb-4">
               <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Custom Stickers</Label>
               <Button 
@@ -504,7 +504,7 @@ export default function ProfilePage() {
                 {formData.stickers.map(s => (
                   <div key={s.id} className="relative w-12 h-12 rounded-lg border overflow-hidden group">
                     <Image src={s.url} alt="s" fill className="object-contain" />
-                    <button onClick={() => setEditingStickerId(s.id)} className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white"><Plus size={12} /></button>
+                    <button onClick={() => { setEditingStickerId(s.id); setIsOptimizeModalOpen(false); }} className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white"><Plus size={12} /></button>
                   </div>
                 ))}
               </div>
@@ -526,8 +526,8 @@ export default function ProfilePage() {
       {/* BANNER DETAIL OVERLAY */}
       <Dialog open={showBannerDetail} onOpenChange={setShowBannerDetail}>
         <DialogContent className="max-w-md w-[95%] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl h-[85vh] flex flex-col">
-          <DialogHeader className="p-6 shrink-0 border-b flex flex-row items-center justify-between">
-            <DialogTitle className="text-sm font-black uppercase tracking-widest">Banner Customization</DialogTitle>
+          <DialogHeader className="p-6 shrink-0 border-b">
+            <DialogTitle className="text-sm font-black uppercase tracking-widest text-center">Banner Customization</DialogTitle>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto p-6 space-y-10 no-scrollbar">
              <div className="space-y-3">
@@ -551,12 +551,10 @@ export default function ProfilePage() {
         </DialogContent>
       </Dialog>
 
-      {/* Hidden File Inputs */}
       <input type="file" ref={profileInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'profile')} />
       <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'banner')} />
       <input type="file" ref={stickerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'sticker')} />
 
-      {/* Nested Color Picker */}
       <Dialog open={isColorPickerOpen} onOpenChange={setIsColorPickerOpen}>
         <DialogContent className="max-w-xs w-[90%] rounded-[2.5rem] p-6 border-none shadow-2xl">
           <DialogHeader><DialogTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-center mb-6">Pick a Vibe</DialogTitle></DialogHeader>
@@ -577,3 +575,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+
