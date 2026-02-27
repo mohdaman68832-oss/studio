@@ -6,12 +6,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { 
   Settings, LogOut, Camera, 
-  Plus, Pencil, Loader2, 
+  Pencil, Loader2, 
   PaintBucket,
   Image as LucideImage, Video, Type,
   X,
   Trash2,
-  RefreshCcw
+  Check
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -84,6 +84,7 @@ export default function ProfilePage() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [activeStickerId, setActiveStickerId] = useState<string | null>(null);
   const [draggedStickerId, setDraggedStickerId] = useState<string | null>(null);
   const [activeColorSection, setActiveColorSection] = useState<ColorSection | null>(null);
@@ -142,8 +143,9 @@ export default function ProfilePage() {
         updatedAt: new Date().toISOString()
       }, { merge: true });
 
-      toast({ title: "Profile Published", description: "Your custom theme is now live." });
-      setIsEditModalOpen(false);
+      toast({ title: "Theme Saved", description: "Your custom look is now live." });
+      setIsEditMode(false);
+      setActiveStickerId(null);
     } catch (error: any) {
       toast({ variant: "destructive", title: "Update Failed", description: error.message });
     } finally {
@@ -161,7 +163,7 @@ export default function ProfilePage() {
         const newSticker = { id: Math.random().toString(36).substr(2, 9), url: base64, x: 50, y: 50, rotation: 0, scale: 1 };
         setFormData(prev => ({ ...prev, stickers: [...prev.stickers, newSticker] }));
         setActiveStickerId(newSticker.id);
-        setIsEditModalOpen(true);
+        setIsEditMode(true);
       }
     }
   };
@@ -170,14 +172,12 @@ export default function ProfilePage() {
     if (!activeColorSection) return;
     setFormData(prev => ({ ...prev, customColors: { ...prev.customColors, [activeColorSection]: hex } }));
     setIsColorPickerOpen(false);
-    setIsEditModalOpen(true); 
     setActiveColorSection(null);
   };
 
   const openPickerFor = (section: ColorSection) => {
     setActiveColorSection(section);
     setIsColorPickerOpen(true);
-    setIsEditModalOpen(false);
   };
 
   const updateSticker = (id: string, updates: Partial<Sticker>) => {
@@ -203,40 +203,41 @@ export default function ProfilePage() {
   return (
     <div 
       ref={containerRef}
-      className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-hidden flex flex-col m-0 p-0"
+      className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-hidden flex flex-col m-0 p-0 no-scrollbar"
       style={{ backgroundColor: formData.customColors.background || "var(--background)" }}
     >
-      {/* Layer 0: Background Sections - Seamless */}
-      <div className="flex flex-col m-0 p-0 relative z-0">
+      {/* Layer 0: Background Sections - Truly Seamless */}
+      <div className="flex flex-col m-0 p-0 relative z-0 shrink-0">
          <div className="h-16 w-full" style={{ backgroundColor: formData.customColors.header }} />
          <div className="h-[28rem] w-full" style={{ backgroundColor: formData.customColors.userInfo }} />
          <div className="h-28 w-full" style={{ backgroundColor: formData.customColors.statsSection }} />
          <div className="flex-1 w-full min-h-[50vh]" style={{ backgroundColor: formData.customColors.tabsContent }} />
       </div>
 
-      {/* Layer 1: Stickers - Above background, below main UI */}
-      <div className="absolute inset-0 pointer-events-none z-10">
+      {/* Layer 1: Stickers - Behind main UI elements (Safe Area) */}
+      <div className="absolute inset-0 z-10 pointer-events-none">
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
             className={cn(
-              "absolute pointer-events-auto cursor-move", 
-              activeStickerId === sticker.id ? "ring-2 ring-primary ring-offset-2 rounded-lg" : ""
+              "absolute pointer-events-auto", 
+              isEditMode ? "cursor-move" : "cursor-default",
+              activeStickerId === sticker.id && isEditMode ? "ring-2 ring-primary ring-offset-2 rounded-lg" : ""
             )} 
             style={{ 
               left: `${sticker.x}%`, 
               top: `${sticker.y}%`, 
               transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`, 
               touchAction: 'none',
-              zIndex: 11
             }}
             onPointerDown={(e) => { 
-                setActiveStickerId(sticker.id);
-                setDraggedStickerId(sticker.id); 
-                (e.currentTarget as any).setPointerCapture(e.pointerId); 
+              if (!isEditMode) return;
+              setActiveStickerId(sticker.id);
+              setDraggedStickerId(sticker.id); 
+              (e.currentTarget as any).setPointerCapture(e.pointerId); 
             }} 
             onPointerMove={(e) => { 
-              if (draggedStickerId === sticker.id) { 
+              if (draggedStickerId === sticker.id && isEditMode) { 
                 const rect = containerRef.current!.getBoundingClientRect(); 
                 updateSticker(sticker.id, { 
                   x: Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100)), 
@@ -249,33 +250,53 @@ export default function ProfilePage() {
             <div className="relative w-24 h-24 select-none">
               <Image src={sticker.url} alt="sticker" fill className="object-contain pointer-events-none" unoptimized={true} />
             </div>
-            {activeStickerId === sticker.id && (
-              <button 
-                onClick={(e) => { e.stopPropagation(); removeSticker(sticker.id); }}
-                className="absolute -top-3 -right-3 bg-red-500 text-white rounded-full p-1 shadow-lg z-50"
-              >
-                <X size={12} />
-              </button>
-            )}
           </div>
         ))}
       </div>
 
-      {/* Layer 2: Main UI Content - Above stickers */}
+      {/* Layer 2: UI Content - Higher z-index ensures stickers are BEHIND name/buttons */}
       <div className="absolute inset-0 flex flex-col m-0 p-0 z-20 pointer-events-none">
         <div className="px-6 flex justify-between items-center py-5 pointer-events-auto">
           <h1 className="text-2xl font-black uppercase tracking-tighter" style={{ color: getContrastColor(formData.customColors.header) }}>Sphere Profile</h1>
-          <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setIsSettingsOpen(true)}><Settings size={24} style={{ color: getContrastColor(formData.customColors.header) }} /></Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className={cn("rounded-full transition-colors", isEditMode ? "bg-primary text-white" : "")} 
+              onClick={() => setIsEditMode(!isEditMode)}
+            >
+              <Pencil size={20} style={{ color: isEditMode ? 'white' : getContrastColor(formData.customColors.header) }} />
+            </Button>
+            <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setIsSettingsOpen(true)}>
+              <Settings size={24} style={{ color: getContrastColor(formData.customColors.header) }} />
+            </Button>
+          </div>
         </div>
 
         <div className="relative">
           <div className="relative h-52 w-full bg-muted overflow-hidden">
             <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized={true} />
+            {isEditMode && (
+              <button 
+                onClick={() => bannerInputRef.current?.click()}
+                className="absolute inset-0 bg-black/30 flex items-center justify-center text-white pointer-events-auto"
+              >
+                <Camera size={24} />
+              </button>
+            )}
           </div>
           <div className="px-6 -mt-16 flex flex-col items-center pb-4">
-            <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl pointer-events-auto">
+            <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl pointer-events-auto relative">
               <AvatarImage src={formData.profilePic} className="object-cover" />
               <AvatarFallback className="text-2xl font-black uppercase">{formData.name?.[0] || "U"}</AvatarFallback>
+              {isEditMode && (
+                <button 
+                  onClick={() => profileInputRef.current?.click()}
+                  className="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center text-white"
+                >
+                  <Camera size={18} />
+                </button>
+              )}
             </Avatar>
             <div className="text-center mt-4">
               <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(formData.customColors.userInfo) }}>{formData.name || user.displayName || "Innovator"}</h2>
@@ -285,6 +306,16 @@ export default function ProfilePage() {
               <p className="text-center text-[12px] leading-relaxed font-bold italic" style={{ color: getContrastColor(formData.customColors.bioCard) }}>
                 {formData.bio || "Building the future of shared intelligence in the sphere."}
               </p>
+              {isEditMode && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="w-full mt-2 h-7 text-[8px] font-black uppercase"
+                  onClick={() => setIsEditModalOpen(true)}
+                >
+                  Edit Bio & Info
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -332,34 +363,64 @@ export default function ProfilePage() {
         </Tabs>
       </div>
 
+      {/* Floating On-Screen Sticker Controls (Only in Edit Mode) */}
+      {isEditMode && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 w-[90%] max-w-md z-[100] animate-in slide-in-from-bottom-5">
+           <div className="bg-white rounded-[2rem] p-4 shadow-2xl border-2 border-primary/20 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <PaintBucket className="text-primary w-4 h-4" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-primary">Theme Studio</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" className="h-8 rounded-full text-[9px] font-black" onClick={() => setIsEditModalOpen(true)}>Colors</Button>
+                  <Button variant="outline" size="sm" className="h-8 rounded-full text-[9px] font-black" onClick={() => stickerInputRef.current?.click()}>+ Sticker</Button>
+                  <Button size="sm" className="h-8 rounded-full bg-green-500 text-white font-black px-4" onClick={handleSaveProfile} disabled={isSaving}>
+                    {isSaving ? <Loader2 className="animate-spin w-3 h-3" /> : <Check className="w-4 h-4" />}
+                  </Button>
+                </div>
+              </div>
+
+              {activeSticker && (
+                <div className="p-3 bg-primary/5 rounded-2xl border border-primary/10 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[9px] font-black uppercase text-primary">Edit Sticker</p>
+                    <Button variant="destructive" size="icon" className="h-6 w-6 rounded-full" onClick={() => removeSticker(activeSticker.id)}>
+                      <Trash2 size={12} />
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-[8px] font-bold uppercase"><span>Scale</span><span>{Math.round(activeSticker.scale * 100)}%</span></div>
+                      <Slider value={[activeSticker.scale]} min={0.2} max={2.5} step={0.1} onValueChange={([v]) => updateSticker(activeSticker.id, { scale: v })} />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-[8px] font-bold uppercase"><span>Rotate</span><span>{activeSticker.rotation}°</span></div>
+                      <Slider value={[activeSticker.rotation]} min={0} max={360} step={5} onValueChange={([v]) => updateSticker(activeSticker.id, { rotation: v })} />
+                    </div>
+                  </div>
+                </div>
+              )}
+           </div>
+        </div>
+      )}
+
+      {/* Hidden Inputs */}
+      <input type="file" ref={profileInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'profile')} />
+      <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'banner')} />
+      <input type="file" ref={stickerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'sticker')} />
+
+      {/* Profile Edit Modal (Bio & Colors) */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <DialogContent 
           onOpenAutoFocus={(e) => e.preventDefault()}
-          className="max-w-md w-[92%] rounded-[2.5rem] p-6 max-h-[85vh] overflow-y-auto z-[3000] no-scrollbar border-none shadow-2xl"
+          className="max-w-md w-[92%] rounded-[2.5rem] p-6 max-h-[80vh] overflow-y-auto z-[2000] no-scrollbar border-none shadow-2xl"
         >
           <DialogHeader className="sr-only">
-            <DialogTitle>Customize Profile Theme</DialogTitle>
+            <DialogTitle>Edit Profile Info & Colors</DialogTitle>
           </DialogHeader>
           <div className="space-y-6">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest">Banner Background</Label>
-                <div className="relative h-28 w-full rounded-2xl overflow-hidden border-2 border-muted bg-muted cursor-pointer" onClick={() => bannerInputRef.current?.click()}>
-                  <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="Banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized={true} />
-                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center text-white"><Camera size={20} /></div>
-                </div>
-              </div>
-              
-              <div className="flex flex-col items-center gap-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest">Profile Logo</Label>
-                <div className="relative h-20 w-20 rounded-full border-4 border-white bg-white shadow-lg cursor-pointer overflow-hidden" onClick={() => profileInputRef.current?.click()}>
-                  <Image src={formData.profilePic} alt="Logo" fill className="object-cover" unoptimized={true} />
-                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center text-white"><Camera size={18} /></div>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-3 pt-2">
+            <div className="space-y-3">
               <div className="space-y-1">
                 <Label className="text-[9px] font-black uppercase tracking-widest opacity-60">Display Name</Label>
                 <Input value={formData.name} onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))} className="rounded-xl h-10 bg-muted/30 border-none font-bold" />
@@ -388,65 +449,18 @@ export default function ProfilePage() {
                 ))}
               </div>
             </div>
-
-            <div className="space-y-4 pt-4 border-t">
-               <div className="flex items-center justify-between">
-                 <Label className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">Sticker Studio</Label>
-                 <Button variant="outline" size="sm" className="h-7 rounded-full text-[8px] font-black" onClick={() => stickerInputRef.current?.click()}>+ New Sticker</Button>
-               </div>
-               
-               <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-                  {formData.stickers.map(s => (
-                    <button 
-                      key={s.id} 
-                      onClick={() => setActiveStickerId(s.id)} 
-                      className={cn(
-                        "w-12 h-12 shrink-0 border-2 rounded-lg p-1 transition-all", 
-                        activeStickerId === s.id ? "border-primary bg-primary/10 scale-105" : "border-muted"
-                      )}
-                    >
-                      <Image src={s.url} alt="sticker" width={48} height={48} className="object-contain w-full h-full" unoptimized={true}/>
-                    </button>
-                  ))}
-               </div>
-
-               {activeSticker && (
-                 <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 space-y-4 animate-in fade-in">
-                    <div className="flex items-center justify-between">
-                       <p className="text-[8px] font-black uppercase text-primary tracking-widest">Adjust Selection</p>
-                       <Button variant="destructive" size="icon" className="h-6 w-6 rounded-full" onClick={() => removeSticker(activeSticker.id)}>
-                          <Trash2 size={12} />
-                       </Button>
-                    </div>
-                    
-                    <div className="grid gap-4">
-                       <div className="space-y-1">
-                         <div className="flex justify-between text-[8px] font-bold uppercase"><span>Scale</span><span>{Math.round(activeSticker.scale * 100)}%</span></div>
-                         <Slider value={[activeSticker.scale]} min={0.2} max={2.5} step={0.1} onValueChange={([v]) => updateSticker(activeSticker.id, { scale: v })} />
-                       </div>
-                       <div className="space-y-1">
-                         <div className="flex justify-between text-[8px] font-bold uppercase"><span>Rotate</span><span>{activeSticker.rotation}°</span></div>
-                         <Slider value={[activeSticker.rotation]} min={0} max={360} step={5} onValueChange={([v]) => updateSticker(activeSticker.id, { rotation: v })} />
-                       </div>
-                    </div>
-                 </div>
-               )}
-            </div>
-
-            <input type="file" ref={profileInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'profile')} />
-            <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'banner')} />
-            <input type="file" ref={stickerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'sticker')} />
           </div>
           <DialogFooter className="mt-6 pt-4 border-t">
-            <Button className="w-full h-12 rounded-2xl bg-primary text-white font-black uppercase tracking-widest shadow-lg" onClick={handleSaveProfile} disabled={isSaving}>
-              {isSaving ? <Loader2 className="animate-spin mr-2" /> : "Save Theme Changes"}
+            <Button className="w-full h-12 rounded-2xl bg-primary text-white font-black uppercase tracking-widest shadow-lg" onClick={() => setIsEditModalOpen(false)}>
+              Done
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
+      {/* Color Picker Sheet */}
       <Sheet open={isColorPickerOpen} onOpenChange={setIsColorPickerOpen}>
-        <SheetContent side="bottom" className="rounded-t-[2.5rem] p-6 max-h-[60vh] overflow-y-auto no-scrollbar border-none z-[4100]">
+        <SheetContent side="bottom" className="rounded-t-[2.5rem] p-6 max-h-[60vh] overflow-y-auto no-scrollbar border-none z-[2100]">
           <SheetHeader><SheetTitle className="text-[9px] font-black uppercase tracking-widest text-center text-primary mb-4">Pick a Color</SheetTitle></SheetHeader>
           <div className="space-y-6 pb-8">
             {Object.entries(COLOR_CATEGORIES).map(([category, colors]) => (
@@ -463,11 +477,12 @@ export default function ProfilePage() {
         </SheetContent>
       </Sheet>
 
+      {/* Settings Sheet */}
       <Sheet open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-        <SheetContent side="bottom" className="rounded-t-[2.5rem] p-6 border-none z-[4100]">
+        <SheetContent side="bottom" className="rounded-t-[2.5rem] p-6 border-none z-[2100]">
           <SheetHeader><SheetTitle className="text-[10px] font-black uppercase tracking-widest text-center mb-4">Account Control</SheetTitle></SheetHeader>
           <div className="space-y-3 mt-4">
-            <Button variant="outline" className="w-full justify-start h-12 rounded-xl px-4 gap-3 border-primary/20 text-primary font-black uppercase text-xs" onClick={() => { setIsSettingsOpen(false); setIsEditModalOpen(true); }}><Pencil size={16} /> Theme Studio</Button>
+            <Button variant="outline" className="w-full justify-start h-12 rounded-xl px-4 gap-3 border-primary/20 text-primary font-black uppercase text-xs" onClick={() => { setIsSettingsOpen(false); setIsEditMode(true); }}><Pencil size={16} /> Theme Studio</Button>
             <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start h-12 rounded-xl px-4 gap-3 text-secondary font-black uppercase text-xs"><LogOut size={16} /> Sign Out</Button>
           </div>
         </SheetContent>
