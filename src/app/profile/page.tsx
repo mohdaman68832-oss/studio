@@ -178,8 +178,8 @@ export default function ProfilePage() {
         const newId = Math.random().toString(36).substr(2, 9);
         const newSticker = { id: newId, url: base64, x: 50, y: 30, rotation: 0, scale: 1 };
         setFormData(prev => ({ ...prev, stickers: [...prev.stickers, newSticker] }));
-        setIsOptimizeModalOpen(false); // Auto-close modal
-        setEditingStickerId(newId); // Select for editing
+        setIsOptimizeModalOpen(false); 
+        setEditingStickerId(newId);
       }
     }
   };
@@ -190,7 +190,6 @@ export default function ProfilePage() {
     setIsColorPickerOpen(false);
   };
 
-  // Sticker dragging logic
   const handleStickerPointerDown = (e: React.PointerEvent, id: string) => {
     if (editingStickerId !== id) return;
     e.preventDefault();
@@ -247,9 +246,6 @@ export default function ProfilePage() {
       className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden flex flex-col no-scrollbar"
       style={{ backgroundColor: colors.background || "var(--background)" }}
     >
-      {/* 
-        STICKER WRAPPER: Covers header area down to stats section.
-      */}
       <div className="relative w-full flex flex-col" ref={studioContainerRef}>
         
         {/* STICKY HEADER BACKGROUND */}
@@ -277,11 +273,7 @@ export default function ProfilePage() {
           </DropdownMenu>
         </header>
 
-        {/* 
-          STICKER LAYER (Z-20): 
-          ABOVE Banner & Logo (Z-10)
-          BEHIND Text & Buttons (Z-30)
-        */}
+        {/* STICKER LAYER: z-20 (ABOVE BANNER/LOGO, BEHIND TEXT/UI) */}
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
@@ -305,7 +297,7 @@ export default function ProfilePage() {
           </div>
         ))}
 
-        {/* BANNER & AVATAR (Z-[10]) */}
+        {/* BANNER & LOGO: z-10 (BEHIND STICKERS) */}
         <div className="relative w-full z-[10]">
           <div className="relative h-52 w-full overflow-hidden">
             <Image 
@@ -325,9 +317,8 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* UI CONTENT: Name, Handle, Bio Card, Stats (Z-[30] - ABOVE STICKERS) */}
+        {/* INTERACTIVE UI CONTENT: z-30 (ABOVE STICKERS) */}
         <div className="relative z-[30] w-full -mt-1">
-          {/* USER INFO AREA */}
           <div style={{ backgroundColor: colors.userInfo || "transparent" }} className="w-full pb-8">
             <div className="px-6 flex flex-col items-center">
               <div className="text-center mt-4">
@@ -343,7 +334,6 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* STATS SECTION */}
           <div style={{ backgroundColor: colors.statsSection || "transparent" }} className="w-full py-8 px-10">
             <div className="grid grid-cols-3 gap-6 w-full">
               <div className="text-center">
@@ -363,7 +353,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* TABS SECTION (Z-30) */}
+      {/* TABS SECTION: z-30 */}
       <div style={{ backgroundColor: colors.tabsContent || "transparent" }} className="w-full flex-1 relative z-[30]">
         <Tabs defaultValue="photo" className="w-full">
           <TabsList className="w-full bg-transparent border-none rounded-none px-6 h-14" style={{ backgroundColor: colors.tabsList }}>
@@ -391,7 +381,7 @@ export default function ProfilePage() {
         </Tabs>
       </div>
 
-      {/* STICKER STUDIO HUD (Z-1000) */}
+      {/* STICKER STUDIO HUD: z-1000 */}
       {editingStickerId && activeSticker && (
         <div className="fixed bottom-20 left-4 right-4 z-[1000] bg-white/95 backdrop-blur-md rounded-[2rem] border shadow-2xl p-5 animate-in slide-in-from-bottom-4">
           <div className="space-y-4">
@@ -448,7 +438,6 @@ export default function ProfilePage() {
             <DialogTitle className="text-xl font-black uppercase tracking-tighter text-primary">Optimize Profile</DialogTitle>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar">
-            {/* Banner Section */}
             <div className="space-y-4">
                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Profile Banner</Label>
                <div onClick={() => setShowBannerDetail(true)} className="relative h-32 bg-muted rounded-[2rem] overflow-hidden border-2 border-dashed border-primary/20 group cursor-pointer">
@@ -456,7 +445,6 @@ export default function ProfilePage() {
                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white"><ChevronRight size={32} /></div>
                </div>
             </div>
-            {/* Logo/Identity Section */}
             <div className="space-y-4">
                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Identity Logo</Label>
                <div className="flex items-center gap-4">
@@ -479,12 +467,10 @@ export default function ProfilePage() {
                   </div>
                </div>
             </div>
-            {/* Bio Section */}
             <div className="space-y-3">
               <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Bio/Objective</Label>
               <Textarea value={formData.bio} onChange={(e) => setFormData(p => ({ ...p, bio: e.target.value }))} className="rounded-[1.5rem] min-h-[80px] bg-muted/20 border-none font-medium text-xs p-4 shadow-none focus-visible:ring-0" />
             </div>
-            {/* Interface Colors */}
             <div className="space-y-4">
               <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Interface Colors</Label>
               <div className="grid grid-cols-2 gap-3">
@@ -503,7 +489,6 @@ export default function ProfilePage() {
                 ))}
               </div>
             </div>
-            {/* Custom Stickers Management */}
             <div className="space-y-4 pb-4">
               <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Custom Stickers</Label>
               <Button onClick={() => stickerInputRef.current?.click()} className="w-full h-14 rounded-3xl bg-primary/10 text-primary border-2 border-dashed border-primary/20 hover:bg-primary/20">
@@ -521,7 +506,6 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
-          {/* Footer Save */}
           <div className="p-6 bg-white border-t shrink-0">
              <Button className="w-full h-14 rounded-[1.5rem] bg-primary text-white font-black uppercase tracking-widest shadow-xl" onClick={handleSaveProfile} disabled={isSaving}>
                {isSaving ? <Loader2 className="animate-spin mr-2" /> : "Save All Changes"}
@@ -530,7 +514,6 @@ export default function ProfilePage() {
         </DialogContent>
       </Dialog>
 
-      {/* BANNER DETAIL DIALOG */}
       <Dialog open={showBannerDetail} onOpenChange={setShowBannerDetail}>
         <DialogContent className="max-w-md w-[95%] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl h-[85vh] flex flex-col">
           <DialogHeader className="p-6 shrink-0 border-b">
@@ -559,11 +542,9 @@ export default function ProfilePage() {
         </DialogContent>
       </Dialog>
 
-      {/* HIDDEN FILE INPUTS */}
       <input type="file" ref={profileInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'profile')} />
       <input type="file" ref={stickerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'sticker')} />
 
-      {/* COLOR PICKER DIALOG */}
       <Dialog open={isColorPickerOpen} onOpenChange={setIsColorPickerOpen}>
         <DialogContent className="max-w-xs w-[90%] rounded-[2.5rem] p-6 border-none shadow-2xl">
           <DialogHeader><DialogTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-center mb-6">Pick a Vibe</DialogTitle></DialogHeader>
@@ -584,3 +565,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+
