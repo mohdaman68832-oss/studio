@@ -3,11 +3,6 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    /**
-     * InnovateSphere Security Rules
-     * Optimized for public read access and owner-based writes.
-     */
-
     function isSignedIn() {
       return request.auth != null;
     }
@@ -27,7 +22,7 @@ service cloud.firestore {
     match /ideas/{ideaId} {
       allow read: if true;
       allow create: if isSignedIn();
-      allow update: if isSignedIn(); // Allow likes/comments updates
+      allow update: if isSignedIn(); 
       allow delete: if isSignedIn() && (resource == null || resource.data.authorId == request.auth.uid);
 
       match /suggestions/{suggestionId} {
@@ -52,14 +47,22 @@ service cloud.firestore {
       }
     }
 
-    // Notifications: CRITICAL FIX - Allow listing by owner.
+    // Notifications: FIXED - Allow listing by owner.
     match /notifications/{notifId} {
-      allow read, list: if isSignedIn() && request.auth.uid == resource.data.userId;
+      allow read: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
+      allow list: if isSignedIn(); 
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
 
-    // Follows: Needed for mutual follow checks in Chat.
+    // Messages: Direct chat privacy.
+    match /messages/{msgId} {
+      allow read: if isSignedIn() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid);
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.senderId == request.auth.uid;
+    }
+
+    // Follows: Publicly readable for mutual checks.
     match /follows/{followId} {
       allow read: if true;
       allow write: if isSignedIn() && (request.auth.uid == request.resource.data.followerId || followId.startsWith(request.auth.uid));

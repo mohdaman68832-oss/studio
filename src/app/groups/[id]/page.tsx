@@ -57,21 +57,17 @@ const MOCK_GROUP_POSTS = Array.from({ length: 20 }).map((_, i) => ({
   id: `post-${i}`,
   title: [
     "Neural Mesh Network", "Smart Grid AI", "Bio-degradable Tech", "Solar Glass v2", 
-    "Haptic Learning", "Urban Wind Turbine", "Water Filter IoT", "Clean Air Necklace",
-    "Self-Healing Materials", "Vertical Farm Controller", "Robot Companion", "Exo-Suit for Logistics",
-    "Mind-Link VR", "Ocean Plastic Recycler", "Carbon Capture Fan", "Green Blockchain",
-    "AI Medical Assistant", "Smart Soil Sensor", "Portable Hydro Generator", "Solar Car Paint"
-  ][i],
-  description: "Exploring the limits of what is possible with modern engineering and design. This project focuses on high-impact scalability for urban environments.",
-  problem: "Traditional solutions are too slow, expensive, and environmentally damaging for our current needs.",
+    "Haptic Learning", "Urban Wind Turbine", "Water Filter IoT", "Clean Air Necklace"
+  ][i % 8],
+  description: "Exploring high-impact scalability for urban environments.",
+  problem: "Traditional solutions are too slow and environmentally damaging.",
   category: i % 2 === 0 ? "Technology" : "Sustainability",
-  userName: ["Alex Rivera", "Sarah Chen", "Marcus Vane", "Elena Gilbert", "Tony Stark"][i % 5],
-  userAvatar: `https://picsum.photos/seed/user${i % 5}/100/100`,
+  userName: ["Alex Rivera", "Sarah Chen", "Marcus Vane", "Elena Gilbert"][i % 4],
+  userAvatar: `https://picsum.photos/seed/user${i % 4}/100/100`,
   mediaUrl: i % 4 === 0 
     ? "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" 
     : `https://picsum.photos/seed/innovation${i}/800/800`,
   innovationScore: 70 + (i % 30),
-  tags: ["Future", "OpenSource", "Scalable"],
   likes: 50 + (i * 12),
 }));
 
@@ -97,20 +93,12 @@ export default function GroupDetailPage() {
     );
   }, [db, group.category]);
 
-  const { data: firestorePosts, isLoading: postsLoading } = useCollection(postsQuery);
+  const { data: firestorePosts } = useCollection(postsQuery);
 
   const posts = useMemo(() => {
     if (firestorePosts && firestorePosts.length > 0) return firestorePosts;
     return MOCK_GROUP_POSTS.filter(p => p.category === group.category);
   }, [firestorePosts, group.category]);
-
-  const handleJoin = () => {
-    setIsJoined(true);
-    toast({
-      title: "Group Joined!",
-      description: `You are now a member of ${group.name}. Check your messages!`,
-    });
-  };
 
   return (
     <div className="max-w-md mx-auto min-h-screen bg-background flex flex-col">
@@ -120,86 +108,89 @@ export default function GroupDetailPage() {
         </Button>
         <div className="flex-1 min-w-0">
           <h1 className="font-black text-sm uppercase tracking-tighter truncate">{group.name}</h1>
-          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Innovation Group</p>
+          <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Community Hub</p>
         </div>
       </header>
 
       <div className="flex-1 overflow-y-auto no-scrollbar">
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-8">
           <div className="flex gap-4 items-start">
-            <Avatar className="h-20 w-20 rounded-3xl border-2 border-primary/10 shadow-lg shrink-0">
+            <Avatar className="h-24 w-24 rounded-[2rem] border-2 border-primary/10 shadow-xl shrink-0">
               <AvatarImage src={group.avatar} className="object-cover" />
-              <AvatarFallback className="text-2xl font-black bg-primary/10 text-primary">{group.name[0]}</AvatarFallback>
+              <AvatarFallback className="text-2xl font-black bg-primary/10 text-primary uppercase">{group.name[0]}</AvatarFallback>
             </Avatar>
-            <div className="flex-1 min-w-0 pt-1">
-              <h2 className="text-xl font-black text-foreground uppercase tracking-tighter leading-none mb-2">{group.name}</h2>
+            <div className="flex-1 min-w-0 pt-2">
+              <h2 className="text-xl font-black text-foreground uppercase tracking-tighter leading-none mb-3">{group.name}</h2>
               <div className="space-y-1">
                 <p className={cn(
-                  "text-[11px] text-muted-foreground leading-relaxed",
+                  "text-[12px] text-muted-foreground leading-relaxed font-medium",
                   !showFullDesc && "line-clamp-2"
                 )}>
                   {group.description}
                 </p>
                 <button 
                   onClick={() => setShowFullDesc(!showFullDesc)}
-                  className="text-[10px] font-black text-primary uppercase flex items-center gap-1 mt-1"
+                  className="text-[10px] font-black text-primary uppercase flex items-center gap-1 mt-2"
                 >
                   {showFullDesc ? (
-                    <>See less <ChevronUp size={10} /></>
+                    <>See less <ChevronUp size={12} /></>
                   ) : (
-                    <>See more <ChevronDown size={10} /></>
+                    <>See more <ChevronDown size={12} /></>
                   )}
                 </button>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center justify-between bg-white p-4 rounded-3xl border border-border/50 shadow-sm">
-            <div className="flex gap-4">
+          <div className="flex items-center justify-between bg-white p-6 rounded-[2.5rem] border border-border/50 shadow-xl">
+            <div className="flex gap-5">
               <div className="flex flex-col">
-                <span className="text-sm font-black text-foreground">{(group.memberCount + (isJoined ? 1 : 0)).toLocaleString()}</span>
-                <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">Members</span>
+                <span className="text-base font-black text-foreground">{(group.memberCount + (isJoined ? 1 : 0)).toLocaleString()}</span>
+                <span className="text-[9px] font-black uppercase text-muted-foreground/50 tracking-widest">Joined</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-sm font-black text-green-500">{group.stats.activeToday}</span>
-                <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">Online</span>
+                <span className="text-base font-black text-green-500">{group.stats.activeToday}</span>
+                <span className="text-[9px] font-black uppercase text-muted-foreground/50 tracking-widest">Online</span>
               </div>
             </div>
 
             {!isJoined ? (
               <Button 
-                onClick={handleJoin}
+                onClick={() => {
+                  setIsJoined(true);
+                  toast({ title: "Joined!", description: `You are now a member of ${group.name}` });
+                }}
                 size="sm" 
-                className="rounded-full h-10 px-6 flex items-center gap-2 bg-secondary shadow-lg shadow-secondary/20"
+                className="rounded-full h-11 px-7 flex items-center gap-2 bg-secondary shadow-lg shadow-secondary/20 active:scale-95 transition-transform"
               >
                 <span className="text-[10px] font-black uppercase tracking-widest">Join Group</span>
               </Button>
             ) : (
               <Sheet>
                 <SheetTrigger asChild>
-                  <Button size="sm" className="rounded-full h-10 px-5 flex items-center gap-2 bg-primary shadow-lg shadow-primary/20">
+                  <Button size="sm" className="rounded-full h-11 px-6 flex items-center gap-2 bg-primary shadow-xl shadow-primary/20">
                     <Pencil size={14} className="fill-current" />
                     <span className="text-[10px] font-black uppercase tracking-widest">Post</span>
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="bottom" className="rounded-t-[2.5rem] h-[40vh] bg-background">
+                <SheetContent side="bottom" className="rounded-t-[3rem] h-[45vh] bg-background border-none shadow-2xl">
                   <SheetHeader>
-                    <SheetTitle className="text-center text-sm font-black uppercase tracking-widest mb-6">
-                      Create Group Post
+                    <SheetTitle className="text-center text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-8">
+                      Choose Post Format
                     </SheetTitle>
                   </SheetHeader>
-                  <div className="grid grid-cols-3 gap-4 px-2">
-                    <Link href="/post" className="flex flex-col items-center gap-3 p-6 bg-white rounded-[2rem] border-2 border-border hover:border-primary transition-all">
+                  <div className="grid grid-cols-3 gap-5 px-4">
+                    <Link href="/post" className="flex flex-col items-center gap-4 p-7 bg-white rounded-[2.5rem] border-2 border-border/50 hover:border-primary transition-all shadow-sm">
                       <ImageIcon className="w-8 h-8 text-primary" />
-                      <span className="text-[10px] font-black uppercase tracking-widest">Image</span>
+                      <span className="text-[9px] font-black uppercase tracking-widest">Image</span>
                     </Link>
-                    <Link href="/post" className="flex flex-col items-center gap-3 p-6 bg-white rounded-[2rem] border-2 border-border hover:border-primary transition-all">
+                    <Link href="/post" className="flex flex-col items-center gap-4 p-7 bg-white rounded-[2.5rem] border-2 border-border/50 hover:border-primary transition-all shadow-sm">
                       <Video className="w-8 h-8 text-secondary" />
-                      <span className="text-[10px] font-black uppercase tracking-widest">Video</span>
+                      <span className="text-[9px] font-black uppercase tracking-widest">Video</span>
                     </Link>
-                    <Link href="/post" className="flex flex-col items-center gap-3 p-6 bg-white rounded-[2rem] border-2 border-border hover:border-primary transition-all">
+                    <Link href="/post" className="flex flex-col items-center gap-4 p-7 bg-white rounded-[2.5rem] border-2 border-border/50 hover:border-primary transition-all shadow-sm">
                       <Type className="w-8 h-8 text-muted-foreground" />
-                      <span className="text-[10px] font-black uppercase tracking-widest">Text</span>
+                      <span className="text-[9px] font-black uppercase tracking-widest">Text</span>
                     </Link>
                   </div>
                 </SheetContent>
@@ -207,21 +198,21 @@ export default function GroupDetailPage() {
             )}
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-8">
             <div className="flex items-center gap-3 px-1">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Group Feed</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Group Feed</span>
               <div className="flex-1 h-px bg-border/50" />
             </div>
             
-            <div className="space-y-8 pb-12">
+            <div className="space-y-10 pb-12">
               {posts && posts.length > 0 ? (
                 posts.map((post) => (
                   <IdeaCard key={post.id} idea={post as any} />
                 ))
               ) : (
-                <div className="py-20 text-center space-y-4 opacity-30">
+                <div className="py-24 text-center space-y-4 opacity-30">
                   <LayoutGrid size={48} className="mx-auto" />
-                  <p className="text-xs font-black uppercase tracking-widest">No posts in this group yet</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em]">No posts in this group yet</p>
                 </div>
               )}
             </div>

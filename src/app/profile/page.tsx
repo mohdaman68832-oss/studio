@@ -20,7 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import Image from "next/image";
 import { useUser, useAuth, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { signOut, updateProfile } from "firebase/auth";
-import { doc, updateDoc, setDoc } from "firebase/firestore";
+import { doc, updateDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -47,9 +47,9 @@ interface CustomColors {
 type ColorSection = keyof CustomColors;
 
 const COLOR_CATEGORIES = {
-  "Light (Pastels)": ["#FFFFFF", "#F8FAFC", "#F0FDF4", "#ECFDF5", "#EFF6FF", "#F5F3FF", "#FDF2F8", "#FFF7ED", "#FFFBEB", "#FEF2F2", "#ECFEFF", "#F5F5F5"],
+  "Pastels": ["#FFFFFF", "#F8FAFC", "#F0FDF4", "#ECFDF5", "#EFF6FF", "#F5F3FF", "#FDF2F8", "#FFF7ED", "#FFFBEB", "#FEF2F2", "#ECFEFF", "#F5F5F5"],
   "Vibrant": ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899", "#06B6D4", "#F97316", "#14B8A6", "#6366F1"],
-  "Dark & Deep": ["#0F172A", "#18181B", "#171717", "#1C1917", "#450A0A", "#422006", "#3F2E0E", "#064E3B", "#134E4A", "#1E1B4B", "#312E81", "#4C1D95", "#581C87", "#701A75", "#831843", "#7F1D1D"]
+  "Deep": ["#0F172A", "#18181B", "#171717", "#1C1917", "#450A0A", "#422006", "#3F2E0E", "#064E3B", "#134E4A", "#1E1B4B", "#312E81", "#4C1D95", "#581C87", "#701A75", "#831843", "#7F1D1D"]
 };
 
 function getContrastColor(hexColor: string | undefined): string {
@@ -136,20 +136,19 @@ export default function ProfilePage() {
     try {
       await updateProfile(user, { displayName: formData.name });
       
-      // Use setDoc with merge to ensure doc exists
       await setDoc(profileRef, {
         id: user.uid,
         username: formData.name.toLowerCase().replace(/\s/g, ''),
         bio: formData.bio,
         profilePictureUrl: formData.profilePic,
         bannerUrl: formData.banner,
-        bannerOffset: formData.bannerOffset,
+        bannerOffset: bannerOffset,
         stickers: formData.stickers,
         customColors: formData.customColors,
         updatedAt: new Date().toISOString()
       }, { merge: true });
 
-      toast({ title: "Success", description: "Profile theme published!" });
+      toast({ title: "Profile Published", description: "Your custom theme is now live for everyone." });
       setIsEditModalOpen(false);
     } catch (error: any) {
       toast({ variant: "destructive", title: "Update Failed", description: error.message });
@@ -228,7 +227,7 @@ export default function ProfilePage() {
     setActiveStickerId(null);
   };
 
-  if (isUserLoading || isProfileLoading) return <div className="max-w-md mx-auto p-10 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>;
+  if (isUserLoading || isProfileLoading) return <div className="max-w-md mx-auto min-h-screen flex items-center justify-center bg-background"><Loader2 className="animate-spin text-primary h-8 w-8" /></div>;
   if (!user) return null;
 
   return (
@@ -239,48 +238,48 @@ export default function ProfilePage() {
     >
       {/* STICKER CONTROL BAR */}
       {activeStickerId && !isEditModalOpen && !showBannerEditor && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[4000] w-[90%] flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-4">
-          <div className="bg-white/90 backdrop-blur-md rounded-3xl p-4 shadow-2xl border border-primary/20 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" className="rounded-full h-10 w-10 border-primary/30" onClick={() => {
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[4000] w-[90%] flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-6">
+          <div className="bg-white/95 backdrop-blur-md rounded-[2.5rem] p-5 shadow-2xl border border-primary/20 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <Button variant="outline" size="icon" className="rounded-full h-11 w-11 border-primary/20 active:scale-90" onClick={() => {
                   const s = formData.stickers.find(st => st.id === activeStickerId);
                   if (s) updateSticker(activeStickerId, { scale: Math.max(0.2, s.scale - 0.1) });
                 }}><Minimize size={18} /></Button>
-              <Button variant="outline" size="icon" className="rounded-full h-10 w-10 border-primary/30" onClick={() => {
+              <Button variant="outline" size="icon" className="rounded-full h-11 w-11 border-primary/20 active:scale-90" onClick={() => {
                   const s = formData.stickers.find(st => st.id === activeStickerId);
                   if (s) updateSticker(activeStickerId, { scale: Math.min(3, s.scale + 0.1) });
                 }}><Maximize size={18} /></Button>
             </div>
-            <div className="h-6 w-px bg-border" />
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" className="rounded-full h-10 w-10 border-primary/30" onClick={() => {
+            <div className="h-8 w-px bg-border" />
+            <div className="flex items-center gap-3">
+              <Button variant="outline" size="icon" className="rounded-full h-11 w-11 border-primary/20 active:scale-90" onClick={() => {
                   const s = formData.stickers.find(st => st.id === activeStickerId);
                   if (s) updateSticker(activeStickerId, { rotation: (s.rotation - 15) % 360 });
                 }}><RotateCcw size={18} /></Button>
-              <Button variant="outline" size="icon" className="rounded-full h-10 w-10 border-primary/30" onClick={() => {
+              <Button variant="outline" size="icon" className="rounded-full h-11 w-11 border-primary/20 active:scale-90" onClick={() => {
                   const s = formData.stickers.find(st => st.id === activeStickerId);
                   if (s) updateSticker(activeStickerId, { rotation: (s.rotation + 15) % 360 });
                 }}><RotateCw size={18} /></Button>
             </div>
-            <div className="h-6 w-px bg-border" />
-            <Button variant="destructive" size="icon" className="rounded-full h-10 w-10" onClick={() => deleteSticker(activeStickerId)}><Trash2 size={18} /></Button>
+            <div className="h-8 w-px bg-border" />
+            <Button variant="destructive" size="icon" className="rounded-full h-11 w-11 shadow-lg shadow-destructive/20 active:scale-90" onClick={() => deleteSticker(activeStickerId)}><Trash2 size={18} /></Button>
           </div>
-          <Button onClick={() => { setActiveStickerId(null); setIsEditModalOpen(true); }} className="rounded-full bg-primary text-white shadow-2xl h-14 font-black uppercase tracking-widest border-2 border-white/20 active:scale-95 transition-transform"><Check className="mr-2" /> Done Positioning</Button>
+          <Button onClick={() => { setActiveStickerId(null); setIsEditModalOpen(true); }} className="rounded-[2rem] bg-primary text-white shadow-2xl h-14 font-black uppercase tracking-widest border-2 border-white/30 active:scale-95 transition-transform"><Check className="mr-2" /> Done Positioning</Button>
         </div>
       )}
 
       {/* BANNER EDITOR */}
       {showBannerEditor && (
         <div className="fixed inset-0 z-[2000] bg-background flex flex-col animate-in slide-in-from-bottom duration-300">
-          <header className="p-4 flex items-center justify-between border-b bg-white sticky top-0 z-50">
+          <header className="p-4 flex items-center justify-between border-b bg-white sticky top-0 z-[2100]">
             <Button variant="ghost" size="icon" onClick={() => setShowBannerEditor(false)} className="rounded-full"><ChevronLeft size={24} /></Button>
-            <h2 className="text-sm font-black uppercase tracking-widest text-primary text-center flex-1">Position Banner</h2>
+            <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary text-center flex-1">Position Banner</h2>
             <div className="w-10" />
           </header>
-          <div className="flex-1 p-6 space-y-12 overflow-y-auto no-scrollbar">
+          <div className="flex-1 p-6 space-y-10 overflow-y-auto no-scrollbar">
             <div className="space-y-4">
-              <div className="flex items-center gap-2 text-primary"><Tablet size={20} /><span className="text-xs font-black uppercase tracking-widest">Device Preview</span></div>
-              <div className="relative aspect-[4/3] w-full bg-slate-900 rounded-[3rem] overflow-hidden border-8 border-slate-800 shadow-2xl">
+              <div className="flex items-center gap-2 text-primary font-black uppercase text-[10px] tracking-widest"><Tablet size={20} /> Preview</div>
+              <div className="relative aspect-video w-full bg-slate-900 rounded-[3rem] overflow-hidden border-8 border-slate-800 shadow-2xl">
                 <div 
                   className="h-full w-full relative cursor-grab active:cursor-grabbing touch-none flex flex-col overflow-hidden bg-slate-800"
                   onPointerDown={(e) => { 
@@ -293,110 +292,119 @@ export default function ProfilePage() {
                 >
                   {tempBannerUrl && <Image src={tempBannerUrl} alt="Banner Preview" fill className="object-cover select-none pointer-events-none" style={{ objectPosition: `50% ${bannerOffset}%` }} unoptimized={true} />}
                   <div className="absolute inset-0 bg-black/10 flex items-center justify-center pointer-events-none">
-                     <div className="bg-white/20 backdrop-blur-md rounded-full px-4 py-1 text-[8px] font-black uppercase text-white border border-white/30 shadow-lg">Drag Image to Reposition</div>
+                     <div className="bg-white/20 backdrop-blur-md rounded-full px-5 py-2 text-[9px] font-black uppercase text-white border border-white/30 shadow-lg tracking-widest">Drag up/down to align</div>
                   </div>
                 </div>
               </div>
             </div>
             <div className="pt-8 pb-12">
-               <Button onClick={() => { setFormData(prev => ({ ...prev, banner: tempBannerUrl!, bannerOffset })); setShowBannerEditor(false); setIsEditModalOpen(true); }} className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase shadow-xl">Apply Changes</Button>
+               <Button onClick={() => { setFormData(prev => ({ ...prev, banner: tempBannerUrl!, bannerOffset })); setShowBannerEditor(false); setIsEditModalOpen(true); }} className="w-full h-16 rounded-[2rem] bg-primary text-white font-black uppercase tracking-widest shadow-2xl shadow-primary/30">Apply Placement</Button>
             </div>
           </div>
         </div>
       )}
 
-      {/* PROFILE HEADER - SEAMLESS */}
+      {/* SEAMLESS HEADER */}
       <div 
-        className="px-6 flex justify-between items-center py-4 relative z-20 transition-colors duration-300" 
+        className="px-6 flex justify-between items-center py-5 relative z-[100] transition-colors duration-300" 
         style={{ backgroundColor: formData.customColors.header }}
       >
-        <h1 className="text-2xl font-black uppercase tracking-tighter" style={{ color: getContrastColor(formData.customColors.header) }}>Profile</h1>
-        <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setIsSettingsOpen(true)}><Settings size={22} style={{ color: getContrastColor(formData.customColors.header) }} /></Button>
+        <h1 className="text-2xl font-black uppercase tracking-tighter" style={{ color: getContrastColor(formData.customColors.header) }}>Sphere Profile</h1>
+        <Button variant="ghost" size="icon" className="rounded-full active:scale-90 transition-transform" onClick={() => setIsSettingsOpen(true)}><Settings size={24} style={{ color: getContrastColor(formData.customColors.header) }} /></Button>
       </div>
 
-      {/* USER INFO - SEAMLESS */}
+      {/* SEAMLESS USER INFO */}
       <div 
-        className="relative z-10 transition-colors duration-300" 
+        className="relative z-50 transition-colors duration-300" 
         style={{ backgroundColor: formData.customColors.userInfo }}
       >
-        <div className="relative h-48 w-full bg-muted overflow-hidden">
+        <div className="relative h-56 w-full bg-muted overflow-hidden">
           <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized={true} />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-transparent pointer-events-none" />
         </div>
-        <div className="px-6 -mt-16 flex flex-col items-center relative z-10 pb-6">
-          <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-lg">
+        <div className="px-6 -mt-20 flex flex-col items-center relative z-10 pb-8">
+          <Avatar className="h-36 w-36 border-4 border-white bg-white shadow-2xl transition-transform active:scale-105">
             <AvatarImage src={formData.profilePic} className="object-cover" />
-            <AvatarFallback className="text-2xl font-black">{formData.name?.[0] || user.displayName?.[0] || "U"}</AvatarFallback>
+            <AvatarFallback className="text-2xl font-black uppercase">{formData.name?.[0] || "U"}</AvatarFallback>
           </Avatar>
-          <div className="text-center mt-4">
+          <div className="text-center mt-6">
             <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(formData.customColors.userInfo) }}>{formData.name || user.displayName || "Innovator"}</h2>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(formData.customColors.userInfo) }}>Master of Innovations</p>
           </div>
           <div 
-            className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-sm transition-colors duration-300" 
+            className="p-8 rounded-[3rem] border w-full mt-8 shadow-xl transition-colors duration-300" 
             style={{ backgroundColor: formData.customColors.bioCard || "#FFFFFF" }}
           >
-            <p className="text-center text-xs leading-relaxed font-medium italic break-words overflow-hidden" style={{ color: getContrastColor(formData.customColors.bioCard) }}>{formData.bio || "Crafting new ideas daily in the sphere."}</p>
+            <p className="text-center text-[13px] leading-relaxed font-bold italic break-words overflow-hidden" style={{ color: getContrastColor(formData.customColors.bioCard) }}>
+              {formData.bio || "Building the future of shared intelligence in the sphere."}
+            </p>
           </div>
         </div>
       </div>
 
-      {/* STATS SECTION - SEAMLESS */}
+      {/* SEAMLESS STATS SECTION */}
       <div 
-        className="relative z-10 transition-colors duration-300 py-6 px-10" 
+        className="relative z-40 transition-colors duration-300 py-10 px-10" 
         style={{ backgroundColor: formData.customColors.statsSection }}
       >
         <div className="grid grid-cols-3 gap-8 w-full">
           <div className="text-center">
-            <p className="text-xl font-black" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{profileData?.totalIdeasPosted || 0}</p>
-            <p className="text-[10px] uppercase font-black opacity-50" style={{ color: getContrastColor(formData.customColors.statsSection) }}>Ideas</p>
+            <p className="text-2xl font-black tracking-tighter" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{profileData?.totalIdeasPosted || 0}</p>
+            <p className="text-[9px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(formData.customColors.statsSection) }}>Ideas</p>
           </div>
           <div className="text-center">
-            <p className="text-xl font-black" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{(profileData?.totalViewsReceived || 0).toLocaleString()}</p>
-            <p className="text-[10px] uppercase font-black opacity-50" style={{ color: getContrastColor(formData.customColors.statsSection) }}>Views</p>
+            <p className="text-2xl font-black tracking-tighter" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{(profileData?.totalViewsReceived || 0).toLocaleString()}</p>
+            <p className="text-[9px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(formData.customColors.statsSection) }}>Views</p>
           </div>
           <div className="text-center">
-            <p className="text-xl font-black" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{(profileData?.totalIdeasSaved || 0).toLocaleString()}</p>
-            <p className="text-[10px] uppercase font-black opacity-50" style={{ color: getContrastColor(formData.customColors.statsSection) }}>Saves</p>
+            <p className="text-2xl font-black tracking-tighter" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{(profileData?.totalIdeasSaved || 0).toLocaleString()}</p>
+            <p className="text-[9px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(formData.customColors.statsSection) }}>Saves</p>
           </div>
         </div>
       </div>
 
-      {/* TABS SECTION - SEAMLESS */}
-      <Tabs defaultValue="photo" className="w-full relative z-10">
+      {/* SEAMLESS TABS SECTION */}
+      <Tabs defaultValue="photo" className="w-full relative z-30">
         <div className="transition-colors duration-300" style={{ backgroundColor: formData.customColors.tabsList }}>
-          <TabsList className="w-full bg-transparent border-none rounded-none px-6 h-14">
+          <TabsList className="w-full bg-transparent border-none rounded-none px-6 h-16">
             <TabsTrigger value="photo" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
-              <LucideImage size={22} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
+              <LucideImage size={24} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
             </TabsTrigger>
             <TabsTrigger value="video" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
-              <Video size={22} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
+              <Video size={24} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
             </TabsTrigger>
             <TabsTrigger value="text" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
-              <Type size={22} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
+              <Type size={24} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
             </TabsTrigger>
           </TabsList>
         </div>
-        <div className="transition-colors duration-300 min-h-[300px] pb-32" style={{ backgroundColor: formData.customColors.tabsContent }}>
-          <TabsContent value="photo" className="mt-0 px-1 py-12 text-center">
-            <p className="opacity-30 text-[10px] font-black uppercase tracking-widest" style={{ color: getContrastColor(formData.customColors.tabsContent) }}>No Photo Innovations</p>
+        <div className="transition-colors duration-300 min-h-[400px] pb-32" style={{ backgroundColor: formData.customColors.tabsContent }}>
+          <TabsContent value="photo" className="mt-0 py-20 text-center">
+            <p className="opacity-20 text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(formData.customColors.tabsContent) }}>Empty Canvas</p>
           </TabsContent>
-          <TabsContent value="video" className="mt-0 px-1 py-12 text-center">
-            <p className="opacity-30 text-[10px] font-black uppercase tracking-widest" style={{ color: getContrastColor(formData.customColors.tabsContent) }}>No Video Innovations</p>
+          <TabsContent value="video" className="mt-0 py-20 text-center">
+            <p className="opacity-20 text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(formData.customColors.tabsContent) }}>No Screen Records</p>
           </TabsContent>
-          <TabsContent value="text" className="mt-0 px-1 py-12 text-center">
-            <p className="opacity-30 text-[10px] font-black uppercase tracking-widest" style={{ color: getContrastColor(formData.customColors.tabsContent) }}>No Text-Based Ideas</p>
+          <TabsContent value="text" className="mt-0 py-20 text-center">
+            <p className="opacity-20 text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(formData.customColors.tabsContent) }}>No Typed Concepts</p>
           </TabsContent>
         </div>
       </Tabs>
 
-      {/* STICKERS LAYER */}
-      <div className="absolute inset-0 pointer-events-none z-[30]">
+      {/* STICKERS LAYER - PERSISTENT */}
+      <div className="absolute inset-0 pointer-events-none z-[150]">
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
-            className={cn("absolute pointer-events-auto cursor-move", activeStickerId === sticker.id ? "ring-4 ring-primary ring-offset-4 rounded-xl active-glow" : "")} 
-            style={{ left: `${sticker.x}%`, top: `${sticker.y}%`, transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`, touchAction: 'none' }}
+            className={cn("absolute pointer-events-auto cursor-move", activeStickerId === sticker.id ? "ring-4 ring-primary ring-offset-4 rounded-2xl active-glow" : "")} 
+            style={{ 
+              left: `${sticker.x}%`, 
+              top: `${sticker.y}%`, 
+              transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`, 
+              touchAction: 'none' 
+            }}
           >
-            <div className="relative w-28 h-28" 
+            <div className="relative w-32 h-32" 
               onPointerDown={(e) => { 
                 if (activeStickerId === sticker.id) { 
                   setDraggedStickerId(sticker.id); 
@@ -421,66 +429,133 @@ export default function ProfilePage() {
 
       {/* EDIT DIALOG */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent onOpenAutoFocus={(e) => e.preventDefault()} className="max-w-md w-[95%] rounded-[3rem] p-6 max-h-[90vh] overflow-y-auto z-[3000] no-scrollbar border-none shadow-2xl">
-          <DialogHeader><DialogTitle className="text-sm font-black uppercase text-center text-primary tracking-[0.2em]">Customize Profile</DialogTitle></DialogHeader>
-          <div className="space-y-8 py-4">
+        <DialogContent 
+          onOpenAutoFocus={(e) => e.preventDefault()} 
+          className="max-w-md w-[95%] rounded-[3rem] p-7 max-h-[92vh] overflow-y-auto z-[3000] no-scrollbar border-none shadow-2xl flex flex-col"
+        >
+          <DialogHeader>
+            <DialogTitle className="text-xs font-black uppercase text-center text-primary tracking-[0.2em] mb-4">Personalize Theme</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-8 py-2 overflow-y-visible">
+            {/* LAYOUT FIX: BANNER ON TOP, LOGO BELOW */}
             <div className="space-y-6">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Banner (Header)</Label>
-                <div className="relative h-28 w-full rounded-2xl overflow-hidden border-2 border-muted bg-muted group cursor-pointer shadow-sm" onClick={() => bannerInputRef.current?.click()}>
+              <div className="space-y-3">
+                <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Banner Placement</Label>
+                <div className="relative h-32 w-full rounded-[2rem] overflow-hidden border-2 border-muted bg-muted group cursor-pointer shadow-lg" onClick={() => bannerInputRef.current?.click()}>
                   <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="Banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized={true} />
-                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-black uppercase text-center px-4">Tap to Position</div>
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white p-4">
+                     <Camera size={24} className="mb-1" />
+                     <span className="text-[8px] font-black uppercase tracking-widest text-center">Update & Reposition</span>
+                  </div>
                 </div>
               </div>
-              <div className="space-y-2 flex flex-col items-center">
-                <Label className="text-[10px] font-black uppercase tracking-widest">Logo / Profile Pic</Label>
-                <div className="relative h-24 w-24 rounded-full border-4 border-white bg-white shadow-lg group cursor-pointer overflow-hidden" onClick={() => profileInputRef.current?.click()}>
+              
+              <div className="flex flex-col items-center gap-3">
+                <Label className="text-[10px] font-black uppercase tracking-widest">Brand Logo</Label>
+                <div className="relative h-28 w-28 rounded-full border-4 border-white bg-white shadow-2xl group cursor-pointer overflow-hidden active:scale-95 transition-transform" onClick={() => profileInputRef.current?.click()}>
                   <Image src={formData.profilePic} alt="Logo" fill className="object-cover" unoptimized={true} />
-                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"><Camera size={20} /></div>
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"><Camera size={24} /></div>
                 </div>
               </div>
             </div>
-            <div className="space-y-4">
-              <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest ml-1">Display Name</Label><Input value={formData.name} onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))} className="rounded-2xl h-12 bg-muted/20 border-none" /></div>
-              <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest ml-1">Bio</Label><Textarea value={formData.bio} maxLength={160} onChange={(e) => setFormData(p => ({ ...p, bio: e.target.value }))} className="rounded-2xl min-h-[80px] bg-muted/20 border-none" /></div>
-            </div>
-            <div className="space-y-4">
-              <Label className="text-[10px] font-black uppercase tracking-widest ml-1 flex items-center gap-2"><PaintBucket size={14} className="text-primary" /> Surface Themes</Label>
-              <div className="grid grid-cols-2 gap-3">
-                <Button variant="outline" className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted" onClick={() => openPickerFor('header')}><Layout size={16} /><span className="text-[8px] font-black uppercase">Header</span><div className="w-8 h-1 rounded-full" style={{ backgroundColor: formData.customColors.header || 'transparent' }} /></Button>
-                <Button variant="outline" className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted" onClick={() => openPickerFor('background')}><Square size={16} /><span className="text-[8px] font-black uppercase">Canvas</span><div className="w-8 h-1 rounded-full" style={{ backgroundColor: formData.customColors.background || 'transparent' }} /></Button>
-                <Button variant="outline" className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted" onClick={() => openPickerFor('userInfo')}><User size={16} /><span className="text-[8px] font-black uppercase">Profile Info</span><div className="w-8 h-1 rounded-full" style={{ backgroundColor: formData.customColors.userInfo || 'transparent' }} /></Button>
-                <Button variant="outline" className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted" onClick={() => openPickerFor('bioCard')}><Pencil size={16} /><span className="text-[8px] font-black uppercase">Bio Box</span><div className="w-8 h-1 rounded-full" style={{ backgroundColor: formData.customColors.bioCard || 'transparent' }} /></Button>
-                <Button variant="outline" className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted" onClick={() => openPickerFor('statsSection')}><Plus size={16} /><span className="text-[8px] font-black uppercase">Stats</span><div className="w-8 h-1 rounded-full" style={{ backgroundColor: formData.customColors.statsSection || 'transparent' }} /></Button>
-                <Button variant="outline" className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted" onClick={() => openPickerFor('tabsList')}><List size={16} /><span className="text-[8px] font-black uppercase">Tabs Bar</span><div className="w-8 h-1 rounded-full" style={{ backgroundColor: formData.customColors.tabsList || 'transparent' }} /></Button>
-                <Button variant="outline" className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted" onClick={() => openPickerFor('tabsContent')}><Layers size={16} /><span className="text-[8px] font-black uppercase">Posts</span><div className="w-8 h-1 rounded-full" style={{ backgroundColor: formData.customColors.tabsContent || 'transparent' }} /></Button>
+
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Innovator Handle</Label>
+                <Input value={formData.name} onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))} className="rounded-2xl h-14 bg-muted/30 border-none font-bold" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Mission Brief</Label>
+                <Textarea value={formData.bio} maxLength={160} onChange={(e) => setFormData(p => ({ ...p, bio: e.target.value }))} className="rounded-2xl min-h-[100px] bg-muted/30 border-none font-medium leading-relaxed" />
               </div>
             </div>
-            <div className="space-y-4">
-               <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Stickers</Label>
-               <Button variant="outline" className="w-full h-12 rounded-2xl flex items-center gap-2 font-black uppercase text-[10px] border-primary/20 text-primary bg-primary/5" onClick={() => stickerInputRef.current?.click()}><Plus size={16} /> Add Sticker</Button>
-               <div className="flex flex-wrap gap-2 pt-2">
-                 {formData.stickers.map(s => <button key={s.id} onClick={() => { setActiveStickerId(s.id); setIsEditModalOpen(false); }} className={cn("w-14 h-14 border-2 rounded-2xl p-1 relative", activeStickerId === s.id ? "border-primary bg-primary/10 shadow-lg" : "border-muted")}><Image src={s.url} alt="sticker" width={48} height={48} className="object-contain" unoptimized={true}/></button>)}
+
+            <div className="space-y-5">
+              <Label className="text-[10px] font-black uppercase tracking-widest ml-1 flex items-center gap-2 text-primary"><PaintBucket size={16} /> Surface Themes</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <Button variant="outline" className="h-16 rounded-[1.5rem] flex flex-col items-center justify-center gap-1 border-muted shadow-sm" onClick={() => openPickerFor('header')}>
+                  <Layout size={18} className="text-muted-foreground" />
+                  <span className="text-[8px] font-black uppercase tracking-widest">Header</span>
+                  <div className="w-10 h-1.5 rounded-full border shadow-inner" style={{ backgroundColor: formData.customColors.header || '#F3F4F6' }} />
+                </Button>
+                <Button variant="outline" className="h-16 rounded-[1.5rem] flex flex-col items-center justify-center gap-1 border-muted shadow-sm" onClick={() => openPickerFor('background')}>
+                  <Square size={18} className="text-muted-foreground" />
+                  <span className="text-[8px] font-black uppercase tracking-widest">Canvas</span>
+                  <div className="w-10 h-1.5 rounded-full border shadow-inner" style={{ backgroundColor: formData.customColors.background || '#F3F4F6' }} />
+                </Button>
+                <Button variant="outline" className="h-16 rounded-[1.5rem] flex flex-col items-center justify-center gap-1 border-muted shadow-sm" onClick={() => openPickerFor('userInfo')}>
+                  <User size={18} className="text-muted-foreground" />
+                  <span className="text-[8px] font-black uppercase tracking-widest">Profile Box</span>
+                  <div className="w-10 h-1.5 rounded-full border shadow-inner" style={{ backgroundColor: formData.customColors.userInfo || '#F3F4F6' }} />
+                </Button>
+                <Button variant="outline" className="h-16 rounded-[1.5rem] flex flex-col items-center justify-center gap-1 border-muted shadow-sm" onClick={() => openPickerFor('bioCard')}>
+                  <Pencil size={18} className="text-muted-foreground" />
+                  <span className="text-[8px] font-black uppercase tracking-widest">Bio Area</span>
+                  <div className="w-10 h-1.5 rounded-full border shadow-inner" style={{ backgroundColor: formData.customColors.bioCard || '#F3F4F6' }} />
+                </Button>
+                <Button variant="outline" className="h-16 rounded-[1.5rem] flex flex-col items-center justify-center gap-1 border-muted shadow-sm" onClick={() => openPickerFor('statsSection')}>
+                  <Plus size={18} className="text-muted-foreground" />
+                  <span className="text-[8px] font-black uppercase tracking-widest">Impact Hub</span>
+                  <div className="w-10 h-1.5 rounded-full border shadow-inner" style={{ backgroundColor: formData.customColors.statsSection || '#F3F4F6' }} />
+                </Button>
+                <Button variant="outline" className="h-16 rounded-[1.5rem] flex flex-col items-center justify-center gap-1 border-muted shadow-sm" onClick={() => openPickerFor('tabsList')}>
+                  <List size={18} className="text-muted-foreground" />
+                  <span className="text-[8px] font-black uppercase tracking-widest">Tab Bar</span>
+                  <div className="w-10 h-1.5 rounded-full border shadow-inner" style={{ backgroundColor: formData.customColors.tabsList || '#F3F4F6' }} />
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-4 pb-4">
+               <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Innovation Stickers</Label>
+               <Button variant="outline" className="w-full h-14 rounded-2xl flex items-center gap-2 font-black uppercase text-[10px] border-primary/30 text-primary bg-primary/5 active:scale-95 transition-transform" onClick={() => stickerInputRef.current?.click()}><Plus size={18} /> Add New Sticker</Button>
+               <div className="flex flex-wrap gap-3 pt-2">
+                 {formData.stickers.map(s => (
+                   <button 
+                    key={s.id} 
+                    onClick={() => { setActiveStickerId(s.id); setIsEditModalOpen(false); }} 
+                    className={cn(
+                      "w-16 h-16 border-2 rounded-2xl p-2 relative active:scale-90 transition-all", 
+                      activeStickerId === s.id ? "border-primary bg-primary/10 shadow-xl" : "border-muted bg-white"
+                    )}
+                   >
+                     <Image src={s.url} alt="sticker" width={64} height={64} className="object-contain" unoptimized={true}/>
+                   </button>
+                 ))}
                </div>
             </div>
             <input type="file" ref={profileInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'profile')} />
             <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'banner')} />
             <input type="file" ref={stickerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'sticker')} />
           </div>
-          <DialogFooter className="mt-4 pt-4 border-t"><Button className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase shadow-xl" onClick={handleSaveProfile} disabled={isSaving}>{isSaving ? <Loader2 className="animate-spin mr-2" /> : "Publish Theme"}</Button></DialogFooter>
+          <DialogFooter className="mt-6 pt-5 border-t">
+            <Button className="w-full h-16 rounded-[2.5rem] bg-primary text-white font-black uppercase tracking-widest shadow-2xl shadow-primary/30 active:scale-95 transition-transform" onClick={handleSaveProfile} disabled={isSaving}>
+              {isSaving ? <Loader2 className="animate-spin mr-2" /> : "Publish Theme"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* COLOR PICKER SHEET */}
       <Sheet open={isColorPickerOpen} onOpenChange={setIsColorPickerOpen}>
-        <SheetContent side="bottom" className="rounded-t-[3rem] p-6 max-h-[70vh] overflow-y-auto no-scrollbar border-none z-[4000]">
-          <SheetHeader><SheetTitle className="text-xs font-black uppercase tracking-widest text-center text-primary">Choose Color</SheetTitle></SheetHeader>
-          <div className="space-y-8 mt-6 pb-20">
+        <SheetContent side="bottom" className="rounded-t-[3.5rem] p-8 max-h-[75vh] overflow-y-auto no-scrollbar border-none z-[4100] shadow-2xl">
+          <SheetHeader><SheetTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-center text-primary mb-8">Surface Palette</SheetTitle></SheetHeader>
+          <div className="space-y-10 pb-20">
             {Object.entries(COLOR_CATEGORIES).map(([category, colors]) => (
-              <div key={category} className="space-y-3">
-                <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{category}</h3>
-                <div className="grid grid-cols-6 gap-3">
-                  {colors.map(c => <button key={c} onClick={() => applyColor(c)} className={cn("aspect-square rounded-full border-2 transition-all active:scale-90", formData.customColors[activeColorSection!] === c ? "border-primary scale-110" : "border-white")} style={{ backgroundColor: c }} />)}
+              <div key={category} className="space-y-4">
+                <h3 className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60 ml-2">{category}</h3>
+                <div className="grid grid-cols-6 gap-4">
+                  {colors.map(c => (
+                    <button 
+                      key={c} 
+                      onClick={() => applyColor(c)} 
+                      className={cn(
+                        "aspect-square rounded-full border-2 transition-all active:scale-75 shadow-sm", 
+                        formData.customColors[activeColorSection!] === c ? "border-primary scale-125 shadow-xl z-10" : "border-white"
+                      )} 
+                      style={{ backgroundColor: c }} 
+                    />
+                  ))}
                 </div>
               </div>
             ))}
@@ -488,12 +563,25 @@ export default function ProfilePage() {
         </SheetContent>
       </Sheet>
 
+      {/* SETTINGS SHEET */}
       <Sheet open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-        <SheetContent side="bottom" className="rounded-t-[3rem] p-6 border-none z-[4000]">
-          <SheetHeader><SheetTitle className="text-[10px] font-black uppercase tracking-widest text-center">Settings</SheetTitle></SheetHeader>
-          <div className="space-y-3 mt-8">
-            <Button variant="outline" className="w-full justify-start h-14 rounded-2xl px-6 gap-4 border-primary/20 text-primary font-black uppercase tracking-widest" onClick={() => { setIsSettingsOpen(false); setIsEditModalOpen(true); }}><Pencil size={18} /> Edit Profile Theme</Button>
-            <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start h-14 rounded-2xl px-6 gap-4 text-secondary font-black uppercase tracking-widest hover:bg-secondary/10"><LogOut size={18} /> Sign Out</Button>
+        <SheetContent side="bottom" className="rounded-t-[3.5rem] p-8 border-none z-[4100] shadow-2xl">
+          <SheetHeader><SheetTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-center mb-6">Management Hub</SheetTitle></SheetHeader>
+          <div className="space-y-4 mt-4 pb-6">
+            <Button 
+              variant="outline" 
+              className="w-full justify-start h-16 rounded-[2rem] px-8 gap-5 border-primary/30 text-primary font-black uppercase tracking-widest shadow-md hover:bg-primary/5 active:scale-95 transition-all" 
+              onClick={() => { setIsSettingsOpen(false); setIsEditModalOpen(true); }}
+            >
+              <Pencil size={20} /> Edit Profile Theme
+            </Button>
+            <Button 
+              variant="ghost" 
+              onClick={handleSignOut} 
+              className="w-full justify-start h-16 rounded-[2rem] px-8 gap-5 text-secondary font-black uppercase tracking-widest hover:bg-secondary/10 active:scale-95 transition-all"
+            >
+              <LogOut size={20} /> Terminate Session
+            </Button>
           </div>
         </SheetContent>
       </Sheet>
