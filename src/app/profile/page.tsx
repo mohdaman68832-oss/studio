@@ -59,8 +59,8 @@ const PALETTE = [
   "#E9D5FF", // Soft Purple
   "#CFFAFE", // Light Cyan
   "#F2F3F5", // App Gray
-  "#008080", // Teal
-  "#FF4500"  // Coral
+  "#ECFEFF", // Light Cyan/Aqua
+  "#F5F5F5"  // Pure Gray Light
 ];
 
 function getContrastColor(hexColor: string | undefined): string {
@@ -361,26 +361,50 @@ export default function ProfilePage() {
           </DialogHeader>
           
           <div className="space-y-6 py-4">
-            {/* Visual Preview Section */}
-            <div className="relative h-28 bg-muted rounded-[1.5rem] overflow-hidden border border-muted-foreground/10 group shadow-sm">
-              {formData.banner && (
-                <Image 
-                  src={formData.banner} 
-                  alt="Banner Preview" 
-                  fill 
-                  className="object-cover opacity-60" 
-                  style={{ objectPosition: `50% ${formData.bannerOffset}%` }}
-                  unoptimized={true} 
-                />
-              )}
-              <div className="absolute inset-0 flex items-center justify-center bg-black/5">
-                <Avatar className="h-16 w-16 border-2 border-white shadow-md">
-                  <AvatarImage src={formData.profilePic} className="object-cover" />
-                  <AvatarFallback className="text-xl font-black">{formData.name?.[0] || "U"}</AvatarFallback>
-                </Avatar>
+            {/* Visual Previews - Separated Banner and Logo */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Banner Preview Area */}
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Banner</Label>
+                <div 
+                  className="relative aspect-video bg-muted rounded-2xl overflow-hidden border border-muted-foreground/10 cursor-pointer hover:border-primary/50 transition-all group"
+                  onClick={() => bannerInputRef.current?.click()}
+                >
+                  {formData.banner ? (
+                    <Image 
+                      src={formData.banner} 
+                      alt="Banner" 
+                      fill 
+                      className="object-cover group-hover:scale-105 transition-transform" 
+                      style={{ objectPosition: `50% ${formData.bannerOffset}%` }}
+                      unoptimized={true} 
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <ImageIcon size={20} className="text-muted-foreground/30" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                    <Camera size={20} className="text-white drop-shadow-md" />
+                  </div>
+                </div>
               </div>
-              <div className="absolute bottom-2 right-4 flex items-center gap-1">
-                <span className="text-[8px] font-black uppercase tracking-widest text-foreground/40">Visual Preview</span>
+
+              {/* Logo Preview Area */}
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Logo</Label>
+                <div 
+                  className="relative aspect-video bg-muted rounded-2xl overflow-hidden border border-muted-foreground/10 cursor-pointer hover:border-primary/50 transition-all group flex items-center justify-center"
+                  onClick={() => profileInputRef.current?.click()}
+                >
+                  <Avatar className="h-14 w-14 border-2 border-white shadow-md group-hover:scale-110 transition-transform">
+                    <AvatarImage src={formData.profilePic} className="object-cover" />
+                    <AvatarFallback className="text-xl font-black">{formData.name?.[0] || "U"}</AvatarFallback>
+                  </Avatar>
+                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                    <Camera size={20} className="text-white drop-shadow-md" />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -405,24 +429,6 @@ export default function ProfilePage() {
                   placeholder="Share your innovation journey..."
                 />
               </div>
-            </div>
-
-            {/* Media Options */}
-            <div className="grid grid-cols-2 gap-3">
-              <Button 
-                variant="outline" 
-                className="rounded-2xl h-12 flex items-center gap-2 border-primary/20 text-primary font-bold uppercase text-[10px]" 
-                onClick={() => profileInputRef.current?.click()}
-              >
-                <Camera size={16} /> Update Logo
-              </Button>
-              <Button 
-                variant="outline" 
-                className="rounded-2xl h-12 flex items-center gap-2 border-primary/20 text-primary font-bold uppercase text-[10px]" 
-                onClick={() => bannerInputRef.current?.click()}
-              >
-                <ImageIcon size={16} /> Update Banner
-              </Button>
             </div>
 
             {/* Theme Colors */}
@@ -512,3 +518,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+
