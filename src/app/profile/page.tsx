@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { 
   Settings, Grid, Bookmark, Heart, LogOut, Camera, 
   Image as ImageIcon, Plus, RotateCw, Pencil, Loader2, 
-  Monitor, Smartphone, Tablet, ChevronLeft, PaintBucket,
+  Tablet, ChevronLeft, PaintBucket,
   X
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -201,43 +201,39 @@ export default function ProfilePage() {
           <div className="flex-1 p-6 space-y-12 pb-32">
             <div className="text-center bg-primary/5 p-4 rounded-3xl border border-primary/10">
               <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">Manual Adjustment</p>
-              <p className="text-[11px] font-bold text-muted-foreground">Click and drag the PC Preview to set the center point.</p>
+              <p className="text-[11px] font-bold text-muted-foreground">Click and drag the Tablet frame banner area to set the center point.</p>
             </div>
 
-            {/* DESKTOP PC PREVIEW */}
-            <div className="space-y-4">
-               <div className="flex items-center gap-2 text-primary">
-                 <Monitor size={20} />
-                 <span className="text-xs font-black uppercase tracking-widest">PC Desktop View (Wide)</span>
-               </div>
-               <div 
-                className="relative aspect-[3/1] w-full bg-black rounded-[2rem] overflow-hidden cursor-grab active:cursor-grabbing touch-none shadow-2xl border-4 border-white"
-                onPointerDown={(e) => { 
-                  setIsDraggingBanner(true); 
-                  setDragStartY(e.clientY); 
-                  try { (e.currentTarget as any).setPointerCapture(e.pointerId); } catch {}
-                }}
-                onPointerMove={handleBannerDragMove}
-                onPointerUp={handleBannerDragEnd}
-              >
-                {tempBannerUrl && (
-                  <Image src={tempBannerUrl} alt="Preview" fill className="object-cover select-none pointer-events-none" style={{ objectPosition: `50% ${bannerOffset}%` }} unoptimized={true} />
-                )}
-                <div className="absolute inset-0 bg-black/10 flex items-center justify-center pointer-events-none">
-                   <div className="bg-white/20 backdrop-blur-md rounded-full px-4 py-1 text-[8px] font-black uppercase text-white border border-white/30">Drag to Reposition</div>
-                </div>
-              </div>
-            </div>
-
-            {/* TABLET PREVIEW (Actual Scale) */}
+            {/* TABLET PREVIEW (Active Interaction) */}
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-primary">
                 <Tablet size={20} />
                 <span className="text-xs font-black uppercase tracking-widest">Tablet Device Frame</span>
               </div>
               <div className="relative aspect-[4/3] w-full max-w-[90%] mx-auto bg-muted rounded-[2rem] overflow-hidden border-8 border-slate-800 shadow-xl">
-                <div className="h-24 w-full relative">
-                  {tempBannerUrl && <Image src={tempBannerUrl} alt="Tablet" fill className="object-cover" style={{ objectPosition: `50% ${bannerOffset}%` }} unoptimized={true} />}
+                <div 
+                  className="h-24 w-full relative cursor-grab active:cursor-grabbing touch-none"
+                  onPointerDown={(e) => { 
+                    setIsDraggingBanner(true); 
+                    setDragStartY(e.clientY); 
+                    try { (e.currentTarget as any).setPointerCapture(e.pointerId); } catch {}
+                  }}
+                  onPointerMove={handleBannerDragMove}
+                  onPointerUp={handleBannerDragEnd}
+                >
+                  {tempBannerUrl && (
+                    <Image 
+                      src={tempBannerUrl} 
+                      alt="Tablet" 
+                      fill 
+                      className="object-cover select-none pointer-events-none" 
+                      style={{ objectPosition: `50% ${bannerOffset}%` }} 
+                      unoptimized={true} 
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-black/10 flex items-center justify-center pointer-events-none">
+                     <div className="bg-white/20 backdrop-blur-md rounded-full px-4 py-1 text-[8px] font-black uppercase text-white border border-white/30">Drag to Reposition</div>
+                  </div>
                 </div>
                 <div className="p-4 space-y-2">
                   <div className="h-4 w-3/4 bg-slate-200 rounded-full" />
