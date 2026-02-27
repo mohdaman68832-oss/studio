@@ -4,10 +4,11 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * InnovateSphere Security Rules - Updated for explicit public read access
+     * InnovateSphere Security Rules
+     * Optimized for public read access and authenticated writes.
      */
 
-    // --- Helper Functions ---
+    // Helper functions
     function isSignedIn() {
       return request.auth != null;
     }
@@ -16,43 +17,43 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // --- Collection Rules ---
-
+    // User Profiles: Anyone can view, only owner can edit.
     match /userProfiles/{userId} {
       allow read: if true;
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId);
+      allow create, update: if isOwner(userId);
       allow delete: if isOwner(userId);
     }
 
+    // Ideas: Publicly readable, authenticated users can create/update.
     match /ideas/{ideaId} {
-      // Explicitly allow public reading for the collection and documents
-      allow get, list: if true;
+      allow read: if true;
       allow create: if isSignedIn();
-      // Allow any signed in user to update (increment/decrement likes)
+      // Allow any signed in user to update (needed for likes increment/decrement)
       allow update: if isSignedIn();
       allow delete: if isSignedIn() && (resource == null || resource.data.authorId == request.auth.uid);
 
+      // Suggestions: Publicly readable feedback.
       match /suggestions/{suggestionId} {
-        allow get, list: if true;
+        allow read: if true;
         allow create: if isSignedIn();
       }
 
+      // Likes: Publicly readable, owner can toggle their own like.
       match /likes/{userId} {
         allow read: if true;
         allow write: if isOwner(userId);
       }
     }
 
+    // Unions: Publicly discoverable community groups.
     match /unions/{unionId} {
-      allow get, list: if true;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
+      allow read: if true;
+      allow create, update: if isSignedIn();
     }
 
-    // Global catch-all for consistency
+    // Global catch-all for consistency during development
     match /{path=**} {
-      allow get, list: if true;
+      allow read: if true;
       allow write: if isSignedIn();
     }
   }

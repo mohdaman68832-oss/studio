@@ -73,7 +73,7 @@ export default function FeedPage() {
   const { data: firestoreIdeas, isLoading: loading } = useCollection(ideasQuery);
 
   const ideasToDisplay = useMemo(() => {
-    const base = firestoreIdeas && firestoreIdeas.length > 0 ? [...firestoreIdeas, ...MOCK_IDEAS] : MOCK_IDEAS;
+    const base = firestoreIdeas && firestoreIdeas.length > 0 ? [...firestoreIdeas] : MOCK_IDEAS;
     const unique = Array.from(new Map(base.map(item => [item.id, item])).values());
     if (activeCategory === "Meme") return unique.filter(i => i.category?.toLowerCase() === "meme");
     return unique;
@@ -93,7 +93,6 @@ export default function FeedPage() {
 
     const handleTouchEnd = () => {
       setTouchStart(0);
-      // Automatically hide button after 5 seconds if not used
       setTimeout(() => {
         if (window.scrollY > 100) setShowRefresh(false);
       }, 5000);
@@ -164,7 +163,7 @@ export default function FeedPage() {
       </div>
 
       <div className="space-y-8 mt-6">
-        {loading && (!firestoreIdeas || firestoreIdeas.length === 0) ? (
+        {loading ? (
           <div className="space-y-12">
             {[1, 2].map(i => (
               <div key={i} className="space-y-4">

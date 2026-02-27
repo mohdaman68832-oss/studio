@@ -4,20 +4,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowBigUp, MoreHorizontal, Share2, Play, MessageCircle, X } from "lucide-react";
+import { ArrowBigUp, MoreHorizontal, Share2, Play, MessageCircle } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-  DialogTitle,
-  DialogHeader,
-  DialogClose,
-} from "@/components/ui/dialog";
 import { useFirestore, useUser, useDoc, useMemoFirebase } from "@/firebase";
-import { doc, setDoc, deleteDoc, increment, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, deleteDoc, increment } from "firebase/firestore";
 
 interface IdeaCardProps {
   idea: {
