@@ -283,7 +283,7 @@ export default function ProfilePage() {
           </DropdownMenu>
         </header>
 
-        {/* Stickers (z-[100]) - TOP MOST LAYER */}
+        {/* Stickers (z-[100]) - HIGHEST LAYER FOR VISIBILITY */}
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id} 

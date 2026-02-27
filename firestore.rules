@@ -46,13 +46,13 @@ service cloud.firestore {
     match /notifications/{notifId} {
       // Allow user to see their own notifications
       allow read, update, delete: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
-      // Allow others to create notifications (e.g. on comment)
+      // Allow others to create notifications
       allow create: if isSignedIn();
     }
 
     match /messages/{msgId} {
       // Allow reading and writing messages if part of the conversation
-      allow read, create: if isSignedIn() && (request.auth.uid == request.resource.data.senderId || request.auth.uid == request.resource.data.receiverId || request.auth.uid == resource.data.senderId || request.auth.uid == resource.data.receiverId);
+      allow read, create: if isSignedIn() && (request.auth.uid == request.resource.data.senderId || request.auth.uid == request.resource.data.receiverId || (resource != null && (request.auth.uid == resource.data.senderId || request.auth.uid == resource.data.receiverId)));
       // Standard list access for inbox
       allow list: if isSignedIn();
     }
