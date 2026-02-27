@@ -111,7 +111,7 @@ export default function ProfilePage() {
   useEffect(() => {
     if (profileData) {
       setFormData({
-        name: user?.displayName || "",
+        name: profileData.username || user?.displayName || "",
         bio: profileData.bio || "",
         profilePic: profileData.profilePictureUrl || user?.photoURL || "",
         banner: profileData.bannerUrl || "",
@@ -285,7 +285,7 @@ export default function ProfilePage() {
               <Settings size={22} style={{ color: getContrastColor(formData.customColors.header) }} />
             </Button>
           </SheetTrigger>
-          <SheetContent side="bottom" className="rounded-t-[2.5rem] p-6 border-none">
+          <SheetContent side="bottom" className="rounded-t-[2.5rem] p-6 border-none z-[100]">
             <SheetHeader className="mb-4 text-center">
               <SheetTitle className="text-sm font-black uppercase tracking-widest text-center">Profile Options</SheetTitle>
             </SheetHeader>
@@ -421,7 +421,8 @@ export default function ProfilePage() {
         </div>
       </Tabs>
 
-      <div className="absolute inset-0 pointer-events-none z-[160]">
+      {/* STICKERS LAYER: Lower z-index so UI is on top */}
+      <div className="absolute inset-0 pointer-events-none z-[5]">
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id}
@@ -484,7 +485,7 @@ export default function ProfilePage() {
       )}
 
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="max-w-md w-[95%] rounded-[2.5rem] p-6 max-h-[90vh] overflow-y-auto no-scrollbar border-none">
+        <DialogContent className="max-w-md w-[95%] rounded-[2.5rem] p-6 max-h-[90vh] overflow-y-auto no-scrollbar border-none z-[200]">
           <DialogHeader>
             <DialogTitle className="text-sm font-black uppercase text-center">Customize Profile</DialogTitle>
           </DialogHeader>
@@ -544,6 +545,16 @@ export default function ProfilePage() {
             </div>
 
             <div className="space-y-2">
+               <Label className="text-[10px] font-black uppercase tracking-widest">Bio</Label>
+               <Textarea 
+                 value={formData.bio} 
+                 onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))} 
+                 placeholder="Tell something about yourself..."
+                 className="rounded-xl bg-muted/20 border-none min-h-[80px]" 
+               />
+            </div>
+
+            <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-widest">Stickers</Label>
               <div className="flex flex-wrap gap-2">
                 <Button variant="outline" size="sm" className="rounded-full h-12 w-12 border-2 border-dashed border-primary/20" onClick={() => stickerInputRef.current?.click()}><Plus size={20} /></Button>
@@ -571,3 +582,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+
