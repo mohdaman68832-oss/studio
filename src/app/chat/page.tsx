@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Search, MessageSquare, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useFirestore, useUser, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, where, orderBy, limit } from "firebase/firestore";
+import { collection, query, orderBy, limit } from "firebase/firestore";
 import { cn } from "@/lib/utils";
 
 export default function ChatPage() {
@@ -15,10 +15,8 @@ export default function ChatPage() {
   const db = useFirestore();
   const { user } = useUser();
 
-  // Optimized query: Only fetch messages involving the current user to avoid permission errors
   const myMessagesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // We can't easily OR in Firestore without complex setup, so we fetch recent and filter in-memory for security
     return query(
       collection(db, "messages"),
       orderBy("createdAt", "desc"),
@@ -32,7 +30,6 @@ export default function ChatPage() {
     if (!allMessages || !user) return [];
     
     const map = new Map();
-    // Filter only my messages for security check compliance
     const filteredMessages = allMessages.filter(m => m.senderId === user.uid || m.receiverId === user.uid);
 
     filteredMessages.forEach(msg => {
@@ -42,7 +39,7 @@ export default function ChatPage() {
         map.set(otherId, {
           ...msg,
           partnerId: otherId,
-          isOnline: Math.random() > 0.6 // Simulated presence
+          isOnline: Math.random() > 0.5 // Simulated for display
         });
       }
     });
@@ -56,7 +53,7 @@ export default function ChatPage() {
   return (
     <div className="max-w-md mx-auto min-h-screen bg-background pt-8 pb-24">
       <div className="px-6 mb-8">
-        <h1 className="text-3xl font-black text-primary uppercase tracking-tighter">Sphere Inbox</h1>
+        <h1 className="text-3xl font-black text-primary uppercase tracking-tighter">Messages</h1>
       </div>
 
       <div className="px-6 mb-8">
@@ -72,7 +69,7 @@ export default function ChatPage() {
       </div>
 
       <div className="space-y-1">
-        <p className="px-6 py-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-40">Recent Messages</p>
+        <p className="px-6 py-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-40">Recent Activity</p>
         
         {uniqueConversations.length > 0 ? (
           <div className="divide-y divide-border/30">
@@ -89,14 +86,11 @@ export default function ChatPage() {
                   )}>
                     <AvatarFallback className="bg-primary/5 text-primary font-black uppercase">{msg.partnerId[0]}</AvatarFallback>
                   </Avatar>
-                  {msg.isOnline && (
-                    <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-white rounded-full" />
-                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-black text-sm uppercase tracking-tight text-foreground truncate">Innovator</h3>
-                    <span className="text-[9px] text-muted-foreground/60 font-bold uppercase">Active</span>
+                    <h3 className="font-black text-sm uppercase tracking-tight text-foreground truncate">@{msg.partnerId.substring(0, 8)}</h3>
+                    {msg.isOnline && <span className="text-[8px] text-green-500 font-bold uppercase tracking-widest">Online</span>}
                   </div>
                   <p className="text-[12px] text-muted-foreground line-clamp-1 mt-0.5 font-medium">{msg.text}</p>
                 </div>
@@ -114,7 +108,7 @@ export default function ChatPage() {
             ) : (
               <>
                 <MessageSquare size={48} className="mx-auto" />
-                <p className="text-[10px] font-black uppercase tracking-[0.2em]">No conversations found. Share your ideas to start chatting!</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em]">No messages yet</p>
               </>
             )}
           </div>

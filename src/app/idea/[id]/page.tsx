@@ -102,21 +102,6 @@ export default function IdeaDetailPage() {
     };
 
     addDoc(collection(db, "ideas", ideaId, "suggestions"), commentData);
-
-    if (idea?.authorId && idea.authorId !== currentUser.uid) {
-      addDoc(collection(db, "notifications"), {
-        userId: idea.authorId,
-        fromUserName: commentData.userName,
-        fromUserAvatar: commentData.userAvatar,
-        type: "comment",
-        ideaId: ideaId,
-        ideaTitle: idea.title,
-        text: commentText,
-        createdAt: new Date().toISOString(),
-        read: false
-      });
-    }
-
     setCommentText("");
   };
 
@@ -151,7 +136,7 @@ export default function IdeaDetailPage() {
         </Button>
         <div className="flex-1 min-w-0">
           <h1 className="font-black text-sm uppercase tracking-tighter truncate">{idea?.title}</h1>
-          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest leading-none mt-1">Live Suggestion Hub</p>
+          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest leading-none mt-1">Innovation Discussion</p>
         </div>
       </header>
 
@@ -214,13 +199,13 @@ export default function IdeaDetailPage() {
             <div className="space-y-1">
               <h2 className="text-lg font-black text-primary uppercase tracking-tighter leading-tight">{idea?.title}</h2>
               <div className="space-y-1 mt-2">
-                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">The Challenge</p>
+                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Problem</p>
                 <p className="text-sm text-foreground/80 font-bold leading-relaxed">{idea?.problem}</p>
               </div>
 
               {isTextPost || showFullDescription ? (
                 <div className="mt-4 pt-4 border-t border-muted animate-in fade-in slide-in-from-top-2">
-                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-primary mb-2">Detailed Brief</p>
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-primary mb-2">Description</p>
                   <p className="text-sm text-foreground/70 leading-relaxed font-medium">
                     {idea?.description}
                   </p>
@@ -237,7 +222,7 @@ export default function IdeaDetailPage() {
                   {showFullDescription ? (
                     <span className="flex items-center gap-1">Show Less <ChevronUp size={12} /></span>
                   ) : (
-                    <span className="flex items-center gap-1">See Full Description <ChevronDown size={12} /></span>
+                    <span className="flex items-center gap-1">See More <ChevronDown size={12} /></span>
                   )}
                 </Button>
               )}
@@ -247,7 +232,7 @@ export default function IdeaDetailPage() {
           <div className="space-y-6 pt-4">
             <div className="flex items-center gap-3 sticky top-0 bg-background/95 backdrop-blur-sm py-2 z-10">
                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 flex items-center gap-2">
-                 <MessageCircle size={14} /> Live Feedback
+                 <MessageCircle size={14} /> Messages
                </span>
                <Separator className="flex-1 opacity-50" />
             </div>
@@ -262,7 +247,7 @@ export default function IdeaDetailPage() {
                   <div className="flex-1 bg-white p-3.5 rounded-2xl rounded-tl-none border border-border/50 shadow-sm">
                     <p className="text-[12px] leading-relaxed text-foreground/90">
                         <span className="font-black text-primary mr-1.5 uppercase text-[9px]">
-                          {suggestion.userName.toLowerCase().replace(/\s/g, '')}
+                          {suggestion.userName}
                         </span>
                         {suggestion.text}
                     </p>
@@ -273,7 +258,7 @@ export default function IdeaDetailPage() {
               {suggestions?.length === 0 && !suggestionsLoading && (
                 <div className="py-12 text-center space-y-2 opacity-30">
                   <Lightbulb size={32} className="mx-auto" />
-                  <p className="text-[10px] font-black uppercase tracking-widest">No live suggestions yet. Be the first!</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest">No messages yet</p>
                 </div>
               )}
             </div>
@@ -289,7 +274,7 @@ export default function IdeaDetailPage() {
           </Avatar>
           <div className="flex-1 flex items-center pr-1">
             <Input 
-              placeholder="Add your live suggestion..." 
+              placeholder="Send a message..." 
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               className="border-none bg-transparent focus-visible:ring-0 shadow-none text-xs h-10 px-0 placeholder:text-muted-foreground/60 font-medium"

@@ -48,14 +48,12 @@ service cloud.firestore {
 
     // Notifications: Allow list and read for the recipient
     match /notifications/{notifId} {
-      allow read, write, delete: if isSignedIn();
-      allow list: if isSignedIn();
+      allow read, write, delete, list: if isSignedIn();
     }
 
     // Messages: Allow list and read for participants
     match /messages/{msgId} {
-      allow read, write: if isSignedIn();
-      allow list: if isSignedIn();
+      allow read, write, list: if isSignedIn();
     }
 
     // Follows: Publicly readable for mutual checks.
