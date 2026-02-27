@@ -247,9 +247,9 @@ export default function ProfilePage() {
       style={{ backgroundColor: colors.background || "var(--background)" }}
     >
       <div className="relative w-full flex flex-col" ref={studioContainerRef}>
-        <div className="h-16 w-full relative z-[60]" style={{ backgroundColor: colors.header }} />
+        <div className="h-16 w-full relative z-[70]" style={{ backgroundColor: colors.header }} />
         
-        <header className="absolute top-0 left-0 right-0 z-[70] px-6 flex justify-between items-center py-5">
+        <header className="absolute top-0 left-0 right-0 z-[80] px-6 flex justify-between items-center py-5">
           <h1 className="text-2xl font-black uppercase tracking-tighter" style={{ color: getContrastColor(colors.header) }}>Sphere</h1>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -270,13 +270,13 @@ export default function ProfilePage() {
           </DropdownMenu>
         </header>
 
-        {/* Stickers (z-15) - Behind Logo (z-20), Above Banner (z-10) */}
+        {/* Stickers (z-20) - Above Banner (z-10), Behind UI (z-30) and Logo (z-50) */}
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
             className={cn(
-              "absolute select-none touch-none z-[15]",
-              editingStickerId === sticker.id ? "pointer-events-auto cursor-move ring-4 ring-primary ring-offset-4 rounded-xl z-[40]" : "pointer-events-none"
+              "absolute select-none touch-none z-[20]",
+              editingStickerId === sticker.id ? "pointer-events-auto cursor-move ring-4 ring-primary ring-offset-4 rounded-xl z-[60]" : "pointer-events-none"
             )} 
             style={{ 
               left: `${sticker.x}%`, 
@@ -295,6 +295,7 @@ export default function ProfilePage() {
         ))}
 
         <div className="relative w-full">
+          {/* Banner (z-10) */}
           <div className="relative h-52 w-full overflow-hidden z-[10]">
             <Image 
               src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} 
@@ -305,7 +306,8 @@ export default function ProfilePage() {
               unoptimized 
             />
           </div>
-          <div className="relative px-6 -mt-16 flex flex-col items-center z-[20]">
+          {/* Logo sabse upar (z-50) */}
+          <div className="relative px-6 -mt-16 flex flex-col items-center z-[50]">
             <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl">
               <AvatarImage src={formData.profilePic} className="object-cover" />
               <AvatarFallback className="text-2xl font-black uppercase">{formData.name?.[0] || "U"}</AvatarFallback>
@@ -313,7 +315,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Content sections (z-30) - Top Layer */}
+        {/* UI Content (z-30) - Above Stickers, Below Logo */}
         <div className="relative z-[30] w-full -mt-1">
           <div style={{ backgroundColor: colors.userInfo || "transparent" }} className="w-full pb-8">
             <div className="px-6 flex flex-col items-center">
