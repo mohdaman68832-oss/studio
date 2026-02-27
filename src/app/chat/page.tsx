@@ -40,7 +40,7 @@ export default function ChatPage() {
   const { user } = useUser();
   const router = useRouter();
 
-  // Fetch real-time notifications
+  // Fetch real-time notifications with explicit filtering
   const notificationsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(
@@ -52,7 +52,6 @@ export default function ChatPage() {
 
   const { data: notifications, isLoading: isNotifLoading } = useCollection(notificationsQuery);
 
-  // Fetch joined groups from firestore (if implemented) or show mock
   const exploreGroups = useMemo(() => {
     return MOCK_GROUPS.filter(g => 
       g.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -163,11 +162,11 @@ export default function ChatPage() {
                 >
                   <Avatar className="h-12 w-12 border-2 border-background shadow-sm shrink-0">
                     <AvatarImage src={notif.fromUserAvatar} />
-                    <AvatarFallback>{notif.fromUserName[0]}</AvatarFallback>
+                    <AvatarFallback>{notif.fromUserName?.[0]}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0 pt-0.5">
                     <p className="text-[12px] leading-tight text-foreground/90">
-                      <span className="font-black text-primary uppercase text-[10px] mr-1">@{notif.fromUserName.toLowerCase().replace(/\s/g, '')}</span>
+                      <span className="font-black text-primary uppercase text-[10px] mr-1">@{notif.fromUserName?.toLowerCase().replace(/\s/g, '')}</span>
                       discussed your idea: <span className="font-black text-foreground">"{notif.ideaTitle}"</span>
                     </p>
                     <div className="mt-2 bg-white/50 p-2.5 rounded-2xl border border-border/30">
