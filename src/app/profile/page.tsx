@@ -270,12 +270,12 @@ export default function ProfilePage() {
           </DropdownMenu>
         </header>
 
-        {/* Stickers (z-20) - Layered above Banner/Avatar (z-10), below Content (z-30) */}
+        {/* Stickers (z-15) - Behind Logo (z-20), Above Banner (z-10) */}
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
             className={cn(
-              "absolute select-none touch-none z-[20]",
+              "absolute select-none touch-none z-[15]",
               editingStickerId === sticker.id ? "pointer-events-auto cursor-move ring-4 ring-primary ring-offset-4 rounded-xl z-[40]" : "pointer-events-none"
             )} 
             style={{ 
@@ -294,8 +294,8 @@ export default function ProfilePage() {
           </div>
         ))}
 
-        <div className="relative w-full z-[10]">
-          <div className="relative h-52 w-full overflow-hidden">
+        <div className="relative w-full">
+          <div className="relative h-52 w-full overflow-hidden z-[10]">
             <Image 
               src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} 
               alt="banner" 
@@ -305,7 +305,7 @@ export default function ProfilePage() {
               unoptimized 
             />
           </div>
-          <div className="relative px-6 -mt-16 flex flex-col items-center">
+          <div className="relative px-6 -mt-16 flex flex-col items-center z-[20]">
             <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl">
               <AvatarImage src={formData.profilePic} className="object-cover" />
               <AvatarFallback className="text-2xl font-black uppercase">{formData.name?.[0] || "U"}</AvatarFallback>
@@ -313,7 +313,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Content sections (z-30) - Always on top of stickers */}
+        {/* Content sections (z-30) - Top Layer */}
         <div className="relative z-[30] w-full -mt-1">
           <div style={{ backgroundColor: colors.userInfo || "transparent" }} className="w-full pb-8">
             <div className="px-6 flex flex-col items-center">
@@ -376,14 +376,14 @@ export default function ProfilePage() {
         </Tabs>
       </div>
 
-      {/* Sticker Studio HUD (z-3000) - Compact & Optimized for simple clicks */}
+      {/* Sticker Studio HUD (z-[3000]) */}
       {editingStickerId && activeSticker && (
         <div className="fixed bottom-20 left-4 right-4 z-[3000] bg-white/95 backdrop-blur-md rounded-[2.5rem] border shadow-2xl p-5 animate-in slide-in-from-bottom-4 pointer-events-auto">
           <div className="space-y-5">
             <header className="flex items-center justify-between px-1">
               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Sticker Studio</h4>
               <button 
-                onClick={() => setEditingStickerId(null)} 
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditingStickerId(null); }} 
                 className="p-1 hover:bg-muted rounded-full transition-colors"
               >
                 <X size={18} />
@@ -426,6 +426,7 @@ export default function ProfilePage() {
                 variant="destructive" 
                 className="flex-1 rounded-2xl font-black uppercase text-[10px] h-12 shadow-lg active:scale-95 transition-transform"
                 onClick={(e) => {
+                  e.preventDefault();
                   e.stopPropagation();
                   deleteSticker(activeSticker.id);
                 }}
@@ -435,6 +436,7 @@ export default function ProfilePage() {
                <Button 
                 className="flex-1 rounded-2xl font-black uppercase text-[10px] h-12 bg-primary text-white shadow-xl active:scale-95 transition-transform"
                 onClick={(e) => {
+                  e.preventDefault();
                   e.stopPropagation();
                   setEditingStickerId(null);
                 }}
