@@ -8,7 +8,7 @@ import {
   Settings, Grid, Bookmark, Heart, LogOut, Camera, 
   Image as ImageIcon, Plus, RotateCw, Pencil, Loader2, 
   Tablet, ChevronLeft, PaintBucket,
-  X, Palette, Check, Pipette
+  X, Palette, Check, Layout, Square
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -42,6 +42,8 @@ interface CustomColors {
   tabsContent?: string;
   background?: string;
 }
+
+type ColorSection = keyof CustomColors;
 
 const COLOR_CATEGORIES = {
   "Light (Pastels)": ["#FFFFFF", "#F8FAFC", "#F0FDF4", "#ECFDF5", "#EFF6FF", "#F5F3FF", "#FDF2F8", "#FFF7ED", "#FFFBEB", "#FEF2F2", "#ECFEFF", "#F5F5F5"],
@@ -87,10 +89,11 @@ export default function ProfilePage() {
   const [isDraggingBanner, setIsDraggingBanner] = useState(false);
   const [dragStartY, setDragStartY] = useState(0);
 
+  const [activeColorSection, setActiveColorSection] = useState<ColorSection | null>(null);
+
   const profileInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
   const stickerInputRef = useRef<HTMLInputElement>(null);
-  const customColorInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [formData, setFormData] = useState({
@@ -142,7 +145,7 @@ export default function ProfilePage() {
         customColors: formData.customColors,
         updatedAt: new Date().toISOString()
       });
-      toast({ title: "Success", description: "Sphere profile updated!" });
+      toast({ title: "Success", description: "Profile updated!" });
       setIsEditModalOpen(false);
     } catch (error: any) {
       toast({ variant: "destructive", title: "Update Failed", description: error.message });
@@ -187,21 +190,22 @@ export default function ProfilePage() {
   };
 
   const applyColor = (hex: string) => {
+    if (!activeColorSection) return;
     setFormData(prev => ({
       ...prev,
       customColors: {
         ...prev.customColors,
-        background: hex,
-        header: hex,
-        tabsList: hex,
-        tabsContent: hex,
-        userInfo: hex,
-        statsSection: hex,
-        bioCard: hex
+        [activeColorSection]: hex
       }
     }));
     setIsColorPickerOpen(false);
-    setIsEditModalOpen(false); // Closes both modals as requested
+    setIsEditModalOpen(false); 
+    setActiveColorSection(null);
+  };
+
+  const openPickerFor = (section: ColorSection) => {
+    setActiveColorSection(section);
+    setIsColorPickerOpen(true);
   };
 
   if (isUserLoading || isProfileLoading) return <div className="max-w-md mx-auto p-10 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>;
@@ -215,25 +219,20 @@ export default function ProfilePage() {
     >
       {/* BANNER REPOSITION OVERLAY */}
       {showBannerEditor && (
-        <div className="fixed inset-0 z-[2000] bg-background flex flex-col animate-in slide-in-from-bottom duration-300 overflow-y-auto no-scrollbar">
+        <div className="fixed inset-0 z-[2000] bg-background flex flex-col animate-in slide-in-from-bottom duration-300">
           <header className="p-4 flex items-center justify-between border-b bg-white sticky top-0 z-50">
             <Button variant="ghost" size="icon" onClick={() => setShowBannerEditor(false)} className="rounded-full"><ChevronLeft size={24} /></Button>
             <h2 className="text-sm font-black uppercase tracking-widest text-primary">Reposition Banner</h2>
             <div className="w-10" />
           </header>
           
-          <div className="flex-1 p-6 space-y-12 pb-32">
-            <div className="text-center bg-primary/5 p-4 rounded-3xl border border-primary/10">
-              <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">Manual Adjustment</p>
-              <p className="text-[11px] font-bold text-muted-foreground">Click and drag the preview to set the banner focal point.</p>
-            </div>
-
+          <div className="flex-1 p-6 space-y-12">
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-primary">
                 <Tablet size={20} />
                 <span className="text-xs font-black uppercase tracking-widest">Device Preview</span>
               </div>
-              <div className="relative aspect-[4/3] w-full bg-slate-900 rounded-[3rem] overflow-hidden border-[12px] border-slate-800 shadow-2xl">
+              <div className="relative aspect-[4/3] w-full bg-slate-900 rounded-[3rem] overflow-hidden border-8 border-slate-800 shadow-2xl">
                 <div 
                   className="h-full w-full relative cursor-grab active:cursor-grabbing touch-none flex flex-col rounded-[2.2rem] overflow-hidden bg-slate-800"
                   onPointerDown={(e) => { 
@@ -261,9 +260,8 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className="pt-8 space-y-4 sticky bottom-0 bg-background/80 backdrop-blur-md p-4 -mx-6">
+            <div className="pt-8 space-y-4">
                <Button onClick={() => { setFormData(prev => ({ ...prev, banner: tempBannerUrl!, bannerOffset })); setShowBannerEditor(false); setIsEditModalOpen(true); }} className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase shadow-xl">Apply Changes</Button>
-               <Button variant="ghost" onClick={() => setShowBannerEditor(false)} className="w-full font-bold uppercase text-[10px]">Cancel</Button>
             </div>
           </div>
         </div>
@@ -323,78 +321,89 @@ export default function ProfilePage() {
             <DialogTitle className="text-sm font-black uppercase text-center text-primary tracking-[0.2em]">Optimize Profile</DialogTitle>
           </DialogHeader>
           <div className="space-y-8 py-4">
-            {/* Visual Previews: Banner sabse upar, Logo uske niche */}
-            <div className="space-y-6">
-               <div className="space-y-2">
-                 <Label className="text-[10px] font-black uppercase tracking-widest ml-1 text-muted-foreground">Banner Preview</Label>
-                 <div 
-                   className="relative h-28 w-full rounded-3xl overflow-hidden border-4 border-white bg-muted shadow-lg group cursor-pointer transition-transform active:scale-95"
-                   onClick={() => bannerInputRef.current?.click()}
-                 >
-                   <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="Banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized={true} />
-                   <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                     <div className="bg-white/20 backdrop-blur-md rounded-full p-2"><Camera className="text-white" size={20} /></div>
-                   </div>
-                 </div>
-               </div>
-
-               <div className="space-y-2">
-                 <Label className="text-[10px] font-black uppercase tracking-widest ml-1 text-muted-foreground">Logo Preview</Label>
-                 <div className="flex justify-center">
-                   <div 
-                     className="relative h-28 w-28 rounded-full border-4 border-white bg-white shadow-xl group cursor-pointer overflow-hidden transition-transform active:scale-95"
-                     onClick={() => profileInputRef.current?.click()}
-                   >
-                     <Image src={formData.profilePic} alt="Logo" fill className="object-cover" unoptimized={true} />
-                     <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                       <Camera className="text-white" size={24} />
-                     </div>
-                   </div>
-                 </div>
-               </div>
-               <p className="text-[9px] text-muted-foreground font-black uppercase text-center tracking-widest opacity-60">Tap Banner or Logo to Change Photo</p>
+            {/* PREVIEWS: Banner Top, Logo Below */}
+            <div className="space-y-4">
+              <div 
+                className="relative h-28 w-full rounded-2xl overflow-hidden border-2 border-muted bg-muted group cursor-pointer"
+                onClick={() => bannerInputRef.current?.click()}
+              >
+                <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="Banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized={true} />
+                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-black uppercase">Change Banner</div>
+              </div>
+              <div className="flex justify-center">
+                <div 
+                  className="relative h-24 w-24 rounded-full border-4 border-white bg-white shadow-lg group cursor-pointer overflow-hidden"
+                  onClick={() => profileInputRef.current?.click()}
+                >
+                  <Image src={formData.profilePic} alt="Logo" fill className="object-cover" unoptimized={true} />
+                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"><Camera size={20} /></div>
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-4 pt-2">
+            <div className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Display Name</Label>
-                <Input value={formData.name} onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))} className="rounded-2xl h-12 bg-muted/20 border-none shadow-inner" placeholder="Your Name"/>
+                <Input value={formData.name} onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))} className="rounded-2xl h-12 bg-muted/20 border-none" placeholder="Your Name"/>
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Bio (max 160 characters)</Label>
-                <Textarea value={formData.bio} maxLength={160} onChange={(e) => setFormData(p => ({ ...p, bio: e.target.value }))} className="rounded-2xl min-h-[100px] bg-muted/20 border-none shadow-inner leading-relaxed" placeholder="Share your journey..."/>
+                <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Bio (max 160 chars)</Label>
+                <Textarea value={formData.bio} maxLength={160} onChange={(e) => setFormData(p => ({ ...p, bio: e.target.value }))} className="rounded-2xl min-h-[80px] bg-muted/20 border-none break-all" placeholder="Share your journey..."/>
               </div>
             </div>
             
+            {/* INDIVIDUAL COLOR PICKERS */}
             <div className="space-y-4">
-              <Label className="text-[10px] font-black uppercase tracking-widest ml-1 flex items-center justify-between">
-                <span className="flex items-center gap-2"><PaintBucket size={14} className="text-primary" /> Theme Customization</span>
-                <Button variant="ghost" className="h-auto p-0 text-[10px] font-black uppercase text-secondary hover:bg-transparent" onClick={() => setIsColorPickerOpen(true)}>
-                  Color Gallery <ChevronLeft className="w-3 h-3 rotate-180 ml-1" />
-                </Button>
+              <Label className="text-[10px] font-black uppercase tracking-widest ml-1 flex items-center gap-2">
+                <PaintBucket size={14} className="text-primary" /> Surface Themes
               </Label>
-              <div className="grid grid-cols-6 gap-3">
-                {COLOR_CATEGORIES["Light (Pastels)"].slice(0, 5).map(c => (
-                  <button key={c} onClick={() => applyColor(c)} className="aspect-square rounded-full border-2 border-white shadow-md transition-all active:scale-75 relative" style={{ backgroundColor: c }}>
-                    {formData.customColors.background === c && <Check size={12} className="absolute inset-0 m-auto text-primary" />}
-                  </button>
-                ))}
-                <button 
-                  onClick={() => setIsColorPickerOpen(true)}
-                  className="aspect-square rounded-full bg-white border-2 border-dashed border-primary/40 flex items-center justify-center text-primary shadow-sm hover:border-primary transition-colors"
+              <div className="grid grid-cols-2 gap-3">
+                <Button 
+                  variant="outline" 
+                  className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted"
+                  onClick={() => openPickerFor('header')}
                 >
-                   <Plus size={16} />
-                </button>
+                  <Layout size={16} className="text-muted-foreground" />
+                  <span className="text-[8px] font-black uppercase">Header</span>
+                  <div className="w-8 h-1 rounded-full" style={{ backgroundColor: formData.customColors.header || 'transparent' }} />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted"
+                  onClick={() => openPickerFor('background')}
+                >
+                  <Square size={16} className="text-muted-foreground" />
+                  <span className="text-[8px] font-black uppercase">Canvas</span>
+                  <div className="w-8 h-1 rounded-full" style={{ backgroundColor: formData.customColors.background || 'transparent' }} />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted"
+                  onClick={() => openPickerFor('bioCard')}
+                >
+                  <Pencil size={16} className="text-muted-foreground" />
+                  <span className="text-[8px] font-black uppercase">Bio Card</span>
+                  <div className="w-8 h-1 rounded-full" style={{ backgroundColor: formData.customColors.bioCard || 'transparent' }} />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted"
+                  onClick={() => openPickerFor('statsSection')}
+                >
+                  <Plus size={16} className="text-muted-foreground" />
+                  <span className="text-[8px] font-black uppercase">Stats</span>
+                  <div className="w-8 h-1 rounded-full" style={{ backgroundColor: formData.customColors.statsSection || 'transparent' }} />
+                </Button>
               </div>
             </div>
 
             <div className="space-y-4">
-               <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Stickers & Decals</Label>
-               <Button variant="outline" className="w-full h-12 rounded-2xl flex items-center gap-2 font-black uppercase text-[10px] border-primary/20 text-primary bg-primary/5" onClick={() => stickerInputRef.current?.click()}><Plus size={16} /> Add Decor Sticker</Button>
+               <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Decals</Label>
+               <Button variant="outline" className="w-full h-12 rounded-2xl flex items-center gap-2 font-black uppercase text-[10px] border-primary/20 text-primary bg-primary/5" onClick={() => stickerInputRef.current?.click()}><Plus size={16} /> Add Sticker</Button>
                {formData.stickers.length > 0 && (
                  <div className="flex flex-wrap gap-2 pt-2">
                    {formData.stickers.map(s => (
-                     <button key={s.id} onClick={() => { setActiveStickerId(s.id === activeStickerId ? null : s.id); setIsEditModalOpen(false); }} className={cn("w-12 h-12 border rounded-xl p-1 relative shadow-sm", activeStickerId === s.id ? "border-primary bg-primary/10 ring-2 ring-primary/20" : "border-muted bg-white")}>
+                     <button key={s.id} onClick={() => { setActiveStickerId(s.id === activeStickerId ? null : s.id); setIsEditModalOpen(false); }} className={cn("w-12 h-12 border rounded-xl p-1 relative", activeStickerId === s.id ? "border-primary bg-primary/10" : "border-muted")}>
                        <Image src={s.url} alt="sticker" width={40} height={40} className="object-contain" unoptimized={true}/>
                      </button>
                    ))}
@@ -407,73 +416,34 @@ export default function ProfilePage() {
             <input type="file" ref={stickerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'sticker')} />
           </div>
           <DialogFooter className="mt-4 pt-4 border-t">
-            <Button className="w-full h-14 rounded-[2rem] bg-primary text-white font-black uppercase shadow-xl shadow-primary/20 transition-all hover:scale-[1.02]" onClick={handleSaveProfile} disabled={isSaving}>
-              {isSaving ? <Loader2 className="animate-spin mr-2" /> : "Save Profile Configuration"}
+            <Button className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase shadow-xl" onClick={handleSaveProfile} disabled={isSaving}>
+              {isSaving ? <Loader2 className="animate-spin mr-2" /> : "Publish Profile Changes"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* THEME GALLERY / COLOR WHEEL SHEET */}
+      {/* THEME GALLERY */}
       <Sheet open={isColorPickerOpen} onOpenChange={setIsColorPickerOpen}>
-        <SheetContent side="bottom" className="rounded-t-[3rem] p-6 max-h-[85vh] overflow-y-auto no-scrollbar border-none z-[4000] shadow-2xl">
+        <SheetContent side="bottom" className="rounded-t-[3rem] p-6 max-h-[70vh] overflow-y-auto no-scrollbar border-none z-[4000]">
           <SheetHeader>
-            <SheetTitle className="text-xs font-black uppercase tracking-[0.3em] text-center text-primary flex items-center justify-center gap-3">
-              <Palette size={20} className="animate-pulse" /> Sphere Theme Gallery
+            <SheetTitle className="text-xs font-black uppercase tracking-widest text-center text-primary">
+              Choose Color for {activeColorSection ? activeColorSection.toUpperCase() : 'Section'}
             </SheetTitle>
           </SheetHeader>
           
-          <div className="space-y-10 mt-8 pb-32">
-            {/* COLOR WHEEL PICKER SECTION */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                 <h3 className="text-[10px] font-black uppercase tracking-widest text-secondary">Custom Palette Wheel</h3>
-                 <div className="flex-1 h-px bg-secondary/10" />
-              </div>
-              
-              <div className="flex items-center gap-6 bg-white p-6 rounded-[2.5rem] border shadow-sm group hover:border-primary transition-all active:scale-[0.98] cursor-pointer" onClick={() => customColorInputRef.current?.click()}>
-                <div 
-                  className="w-24 h-24 rounded-full border-4 border-white shadow-xl flex items-center justify-center relative overflow-hidden"
-                  style={{ 
-                    background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)',
-                  }}
-                >
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Pipette size={32} className="text-white drop-shadow-lg" />
-                  </div>
-                  <div className="absolute inset-2 rounded-full border border-white/30" />
-                </div>
-                <div className="flex-1 space-y-1">
-                  <p className="text-sm font-black uppercase text-foreground">Pick From Wheel</p>
-                  <p className="text-[10px] font-bold text-muted-foreground leading-relaxed">Choose any unique shade from the infinite spectrum.</p>
-                  <div className="flex items-center gap-2 mt-2">
-                     <span className="h-4 w-4 rounded-full border" style={{ backgroundColor: formData.customColors.background || '#008080' }} />
-                     <span className="text-[9px] font-black uppercase opacity-60">Current: {formData.customColors.background || '#008080'}</span>
-                  </div>
-                </div>
-                <input 
-                  type="color" 
-                  ref={customColorInputRef} 
-                  className="hidden" 
-                  onChange={(e) => applyColor(e.target.value)} 
-                />
-              </div>
-            </div>
-
+          <div className="space-y-8 mt-6 pb-20">
             {Object.entries(COLOR_CATEGORIES).map(([category, colors]) => (
-              <div key={category} className="space-y-4">
-                <div className="flex items-center gap-3">
-                   <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{category}</h3>
-                   <div className="flex-1 h-px bg-muted" />
-                </div>
-                <div className="grid grid-cols-5 gap-4">
+              <div key={category} className="space-y-3">
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{category}</h3>
+                <div className="grid grid-cols-6 gap-3">
                   {colors.map(c => (
                     <button 
                       key={c} 
                       onClick={() => applyColor(c)} 
                       className={cn(
-                        "aspect-square rounded-2xl border-4 transition-all active:scale-90 shadow-md",
-                        formData.customColors.background === c ? "border-primary scale-110 shadow-xl" : "border-white"
+                        "aspect-square rounded-full border-2 transition-all active:scale-90",
+                        formData.customColors[activeColorSection!] === c ? "border-primary scale-110" : "border-white"
                       )} 
                       style={{ backgroundColor: c }} 
                     />
@@ -483,19 +453,19 @@ export default function ProfilePage() {
             ))}
           </div>
 
-          <div className="fixed bottom-0 left-0 right-0 bg-background/90 backdrop-blur-md p-6 border-t z-50">
-            <Button className="w-full max-w-md mx-auto h-14 rounded-[2rem] bg-primary text-white font-black uppercase shadow-xl" onClick={() => setIsColorPickerOpen(false)}>Close Gallery</Button>
+          <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-md p-4 flex justify-center border-t">
+            <Button variant="ghost" className="font-black uppercase text-[10px]" onClick={() => setIsColorPickerOpen(false)}>Cancel Selection</Button>
           </div>
         </SheetContent>
       </Sheet>
 
       {/* SETTINGS SHEET */}
       <Sheet open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-        <SheetContent side="bottom" className="rounded-t-[3rem] p-6 border-none z-[4000] shadow-2xl">
-          <SheetHeader><SheetTitle className="text-[10px] font-black uppercase tracking-[0.4em] text-center text-muted-foreground/60">Sphere Intelligence Control</SheetTitle></SheetHeader>
-          <div className="space-y-3 mt-10 mb-8">
-            <Button variant="outline" className="w-full justify-between h-14 rounded-[1.5rem] px-6 border-primary/20 text-primary font-black uppercase tracking-widest transition-all hover:bg-primary hover:text-white" onClick={() => { setIsSettingsOpen(false); setIsEditModalOpen(true); }}><span className="flex items-center gap-4"><Pencil size={18} /> Profile Optimization</span><RotateCw size={16} className="opacity-40" /></Button>
-            <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start h-14 rounded-[1.5rem] px-6 gap-4 text-secondary font-black uppercase tracking-widest hover:bg-secondary/10"><LogOut size={18} /> Sign Out Sphere</Button>
+        <SheetContent side="bottom" className="rounded-t-[3rem] p-6 border-none z-[4000]">
+          <SheetHeader><SheetTitle className="text-[10px] font-black uppercase tracking-widest text-center">Settings</SheetTitle></SheetHeader>
+          <div className="space-y-3 mt-8">
+            <Button variant="outline" className="w-full justify-start h-14 rounded-2xl px-6 gap-4 border-primary/20 text-primary font-black uppercase tracking-widest" onClick={() => { setIsSettingsOpen(false); setIsEditModalOpen(true); }}><Pencil size={18} /> Edit Sphere Profile</Button>
+            <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start h-14 rounded-2xl px-6 gap-4 text-secondary font-black uppercase tracking-widest hover:bg-secondary/10"><LogOut size={18} /> Sign Out</Button>
           </div>
         </SheetContent>
       </Sheet>
