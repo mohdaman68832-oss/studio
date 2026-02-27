@@ -5,16 +5,14 @@ import { useState, useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, MessageSquare, Users, Bell, ChevronRight, Activity, Lock } from "lucide-react";
+import { Search, MessageSquare, Users, Bell, ChevronRight } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useFirestore, useUser, useCollection, useMemoFirebase } from "@/firebase";
-import { useRouter } from "next/navigation";
 import { collection, query, where, orderBy } from "firebase/firestore";
 import { cn } from "@/lib/utils";
 
-// Mock data for initial states or fallback
 const MOCK_GROUPS = [
   {
     id: "g1",
@@ -38,9 +36,8 @@ export default function ChatPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const db = useFirestore();
   const { user } = useUser();
-  const router = useRouter();
 
-  // Fetch real-time notifications with explicit filtering
+  // Fetch real-time notifications with owner filtering
   const notificationsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(
@@ -50,7 +47,7 @@ export default function ChatPage() {
     );
   }, [db, user]);
 
-  const { data: notifications, isLoading: isNotifLoading } = useCollection(notificationsQuery);
+  const { data: notifications } = useCollection(notificationsQuery);
 
   const exploreGroups = useMemo(() => {
     return MOCK_GROUPS.filter(g => 

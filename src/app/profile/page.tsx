@@ -5,11 +5,11 @@ import { useState, useEffect, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { 
-  Settings, Grid, Bookmark, Heart, LogOut, Camera, 
+  Settings, LogOut, Camera, 
   Plus, RotateCw, Pencil, Loader2, 
   Tablet, ChevronLeft, PaintBucket,
-  X, Check, Layout, Square, User, List, Layers,
-  Move, Maximize, Minimize, RotateCcw, Trash2, Video, Type, Image as LucideImage
+  Check, Layout, Square, User, List, Layers,
+  Minimize, Maximize, RotateCcw, Trash2, Video, Type, Image as LucideImage
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -395,7 +395,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* STATS SECTION - NO MARGIN FOR SEAMLESS LOOK */}
+      {/* STATS SECTION */}
       <div 
         className="relative z-10 transition-colors duration-300 py-8 px-10 border-y border-border/10" 
         style={{ backgroundColor: formData.customColors.statsSection }}
@@ -416,7 +416,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* TABS SECTION - NO MARGIN FOR SEAMLESS LOOK */}
+      {/* TABS SECTION */}
       <Tabs defaultValue="photo" className="w-full relative z-10">
         <div 
           className="transition-colors duration-300" 

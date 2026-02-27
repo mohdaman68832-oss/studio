@@ -17,7 +17,7 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // User Profiles: Anyone can view (persistent themes), only owner can edit.
+    // User Profiles: Publicly readable for themes, owner can edit.
     match /userProfiles/{userId} {
       allow read: if true;
       allow create, update: if isOwner(userId);
@@ -47,33 +47,27 @@ service cloud.firestore {
       allow read: if true;
       allow create, update: if isSignedIn();
       
-      // Membership (Subcollection for checking if joined)
       match /members/{userId} {
         allow read: if true;
         allow write: if isOwner(userId);
       }
     }
 
-    // Notifications: Only owner can list/read their own notifications.
+    // Notifications: Fixed permission error for listing.
     match /notifications/{notifId} {
-      // Allow reading if the user is the recipient. 
-      // Split list and get for robustness.
-      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
-      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      // Allow read (get/list) if the user is the recipient.
+      allow read: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
 
-    // Follows: Publicly visible following relationships for mutual follow checks.
+    // Follows: Publicly visible for mutual follow checks.
     match /follows/{followId} {
       allow read: if true;
-      allow write: if isSignedIn() && (
-        (request.resource != null && request.auth.uid == request.resource.data.followerId) || 
-        (resource != null && request.auth.uid == resource.data.followerId)
-      );
+      allow write: if isSignedIn();
     }
 
-    // Global catch-all for consistency during development
+    // Global catch-all
     match /{path=**} {
       allow read: if true;
       allow write: if isSignedIn();
