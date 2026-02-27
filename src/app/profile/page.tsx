@@ -9,7 +9,7 @@ import {
   Image as ImageIcon, Plus, RotateCw, Pencil, Loader2, 
   Tablet, ChevronLeft, PaintBucket,
   X, Palette, Check, Layout, Square, User, List, Layers,
-  Move, Maximize, Minimize, RotateCcw, Trash2
+  Move, Maximize, Minimize, RotateCcw, Trash2, Video, Type, Image as LucideImage
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -360,7 +360,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* PROFILE SECTIONS - REMOVED GAPS FOR SEAMLESS COLOR FLOW */}
+      {/* PROFILE SECTIONS */}
       <div className="flex flex-col">
         {/* HEADER BAR */}
         <div 
@@ -420,20 +420,20 @@ export default function ProfilePage() {
         </div>
 
         {/* TABS AREA */}
-        <Tabs defaultValue="my-ideas" className="w-full relative z-10">
+        <Tabs defaultValue="photo" className="w-full relative z-10">
           <div 
             className="transition-colors duration-300" 
             style={{ backgroundColor: formData.customColors.tabsList }}
           >
             <TabsList className="w-full bg-transparent border-none rounded-none px-6 h-14">
-              <TabsTrigger value="my-ideas" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
-                <Grid size={22} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
+              <TabsTrigger value="photo" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
+                <LucideImage size={22} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
               </TabsTrigger>
-              <TabsTrigger value="saved" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
-                <Bookmark size={22} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
+              <TabsTrigger value="video" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
+                <Video size={22} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
               </TabsTrigger>
-              <TabsTrigger value="liked" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
-                <Heart size={22} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
+              <TabsTrigger value="text" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
+                <Type size={22} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
               </TabsTrigger>
             </TabsList>
           </div>
@@ -443,16 +443,20 @@ export default function ProfilePage() {
             className="transition-colors duration-300 min-h-[300px]" 
             style={{ backgroundColor: formData.customColors.tabsContent }}
           >
-            <TabsContent value="my-ideas" className="mt-0 px-1 py-12 text-center pb-32">
+            <TabsContent value="photo" className="mt-0 px-1 py-12 text-center pb-32">
               <p className="opacity-30 text-[10px] font-black uppercase tracking-widest" style={{ color: getContrastColor(formData.customColors.tabsContent) }}>
-                Your Innovations Will Appear Here
+                Photo Posts Will Appear Here
               </p>
             </TabsContent>
-            <TabsContent value="saved" className="mt-0 px-1 py-12 text-center pb-32">
-              <Bookmark className="mx-auto opacity-10 mb-2" size={40} style={{ color: getContrastColor(formData.customColors.tabsContent) }} />
+            <TabsContent value="video" className="mt-0 px-1 py-12 text-center pb-32">
+              <p className="opacity-30 text-[10px] font-black uppercase tracking-widest" style={{ color: getContrastColor(formData.customColors.tabsContent) }}>
+                Video Posts Will Appear Here
+              </p>
             </TabsContent>
-            <TabsContent value="liked" className="mt-0 px-1 py-12 text-center pb-32">
-              <Heart className="mx-auto opacity-10 mb-2" size={40} style={{ color: getContrastColor(formData.customColors.tabsContent) }} />
+            <TabsContent value="text" className="mt-0 px-1 py-12 text-center pb-32">
+              <p className="opacity-30 text-[10px] font-black uppercase tracking-widest" style={{ color: getContrastColor(formData.customColors.tabsContent) }}>
+                Text Posts Will Appear Here
+              </p>
             </TabsContent>
           </div>
         </Tabs>
