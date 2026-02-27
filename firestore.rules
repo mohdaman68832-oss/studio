@@ -57,12 +57,14 @@ service cloud.firestore {
     // Notifications: Only owner can list/read their own notifications.
     match /notifications/{notifId} {
       // Allow reading if the user is the recipient. 
-      // resource == null check allows listing via query filtering.
-      allow read, update, delete: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
+      // Split list and get for robustness.
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
       allow create: if isSignedIn();
+      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
 
-    // Follows: Publicly visible following relationships.
+    // Follows: Publicly visible following relationships for mutual follow checks.
     match /follows/{followId} {
       allow read: if true;
       allow write: if isSignedIn() && (

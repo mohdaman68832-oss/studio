@@ -34,9 +34,10 @@ interface CustomColors {
 
 function getContrastColor(hexColor: string | undefined): string {
   if (!hexColor || !hexColor.startsWith('#')) return 'inherit';
-  const r = parseInt(hexColor.slice(1, 3), 16);
-  const g = parseInt(hexColor.slice(3, 5), 16);
-  const b = parseInt(hexColor.slice(5, 7), 16);
+  const hex = hexColor.replace('#', '');
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
   const brightness = (r * 299 + g * 587 + b * 114) / 1000;
   return brightness >= 128 ? '#1A1A1A' : '#FFFFFF';
 }
@@ -48,7 +49,6 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
   const { user: currentUser } = useUser();
   const { toast } = useToast();
 
-  // Query to find user profile by username
   const userQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, "userProfiles"), where("username", "==", username.toLowerCase()), limit(1));
@@ -57,7 +57,6 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
   const { data: userProfiles, isLoading } = useCollection(userQuery);
   const profileData = userProfiles?.[0];
 
-  // Check if current user is following this profile
   const followRef = useMemoFirebase(() => {
     if (!db || !currentUser || !profileData) return null;
     return doc(db, "follows", `${currentUser.uid}_${profileData.id}`);
@@ -188,12 +187,10 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       </div>
 
       <div 
-        className="relative z-10 transition-colors duration-300"
+        className="relative z-10 transition-colors duration-300 py-8 px-10 border-y border-border/10"
         style={{ backgroundColor: colors.statsSection }}
       >
-        <div 
-          className="grid grid-cols-3 gap-8 w-full py-8 px-10 border-y border-border/10"
-        >
+        <div className="grid grid-cols-3 gap-8 w-full">
           <div className="text-center">
             <p className="text-xl font-black" style={{ color: getContrastColor(colors.statsSection) }}>{profileData.totalIdeasPosted || 0}</p>
             <p className="text-[10px] uppercase font-black opacity-50" style={{ color: getContrastColor(colors.statsSection) }}>Ideas</p>
@@ -228,7 +225,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         </div>
 
         <div 
-          className="min-h-[300px] transition-colors duration-300 pb-20"
+          className="min-h-[300px] transition-colors duration-300 pb-32"
           style={{ backgroundColor: colors.tabsContent }}
         >
           <TabsContent value="photo" className="px-1 mt-0 py-12 text-center">
