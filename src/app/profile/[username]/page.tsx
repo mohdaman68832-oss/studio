@@ -109,6 +109,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden transition-colors duration-300"
       style={{ backgroundColor: colors.background || "var(--background)" }}
     >
+      {/* SEAMLESS HEADER */}
       <div 
         className="px-6 flex justify-between items-center relative z-20 py-4 transition-colors duration-300"
         style={{ backgroundColor: colors.header }}
@@ -122,6 +123,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         <div className="w-10" />
       </div>
 
+      {/* SEAMLESS INFO SECTION */}
       <div 
         className="transition-colors duration-300 relative z-10"
         style={{ backgroundColor: colors.userInfo }}
@@ -186,6 +188,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         </div>
       </div>
 
+      {/* SEAMLESS STATS SECTION */}
       <div 
         className="relative z-10 transition-colors duration-300 py-6 px-10"
         style={{ backgroundColor: colors.statsSection }}
@@ -206,6 +209,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         </div>
       </div>
 
+      {/* SEAMLESS TABS SECTION */}
       <Tabs defaultValue="photo" className="w-full relative z-10">
         <div 
           className="transition-colors duration-300"
@@ -246,6 +250,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         </div>
       </Tabs>
 
+      {/* PERSISTENT STICKERS LAYER */}
       <div className="absolute inset-0 pointer-events-none z-[160]">
         {stickers.map((sticker) => (
           <div 

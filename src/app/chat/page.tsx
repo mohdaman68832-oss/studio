@@ -37,7 +37,7 @@ export default function ChatPage() {
   const db = useFirestore();
   const { user } = useUser();
 
-  // Fetch real-time notifications with owner filtering
+  // Fetch real-time notifications with filter that matches security rules.
   const notificationsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(

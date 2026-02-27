@@ -361,7 +361,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* HEADER SECTION */}
+      {/* SEAMLESS HEADER SECTION */}
       <div 
         className="px-6 flex justify-between items-center py-4 relative z-20 transition-colors duration-300" 
         style={{ backgroundColor: formData.customColors.header }}
@@ -370,7 +370,7 @@ export default function ProfilePage() {
         <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setIsSettingsOpen(true)}><Settings size={22} style={{ color: getContrastColor(formData.customColors.header) }} /></Button>
       </div>
 
-      {/* INFO SECTION */}
+      {/* SEAMLESS INFO SECTION */}
       <div 
         className="relative z-10 transition-colors duration-300" 
         style={{ backgroundColor: formData.customColors.userInfo }}
@@ -395,7 +395,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* STATS SECTION */}
+      {/* SEAMLESS STATS SECTION */}
       <div 
         className="relative z-10 transition-colors duration-300 py-6 px-10" 
         style={{ backgroundColor: formData.customColors.statsSection }}
@@ -416,7 +416,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* TABS SECTION */}
+      {/* SEAMLESS TABS SECTION */}
       <Tabs defaultValue="photo" className="w-full relative z-10">
         <div 
           className="transition-colors duration-300" 
@@ -499,7 +499,7 @@ export default function ProfilePage() {
         ))}
       </div>
 
-      {/* EDIT MODAL */}
+      {/* EDIT MODAL - Banner Top, Logo Below, No Auto-Keyboard */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <DialogContent 
           onOpenAutoFocus={(e) => e.preventDefault()}
@@ -510,6 +510,7 @@ export default function ProfilePage() {
           </DialogHeader>
           <div className="space-y-8 py-4">
             <div className="space-y-6">
+              {/* BANNER FIRST */}
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Banner (Header)</Label>
                 <div 
@@ -520,6 +521,7 @@ export default function ProfilePage() {
                   <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-black uppercase text-center px-4">Tap to Position</div>
                 </div>
               </div>
+              {/* LOGO SECOND */}
               <div className="space-y-2 flex flex-col items-center">
                 <Label className="text-[10px] font-black uppercase tracking-widest">Logo / Profile Pic</Label>
                 <div 
