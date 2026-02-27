@@ -47,7 +47,6 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Reference to the current user's like for this post
   const userLikeRef = useMemoFirebase(() => 
     (db && user && idea.id) ? doc(db, "ideas", idea.id, "likes", user.uid) : null
   , [db, user, idea.id]);
@@ -55,13 +54,11 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
   const { data: userLike } = useDoc(userLikeRef);
   const isLiked = !!userLike;
 
-  // Real-time listener for the main idea doc to get live likes count
   const ideaDocRef = useMemoFirebase(() => 
     (db && idea.id) ? doc(db, "ideas", idea.id) : null
   , [db, idea.id]);
   const { data: liveIdeaData } = useDoc(ideaDocRef);
 
-  // Use live count if available, otherwise fallback to idea props
   const likesCount = liveIdeaData?.likes ?? idea.likes ?? 0;
 
   const handleToggleLike = (e: React.MouseEvent) => {
@@ -74,29 +71,23 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
     const likeDocRef = doc(db, "ideas", idea.id, "likes", user.uid);
 
     if (isLiked) {
-      // Remove Like (Decrement)
       deleteDoc(likeDocRef)
         .then(() => {
-          // Update likes count without updating createdAt to prevent jumping
           setDoc(ideaRef, { likes: increment(-1) }, { merge: true });
         })
         .finally(() => {
           setTimeout(() => setIsProcessing(false), 300);
         });
     } else {
-      // Add Like (Increment)
       setDoc(likeDocRef, { 
         timestamp: serverTimestamp(),
         userId: user.uid 
       })
         .then(() => {
-          // Important: We do NOT update createdAt here.
-          // This ensures the post stays in its original chronological position.
           setDoc(ideaRef, { 
             likes: increment(1),
             title: idea.title || "Untitled",
             authorId: idea.authorId || 'system',
-            // DO NOT set createdAt: serverTimestamp() here as it causes the post to jump to top
           }, { merge: true });
         })
         .finally(() => {
@@ -114,7 +105,6 @@ export function IdeaCard({ idea, priority = false, isMemeView = false }: IdeaCar
     });
   };
 
-  // Safe username handling to avoid .toLowerCase() on undefined
   const userHandle = idea.authorUsername || (idea.userName || 'user').toLowerCase().replace(/\s/g, '');
   const isVideo = idea.mediaUrl && (idea.mediaUrl.includes('blob:') || idea.mediaUrl.endsWith('.mp4') || idea.mediaUrl.endsWith('.webm') || idea.mediaUrl.includes('gtv-videos-bucket') || idea.mediaUrl.startsWith('data:video'));
   const isTextPost = !idea.mediaUrl || idea.mediaUrl.includes('textpost') || idea.mediaUrl === "";

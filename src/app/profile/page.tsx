@@ -88,10 +88,9 @@ export default function ProfilePage() {
   const [activeStickerId, setActiveStickerId] = useState<string | null>(null);
   const [draggedStickerId, setDraggedStickerId] = useState<string | null>(null);
   
-  // Banner Repositioning States
   const [showBannerEditor, setShowBannerEditor] = useState(false);
   const [tempBannerUrl, setTempBannerUrl] = useState<string | null>(null);
-  const [bannerOffset, setBannerOffset] = useState(50); // Default centered (50%)
+  const [bannerOffset, setBannerOffset] = useState(50);
   const [isDraggingBanner, setIsDraggingBanner] = useState(false);
   const [dragStartY, setDragStartY] = useState(0);
 
@@ -166,9 +165,10 @@ export default function ProfilePage() {
     if (!user || !profileRef) return;
     setIsSaving(true);
     try {
-      if (user.displayName !== formData.name) {
-        await updateProfile(user, { displayName: formData.name });
-      }
+      await updateProfile(user, { 
+        displayName: formData.name,
+        photoURL: formData.profilePic || user.photoURL
+      });
       await updateDoc(profileRef, {
         bio: formData.bio,
         profilePictureUrl: formData.profilePic,
@@ -223,7 +223,6 @@ export default function ProfilePage() {
     }
   };
 
-  // Banner Dragging Handlers
   const handleBannerDragStart = (e: React.PointerEvent) => {
     setIsDraggingBanner(true);
     setDragStartY(e.clientY);
@@ -233,7 +232,7 @@ export default function ProfilePage() {
   const handleBannerDragMove = (e: React.PointerEvent) => {
     if (!isDraggingBanner) return;
     const deltaY = e.clientY - dragStartY;
-    const newOffset = Math.max(0, Math.min(100, bannerOffset - (deltaY / 2))); // Adjust sensitivity
+    const newOffset = Math.max(0, Math.min(100, bannerOffset - (deltaY / 2)));
     setBannerOffset(newOffset);
     setDragStartY(e.clientY);
   };
@@ -250,6 +249,7 @@ export default function ProfilePage() {
         const base64 = await toBase64(file);
         if (type === 'profile') {
           setFormData(prev => ({ ...prev, profilePic: base64 }));
+          if (user) await updateProfile(user, { photoURL: base64 });
           await saveToFirestore({ profilePictureUrl: base64 });
         } else if (type === 'banner') {
           setTempBannerUrl(base64);
@@ -302,7 +302,6 @@ export default function ProfilePage() {
       style={{ backgroundColor: formData.customColors.background || "var(--background)" }}
       onClick={(e) => handleZoneClick(e, 'background')}
     >
-      {/* FULL SCREEN BANNER EDITOR OVERLAY */}
       {showBannerEditor && (
         <div className="fixed inset-0 z-[1000] bg-background flex flex-col animate-in slide-in-from-bottom duration-300">
           <header className="p-4 flex items-center justify-between border-b bg-white">
@@ -319,7 +318,6 @@ export default function ProfilePage() {
                <p className="text-xs text-muted-foreground font-medium leading-relaxed">Drag the photo up or down to manually select the area you want to show.</p>
             </div>
 
-            {/* PC/Desktop Visualization */}
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Monitor size={16} />
@@ -347,7 +345,6 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Mobile Visualization */}
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Smartphone size={16} />
@@ -403,7 +400,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* HEADER BAR */}
       <div 
         onClick={(e) => handleZoneClick(e, 'header')}
         className={cn(
@@ -431,7 +427,6 @@ export default function ProfilePage() {
         </Sheet>
       </div>
 
-      {/* USER INFO AREA */}
       <div 
         onClick={(e) => handleZoneClick(e, 'userInfo')}
         className={cn(
@@ -556,7 +551,6 @@ export default function ProfilePage() {
         </div>
       </Tabs>
 
-      {/* STICKERS LAYER: z-[30] ensures it's above content but below navigation/modals */}
       <div className="absolute inset-0 pointer-events-none z-[30]">
         {formData.stickers.map((sticker) => (
           <div 
@@ -625,7 +619,6 @@ export default function ProfilePage() {
             <DialogTitle className="text-sm font-black uppercase text-center">Customize Profile</DialogTitle>
           </DialogHeader>
           <div className="space-y-6 py-4">
-            {/* NAME & BIO FIELDS - PROMINENTLY AT TOP */}
             <div className="space-y-4">
                <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest">Display Name</Label>
@@ -728,7 +721,6 @@ export default function ProfilePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'banner')} />
     </div>
   );
 }

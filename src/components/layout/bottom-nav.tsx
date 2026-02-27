@@ -44,7 +44,7 @@ export function BottomNav() {
               <div className="relative flex flex-col items-center">
                 {isProfile ? (
                   <Avatar className={cn(
-                    "h-7 w-7 border-2 transition-all duration-300",
+                    "h-7 w-7 border-2 transition-all duration-300 shadow-sm",
                     isActive ? "border-primary scale-110 shadow-md" : "border-transparent"
                   )}>
                     <AvatarImage src={user?.photoURL || ""} className="object-cover" />
