@@ -123,7 +123,6 @@ export default function ProfilePage() {
     if (!user || !profileRef) return;
     setIsSaving(true);
     try {
-      // NOTE: Character limit fix - We only update Display Name in Auth to avoid "Photo URL too long" Base64 error.
       await updateProfile(user, { displayName: formData.name });
       
       await updateDoc(profileRef, {
@@ -189,66 +188,67 @@ export default function ProfilePage() {
       className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden transition-colors duration-300"
       style={{ backgroundColor: formData.customColors.background || "var(--background)" }}
     >
-      {/* BANNER REPOSITION OVERLAY (PAGE-LIKE) */}
+      {/* BANNER REPOSITION OVERLAY */}
       {showBannerEditor && (
         <div className="fixed inset-0 z-[2000] bg-background flex flex-col animate-in slide-in-from-bottom duration-300 overflow-y-auto no-scrollbar">
-          <header className="p-4 flex items-center justify-between border-b bg-white sticky top-0 z-10">
+          <header className="p-4 flex items-center justify-between border-b bg-white sticky top-0 z-50">
             <Button variant="ghost" size="icon" onClick={() => setShowBannerEditor(false)} className="rounded-full"><ChevronLeft size={24} /></Button>
-            <h2 className="text-sm font-black uppercase tracking-widest text-primary">Banner Customization</h2>
+            <h2 className="text-sm font-black uppercase tracking-widest text-primary">Responsive Preview</h2>
             <div className="w-10" />
           </header>
           
-          <div className="flex-1 p-6 space-y-8 pb-20">
-            <div className="text-center space-y-2">
-               <div className="bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2 text-primary">
-                 <Monitor size={24} />
+          <div className="flex-1 p-6 space-y-12 pb-32">
+            {/* DESKTOP PC PREVIEW */}
+            <div className="space-y-4">
+               <div className="flex items-center gap-2 text-primary">
+                 <Monitor size={20} />
+                 <span className="text-xs font-black uppercase tracking-widest">Desktop / PC Preview</span>
                </div>
-               <p className="text-[10px] font-black uppercase text-primary tracking-widest">PC / Desktop Preview</p>
-               <p className="text-xs text-muted-foreground font-medium">Drag to adjust how it looks on wide screens.</p>
-            </div>
-
-            <div 
-              className="relative aspect-[3/1] w-full bg-black rounded-3xl overflow-hidden cursor-grab active:cursor-grabbing touch-none shadow-2xl border-4 border-white"
-              onPointerDown={(e) => { 
-                setIsDraggingBanner(true); 
-                setDragStartY(e.clientY); 
-                try { (e.currentTarget as any).setPointerCapture(e.pointerId); } catch {}
-              }}
-              onPointerMove={handleBannerDragMove}
-              onPointerUp={handleBannerDragEnd}
-            >
-              {tempBannerUrl && (
-                <Image src={tempBannerUrl} alt="Preview" fill className="object-cover select-none pointer-events-none" style={{ objectPosition: `50% ${bannerOffset}%` }} unoptimized={true} />
-              )}
-              <div className="absolute inset-0 bg-black/10 flex items-center justify-center pointer-events-none">
-                 <div className="bg-white/20 backdrop-blur-md rounded-full px-4 py-1 text-[8px] font-black uppercase text-white border border-white/30">Drag Image</div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-6">
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-muted-foreground justify-center">
-                  <Tablet size={16} />
-                  <span className="text-[10px] font-bold uppercase">Tablet</span>
-                </div>
-                <div className="relative aspect-[4/3] w-full bg-muted rounded-2xl overflow-hidden border-2 border-white shadow-md">
-                  {tempBannerUrl && <Image src={tempBannerUrl} alt="Tablet" fill className="object-cover" style={{ objectPosition: `50% ${bannerOffset}%` }} unoptimized={true} />}
-                </div>
-              </div>
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-muted-foreground justify-center">
-                  <Smartphone size={16} />
-                  <span className="text-[10px] font-bold uppercase">Mobile</span>
-                </div>
-                <div className="relative aspect-[9/16] w-full bg-muted rounded-2xl overflow-hidden border-2 border-white shadow-md">
-                  {tempBannerUrl && <Image src={tempBannerUrl} alt="Mobile" fill className="object-cover" style={{ objectPosition: `50% ${bannerOffset}%` }} unoptimized={true} />}
+               <div 
+                className="relative aspect-[3/1] w-full bg-black rounded-[2rem] overflow-hidden cursor-grab active:cursor-grabbing touch-none shadow-2xl border-4 border-white"
+                onPointerDown={(e) => { 
+                  setIsDraggingBanner(true); 
+                  setDragStartY(e.clientY); 
+                  try { (e.currentTarget as any).setPointerCapture(e.pointerId); } catch {}
+                }}
+                onPointerMove={handleBannerDragMove}
+                onPointerUp={handleBannerDragEnd}
+              >
+                {tempBannerUrl && (
+                  <Image src={tempBannerUrl} alt="Preview" fill className="object-cover select-none pointer-events-none" style={{ objectPosition: `50% ${bannerOffset}%` }} unoptimized={true} />
+                )}
+                <div className="absolute inset-0 bg-black/10 flex items-center justify-center pointer-events-none">
+                   <div className="bg-white/20 backdrop-blur-md rounded-full px-4 py-1 text-[8px] font-black uppercase text-white border border-white/30">Drag to Reposition</div>
                 </div>
               </div>
             </div>
 
-            <div className="pt-8 space-y-4">
-               <Button onClick={() => { setFormData(prev => ({ ...prev, banner: tempBannerUrl!, bannerOffset })); setShowBannerEditor(false); setIsEditModalOpen(true); }} className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase shadow-xl">Apply Banner Position</Button>
-               <Button variant="ghost" onClick={() => setShowBannerEditor(false)} className="w-full font-bold uppercase text-[10px]">Cancel Changes</Button>
+            {/* TABLET PREVIEW */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-primary">
+                <Tablet size={20} />
+                <span className="text-xs font-black uppercase tracking-widest">Tablet (768px - 1024px)</span>
+              </div>
+              <div className="relative aspect-[4/3] w-full max-w-[80%] mx-auto bg-muted rounded-[2rem] overflow-hidden border-8 border-slate-800 shadow-xl">
+                {tempBannerUrl && <Image src={tempBannerUrl} alt="Tablet" fill className="object-cover" style={{ objectPosition: `50% ${bannerOffset}%` }} unoptimized={true} />}
+              </div>
+            </div>
+
+            {/* MOBILE PREVIEW */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-primary">
+                <Smartphone size={20} />
+                <span className="text-xs font-black uppercase tracking-widest">Mobile Device Preview</span>
+              </div>
+              <div className="relative w-[180px] aspect-[9/19] mx-auto bg-muted rounded-[2.5rem] overflow-hidden border-[10px] border-slate-900 shadow-2xl">
+                {tempBannerUrl && <Image src={tempBannerUrl} alt="Mobile" fill className="object-cover" style={{ objectPosition: `50% ${bannerOffset}%` }} unoptimized={true} />}
+                <div className="absolute top-1 left-1/2 -translate-x-1/2 w-12 h-4 bg-slate-900 rounded-full" />
+              </div>
+            </div>
+
+            <div className="pt-8 space-y-4 sticky bottom-0 bg-background/80 backdrop-blur-md p-4 -mx-6">
+               <Button onClick={() => { setFormData(prev => ({ ...prev, banner: tempBannerUrl!, bannerOffset })); setShowBannerEditor(false); setIsEditModalOpen(true); }} className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase shadow-xl">Confirm & Apply</Button>
+               <Button variant="ghost" onClick={() => setShowBannerEditor(false)} className="w-full font-bold uppercase text-[10px]">Discard Changes</Button>
             </div>
           </div>
         </div>
@@ -273,7 +273,7 @@ export default function ProfilePage() {
             <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(formData.customColors.userInfo) }}>{formData.name || user.displayName || "Innovator"}</h2>
           </div>
           <div className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-sm" style={{ backgroundColor: formData.customColors.bioCard || "#FFFFFF" }}>
-            <p className="text-center text-xs leading-relaxed font-medium italic break-all overflow-hidden" style={{ color: getContrastColor(formData.customColors.bioCard) }}>{formData.bio || "Crafting new ideas daily in the sphere."}</p>
+            <p className="text-center text-xs leading-relaxed font-medium italic break-words overflow-hidden" style={{ color: getContrastColor(formData.customColors.bioCard) }}>{formData.bio || "Crafting new ideas daily in the sphere."}</p>
           </div>
         </div>
       </div>
@@ -287,7 +287,7 @@ export default function ProfilePage() {
         <TabsContent value="my-ideas" className="px-1 py-12 text-center opacity-30 text-[10px] font-black uppercase tracking-widest">Your Innovations Will Appear Here</TabsContent>
       </Tabs>
 
-      {/* STICKERS LAYER - Lower Z-Index to stay behind menus */}
+      {/* STICKERS LAYER */}
       <div className="absolute inset-0 pointer-events-none z-[30]">
         {formData.stickers.map((sticker) => (
           <div key={sticker.id} className={cn("absolute pointer-events-auto", activeStickerId === sticker.id ? "ring-2 ring-primary rounded-xl" : "")} style={{ left: `${sticker.x}%`, top: `${sticker.y}%`, transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`, touchAction: 'none' }}>
@@ -307,17 +307,17 @@ export default function ProfilePage() {
           <DialogHeader>
             <DialogTitle className="text-sm font-black uppercase text-center text-primary">Optimize Profile</DialogTitle>
           </DialogHeader>
-          <div className="space-y-6 py-4">
+          <div className="space-y-8 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Banner Layout</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Banner Area</Label>
                 <div className="relative aspect-video bg-muted rounded-2xl overflow-hidden border border-muted-foreground/10 cursor-pointer hover:border-primary/50 transition-all group" onClick={() => bannerInputRef.current?.click()}>
                   {formData.banner ? <Image src={formData.banner} alt="Banner" fill className="object-cover group-hover:scale-105 transition-transform" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized={true} /> : <div className="w-full h-full flex items-center justify-center"><ImageIcon size={20} className="text-muted-foreground/30" /></div>}
                   <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"><Camera size={20} className="text-white" /></div>
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Profile Logo</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Logo Area</Label>
                 <div className="relative aspect-video bg-muted rounded-2xl overflow-hidden border border-muted-foreground/10 cursor-pointer hover:border-primary/50 transition-all group flex items-center justify-center" onClick={() => profileInputRef.current?.click()}>
                   <Avatar className="h-14 w-14 border-2 border-white shadow-md group-hover:scale-110 transition-transform"><AvatarImage src={formData.profilePic} className="object-cover" /><AvatarFallback className="text-xl font-black">{formData.name?.[0] || "U"}</AvatarFallback></Avatar>
                   <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"><Camera size={20} className="text-white" /></div>
@@ -337,7 +337,7 @@ export default function ProfilePage() {
             </div>
 
             <div className="space-y-3">
-              <Label className="text-[10px] font-black uppercase tracking-widest ml-1 flex items-center gap-2"><PaintBucket size={14} /> Light Theme Colors</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest ml-1 flex items-center gap-2"><PaintBucket size={14} /> Soft Theme Colors</Label>
               <div className="flex flex-wrap gap-2 p-1">
                 {PALETTE.map(c => (
                   <button key={c} onClick={() => setFormData(prev => ({ ...prev, customColors: { ...prev.customColors, background: c } }))} className="w-8 h-8 rounded-full border-2 border-white shadow-sm transition-transform active:scale-90" style={{ backgroundColor: c }} />
@@ -384,3 +384,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+
