@@ -60,7 +60,7 @@ export default function ChatPage() {
   return (
     <div className="max-w-md mx-auto min-h-screen bg-background pt-8 pb-24">
       <div className="px-6 mb-8 flex items-center justify-between">
-        <h1 className="text-3xl font-black text-primary uppercase tracking-tighter">Innovations</h1>
+        <h1 className="text-3xl font-black text-primary uppercase tracking-tighter">Sphere Inbox</h1>
       </div>
 
       <div className="px-6 mb-8">
@@ -81,13 +81,13 @@ export default function ChatPage() {
             value="messages" 
             className="rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-0 py-4 text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2 shrink-0"
           >
-            <MessageSquare size={14} /> Chats
+            <MessageSquare size={14} /> Direct Chats
           </TabsTrigger>
           <TabsTrigger 
             value="groups" 
             className="rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-0 py-4 text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2 shrink-0"
           >
-            <Users size={14} /> Groups
+            <Users size={14} /> Innovation Groups
           </TabsTrigger>
         </TabsList>
 
@@ -105,7 +105,7 @@ export default function ChatPage() {
                     <AvatarFallback className="bg-primary/5 text-primary font-black uppercase">{msg.senderId[0]}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-black text-sm uppercase tracking-tight text-foreground truncate">Direct Message</h3>
+                    <h3 className="font-black text-sm uppercase tracking-tight text-foreground truncate">Chat History</h3>
                     <p className="text-[12px] text-muted-foreground line-clamp-1 mt-0.5 font-medium">{msg.text}</p>
                   </div>
                   <ChevronRight size={16} className="text-muted-foreground shrink-0" />

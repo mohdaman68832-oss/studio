@@ -9,7 +9,8 @@ import {
   Plus, RotateCw, Pencil, Loader2, 
   ChevronLeft, PaintBucket,
   Check, Layout, Square, User, List,
-  Image as LucideImage, Video, Type
+  Image as LucideImage, Video, Type,
+  X
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -188,81 +189,11 @@ export default function ProfilePage() {
   return (
     <div 
       ref={containerRef}
-      className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden"
+      className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden flex flex-col"
       style={{ backgroundColor: formData.customColors.background || "var(--background)" }}
     >
-      <div className="px-6 flex justify-between items-center py-5 relative z-[100]" style={{ backgroundColor: formData.customColors.header }}>
-        <h1 className="text-2xl font-black uppercase tracking-tighter" style={{ color: getContrastColor(formData.customColors.header) }}>Sphere Profile</h1>
-        <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setIsSettingsOpen(true)}><Settings size={24} style={{ color: getContrastColor(formData.customColors.header) }} /></Button>
-      </div>
-
-      <div className="relative z-50" style={{ backgroundColor: formData.customColors.userInfo }}>
-        <div className="relative h-56 w-full bg-muted overflow-hidden">
-          <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized={true} />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-transparent pointer-events-none" />
-        </div>
-        <div className="px-6 -mt-20 flex flex-col items-center relative z-10 pb-10">
-          <Avatar className="h-36 w-36 border-4 border-white bg-white shadow-2xl">
-            <AvatarImage src={formData.profilePic} className="object-cover" />
-            <AvatarFallback className="text-2xl font-black uppercase">{formData.name?.[0] || "U"}</AvatarFallback>
-          </Avatar>
-          <div className="text-center mt-6">
-            <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(formData.customColors.userInfo) }}>{formData.name || user.displayName || "Innovator"}</h2>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(formData.customColors.userInfo) }}>Master of Innovations</p>
-          </div>
-          <div className="p-8 rounded-[3rem] border w-full mt-8 shadow-xl" style={{ backgroundColor: formData.customColors.bioCard || "#FFFFFF" }}>
-            <p className="text-center text-[13px] leading-relaxed font-bold italic" style={{ color: getContrastColor(formData.customColors.bioCard) }}>
-              {formData.bio || "Building the future of shared intelligence in the sphere."}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="relative z-40 py-12 px-10" style={{ backgroundColor: formData.customColors.statsSection }}>
-        <div className="grid grid-cols-3 gap-8 w-full">
-          <div className="text-center">
-            <p className="text-2xl font-black tracking-tighter" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{profileData?.totalIdeasPosted || 0}</p>
-            <p className="text-[9px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(formData.customColors.statsSection) }}>Ideas</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-black tracking-tighter" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{(profileData?.totalViewsReceived || 0).toLocaleString()}</p>
-            <p className="text-[9px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(formData.customColors.statsSection) }}>Views</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-black tracking-tighter" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{(profileData?.totalIdeasSaved || 0).toLocaleString()}</p>
-            <p className="text-[9px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(formData.customColors.statsSection) }}>Saves</p>
-          </div>
-        </div>
-      </div>
-
-      <Tabs defaultValue="photo" className="w-full relative z-30">
-        <div style={{ backgroundColor: formData.customColors.tabsList }}>
-          <TabsList className="w-full bg-transparent border-none rounded-none px-6 h-16">
-            <TabsTrigger value="photo" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
-              <LucideImage size={24} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
-            </TabsTrigger>
-            <TabsTrigger value="video" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
-              <Video size={24} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
-            </TabsTrigger>
-            <TabsTrigger value="text" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
-              <Type size={24} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
-            </TabsTrigger>
-          </TabsList>
-        </div>
-        <div className="min-h-[400px] pb-32" style={{ backgroundColor: formData.customColors.tabsContent }}>
-          <TabsContent value="photo" className="mt-0 py-20 text-center">
-            <p className="opacity-20 text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(formData.customColors.tabsContent) }}>Empty Canvas</p>
-          </TabsContent>
-          <TabsContent value="video" className="mt-0 py-20 text-center">
-            <p className="opacity-20 text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(formData.customColors.tabsContent) }}>No Screen Records</p>
-          </TabsContent>
-          <TabsContent value="text" className="mt-0 py-20 text-center">
-            <p className="opacity-20 text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(formData.customColors.tabsContent) }}>No Typed Concepts</p>
-          </TabsContent>
-        </div>
-      </Tabs>
-
-      <div className="absolute inset-0 pointer-events-none z-[150]">
+      {/* Stickers Layer - Placed BEHIND UI elements using lower z-index */}
+      <div className="absolute inset-0 pointer-events-none z-[10]">
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
@@ -292,6 +223,82 @@ export default function ProfilePage() {
         ))}
       </div>
 
+      {/* Header - Higher z-index to stay above stickers */}
+      <div className="px-6 flex justify-between items-center py-5 relative z-[100]" style={{ backgroundColor: formData.customColors.header }}>
+        <h1 className="text-2xl font-black uppercase tracking-tighter" style={{ color: getContrastColor(formData.customColors.header) }}>Sphere Profile</h1>
+        <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setIsSettingsOpen(true)}><Settings size={24} style={{ color: getContrastColor(formData.customColors.header) }} /></Button>
+      </div>
+
+      {/* User Info Section - Higher z-index */}
+      <div className="relative z-[100]" style={{ backgroundColor: formData.customColors.userInfo }}>
+        <div className="relative h-56 w-full bg-muted overflow-hidden">
+          <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized={true} />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-transparent pointer-events-none" />
+        </div>
+        <div className="px-6 -mt-20 flex flex-col items-center relative z-[101] pb-10">
+          <Avatar className="h-36 w-36 border-4 border-white bg-white shadow-2xl">
+            <AvatarImage src={formData.profilePic} className="object-cover" />
+            <AvatarFallback className="text-2xl font-black uppercase">{formData.name?.[0] || "U"}</AvatarFallback>
+          </Avatar>
+          <div className="text-center mt-6">
+            <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(formData.customColors.userInfo) }}>{formData.name || user.displayName || "Innovator"}</h2>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(formData.customColors.userInfo) }}>Master of Innovations</p>
+          </div>
+          <div className="p-8 rounded-[3rem] border w-full mt-8 shadow-xl" style={{ backgroundColor: formData.customColors.bioCard || "#FFFFFF" }}>
+            <p className="text-center text-[13px] leading-relaxed font-bold italic" style={{ color: getContrastColor(formData.customColors.bioCard) }}>
+              {formData.bio || "Building the future of shared intelligence in the sphere."}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Impact Hub - Higher z-index */}
+      <div className="relative z-[100] py-12 px-10" style={{ backgroundColor: formData.customColors.statsSection }}>
+        <div className="grid grid-cols-3 gap-8 w-full">
+          <div className="text-center">
+            <p className="text-2xl font-black tracking-tighter" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{profileData?.totalIdeasPosted || 0}</p>
+            <p className="text-[9px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(formData.customColors.statsSection) }}>Ideas</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-black tracking-tighter" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{(profileData?.totalViewsReceived || 0).toLocaleString()}</p>
+            <p className="text-[9px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(formData.customColors.statsSection) }}>Views</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-black tracking-tighter" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{(profileData?.totalIdeasSaved || 0).toLocaleString()}</p>
+            <p className="text-[9px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(formData.customColors.statsSection) }}>Saves</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs - Higher z-index */}
+      <Tabs defaultValue="photo" className="w-full relative z-[100]">
+        <div style={{ backgroundColor: formData.customColors.tabsList }}>
+          <TabsList className="w-full bg-transparent border-none rounded-none px-6 h-16">
+            <TabsTrigger value="photo" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
+              <LucideImage size={24} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
+            </TabsTrigger>
+            <TabsTrigger value="video" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
+              <Video size={24} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
+            </TabsTrigger>
+            <TabsTrigger value="text" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
+              <Type size={24} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
+            </TabsTrigger>
+          </TabsList>
+        </div>
+        <div className="min-h-[400px] pb-32" style={{ backgroundColor: formData.customColors.tabsContent }}>
+          <TabsContent value="photo" className="mt-0 py-20 text-center">
+            <p className="opacity-20 text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(formData.customColors.tabsContent) }}>Empty Canvas</p>
+          </TabsContent>
+          <TabsContent value="video" className="mt-0 py-20 text-center">
+            <p className="opacity-20 text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(formData.customColors.tabsContent) }}>No Screen Records</p>
+          </TabsContent>
+          <TabsContent value="text" className="mt-0 py-20 text-center">
+            <p className="opacity-20 text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(formData.customColors.tabsContent) }}>No Typed Concepts</p>
+          </TabsContent>
+        </div>
+      </Tabs>
+
+      {/* Edit Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <DialogContent 
           onOpenAutoFocus={(e) => e.preventDefault()}
@@ -345,7 +352,7 @@ export default function ProfilePage() {
                   <span className="text-[8px] font-black uppercase tracking-widest">Profile Box</span>
                   <div className="w-8 h-2 rounded-full border" style={{ backgroundColor: formData.customColors.userInfo || '#F3F4F6' }} />
                 </Button>
-                <Button variant="outline" className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted" onClick={() => openPickerFor('bioArea')}>
+                <Button variant="outline" className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted" onClick={() => openPickerFor('bioCard')}>
                   <span className="text-[8px] font-black uppercase tracking-widest">Bio Area</span>
                   <div className="w-8 h-2 rounded-full border" style={{ backgroundColor: formData.customColors.bioCard || '#F3F4F6' }} />
                 </Button>
