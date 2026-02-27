@@ -61,7 +61,7 @@ export default function ChatPage() {
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
           <Input 
-            placeholder="Search conversations..." 
+            placeholder="Search messages..." 
             className="pl-12 h-14 bg-white border-none rounded-2xl shadow-xl focus-visible:ring-primary/20 text-sm font-medium"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -107,7 +107,7 @@ export default function ChatPage() {
             ) : (
               <>
                 <MessageSquare size={48} className="mx-auto" />
-                <p className="text-[10px] font-black uppercase tracking-[0.2em]">No conversations yet</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em]">No messages yet</p>
               </>
             )}
           </div>

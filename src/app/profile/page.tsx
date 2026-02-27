@@ -17,7 +17,8 @@ import {
   UserCog,
   Trash2,
   RotateCcw,
-  Maximize
+  Maximize,
+  CheckCircle
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -179,8 +180,8 @@ export default function ProfilePage() {
         const newId = Math.random().toString(36).substr(2, 9);
         const newSticker = { id: newId, url: base64, x: 50, y: 50, rotation: 0, scale: 1 };
         setFormData(prev => ({ ...prev, stickers: [...prev.stickers, newSticker] }));
-        setIsOptimizeModalOpen(false); // Close modal to enter studio mode
-        setEditingStickerId(newId); // Enter edit mode for this new sticker
+        setIsOptimizeModalOpen(false); // Close modal automatically
+        setEditingStickerId(newId); // Open studio mode
       }
     }
   };
@@ -193,13 +194,12 @@ export default function ProfilePage() {
 
   // Sticker Interaction Handlers
   const handleStickerPointerDown = (e: React.PointerEvent, id: string) => {
-    if (editingStickerId !== id) return;
     setIsDragging(true);
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
   };
 
   const handleStickerPointerMove = (e: React.PointerEvent, id: string) => {
-    if (!isDragging || editingStickerId !== id || !containerRef.current) return;
+    if (!isDragging || !containerRef.current) return;
     
     const rect = containerRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
@@ -250,7 +250,7 @@ export default function ProfilePage() {
          <div className="flex-1 w-full min-h-[50vh]" style={{ backgroundColor: colors.tabsContent }} />
       </div>
 
-      {/* Layer: Stickers (z-index 40) - On top of Banner/Logo, behind Interactive Buttons */}
+      {/* Layer: Stickers (z-index 40) - On top of Banner/Logo, behind UI text */}
       <div className="absolute inset-0 z-40 pointer-events-none">
         {formData.stickers.map((sticker) => (
           <div 
@@ -264,14 +264,10 @@ export default function ProfilePage() {
               top: `${sticker.y}%`, 
               transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`, 
             }}
-            onPointerDown={(e) => {
-              if (editingStickerId) handleStickerPointerDown(e, sticker.id);
-            }}
-            onPointerMove={(e) => {
-              if (editingStickerId) handleStickerPointerMove(e, sticker.id);
-            }}
+            onPointerDown={(e) => handleStickerPointerDown(e, sticker.id)}
+            onPointerMove={(e) => handleStickerPointerMove(e, sticker.id)}
             onPointerUp={handleStickerPointerUp}
-            onClick={() => editingStickerId ? setEditingStickerId(sticker.id) : null}
+            onClick={() => setEditingStickerId(sticker.id)}
           >
             <div className="relative w-24 h-24">
               <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized />
@@ -367,7 +363,7 @@ export default function ProfilePage() {
         </Tabs>
       </div>
 
-      {/* STICKER STUDIO HUD */}
+      {/* STICKER STUDIO HUD (Scale/Rotate Controls) */}
       {editingStickerId && activeSticker && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[1000] w-[90%] max-w-sm bg-white/95 backdrop-blur-md rounded-[2.5rem] border shadow-2xl p-6 animate-in slide-in-from-bottom-4">
           <div className="space-y-6">
@@ -381,7 +377,7 @@ export default function ProfilePage() {
             <div className="space-y-4">
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-[8px] font-black uppercase opacity-50">
-                  <span>Scale</span>
+                  <span>Scale (Size)</span>
                   <span>{Math.round(activeSticker.scale * 100)}%</span>
                 </div>
                 <Slider 
@@ -409,7 +405,7 @@ export default function ProfilePage() {
                  <Trash2 size={16} className="mr-2" /> Delete
                </Button>
                <Button className="flex-1 rounded-2xl font-black uppercase text-[10px] h-11 bg-primary text-white" onClick={() => setEditingStickerId(null)}>
-                 <CheckCircle size={16} className="mr-2" /> Save Placement
+                 <CheckCircle size={16} className="mr-2" /> Done
                </Button>
             </div>
           </div>
@@ -427,7 +423,7 @@ export default function ProfilePage() {
           </DialogHeader>
 
           <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar">
-            {/* Banner Section */}
+            {/* Banner Section (Preview on Top) */}
             <div className="space-y-4">
                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Profile Banner</Label>
                <div 
@@ -439,7 +435,7 @@ export default function ProfilePage() {
                </div>
             </div>
 
-            {/* Logo Section */}
+            {/* Logo Section (Logo Below Banner) */}
             <div className="space-y-4">
                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Identity Logo</Label>
                <div className="flex items-center gap-4">
@@ -495,7 +491,7 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Sticker Upload */}
+            {/* Sticker Management */}
             <div className="space-y-4 pb-4">
               <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Custom Stickers</Label>
               <Button 
@@ -527,7 +523,7 @@ export default function ProfilePage() {
         </DialogContent>
       </Dialog>
 
-      {/* BANNER DETAIL PAGE/OVERLAY */}
+      {/* BANNER DETAIL OVERLAY */}
       <Dialog open={showBannerDetail} onOpenChange={setShowBannerDetail}>
         <DialogContent className="max-w-md w-[95%] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl h-[85vh] flex flex-col">
           <DialogHeader className="p-6 shrink-0 border-b flex flex-row items-center justify-between">
@@ -579,25 +575,5 @@ export default function ProfilePage() {
         </DialogContent>
       </Dialog>
     </div>
-  );
-}
-
-// Sub-component for icons that might not be in lucide
-function CheckCircle({ size, className }: { size: number; className?: string }) {
-  return (
-    <svg 
-      width={size} 
-      height={size} 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
-      className={className}
-    >
-      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-      <polyline points="22 4 12 14.01 9 11.01" />
-    </svg>
   );
 }
