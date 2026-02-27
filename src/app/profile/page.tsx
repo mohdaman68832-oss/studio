@@ -200,7 +200,9 @@ export default function ProfilePage() {
   const handleStickerPointerDown = (e: React.PointerEvent, stickerId: string) => {
     if (activeStickerId !== stickerId || isPaintMode) return;
     e.stopPropagation();
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch (err) {}
     setDraggedStickerId(stickerId);
   };
 
@@ -217,7 +219,11 @@ export default function ProfilePage() {
 
   const handleStickerPointerUp = async (e: React.PointerEvent, stickerId: string) => {
     if (draggedStickerId === stickerId) {
-      (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+      try {
+        if ((e.currentTarget as HTMLElement).hasPointerCapture(e.pointerId)) {
+          (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+        }
+      } catch (err) {}
       setDraggedStickerId(null);
       await saveToFirestore({ stickers: formData.stickers });
     }
@@ -226,7 +232,9 @@ export default function ProfilePage() {
   const handleBannerDragStart = (e: React.PointerEvent) => {
     setIsDraggingBanner(true);
     setDragStartY(e.clientY);
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch (err) {}
   };
 
   const handleBannerDragMove = (e: React.PointerEvent) => {
@@ -239,7 +247,11 @@ export default function ProfilePage() {
 
   const handleBannerDragEnd = (e: React.PointerEvent) => {
     setIsDraggingBanner(false);
-    (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+    try {
+      if ((e.currentTarget as HTMLElement).hasPointerCapture(e.pointerId)) {
+        (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+      }
+    } catch (err) {}
   };
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'banner' | 'sticker') => {
@@ -630,9 +642,10 @@ export default function ProfilePage() {
                   />
                </div>
                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest">Bio Description</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest">Bio Description (Max 160)</Label>
                   <Textarea 
                     value={formData.bio} 
+                    maxLength={160}
                     onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))} 
                     placeholder="Tell your story..."
                     className="rounded-2xl bg-muted/20 border-none min-h-[100px]" 
