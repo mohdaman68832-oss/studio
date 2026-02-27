@@ -55,8 +55,7 @@ service cloud.firestore {
 
     // Notifications: Fixed permission error for listing with owner check.
     match /notifications/{notifId} {
-      // Allow read if the user is the recipient. 
-      // Firestore automatically filters lists based on these conditions if the query matches.
+      // Allow list if the user is the recipient.
       allow read: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
@@ -65,7 +64,7 @@ service cloud.firestore {
     // Follows: Publicly visible for mutual follow checks.
     match /follows/{followId} {
       allow read: if true;
-      allow write: if isSignedIn();
+      allow write: if isSignedIn() && (request.auth.uid == request.resource.data.followerId || followId.startsWith(request.auth.uid));
     }
 
     // Global catch-all

@@ -146,7 +146,7 @@ export default function ProfilePage() {
         customColors: formData.customColors,
         updatedAt: new Date().toISOString()
       });
-      toast({ title: "Success", description: "Profile layout published!" });
+      toast({ title: "Success", description: "Profile theme published!" });
       setIsEditModalOpen(false);
     } catch (error: any) {
       toast({ variant: "destructive", title: "Update Failed", description: error.message });
@@ -613,7 +613,7 @@ export default function ProfilePage() {
           </div>
           <DialogFooter className="mt-4 pt-4 border-t">
             <Button className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase shadow-xl" onClick={handleSaveProfile} disabled={isSaving}>
-              {isSaving ? <Loader2 className="animate-spin mr-2" /> : "Publish Profile"}
+              {isSaving ? <Loader2 className="animate-spin mr-2" /> : "Publish Theme"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -654,7 +654,7 @@ export default function ProfilePage() {
         <SheetContent side="bottom" className="rounded-t-[3rem] p-6 border-none z-[4000]">
           <SheetHeader><SheetTitle className="text-[10px] font-black uppercase tracking-widest text-center">Settings</SheetTitle></SheetHeader>
           <div className="space-y-3 mt-8">
-            <Button variant="outline" className="w-full justify-start h-14 rounded-2xl px-6 gap-4 border-primary/20 text-primary font-black uppercase tracking-widest" onClick={() => { setIsSettingsOpen(false); setIsEditModalOpen(true); }}><Pencil size={18} /> Edit Profile Layout</Button>
+            <Button variant="outline" className="w-full justify-start h-14 rounded-2xl px-6 gap-4 border-primary/20 text-primary font-black uppercase tracking-widest" onClick={() => { setIsSettingsOpen(false); setIsEditModalOpen(true); }}><Pencil size={18} /> Edit Profile Theme</Button>
             <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start h-14 rounded-2xl px-6 gap-4 text-secondary font-black uppercase tracking-widest hover:bg-secondary/10"><LogOut size={18} /> Sign Out</Button>
           </div>
         </SheetContent>
