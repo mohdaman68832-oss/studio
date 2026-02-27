@@ -20,7 +20,7 @@ import Image from "next/image";
 import { useUser, useAuth, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { signOut, updateProfile } from "firebase/auth";
 import { doc, updateDoc } from "firebase/firestore";
-import { useRouter } from "next/navigation";
+import { useRouter } from "navigation";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -44,9 +44,9 @@ interface CustomColors {
 }
 
 const COLOR_CATEGORIES = {
-  "Light": ["#FFFFFF", "#F8FAFC", "#F0FDF4", "#ECFDF5", "#EFF6FF", "#F5F3FF", "#FDF2F8", "#FFF7ED", "#FFFBEB", "#FEF2F2", "#ECFEFF", "#F5F5F5"],
+  "Light (Pastels)": ["#FFFFFF", "#F8FAFC", "#F0FDF4", "#ECFDF5", "#EFF6FF", "#F5F3FF", "#FDF2F8", "#FFF7ED", "#FFFBEB", "#FEF2F2", "#ECFEFF", "#F5F5F5"],
   "Vibrant": ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899", "#06B6D4", "#F97316", "#14B8A6", "#6366F1"],
-  "Dark": ["#0F172A", "#18181B", "#171717", "#1C1917", "#450A0A", "#422006", "#3F2E0E", "#064E3B", "#134E4A", "#1E1B4B", "#312E81", "#4C1D95", "#581C87", "#701A75", "#831843", "#7F1D1D"]
+  "Dark & Deep": ["#0F172A", "#18181B", "#171717", "#1C1917", "#450A0A", "#422006", "#3F2E0E", "#064E3B", "#134E4A", "#1E1B4B", "#312E81", "#4C1D95", "#581C87", "#701A75", "#831843", "#7F1D1D"]
 };
 
 function getContrastColor(hexColor: string | undefined): string {
@@ -130,6 +130,7 @@ export default function ProfilePage() {
     if (!user || !profileRef) return;
     setIsSaving(true);
     try {
+      // Avoid saving Base64 to Firebase Auth if it's too long
       await updateProfile(user, { displayName: formData.name });
       
       await updateDoc(profileRef, {
@@ -192,11 +193,12 @@ export default function ProfilePage() {
       customColors: {
         ...prev.customColors,
         background: hex,
-        header: hex, // Optional: auto-sync header color for better look
+        header: hex,
         tabsList: hex,
         tabsContent: hex,
         userInfo: hex,
-        statsSection: hex
+        statsSection: hex,
+        bioCard: hex === '#FFFFFF' ? '#FFFFFF' : hex // Adjust bio card logic if needed
       }
     }));
     setIsColorPickerOpen(false);
@@ -321,34 +323,36 @@ export default function ProfilePage() {
             <DialogTitle className="text-sm font-black uppercase text-center text-primary tracking-[0.2em]">Optimize Profile</DialogTitle>
           </DialogHeader>
           <div className="space-y-8 py-4">
-            {/* Visual Previews: Banner then Logo */}
-            <div className="space-y-4">
-               <Label className="text-[10px] font-black uppercase tracking-widest ml-1 text-muted-foreground">Appearance Preview</Label>
-               
-               {/* Banner Preview */}
-               <div 
-                 className="relative h-28 w-full rounded-3xl overflow-hidden border-4 border-white bg-muted shadow-lg group cursor-pointer transition-transform active:scale-95"
-                 onClick={() => bannerInputRef.current?.click()}
-               >
-                 <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="Banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized={true} />
-                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                   <div className="bg-white/20 backdrop-blur-md rounded-full p-2"><Camera className="text-white" size={20} /></div>
-                 </div>
-               </div>
-
-               {/* Logo Preview */}
-               <div className="flex justify-center -mt-10 relative z-10">
+            {/* Visual Previews: Banner then Logo Below */}
+            <div className="space-y-6">
+               <div className="space-y-2">
+                 <Label className="text-[10px] font-black uppercase tracking-widest ml-1 text-muted-foreground">Banner Preview</Label>
                  <div 
-                   className="relative h-24 w-24 rounded-full border-4 border-white bg-white shadow-xl group cursor-pointer overflow-hidden transition-transform active:scale-95"
-                   onClick={() => profileInputRef.current?.click()}
+                   className="relative h-28 w-full rounded-3xl overflow-hidden border-4 border-white bg-muted shadow-lg group cursor-pointer transition-transform active:scale-95"
+                   onClick={() => bannerInputRef.current?.click()}
                  >
-                   <Image src={formData.profilePic} alt="Logo" fill className="object-cover" unoptimized={true} />
+                   <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="Banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized={true} />
                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                     <Camera className="text-white" size={20} />
+                     <div className="bg-white/20 backdrop-blur-md rounded-full p-2"><Camera className="text-white" size={20} /></div>
                    </div>
                  </div>
                </div>
-               <p className="text-[9px] text-muted-foreground font-black uppercase text-center tracking-widest opacity-60">Tap Banner or Logo to Change</p>
+
+               <div className="space-y-2">
+                 <Label className="text-[10px] font-black uppercase tracking-widest ml-1 text-muted-foreground">Logo Preview</Label>
+                 <div className="flex justify-center">
+                   <div 
+                     className="relative h-28 w-28 rounded-full border-4 border-white bg-white shadow-xl group cursor-pointer overflow-hidden transition-transform active:scale-95"
+                     onClick={() => profileInputRef.current?.click()}
+                   >
+                     <Image src={formData.profilePic} alt="Logo" fill className="object-cover" unoptimized={true} />
+                     <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                       <Camera className="text-white" size={24} />
+                     </div>
+                   </div>
+                 </div>
+               </div>
+               <p className="text-[9px] text-muted-foreground font-black uppercase text-center tracking-widest opacity-60">Tap Banner or Logo to Change Photo</p>
             </div>
 
             <div className="space-y-4 pt-2">
@@ -366,11 +370,11 @@ export default function ProfilePage() {
               <Label className="text-[10px] font-black uppercase tracking-widest ml-1 flex items-center justify-between">
                 <span className="flex items-center gap-2"><PaintBucket size={14} className="text-primary" /> Theme Customization</span>
                 <Button variant="ghost" className="h-auto p-0 text-[10px] font-black uppercase text-secondary hover:bg-transparent" onClick={() => setIsColorPickerOpen(true)}>
-                  Explore Gallery <ChevronLeft className="w-3 h-3 rotate-180 ml-1" />
+                  Color Gallery <ChevronLeft className="w-3 h-3 rotate-180 ml-1" />
                 </Button>
               </Label>
               <div className="grid grid-cols-6 gap-3">
-                {COLOR_CATEGORIES.Light.slice(0, 5).map(c => (
+                {COLOR_CATEGORIES["Light (Pastels)"].slice(0, 5).map(c => (
                   <button key={c} onClick={() => applyColor(c)} className="aspect-square rounded-full border-2 border-white shadow-md transition-all active:scale-75 relative" style={{ backgroundColor: c }}>
                     {formData.customColors.background === c && <Check size={12} className="absolute inset-0 m-auto text-primary" />}
                   </button>
@@ -410,7 +414,7 @@ export default function ProfilePage() {
         </DialogContent>
       </Dialog>
 
-      {/* FULL COLOR PICKER SHEET */}
+      {/* THEME GALLERY / COLOR WHEEL SHEET */}
       <Sheet open={isColorPickerOpen} onOpenChange={setIsColorPickerOpen}>
         <SheetContent side="bottom" className="rounded-t-[3rem] p-6 max-h-[85vh] overflow-y-auto no-scrollbar border-none z-[4000] shadow-2xl">
           <SheetHeader>
@@ -420,23 +424,32 @@ export default function ProfilePage() {
           </SheetHeader>
           
           <div className="space-y-10 mt-8 pb-32">
-            {/* Custom Picker Section */}
+            {/* COLOR WHEEL PICKER SECTION */}
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                  <h3 className="text-[10px] font-black uppercase tracking-widest text-secondary">Custom Palette Wheel</h3>
                  <div className="flex-1 h-px bg-secondary/10" />
               </div>
-              <div className="flex items-center gap-4 bg-secondary/5 p-4 rounded-3xl border border-secondary/10">
+              
+              <div className="flex items-center gap-6 bg-white p-6 rounded-[2.5rem] border shadow-sm group hover:border-primary transition-all active:scale-[0.98] cursor-pointer" onClick={() => customColorInputRef.current?.click()}>
                 <div 
-                  className="w-14 h-14 rounded-full border-4 border-white shadow-lg cursor-pointer flex items-center justify-center transition-transform active:scale-90"
-                  style={{ backgroundColor: formData.customColors.background || '#008080' }}
-                  onClick={() => customColorInputRef.current?.click()}
+                  className="w-24 h-24 rounded-full border-4 border-white shadow-xl flex items-center justify-center relative overflow-hidden"
+                  style={{ 
+                    background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)',
+                  }}
                 >
-                  <Pipette size={24} className="text-white drop-shadow-md" />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Pipette size={32} className="text-white drop-shadow-lg" />
+                  </div>
+                  <div className="absolute inset-2 rounded-full border border-white/30" />
                 </div>
-                <div className="flex-1">
-                  <p className="text-xs font-black uppercase text-foreground">Pick Your Hue</p>
-                  <p className="text-[10px] font-bold text-muted-foreground">Tap the circle for the color wheel.</p>
+                <div className="flex-1 space-y-1">
+                  <p className="text-sm font-black uppercase text-foreground">Pick From Wheel</p>
+                  <p className="text-[10px] font-bold text-muted-foreground leading-relaxed">Choose any unique shade from the infinite spectrum.</p>
+                  <div className="flex items-center gap-2 mt-2">
+                     <span className="h-4 w-4 rounded-full border" style={{ backgroundColor: formData.customColors.background || '#008080' }} />
+                     <span className="text-[9px] font-black uppercase opacity-60">Current: {formData.customColors.background || '#008080'}</span>
+                  </div>
                 </div>
                 <input 
                   type="color" 
@@ -450,7 +463,7 @@ export default function ProfilePage() {
             {Object.entries(COLOR_CATEGORIES).map(([category, colors]) => (
               <div key={category} className="space-y-4">
                 <div className="flex items-center gap-3">
-                   <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{category} Collection</h3>
+                   <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{category}</h3>
                    <div className="flex-1 h-px bg-muted" />
                 </div>
                 <div className="grid grid-cols-5 gap-4">
@@ -489,4 +502,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
