@@ -97,8 +97,8 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
          <div className="flex-1 w-full min-h-[50vh]" style={{ backgroundColor: colors.tabsContent }} />
       </div>
 
-      {/* Layer 1: Stickers (z-index 10) - Behind Main UI */}
-      <div className="absolute inset-0 z-10 pointer-events-none">
+      {/* Layer: Stickers (z-index 40) - On top of Banner/Logo */}
+      <div className="absolute inset-0 z-40 pointer-events-none">
         {stickers.map((sticker) => (
           <div 
             key={sticker.id} 
@@ -116,8 +116,8 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         ))}
       </div>
 
-      {/* Layer 2: Main UI Content (z-index 20) */}
-      <div className="absolute inset-0 flex flex-col m-0 p-0 z-20 pointer-events-none no-scrollbar overflow-y-auto">
+      {/* Layer: UI Content (z-index 50) */}
+      <div className="absolute inset-0 flex flex-col m-0 p-0 z-50 pointer-events-none no-scrollbar overflow-y-auto">
         <div className="px-6 flex justify-between items-center py-5 pointer-events-auto">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full"><ChevronLeft size={24} style={{ color: getContrastColor(colors.header) }} /></Button>
           <h1 className="text-lg font-black uppercase tracking-tighter" style={{ color: getContrastColor(colors.header) }}>@{profileData.username}</h1>

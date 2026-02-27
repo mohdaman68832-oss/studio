@@ -14,7 +14,10 @@ import {
   Monitor,
   Smartphone,
   ChevronRight,
-  UserCog
+  UserCog,
+  Trash2,
+  RotateCcw,
+  Maximize
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -27,6 +30,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Slider } from "@/components/ui/slider";
 import Image from "next/image";
 import { useUser, useAuth, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { signOut, updateProfile } from "firebase/auth";
@@ -92,6 +96,11 @@ export default function ProfilePage() {
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [activeColorSection, setActiveColorSection] = useState<ColorSection | null>(null);
+  
+  // Sticker Studio State
+  const [editingStickerId, setEditingStickerId] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const profileInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
@@ -165,11 +174,13 @@ export default function ProfilePage() {
       if (type === 'profile') setFormData(prev => ({ ...prev, profilePic: base64 }));
       else if (type === 'banner') {
         setFormData(prev => ({ ...prev, banner: base64 }));
-        setShowBannerDetail(false);
       }
       else if (type === 'sticker') {
-        const newSticker = { id: Math.random().toString(36).substr(2, 9), url: base64, x: 50, y: 50, rotation: 0, scale: 1 };
+        const newId = Math.random().toString(36).substr(2, 9);
+        const newSticker = { id: newId, url: base64, x: 50, y: 50, rotation: 0, scale: 1 };
         setFormData(prev => ({ ...prev, stickers: [...prev.stickers, newSticker] }));
+        setIsOptimizeModalOpen(false); // Close modal to enter studio mode
+        setEditingStickerId(newId); // Enter edit mode for this new sticker
       }
     }
   };
@@ -180,17 +191,58 @@ export default function ProfilePage() {
     setIsColorPickerOpen(false);
   };
 
+  // Sticker Interaction Handlers
+  const handleStickerPointerDown = (e: React.PointerEvent, id: string) => {
+    if (editingStickerId !== id) return;
+    setIsDragging(true);
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  };
+
+  const handleStickerPointerMove = (e: React.PointerEvent, id: string) => {
+    if (!isDragging || editingStickerId !== id || !containerRef.current) return;
+    
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+    setFormData(prev => ({
+      ...prev,
+      stickers: prev.stickers.map(s => s.id === id ? { ...s, x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) } : s)
+    }));
+  };
+
+  const handleStickerPointerUp = () => {
+    setIsDragging(false);
+  };
+
+  const updateSticker = (id: string, updates: Partial<Sticker>) => {
+    setFormData(prev => ({
+      ...prev,
+      stickers: prev.stickers.map(s => s.id === id ? { ...s, ...updates } : s)
+    }));
+  };
+
+  const deleteSticker = (id: string) => {
+    setFormData(prev => ({
+      ...prev,
+      stickers: prev.stickers.filter(s => s.id !== id)
+    }));
+    setEditingStickerId(null);
+  };
+
   if (isUserLoading || isProfileLoading) return <div className="max-w-md mx-auto min-h-screen flex items-center justify-center bg-background"><Loader2 className="animate-spin text-primary h-8 w-8" /></div>;
   if (!user) return null;
 
   const colors = formData.customColors;
+  const activeSticker = formData.stickers.find(s => s.id === editingStickerId);
 
   return (
     <div 
       className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-hidden flex flex-col m-0 p-0 no-scrollbar"
       style={{ backgroundColor: colors.background || "var(--background)" }}
+      ref={containerRef}
     >
-      {/* Background Sections (Tiled) */}
+      {/* Background Sections (Seamless) */}
       <div className="flex flex-col m-0 p-0 relative z-0 shrink-0">
          <div className="h-16 w-full" style={{ backgroundColor: colors.header }} />
          <div className="h-[28rem] w-full" style={{ backgroundColor: colors.userInfo }} />
@@ -198,17 +250,28 @@ export default function ProfilePage() {
          <div className="flex-1 w-full min-h-[50vh]" style={{ backgroundColor: colors.tabsContent }} />
       </div>
 
-      {/* Layer 1: Stickers (z-index 10) - Behind Main UI */}
-      <div className="absolute inset-0 z-10 pointer-events-none">
+      {/* Layer: Stickers (z-index 40) - On top of Banner/Logo, behind Interactive Buttons */}
+      <div className="absolute inset-0 z-40 pointer-events-none">
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
-            className="absolute" 
+            className={cn(
+              "absolute pointer-events-auto cursor-move select-none",
+              editingStickerId === sticker.id && "ring-2 ring-primary ring-offset-2 rounded-lg"
+            )} 
             style={{ 
               left: `${sticker.x}%`, 
               top: `${sticker.y}%`, 
               transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`, 
             }}
+            onPointerDown={(e) => {
+              if (editingStickerId) handleStickerPointerDown(e, sticker.id);
+            }}
+            onPointerMove={(e) => {
+              if (editingStickerId) handleStickerPointerMove(e, sticker.id);
+            }}
+            onPointerUp={handleStickerPointerUp}
+            onClick={() => editingStickerId ? setEditingStickerId(sticker.id) : null}
           >
             <div className="relative w-24 h-24">
               <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized />
@@ -217,8 +280,8 @@ export default function ProfilePage() {
         ))}
       </div>
 
-      {/* Layer 2: Main UI Content (z-index 20) */}
-      <div className="absolute inset-0 flex flex-col m-0 p-0 z-20 pointer-events-none no-scrollbar overflow-y-auto">
+      {/* Layer: UI Content (z-index 50) */}
+      <div className="absolute inset-0 flex flex-col m-0 p-0 z-50 pointer-events-none no-scrollbar overflow-y-auto">
         <header className="px-6 flex justify-between items-center py-5 pointer-events-auto">
           <h1 className="text-2xl font-black uppercase tracking-tighter" style={{ color: getContrastColor(colors.header) }}>Sphere</h1>
           <DropdownMenu>
@@ -303,6 +366,55 @@ export default function ProfilePage() {
           </div>
         </Tabs>
       </div>
+
+      {/* STICKER STUDIO HUD */}
+      {editingStickerId && activeSticker && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[1000] w-[90%] max-w-sm bg-white/95 backdrop-blur-md rounded-[2.5rem] border shadow-2xl p-6 animate-in slide-in-from-bottom-4">
+          <div className="space-y-6">
+            <header className="flex items-center justify-between">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Sticker Studio</h4>
+              <Button variant="ghost" size="icon" className="rounded-full h-8 w-8" onClick={() => setEditingStickerId(null)}>
+                <X size={16} />
+              </Button>
+            </header>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-[8px] font-black uppercase opacity-50">
+                  <span>Scale</span>
+                  <span>{Math.round(activeSticker.scale * 100)}%</span>
+                </div>
+                <Slider 
+                  value={[activeSticker.scale]} 
+                  min={0.2} max={3} step={0.1} 
+                  onValueChange={([v]) => updateSticker(activeSticker.id, { scale: v })} 
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-[8px] font-black uppercase opacity-50">
+                  <span>Rotation</span>
+                  <span>{activeSticker.rotation}°</span>
+                </div>
+                <Slider 
+                  value={[activeSticker.rotation]} 
+                  min={-180} max={180} step={5} 
+                  onValueChange={([v]) => updateSticker(activeSticker.id, { rotation: v })} 
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+               <Button variant="destructive" className="flex-1 rounded-2xl font-black uppercase text-[10px] h-11" onClick={() => deleteSticker(activeSticker.id)}>
+                 <Trash2 size={16} className="mr-2" /> Delete
+               </Button>
+               <Button className="flex-1 rounded-2xl font-black uppercase text-[10px] h-11 bg-primary text-white" onClick={() => setEditingStickerId(null)}>
+                 <CheckCircle size={16} className="mr-2" /> Save Placement
+               </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* OPTIMIZE PROFILE DIALOG */}
       <Dialog open={isOptimizeModalOpen} onOpenChange={setIsOptimizeModalOpen}>
@@ -392,6 +504,14 @@ export default function ProfilePage() {
               >
                 <Plus size={18} className="mr-2" /> Upload New Sticker
               </Button>
+              <div className="flex flex-wrap gap-2">
+                {formData.stickers.map(s => (
+                  <div key={s.id} className="relative w-12 h-12 rounded-lg border overflow-hidden group">
+                    <Image src={s.url} alt="s" fill className="object-contain" />
+                    <button onClick={() => setEditingStickerId(s.id)} className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white"><Plus size={12} /></button>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -459,5 +579,25 @@ export default function ProfilePage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+// Sub-component for icons that might not be in lucide
+function CheckCircle({ size, className }: { size: number; className?: string }) {
+  return (
+    <svg 
+      width={size} 
+      height={size} 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      className={className}
+    >
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+      <polyline points="22 4 12 14.01 9 11.01" />
+    </svg>
   );
 }
