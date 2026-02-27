@@ -86,36 +86,26 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
 
   return (
     <div 
-      className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden flex flex-col m-0 p-0 no-scrollbar" 
+      className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden flex flex-col no-scrollbar" 
       style={{ backgroundColor: colors.background || "var(--background)" }}
     >
-      {/* SEAMLESS BACKGROUND LAYERS (z-0) */}
-      <div className="flex flex-col m-0 p-0 relative z-0 shrink-0">
-         <div className="h-16 w-full" style={{ backgroundColor: colors.header }} />
-         <div className="h-[28rem] w-full" style={{ backgroundColor: colors.userInfo }} />
-         <div className="h-28 w-full" style={{ backgroundColor: colors.statsSection }} />
-         <div className="flex-1 w-full min-h-[50vh]" style={{ backgroundColor: colors.tabsContent }} />
-      </div>
+      {/* HEADER SECTION (Banner + Logo + Stickers) */}
+      <div className="relative w-full shrink-0">
+        <div className="h-16 w-full" style={{ backgroundColor: colors.header }} />
+        
+        <header className="absolute top-0 left-0 right-0 z-[50] px-6 flex justify-between items-center py-5">
+          <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full">
+            <ChevronLeft size={24} style={{ color: getContrastColor(colors.header) }} />
+          </Button>
+          <h1 className="text-lg font-black uppercase tracking-tighter" style={{ color: getContrastColor(colors.header) }}>@{profileData.username}</h1>
+          <div className="w-10" />
+        </header>
 
-      {/* IDENTITY LAYER (z-10) - Banner & Logo */}
-      <div className="absolute inset-0 z-10 pointer-events-none">
-        <div className="relative h-52 w-full bg-muted overflow-hidden">
-          <Image src={profileData.bannerUrl || `https://picsum.photos/seed/banner${profileData.id}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${profileData.bannerOffset || 50}%` }} unoptimized />
-        </div>
-        <div className="px-6 -mt-16 flex flex-col items-center pb-4">
-          <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl pointer-events-auto">
-            <AvatarImage src={profileData.profilePictureUrl} className="object-cover" />
-            <AvatarFallback className="text-2xl font-black uppercase">{profileData.username?.[0]}</AvatarFallback>
-          </Avatar>
-        </div>
-      </div>
-
-      {/* STICKERS LAYER (z-20) - On top of Banner/Logo, but behind UI elements */}
-      <div className="absolute inset-0 z-20 pointer-events-none">
+        {/* STICKERS LAYER (Behind Text/Buttons, Above Banner/Logo) */}
         {stickers.map((sticker) => (
           <div 
             key={sticker.id} 
-            className="absolute pointer-events-none select-none" 
+            className="absolute pointer-events-none select-none z-[20]" 
             style={{ 
               left: `${sticker.x}%`, 
               top: `${sticker.y}%`, 
@@ -127,59 +117,66 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
             </div>
           </div>
         ))}
+
+        <div className="relative h-52 w-full overflow-hidden z-[10]">
+          <Image src={profileData.bannerUrl || `https://picsum.photos/seed/banner${profileData.id}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${profileData.bannerOffset || 50}%` }} unoptimized />
+        </div>
+        
+        <div className="relative px-6 -mt-16 flex flex-col items-center z-[30]">
+          <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl">
+            <AvatarImage src={profileData.profilePictureUrl} className="object-cover" />
+            <AvatarFallback className="text-2xl font-black uppercase">{profileData.username?.[0]}</AvatarFallback>
+          </Avatar>
+        </div>
       </div>
 
-      {/* UI INTERACTIVE LAYER (z-30) - Name, Bio, Stats, Tabs */}
-      <div className="absolute inset-0 flex flex-col m-0 p-0 z-30 pointer-events-none no-scrollbar overflow-y-auto">
-        <div className="px-6 flex justify-between items-center py-5 pointer-events-auto">
-          <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full"><ChevronLeft size={24} style={{ color: getContrastColor(colors.header) }} /></Button>
-          <h1 className="text-lg font-black uppercase tracking-tighter" style={{ color: getContrastColor(colors.header) }}>@{profileData.username}</h1>
-          <div className="w-10" />
+      {/* USER INFO SECTION */}
+      <div style={{ backgroundColor: colors.userInfo || "transparent" }} className="w-full">
+        <div className="px-6 flex flex-col items-center pb-8 z-[30] relative">
+          <div className="text-center mt-4">
+            <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{profileData.name || profileData.username}</h2>
+            <p className="text-[10px] font-black tracking-[0.2em] uppercase opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>Sphere Innovator</p>
+          </div>
+          
+          <div className="flex gap-3 w-full mt-6 px-4">
+            <Button className={cn("flex-1 rounded-2xl font-black uppercase text-[10px] h-11 shadow-xl", isFollowing ? "bg-muted text-foreground" : "bg-primary text-white")} onClick={handleFollowToggle} disabled={followLoading || profileData.id === currentUser?.uid}>
+              {isFollowing ? <><UserCheck size={16} className="mr-2" /> Following</> : <><UserPlus size={16} className="mr-2" /> Follow</>}
+            </Button>
+            <Button variant="outline" className="flex-1 rounded-2xl font-black uppercase text-[10px] h-11 border-primary/20 text-primary bg-white shadow-lg" onClick={() => router.push(`/chat/${profileData.id}`)}>
+              <MessageSquare size={16} className="mr-2" /> Message
+            </Button>
+          </div>
+
+          <div className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-xl" style={{ backgroundColor: colors.bioCard || "#FFFFFF" }}>
+            <p className="text-center text-[12px] leading-relaxed font-bold italic" style={{ color: getContrastColor(colors.bioCard) }}>
+              {profileData.bio || "Innovating the future, one idea at a time."}
+            </p>
+          </div>
         </div>
+      </div>
 
-        <section className="relative">
-          <div className="h-52 w-full" />
-          <div className="px-6 -mt-16 flex flex-col items-center pb-4">
-            <div className="h-32 w-32" />
-            <div className="text-center mt-4">
-              <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{profileData.name || profileData.username}</h2>
-              <p className="text-[10px] font-black tracking-[0.2em] uppercase opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>Sphere Innovator</p>
-            </div>
-            <div className="flex gap-3 w-full mt-6 pointer-events-auto px-4">
-              <Button className={cn("flex-1 rounded-2xl font-black uppercase text-[10px] h-11 shadow-xl", isFollowing ? "bg-muted text-foreground" : "bg-primary text-white")} onClick={handleFollowToggle} disabled={followLoading || profileData.id === currentUser?.uid}>
-                {isFollowing ? <><UserCheck size={16} className="mr-2" /> Following</> : <><UserPlus size={16} className="mr-2" /> Follow</>}
-              </Button>
-              <Button variant="outline" className="flex-1 rounded-2xl font-black uppercase text-[10px] h-11 border-primary/20 text-primary bg-white shadow-lg" onClick={() => router.push(`/chat/${profileData.id}`)}>
-                <MessageSquare size={16} className="mr-2" /> Message
-              </Button>
-            </div>
-            <div className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-xl pointer-events-auto" style={{ backgroundColor: colors.bioCard || "#FFFFFF" }}>
-              <p className="text-center text-[12px] leading-relaxed font-bold italic" style={{ color: getContrastColor(colors.bioCard) }}>
-                {profileData.bio || "Innovating the future, one idea at a time."}
-              </p>
-            </div>
+      {/* STATS SECTION */}
+      <div style={{ backgroundColor: colors.statsSection || "transparent" }} className="w-full py-8 px-10 relative z-[30]">
+        <div className="grid grid-cols-3 gap-6 w-full">
+          <div className="text-center">
+            <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{profileData.totalIdeasPosted || 0}</p>
+            <p className="text-[8px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(colors.statsSection) }}>Ideas</p>
           </div>
-        </section>
-
-        <section className="py-8 px-10">
-          <div className="grid grid-cols-3 gap-6 w-full">
-            <div className="text-center">
-              <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{profileData.totalIdeasPosted || 0}</p>
-              <p className="text-[8px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(colors.statsSection) }}>Ideas</p>
-            </div>
-            <div className="text-center">
-              <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{(profileData.totalViewsReceived || 0).toLocaleString()}</p>
-              <p className="text-[8px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(colors.statsSection) }}>Views</p>
-            </div>
-            <div className="text-center">
-              <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{(profileData.totalIdeasSaved || 0).toLocaleString()}</p>
-              <p className="text-[8px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(colors.statsSection) }}>Saves</p>
-            </div>
+          <div className="text-center">
+            <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{(profileData.totalViewsReceived || 0).toLocaleString()}</p>
+            <p className="text-[8px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(colors.statsSection) }}>Views</p>
           </div>
-        </section>
+          <div className="text-center">
+            <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{(profileData.totalIdeasSaved || 0).toLocaleString()}</p>
+            <p className="text-[8px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(colors.statsSection) }}>Saves</p>
+          </div>
+        </div>
+      </div>
 
-        <Tabs defaultValue="photo" className="w-full pointer-events-auto">
-          <TabsList className="w-full bg-transparent border-none rounded-none px-6 h-14">
+      {/* TABS SECTION */}
+      <div style={{ backgroundColor: colors.tabsContent || "transparent" }} className="w-full flex-1 relative z-[30]">
+        <Tabs defaultValue="photo" className="w-full">
+          <TabsList className="w-full bg-transparent border-none rounded-none px-6 h-14" style={{ backgroundColor: colors.tabsList }}>
             <TabsTrigger value="photo" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
               <LucideImage size={20} style={{ color: getContrastColor(colors.tabsList) }} />
             </TabsTrigger>
