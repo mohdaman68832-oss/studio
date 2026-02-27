@@ -149,7 +149,7 @@ export default function ProfilePage() {
       await setDoc(profileRef, {
         id: user.uid,
         name: formData.name,
-        username: formData.username.toLowerCase().replace(/\s/g, ''),
+        username: (formData.username || '').toLowerCase().replace(/\s/g, ''),
         bio: formData.bio,
         profilePictureUrl: formData.profilePic,
         bannerUrl: formData.banner,
@@ -239,14 +239,12 @@ export default function ProfilePage() {
 
   const handleDoneSticker = () => {
     setEditingStickerId(null);
-    // Automatically save after finishing sticker adjustment
     handleSaveProfile();
   };
 
   const handleDeleteSticker = () => {
     if (editingStickerId) {
       deleteSticker(editingStickerId);
-      // Automatically save after deleting a sticker
       handleSaveProfile();
     }
   };
@@ -286,7 +284,7 @@ export default function ProfilePage() {
           </DropdownMenu>
         </header>
 
-        {/* Stickers (z-[100]) - HIGHEST LAYER IN HEADER */}
+        {/* Stickers (z-[100]) - HIGHEST LAYER */}
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
@@ -322,7 +320,7 @@ export default function ProfilePage() {
               unoptimized 
             />
           </div>
-          {/* Logo (z-[50]) - Above Content, Below Stickers */}
+          {/* Logo (z-[50]) */}
           <div className="relative px-6 -mt-16 flex flex-col items-center z-[50]">
             <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl">
               <AvatarImage src={formData.profilePic} className="object-cover" />
@@ -331,7 +329,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Text & UI Content (z-[40]) - Above Banner, Below Stickers & Logo */}
+        {/* UI Content (z-[40]) */}
         <div className="relative z-[40] w-full -mt-1">
           <div style={{ backgroundColor: colors.userInfo || "transparent" }} className="w-full pb-8">
             <div className="px-6 flex flex-col items-center">
@@ -394,9 +392,9 @@ export default function ProfilePage() {
         </Tabs>
       </div>
 
-      {/* Sticker Studio HUD (z-[3000]) */}
+      {/* Sticker Studio HUD */}
       {editingStickerId && activeSticker && (
-        <div className="fixed bottom-20 left-4 right-4 z-[3000] bg-white/95 backdrop-blur-md rounded-[2.5rem] border shadow-2xl p-5 animate-in slide-in-from-bottom-4 pointer-events-auto">
+        <div className="fixed bottom-24 left-4 right-4 z-[3000] bg-white/95 backdrop-blur-md rounded-[2.5rem] border shadow-2xl p-5 animate-in slide-in-from-bottom-4">
           <div className="space-y-4">
             <header className="flex items-center justify-between px-1">
               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Sticker Studio</h4>

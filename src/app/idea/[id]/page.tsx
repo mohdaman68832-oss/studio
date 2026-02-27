@@ -28,9 +28,7 @@ export default function IdeaDetailPage() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const ideaRef = useMemoFirebase(() => (db ? doc(db, "ideas", ideaId) : null), [db, ideaId]);
-  const { data: firestoreIdea, isLoading: ideaLoading } = useDoc(ideaRef);
-
-  const idea = firestoreIdea;
+  const { data: idea, isLoading: ideaLoading } = useDoc(ideaRef);
 
   const suggestionsQuery = useMemoFirebase(() => {
     if (!db) return null;
@@ -49,7 +47,7 @@ export default function IdeaDetailPage() {
   }, [suggestions]);
 
   const handlePostSuggestion = async () => {
-    if (!commentText.trim() || !db || !currentUser) return;
+    if (!commentText.trim() || !db || !currentUser || !idea) return;
 
     const commentData = {
       text: commentText,
@@ -59,7 +57,24 @@ export default function IdeaDetailPage() {
       createdAt: serverTimestamp(),
     };
 
+    // Add suggestion
     addDoc(collection(db, "ideas", ideaId, "suggestions"), commentData);
+
+    // Add notification for the author if it's not the author commenting
+    if (idea.authorId !== currentUser.uid) {
+      addDoc(collection(db, "notifications"), {
+        userId: idea.authorId,
+        fromUserName: currentUser.displayName || "Innovator",
+        fromUserAvatar: currentUser.photoURL || `https://picsum.photos/seed/${currentUser.uid}/100/100`,
+        type: "comment",
+        ideaId: ideaId,
+        ideaTitle: idea.title,
+        text: commentText,
+        createdAt: serverTimestamp(),
+        read: false
+      });
+    }
+
     setCommentText("");
   };
 
