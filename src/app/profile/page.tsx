@@ -148,6 +148,7 @@ export default function ProfilePage() {
   const handleBannerDragMove = (e: React.PointerEvent) => {
     if (!isDraggingBanner) return;
     const deltaY = e.clientY - dragStartY;
+    // Sensitivity adjustment
     const newOffset = Math.max(0, Math.min(100, bannerOffset - (deltaY / 2.5)));
     setBannerOffset(newOffset);
     setDragStartY(e.clientY);
@@ -212,7 +213,7 @@ export default function ProfilePage() {
               </div>
               <div className="relative aspect-[4/3] w-full max-w-[90%] mx-auto bg-slate-900 rounded-[2.5rem] overflow-hidden border-8 border-slate-800 shadow-xl">
                 <div 
-                  className="h-full w-full relative cursor-grab active:cursor-grabbing touch-none"
+                  className="h-full w-full relative cursor-grab active:cursor-grabbing touch-none flex flex-col"
                   onPointerDown={(e) => { 
                     setIsDraggingBanner(true); 
                     setDragStartY(e.clientY); 
@@ -221,7 +222,14 @@ export default function ProfilePage() {
                   onPointerMove={handleBannerDragMove}
                   onPointerUp={handleBannerDragEnd}
                 >
-                  <div className="h-32 w-full relative">
+                  {/* Mock Header Inside Frame */}
+                  <div className="h-10 w-full bg-slate-900/50 backdrop-blur-sm border-b border-white/5 flex items-center px-4 gap-2 shrink-0">
+                    <div className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center text-[6px] font-black text-white">N</div>
+                    <div className="text-[6px] font-black text-white/40 uppercase tracking-widest">Profile</div>
+                  </div>
+
+                  {/* The Interactive Banner Area */}
+                  <div className="flex-1 w-full relative bg-slate-800">
                     {tempBannerUrl && (
                       <Image 
                         src={tempBannerUrl} 
@@ -232,9 +240,9 @@ export default function ProfilePage() {
                         unoptimized={true} 
                       />
                     )}
-                  </div>
-                  <div className="absolute inset-0 bg-black/5 flex items-center justify-center pointer-events-none">
-                     <div className="bg-white/20 backdrop-blur-md rounded-full px-4 py-1 text-[8px] font-black uppercase text-white border border-white/30 shadow-lg">Drag Image to Reposition</div>
+                    <div className="absolute inset-0 bg-black/5 flex items-center justify-center pointer-events-none">
+                       <div className="bg-white/20 backdrop-blur-md rounded-full px-4 py-1 text-[8px] font-black uppercase text-white border border-white/30 shadow-lg">Drag Image to Reposition</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -302,6 +310,24 @@ export default function ProfilePage() {
             <DialogTitle className="text-sm font-black uppercase text-center text-primary">Optimize Profile</DialogTitle>
           </DialogHeader>
           <div className="space-y-8 py-4">
+            {/* Visual Preview Section */}
+            <div className="space-y-3">
+              <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Live Appearance Preview</Label>
+              <div className="relative h-32 w-full rounded-2xl overflow-hidden border bg-muted shadow-sm group">
+                 <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="Banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized={true} />
+                 <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-all flex items-center justify-center cursor-pointer" onClick={() => bannerInputRef.current?.click()}>
+                    <Camera className="text-white opacity-60 group-hover:opacity-100" />
+                 </div>
+                 <div className="absolute bottom-2 left-4">
+                    <Avatar className="h-14 w-14 border-2 border-white bg-white shadow-md cursor-pointer hover:scale-105 transition-transform" onClick={(e) => { e.stopPropagation(); profileInputRef.current?.click(); }}>
+                       <AvatarImage src={formData.profilePic} className="object-cover" />
+                       <AvatarFallback className="text-xl font-black">{formData.name?.[0] || "U"}</AvatarFallback>
+                    </Avatar>
+                 </div>
+              </div>
+              <p className="text-[9px] text-muted-foreground font-bold text-center">Tap Banner or Logo to Change Photo</p>
+            </div>
+
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Display Name</Label>
@@ -310,23 +336,6 @@ export default function ProfilePage() {
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Bio (max 160 characters)</Label>
                 <Textarea value={formData.bio} maxLength={160} onChange={(e) => setFormData(p => ({ ...p, bio: e.target.value }))} className="rounded-2xl min-h-[80px] bg-muted/20 border-none" placeholder="Share your journey..."/>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Banner Area</Label>
-                <div className="relative aspect-video bg-muted rounded-2xl overflow-hidden border border-muted-foreground/10 cursor-pointer hover:border-primary/50 transition-all group" onClick={() => bannerInputRef.current?.click()}>
-                  {formData.banner ? <Image src={formData.banner} alt="Banner" fill className="object-cover group-hover:scale-105 transition-transform" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized={true} /> : <div className="w-full h-full flex items-center justify-center"><ImageIcon size={20} className="text-muted-foreground/30" /></div>}
-                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"><Camera size={20} className="text-white" /></div>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Logo Area</Label>
-                <div className="relative aspect-video bg-muted rounded-2xl overflow-hidden border border-muted-foreground/10 cursor-pointer hover:border-primary/50 transition-all group flex items-center justify-center" onClick={() => profileInputRef.current?.click()}>
-                  <Avatar className="h-14 w-14 border-2 border-white shadow-md group-hover:scale-110 transition-transform"><AvatarImage src={formData.profilePic} className="object-cover" /><AvatarFallback className="text-xl font-black">{formData.name?.[0] || "U"}</AvatarFallback></Avatar>
-                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"><Camera size={20} className="text-white" /></div>
-                </div>
               </div>
             </div>
             
