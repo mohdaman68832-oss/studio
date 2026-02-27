@@ -22,11 +22,11 @@ export default function SearchPage() {
 
   const ideasRef = useMemoFirebase(() => (db ? collection(db, "ideas") : null), [db]);
   const profilesRef = useMemoFirebase(() => (db ? collection(db, "userProfiles") : null), [db]);
-  const unionsRef = useMemoFirebase(() => (db ? collection(db, "unions") : null), [db]);
+  const groupsRef = useMemoFirebase(() => (db ? collection(db, "groups") : null), [db]);
 
   const { data: allIdeas } = useCollection(ideasRef);
   const { data: allProfiles } = useCollection(profilesRef);
-  const { data: allUnions } = useCollection(unionsRef);
+  const { data: allGroups } = useCollection(groupsRef);
 
   useEffect(() => {
     const savedHistory = localStorage.getItem(STORAGE_KEY);
@@ -82,7 +82,7 @@ export default function SearchPage() {
 
   const filteredResults = useMemo(() => {
     const q = submittedQuery.toLowerCase().trim();
-    if (!q) return { ideas: [], profiles: [], unions: [] };
+    if (!q) return { ideas: [], profiles: [], groups: [] };
 
     return {
       ideas: allIdeas?.filter(i => 
@@ -97,30 +97,30 @@ export default function SearchPage() {
         p.bio?.toLowerCase().includes(q) ||
         p.name?.toLowerCase().includes(q)
       ) || [],
-      unions: allUnions?.filter(u => 
+      groups: allGroups?.filter(u => 
         u.name?.toLowerCase().includes(q) || 
         u.description?.toLowerCase().includes(q) ||
         u.category?.toLowerCase().includes(q)
       ) || []
     };
-  }, [submittedQuery, allIdeas, allProfiles, allUnions]);
+  }, [submittedQuery, allIdeas, allProfiles, allGroups]);
 
   const hasResults = filteredResults.ideas.length > 0 || 
                      filteredResults.profiles.length > 0 || 
-                     filteredResults.unions.length > 0;
+                     filteredResults.groups.length > 0;
 
   return (
     <div className="max-w-md mx-auto min-h-screen bg-background p-6 pb-24 space-y-6">
       <header>
         <h1 className="text-2xl font-black text-primary uppercase tracking-tighter">Global Search</h1>
-        <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Profiles • Ideas • Unions</p>
+        <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Profiles • Ideas • Groups</p>
       </header>
 
       <div className="flex gap-2 sticky top-4 z-50">
         <div className="relative flex-1">
           <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
           <Input 
-            placeholder="Type and press Enter to search..." 
+            placeholder="Search everything..." 
             className="pl-10 pr-10 h-14 bg-white border-none rounded-2xl shadow-xl focus-visible:ring-primary/20 text-sm font-medium"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
@@ -179,7 +179,7 @@ export default function SearchPage() {
             ) : (
               <div className="py-20 text-center space-y-3 opacity-20">
                 <SearchIcon size={48} className="mx-auto" />
-                <p className="text-[10px] font-black uppercase tracking-widest">Your search history is empty</p>
+                <p className="text-[10px] font-black uppercase tracking-widest">Search history empty</p>
               </div>
             )}
           </div>
@@ -213,14 +213,14 @@ export default function SearchPage() {
             </section>
           )}
 
-          {filteredResults.unions.length > 0 && (
+          {filteredResults.groups.length > 0 && (
             <section className="space-y-4">
               <h3 className="text-[10px] font-black uppercase tracking-widest text-secondary flex items-center gap-2 bg-secondary/5 px-3 py-1.5 rounded-full inline-flex">
-                <Globe size={14} /> Unions ({filteredResults.unions.length})
+                <Globe size={14} /> Groups ({filteredResults.groups.length})
               </h3>
               <div className="space-y-3">
-                {filteredResults.unions.map(u => (
-                  <Link key={u.id} href={`/unions/${u.id}`} className="flex items-center gap-4 bg-white p-5 rounded-[2.5rem] shadow-sm border border-border/50 hover:border-secondary transition-all">
+                {filteredResults.groups.map(u => (
+                  <Link key={u.id} href={`/groups/${u.id}`} className="flex items-center gap-4 bg-white p-5 rounded-[2.5rem] shadow-sm border border-border/50 hover:border-secondary transition-all">
                     <Avatar className="h-12 w-12 rounded-2xl border-2 border-background shadow-sm">
                       <AvatarImage src={u.avatarUrl} className="object-cover" />
                       <AvatarFallback className="bg-secondary/10 text-secondary font-black">{u.name?.[0]}</AvatarFallback>
@@ -258,10 +258,7 @@ export default function SearchPage() {
               <div className="w-20 h-20 bg-muted/30 rounded-full flex items-center justify-center mb-4">
                  <SearchIcon size={32} className="opacity-10" />
               </div>
-              <p className="text-sm font-black uppercase tracking-widest">No innovations found</p>
-              <p className="text-[10px] font-bold leading-relaxed mt-2 opacity-60">
-                We couldn't find anything matching "{submittedQuery}". Try another keyword or check your spelling.
-              </p>
+              <p className="text-sm font-black uppercase tracking-widest">No results found</p>
               <Button variant="ghost" className="mt-6 font-black uppercase text-[10px]" onClick={clearSearch}>
                 Reset Search
               </Button>

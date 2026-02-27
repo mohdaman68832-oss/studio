@@ -28,27 +28,30 @@ service cloud.firestore {
     match /ideas/{ideaId} {
       allow read: if true;
       allow create: if isSignedIn();
-      // Allow any signed in user to update (needed for likes increment/decrement)
       allow update: if isSignedIn();
       allow delete: if isSignedIn() && (resource == null || resource.data.authorId == request.auth.uid);
 
-      // Suggestions: Publicly readable feedback.
       match /suggestions/{suggestionId} {
         allow read: if true;
         allow create: if isSignedIn();
       }
 
-      // Likes: Publicly readable, owner can toggle their own like.
       match /likes/{userId} {
         allow read: if true;
         allow write: if isOwner(userId);
       }
     }
 
-    // Unions: Publicly discoverable community groups.
-    match /unions/{unionId} {
+    // Groups: Publicly discoverable community groups.
+    match /groups/{groupId} {
       allow read: if true;
       allow create, update: if isSignedIn();
+      
+      // Membership (Subcollection for checking if joined)
+      match /members/{userId} {
+        allow read: if true;
+        allow write: if isOwner(userId);
+      }
     }
 
     // Global catch-all for consistency during development

@@ -177,10 +177,12 @@
         "innovationScore"
       ]
     },
-    "Union": {
-      "title": "Union",
+    "Group": {
+      "title": "Group",
       "type": "object",
+      "description": "Community groups for innovation.",
       "properties": {
+        "id": { "type": "string" },
         "name": { "type": "string" },
         "description": { "type": "string" },
         "category": { "type": "string" },
@@ -230,17 +232,17 @@
         }
       },
       {
-        "path": "/unions/{unionId}",
+        "path": "/groups/{groupId}",
         "definition": {
-          "entityName": "Union",
+          "entityName": "Group",
           "schema": {
-            "$ref": "#/backend/entities/Union"
+            "$ref": "#/backend/entities/Group"
           },
           "description": "Community groups for innovation.",
           "params": [
             {
-              "name": "unionId",
-              "description": "The unique ID of the union."
+              "name": "groupId",
+              "description": "The unique ID of the group."
             }
           ]
         }
