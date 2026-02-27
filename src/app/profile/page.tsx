@@ -12,10 +12,17 @@ import {
   X,
   Plus,
   Monitor,
-  Smartphone
+  Smartphone,
+  ChevronRight,
+  UserCog
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -81,6 +88,7 @@ export default function ProfilePage() {
   const { toast } = useToast();
 
   const [isOptimizeModalOpen, setIsOptimizeModalOpen] = useState(false);
+  const [showBannerDetail, setShowBannerDetail] = useState(false);
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [activeColorSection, setActiveColorSection] = useState<ColorSection | null>(null);
@@ -88,10 +96,10 @@ export default function ProfilePage() {
   const profileInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
   const stickerInputRef = useRef<HTMLInputElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   const [formData, setFormData] = useState({
     name: "",
+    username: "",
     bio: "",
     profilePic: "",
     banner: "",
@@ -106,7 +114,8 @@ export default function ProfilePage() {
   useEffect(() => {
     if (profileData) {
       setFormData({
-        name: profileData.username || user?.displayName || "",
+        name: user?.displayName || profileData.name || "",
+        username: profileData.username || "",
         bio: profileData.bio || "",
         profilePic: profileData.profilePictureUrl || user?.photoURL || "",
         banner: profileData.bannerUrl || "",
@@ -129,7 +138,8 @@ export default function ProfilePage() {
       await updateProfile(user, { displayName: formData.name });
       await setDoc(profileRef, {
         id: user.uid,
-        username: formData.name.toLowerCase().replace(/\s/g, ''),
+        name: formData.name,
+        username: formData.username.toLowerCase().replace(/\s/g, ''),
         bio: formData.bio,
         profilePictureUrl: formData.profilePic,
         bannerUrl: formData.banner,
@@ -153,7 +163,10 @@ export default function ProfilePage() {
     if (file) {
       const base64 = await toBase64(file);
       if (type === 'profile') setFormData(prev => ({ ...prev, profilePic: base64 }));
-      else if (type === 'banner') setFormData(prev => ({ ...prev, banner: base64 }));
+      else if (type === 'banner') {
+        setFormData(prev => ({ ...prev, banner: base64 }));
+        setShowBannerDetail(false);
+      }
       else if (type === 'sticker') {
         const newSticker = { id: Math.random().toString(36).substr(2, 9), url: base64, x: 50, y: 50, rotation: 0, scale: 1 };
         setFormData(prev => ({ ...prev, stickers: [...prev.stickers, newSticker] }));
@@ -165,32 +178,27 @@ export default function ProfilePage() {
     if (!activeColorSection) return;
     setFormData(prev => ({ ...prev, customColors: { ...prev.customColors, [activeColorSection]: hex } }));
     setIsColorPickerOpen(false);
-    setActiveColorSection(null);
-  };
-
-  const openPickerFor = (section: ColorSection) => {
-    setActiveColorSection(section);
-    setIsColorPickerOpen(true);
   };
 
   if (isUserLoading || isProfileLoading) return <div className="max-w-md mx-auto min-h-screen flex items-center justify-center bg-background"><Loader2 className="animate-spin text-primary h-8 w-8" /></div>;
   if (!user) return null;
 
+  const colors = formData.customColors;
+
   return (
     <div 
-      ref={containerRef}
       className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-hidden flex flex-col m-0 p-0 no-scrollbar"
-      style={{ backgroundColor: formData.customColors.background || "var(--background)" }}
+      style={{ backgroundColor: colors.background || "var(--background)" }}
     >
-      {/* Layer 0: Background Sections - Seamlessly Tiled */}
+      {/* Background Sections (Tiled) */}
       <div className="flex flex-col m-0 p-0 relative z-0 shrink-0">
-         <div className="h-16 w-full" style={{ backgroundColor: formData.customColors.header }} />
-         <div className="h-[28rem] w-full" style={{ backgroundColor: formData.customColors.userInfo }} />
-         <div className="h-28 w-full" style={{ backgroundColor: formData.customColors.statsSection }} />
-         <div className="flex-1 w-full min-h-[50vh]" style={{ backgroundColor: formData.customColors.tabsContent }} />
+         <div className="h-16 w-full" style={{ backgroundColor: colors.header }} />
+         <div className="h-[28rem] w-full" style={{ backgroundColor: colors.userInfo }} />
+         <div className="h-28 w-full" style={{ backgroundColor: colors.statsSection }} />
+         <div className="flex-1 w-full min-h-[50vh]" style={{ backgroundColor: colors.tabsContent }} />
       </div>
 
-      {/* Layer 1: Stickers (z-index 10) - Behind main UI content */}
+      {/* Layer 1: Stickers (z-index 10) - Behind Main UI */}
       <div className="absolute inset-0 z-10 pointer-events-none">
         {formData.stickers.map((sticker) => (
           <div 
@@ -202,25 +210,39 @@ export default function ProfilePage() {
               transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`, 
             }}
           >
-            <div className="relative w-24 h-24 select-none">
-              <Image src={sticker.url} alt="sticker" fill className="object-contain pointer-events-none" unoptimized={true} />
+            <div className="relative w-24 h-24">
+              <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized />
             </div>
           </div>
         ))}
       </div>
 
-      {/* Layer 2: UI Content (z-index 20) - Always ABOVE stickers */}
+      {/* Layer 2: Main UI Content (z-index 20) */}
       <div className="absolute inset-0 flex flex-col m-0 p-0 z-20 pointer-events-none no-scrollbar overflow-y-auto">
-        <div className="px-6 flex justify-between items-center py-5 pointer-events-auto">
-          <h1 className="text-2xl font-black uppercase tracking-tighter" style={{ color: getContrastColor(formData.customColors.header) }}>Sphere Profile</h1>
-          <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setIsOptimizeModalOpen(true)}>
-            <Settings size={24} style={{ color: getContrastColor(formData.customColors.header) }} />
-          </Button>
-        </div>
+        <header className="px-6 flex justify-between items-center py-5 pointer-events-auto">
+          <h1 className="text-2xl font-black uppercase tracking-tighter" style={{ color: getContrastColor(colors.header) }}>Sphere</h1>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="rounded-full">
+                <Settings size={24} style={{ color: getContrastColor(colors.header) }} />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="rounded-2xl border-none shadow-2xl p-2 min-w-[160px]">
+              <DropdownMenuItem onClick={() => setIsOptimizeModalOpen(true)} className="rounded-xl h-11 cursor-pointer flex items-center gap-3">
+                <UserCog size={18} className="text-primary" />
+                <span className="text-xs font-black uppercase tracking-widest">Optimize</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSignOut} className="rounded-xl h-11 cursor-pointer flex items-center gap-3 text-secondary">
+                <LogOut size={18} />
+                <span className="text-xs font-black uppercase tracking-widest">Logout</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </header>
 
-        <div className="relative">
+        <section className="relative">
           <div className="relative h-52 w-full bg-muted overflow-hidden">
-            <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized={true} />
+            <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized />
           </div>
           <div className="px-6 -mt-16 flex flex-col items-center pb-4">
             <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl pointer-events-auto">
@@ -228,192 +250,214 @@ export default function ProfilePage() {
               <AvatarFallback className="text-2xl font-black uppercase">{formData.name?.[0] || "U"}</AvatarFallback>
             </Avatar>
             <div className="text-center mt-4">
-              <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(formData.customColors.userInfo) }}>{formData.name || user.displayName || "Innovator"}</h2>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(formData.customColors.userInfo) }}>Master Innovator</p>
+              <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{formData.name || "Innovator"}</h2>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>@{formData.username || "handle"}</p>
             </div>
-            <div className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-xl pointer-events-auto" style={{ backgroundColor: formData.customColors.bioCard || "#FFFFFF" }}>
-              <p className="text-center text-[12px] leading-relaxed font-bold italic" style={{ color: getContrastColor(formData.customColors.bioCard) }}>
+            <div className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-xl pointer-events-auto" style={{ backgroundColor: colors.bioCard || "#FFFFFF" }}>
+              <p className="text-center text-[12px] leading-relaxed font-bold italic" style={{ color: getContrastColor(colors.bioCard) }}>
                 {formData.bio || "Building the future of shared intelligence in the sphere."}
               </p>
             </div>
           </div>
-        </div>
+        </section>
 
-        <div className="py-8 px-10">
+        <section className="py-8 px-10">
           <div className="grid grid-cols-3 gap-6 w-full">
             <div className="text-center">
-              <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{profileData?.totalIdeasPosted || 0}</p>
-              <p className="text-[8px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(formData.customColors.statsSection) }}>Ideas</p>
+              <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{profileData?.totalIdeasPosted || 0}</p>
+              <p className="text-[8px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(colors.statsSection) }}>Ideas</p>
             </div>
             <div className="text-center">
-              <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{(profileData?.totalViewsReceived || 0).toLocaleString()}</p>
-              <p className="text-[8px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(formData.customColors.statsSection) }}>Views</p>
+              <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{(profileData?.totalViewsReceived || 0).toLocaleString()}</p>
+              <p className="text-[8px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(colors.statsSection) }}>Views</p>
             </div>
             <div className="text-center">
-              <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{(profileData?.totalIdeasSaved || 0).toLocaleString()}</p>
-              <p className="text-[8px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(formData.customColors.statsSection) }}>Saves</p>
+              <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{(profileData?.totalIdeasSaved || 0).toLocaleString()}</p>
+              <p className="text-[8px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(colors.statsSection) }}>Saves</p>
             </div>
           </div>
-        </div>
+        </section>
 
         <Tabs defaultValue="photo" className="w-full pointer-events-auto">
           <TabsList className="w-full bg-transparent border-none rounded-none px-6 h-14">
             <TabsTrigger value="photo" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
-              <LucideImage size={20} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
+              <LucideImage size={20} style={{ color: getContrastColor(colors.tabsList) }} />
             </TabsTrigger>
             <TabsTrigger value="video" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
-              <Video size={20} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
+              <Video size={20} style={{ color: getContrastColor(colors.tabsList) }} />
             </TabsTrigger>
             <TabsTrigger value="text" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
-              <Type size={20} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
+              <Type size={20} style={{ color: getContrastColor(colors.tabsList) }} />
             </TabsTrigger>
           </TabsList>
           <div className="min-h-[300px] pb-32">
             <TabsContent value="photo" className="mt-0 py-16 text-center">
-              <p className="opacity-20 text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(formData.customColors.tabsContent) }}>Empty Canvas</p>
+              <p className="opacity-20 text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(colors.tabsContent) }}>No Photo Records</p>
             </TabsContent>
             <TabsContent value="video" className="mt-0 py-16 text-center">
-              <p className="opacity-20 text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(formData.customColors.tabsContent) }}>No Records</p>
+              <p className="opacity-20 text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(colors.tabsContent) }}>No Video Records</p>
             </TabsContent>
             <TabsContent value="text" className="mt-0 py-16 text-center">
-              <p className="opacity-20 text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(formData.customColors.tabsContent) }}>No Concepts</p>
+              <p className="opacity-20 text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(colors.tabsContent) }}>No Concept Files</p>
             </TabsContent>
           </div>
         </Tabs>
       </div>
 
-      {/* Hidden Inputs for Optimize Page */}
-      <input type="file" ref={profileInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'profile')} />
-      <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'banner')} />
-      <input type="file" ref={stickerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'sticker')} />
-
-      {/* COMPREHENSIVE OPTIMIZE PROFILE MODAL */}
+      {/* OPTIMIZE PROFILE DIALOG */}
       <Dialog open={isOptimizeModalOpen} onOpenChange={setIsOptimizeModalOpen}>
         <DialogContent 
           onOpenAutoFocus={(e) => e.preventDefault()}
-          className="max-w-md w-[95%] rounded-[3rem] p-0 overflow-hidden z-[2000] border-none shadow-2xl max-h-[85vh] flex flex-col"
+          className="max-w-md w-[95%] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col"
         >
-          <DialogHeader className="p-6 pb-2 shrink-0">
-            <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-primary">Optimize Profile</DialogTitle>
+          <DialogHeader className="p-6 shrink-0 border-b">
+            <DialogTitle className="text-xl font-black uppercase tracking-tighter text-primary">Optimize Profile</DialogTitle>
           </DialogHeader>
 
           <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar">
-            {/* 1. Banner Preview (On Top) */}
+            {/* Banner Section */}
             <div className="space-y-4">
-               <Label className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><LucideImage size={14} /> Banner & Preview</Label>
-               <div className="space-y-6">
-                 <div className="relative h-32 bg-muted rounded-[2rem] overflow-hidden border-2 border-dashed border-primary/20 group cursor-pointer" onClick={() => bannerInputRef.current?.click()}>
-                   {formData.banner ? <Image src={formData.banner} alt="banner" fill className="object-cover" unoptimized={true} /> : <div className="w-full h-full flex flex-col items-center justify-center gap-1"><Camera className="text-muted-foreground/40" /><span className="text-[9px] font-black uppercase opacity-40">Tap to Upload Banner</span></div>}
-                   <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white"><Camera size={24} /></div>
-                 </div>
-                 
-                 <div className="grid grid-cols-2 gap-4">
-                   <div className="space-y-2">
-                     <p className="text-[8px] font-black uppercase tracking-widest opacity-50 flex items-center gap-1"><Monitor size={10} /> Desktop Preview</p>
-                     <div className="relative aspect-video rounded-xl overflow-hidden border bg-muted">
-                        <Image src={formData.banner || `https://picsum.photos/seed/banner/800/400`} alt="Desktop" fill className="object-cover" unoptimized={true} />
-                     </div>
-                   </div>
-                   <div className="space-y-2">
-                     <p className="text-[8px] font-black uppercase tracking-widest opacity-50 flex items-center gap-1"><Smartphone size={10} /> Mobile Preview</p>
-                     <div className="flex justify-center">
-                        <div className="relative w-full max-w-[80px] aspect-[4/3] rounded-xl overflow-hidden border bg-muted">
-                          <Image src={formData.banner || `https://picsum.photos/seed/banner/800/400`} alt="Mobile" fill className="object-cover" unoptimized={true} />
-                        </div>
-                     </div>
-                   </div>
-                 </div>
+               <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Profile Banner</Label>
+               <div 
+                 onClick={() => setShowBannerDetail(true)}
+                 className="relative h-32 bg-muted rounded-[2rem] overflow-hidden border-2 border-dashed border-primary/20 group cursor-pointer"
+               >
+                 {formData.banner ? <Image src={formData.banner} alt="banner" fill className="object-cover" unoptimized /> : <div className="w-full h-full flex items-center justify-center opacity-30"><Camera size={32} /></div>}
+                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white"><ChevronRight size={32} /></div>
                </div>
             </div>
 
-            {/* 2. Logo & Branding (Below Banner) */}
+            {/* Logo Section */}
             <div className="space-y-4">
-               <Label className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><Camera size={14} /> Logo & Identity</Label>
+               <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Identity Logo</Label>
                <div className="flex items-center gap-4">
                   <div className="relative h-20 w-20 rounded-full bg-muted border-4 border-white shadow-xl overflow-hidden group cursor-pointer" onClick={() => profileInputRef.current?.click()}>
                     <Avatar className="h-full w-full"><AvatarImage src={formData.profilePic} className="object-cover" /><AvatarFallback className="font-black">{formData.name?.[0]}</AvatarFallback></Avatar>
                     <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white"><Camera size={16} /></div>
                   </div>
-                  <div className="flex-1 space-y-1">
-                    <Label className="text-[9px] font-black uppercase tracking-widest opacity-60">Display Name</Label>
-                    <Input value={formData.name} onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))} className="rounded-xl h-10 bg-muted/30 border-none font-bold" placeholder="Innovator Name" />
+                  <div className="flex-1 space-y-4">
+                    <div className="space-y-1">
+                      <Label className="text-[8px] font-black uppercase tracking-widest opacity-60">Display Name</Label>
+                      <Input value={formData.name} onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))} className="rounded-xl h-10 bg-muted/20 border-none font-bold text-xs" />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[8px] font-black uppercase tracking-widest opacity-60">Unique Handle</Label>
+                      <Input value={formData.username} onChange={(e) => setFormData(p => ({ ...p, username: e.target.value }))} className="rounded-xl h-10 bg-muted/20 border-none font-bold text-xs" />
+                    </div>
                   </div>
                </div>
             </div>
 
-            {/* 3. Bio & Expertise */}
+            {/* Bio Section */}
             <div className="space-y-3">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><Type size={14} /> Personal Bio</Label>
+              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Bio/Objective</Label>
               <Textarea 
                 value={formData.bio} 
-                maxLength={160} 
                 onChange={(e) => setFormData(p => ({ ...p, bio: e.target.value }))} 
-                className="rounded-[1.5rem] min-h-[80px] bg-muted/30 border-none font-medium text-xs p-4" 
-                placeholder="Share your innovation journey..."
+                className="rounded-[1.5rem] min-h-[80px] bg-muted/20 border-none font-medium text-xs p-4" 
               />
             </div>
 
-            {/* 4. Theme Colors (Seamless Pickers) */}
+            {/* Colors Section */}
             <div className="space-y-4">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><PaintBucket size={14} /> Color Scheme</Label>
-              <div className="grid grid-cols-2 gap-2">
+              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Interface Colors</Label>
+              <div className="grid grid-cols-2 gap-3">
                 {[
-                  { label: 'Header Strip', key: 'header' as const },
+                  { label: 'Header', key: 'header' as const },
                   { label: 'Background', key: 'background' as const },
-                  { label: 'User Area', key: 'userInfo' as const },
+                  { label: 'Profile Area', key: 'userInfo' as const },
                   { label: 'Bio Box', key: 'bioCard' as const },
                   { label: 'Stats Strip', key: 'statsSection' as const },
                   { label: 'Tabs Bar', key: 'tabsList' as const }
                 ].map(item => (
-                  <Button key={item.key} variant="outline" className="h-14 rounded-2xl flex flex-col items-center justify-center gap-1 border-muted hover:border-primary/50 transition-all" onClick={() => openPickerFor(item.key)}>
+                  <Button 
+                    key={item.key} 
+                    variant="outline" 
+                    className="h-14 rounded-2xl flex flex-col items-center gap-1 border-muted"
+                    onClick={() => { setActiveColorSection(item.key); setIsColorPickerOpen(true); }}
+                  >
                     <span className="text-[7px] font-black uppercase tracking-widest">{item.label}</span>
-                    <div className="w-8 h-2 rounded-full border shadow-sm" style={{ backgroundColor: formData.customColors[item.key] || '#F3F4F6' }} />
+                    <div className="w-8 h-2 rounded-full border" style={{ backgroundColor: formData.customColors[item.key] || '#F3F4F6' }} />
                   </Button>
                 ))}
               </div>
             </div>
 
-            {/* 5. Sticker Management */}
+            {/* Sticker Upload */}
             <div className="space-y-4 pb-4">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><Plus size={14} /> Add Stickers</Label>
-              <div className="bg-primary/5 p-6 rounded-[2rem] border-2 border-dashed border-primary/20 flex flex-col items-center justify-center gap-3 cursor-pointer group hover:bg-primary/10 transition-all" onClick={() => stickerInputRef.current?.click()}>
-                 <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                   <Plus size={24} />
-                 </div>
-                 <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Upload New Sticker</p>
-              </div>
+              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Custom Stickers</Label>
+              <Button 
+                onClick={() => stickerInputRef.current?.click()}
+                className="w-full h-14 rounded-3xl bg-primary/10 text-primary border-2 border-dashed border-primary/20 hover:bg-primary/20"
+              >
+                <Plus size={18} className="mr-2" /> Upload New Sticker
+              </Button>
             </div>
           </div>
 
-          <div className="p-6 bg-white border-t space-y-3 shrink-0">
-             <Button className="w-full h-14 rounded-[1.5rem] bg-primary text-white font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all" onClick={handleSaveProfile} disabled={isSaving}>
-               {isSaving ? <Loader2 className="animate-spin mr-2" /> : "Save Optimization"}
-             </Button>
-             <Button variant="ghost" className="w-full h-10 text-secondary font-black uppercase text-[9px] tracking-[0.2em]" onClick={handleSignOut}>
-               <LogOut size={14} className="mr-2" /> Sign Out
+          <div className="p-6 bg-white border-t shrink-0">
+             <Button 
+               className="w-full h-14 rounded-[1.5rem] bg-primary text-white font-black uppercase tracking-widest shadow-xl" 
+               onClick={handleSaveProfile} 
+               disabled={isSaving}
+             >
+               {isSaving ? <Loader2 className="animate-spin mr-2" /> : "Save All Changes"}
              </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Color Picker Sheet (Nested) */}
-      <Sheet open={isColorPickerOpen} onOpenChange={setIsColorPickerOpen}>
-        <SheetContent side="bottom" className="rounded-t-[3rem] p-6 max-h-[60vh] overflow-y-auto no-scrollbar border-none z-[2100]">
-          <SheetHeader><SheetTitle className="text-[10px] font-black uppercase tracking-widest text-center text-primary mb-6">Pick a Vibe</SheetTitle></SheetHeader>
-          <div className="space-y-8 pb-12">
+      {/* BANNER DETAIL PAGE/OVERLAY */}
+      <Dialog open={showBannerDetail} onOpenChange={setShowBannerDetail}>
+        <DialogContent className="max-w-md w-[95%] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl h-[85vh] flex flex-col">
+          <DialogHeader className="p-6 shrink-0 border-b flex flex-row items-center justify-between">
+            <DialogTitle className="text-sm font-black uppercase tracking-widest">Banner Customization</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto p-6 space-y-10 no-scrollbar">
+             <div className="space-y-3">
+                <Label className="text-[10px] font-black uppercase tracking-widest opacity-50 flex items-center gap-2"><Monitor size={14} /> Desktop Preview</Label>
+                <div className="relative aspect-[3/1] w-full bg-muted rounded-2xl overflow-hidden border shadow-inner">
+                   {formData.banner ? <Image src={formData.banner} alt="PC" fill className="object-cover" unoptimized /> : <div className="w-full h-full flex items-center justify-center opacity-30"><LucideImage size={40} /></div>}
+                </div>
+             </div>
+             <div className="space-y-3">
+                <Label className="text-[10px] font-black uppercase tracking-widest opacity-50 flex items-center gap-2"><Smartphone size={14} /> Mobile Preview</Label>
+                <div className="flex justify-center">
+                  <div className="relative w-full max-w-[220px] aspect-[4/3] bg-muted rounded-2xl overflow-hidden border shadow-inner">
+                    {formData.banner ? <Image src={formData.banner} alt="Mobile" fill className="object-cover" unoptimized /> : <div className="w-full h-full flex items-center justify-center opacity-30"><LucideImage size={30} /></div>}
+                  </div>
+                </div>
+             </div>
+             <div className="pt-6 space-y-4">
+                <Button onClick={() => bannerInputRef.current?.click()} className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase tracking-widest">Change Banner Image</Button>
+             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Hidden File Inputs */}
+      <input type="file" ref={profileInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'profile')} />
+      <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'banner')} />
+      <input type="file" ref={stickerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'sticker')} />
+
+      {/* Nested Color Picker */}
+      <Dialog open={isColorPickerOpen} onOpenChange={setIsColorPickerOpen}>
+        <DialogContent className="max-w-xs w-[90%] rounded-[2.5rem] p-6 border-none shadow-2xl">
+          <DialogHeader><DialogTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-center mb-6">Pick a Vibe</DialogTitle></DialogHeader>
+          <div className="space-y-8 max-h-[50vh] overflow-y-auto no-scrollbar pb-6">
             {Object.entries(COLOR_CATEGORIES).map(([category, colors]) => (
               <div key={category} className="space-y-3">
-                <h3 className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60 ml-2">{category}</h3>
-                <div className="grid grid-cols-6 gap-3">
+                <h3 className="text-[8px] font-black uppercase opacity-40 ml-1">{category}</h3>
+                <div className="grid grid-cols-5 gap-3">
                   {colors.map(c => (
-                    <button key={c} onClick={() => applyColor(c)} className={cn("aspect-square rounded-full border-4 transition-all active:scale-90 shadow-sm", formData.customColors[activeColorSection!] === c ? "border-primary scale-110" : "border-white")} style={{ backgroundColor: c }} />
+                    <button key={c} onClick={() => applyColor(c)} className="aspect-square rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: c }} />
                   ))}
                 </div>
               </div>
             ))}
           </div>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -54,7 +54,7 @@ export default function ChatPage() {
     <div className="max-w-md mx-auto min-h-screen bg-background pt-8 pb-24">
       <div className="px-6 mb-8">
         <h1 className="text-3xl font-black text-primary uppercase tracking-tighter">Inbox</h1>
-        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Direct Messages</p>
+        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Recent Conversations</p>
       </div>
 
       <div className="px-6 mb-8">
