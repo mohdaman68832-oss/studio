@@ -124,8 +124,6 @@ export default function ProfilePage() {
     if (!user || !profileRef) return;
     setIsSaving(true);
     try {
-      // Avoid updating Auth Profile Photo if Base64 is too long (Firebase Auth limit)
-      // We only update display name in Auth, and rely on Firestore for everything else.
       await updateProfile(user, { displayName: formData.name });
       
       await updateDoc(profileRef, {
@@ -212,9 +210,9 @@ export default function ProfilePage() {
                 <Tablet size={20} />
                 <span className="text-xs font-black uppercase tracking-widest">Tablet Device Frame</span>
               </div>
-              <div className="relative aspect-[4/3] w-full max-w-[90%] mx-auto bg-muted rounded-[2rem] overflow-hidden border-8 border-slate-800 shadow-xl">
+              <div className="relative aspect-[4/3] w-full max-w-[90%] mx-auto bg-slate-900 rounded-[2.5rem] overflow-hidden border-8 border-slate-800 shadow-xl">
                 <div 
-                  className="h-32 w-full relative cursor-grab active:cursor-grabbing touch-none"
+                  className="h-full w-full relative cursor-grab active:cursor-grabbing touch-none"
                   onPointerDown={(e) => { 
                     setIsDraggingBanner(true); 
                     setDragStartY(e.clientY); 
@@ -223,18 +221,20 @@ export default function ProfilePage() {
                   onPointerMove={handleBannerDragMove}
                   onPointerUp={handleBannerDragEnd}
                 >
-                  {tempBannerUrl && (
-                    <Image 
-                      src={tempBannerUrl} 
-                      alt="Tablet" 
-                      fill 
-                      className="object-cover select-none pointer-events-none" 
-                      style={{ objectPosition: `50% ${bannerOffset}%` }} 
-                      unoptimized={true} 
-                    />
-                  )}
-                  <div className="absolute inset-0 bg-black/10 flex items-center justify-center pointer-events-none">
-                     <div className="bg-white/20 backdrop-blur-md rounded-full px-4 py-1 text-[8px] font-black uppercase text-white border border-white/30">Drag Image to Reposition</div>
+                  <div className="h-32 w-full relative">
+                    {tempBannerUrl && (
+                      <Image 
+                        src={tempBannerUrl} 
+                        alt="Tablet" 
+                        fill 
+                        className="object-cover select-none pointer-events-none" 
+                        style={{ objectPosition: `50% ${bannerOffset}%` }} 
+                        unoptimized={true} 
+                      />
+                    )}
+                  </div>
+                  <div className="absolute inset-0 bg-black/5 flex items-center justify-center pointer-events-none">
+                     <div className="bg-white/20 backdrop-blur-md rounded-full px-4 py-1 text-[8px] font-black uppercase text-white border border-white/30 shadow-lg">Drag Image to Reposition</div>
                   </div>
                 </div>
               </div>
