@@ -370,18 +370,18 @@ export default function ProfilePage() {
 
       {/* STICKER STUDIO HUD (z-2000) */}
       {editingStickerId && activeSticker && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[2000] w-[90%] max-w-sm bg-white/95 backdrop-blur-md rounded-[2.5rem] border shadow-2xl p-6 animate-in slide-in-from-bottom-4">
-          <div className="space-y-6">
+        <div className="fixed bottom-20 left-4 right-4 z-[2000] bg-white/95 backdrop-blur-md rounded-[2rem] border shadow-2xl p-5 animate-in slide-in-from-bottom-4">
+          <div className="space-y-4">
             <header className="flex items-center justify-between">
               <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Sticker Studio</h4>
               <Button variant="ghost" size="icon" className="rounded-full h-8 w-8" onClick={() => setEditingStickerId(null)}>
                 <X size={16} />
               </Button>
             </header>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-[8px] font-black uppercase opacity-50">
-                  <span>Scale (Size)</span>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-[8px] font-black uppercase opacity-50 mb-1">
+                  <span>Size</span>
                   <span>{Math.round(activeSticker.scale * 100)}%</span>
                 </div>
                 <Slider 
@@ -392,8 +392,8 @@ export default function ProfilePage() {
                   onValueChange={([v]) => updateSticker(activeSticker.id, { scale: v })} 
                 />
               </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-[8px] font-black uppercase opacity-50">
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-[8px] font-black uppercase opacity-50 mb-1">
                   <span>Rotation</span>
                   <span>{activeSticker.rotation}°</span>
                 </div>
@@ -406,12 +406,12 @@ export default function ProfilePage() {
                 />
               </div>
             </div>
-            <div className="flex gap-2 pt-2">
-               <Button variant="destructive" className="flex-1 rounded-2xl font-black uppercase text-[10px] h-11" onClick={() => deleteSticker(activeSticker.id)}>
-                 <Trash2 size={16} className="mr-2" /> Delete
+            <div className="flex gap-2 pt-1">
+               <Button variant="destructive" className="flex-1 rounded-xl font-black uppercase text-[10px] h-10" onClick={() => deleteSticker(activeSticker.id)}>
+                 <Trash2 size={14} className="mr-2" /> Delete
                </Button>
-               <Button className="flex-1 rounded-2xl font-black uppercase text-[10px] h-11 bg-primary text-white" onClick={() => setEditingStickerId(null)}>
-                 <CheckCircle size={16} className="mr-2" /> Done
+               <Button className="flex-1 rounded-xl font-black uppercase text-[10px] h-10 bg-primary text-white" onClick={() => setEditingStickerId(null)}>
+                 <CheckCircle size={14} className="mr-2" /> Done
                </Button>
             </div>
           </div>
