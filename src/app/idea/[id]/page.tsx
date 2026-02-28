@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useDoc, useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, addDoc, query, orderBy, serverTimestamp, doc } from "firebase/firestore";
@@ -13,7 +12,6 @@ import { Separator } from "@/components/ui/separator";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogHeader } from "@/components/ui/dialog";
 
 export default function IdeaDetailPage() {
@@ -38,7 +36,7 @@ export default function IdeaDetailPage() {
     );
   }, [db, ideaId]);
 
-  const { data: suggestions, isLoading: suggestionsLoading } = useCollection(suggestionsQuery);
+  const { data: suggestions } = useCollection(suggestionsQuery);
 
   useEffect(() => {
     if (scrollContainerRef.current) {
@@ -59,21 +57,6 @@ export default function IdeaDetailPage() {
 
     // Add suggestion
     addDoc(collection(db, "ideas", ideaId, "suggestions"), commentData);
-
-    // Add notification for the author if it's not the author commenting
-    if (idea.authorId !== currentUser.uid) {
-      addDoc(collection(db, "notifications"), {
-        userId: idea.authorId,
-        fromUserName: currentUser.displayName || "Innovator",
-        fromUserAvatar: currentUser.photoURL || `https://picsum.photos/seed/${currentUser.uid}/100/100`,
-        type: "comment",
-        ideaId: ideaId,
-        ideaTitle: idea.title,
-        text: commentText,
-        createdAt: serverTimestamp(),
-        read: false
-      });
-    }
 
     setCommentText("");
   };
@@ -212,7 +195,7 @@ export default function IdeaDetailPage() {
                 <div key={suggestion.id} className="flex gap-3 items-start animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <Avatar className="h-8 w-8 border border-muted/50 shadow-sm shrink-0">
                     <AvatarImage src={suggestion.userAvatar} />
-                    <AvatarFallback>{suggestion.userName[0]}</AvatarFallback>
+                    <AvatarFallback>{suggestion.userName?.[0]}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 bg-white p-3.5 rounded-2xl rounded-tl-none border border-border/50 shadow-sm">
                     <p className="text-[12px] leading-relaxed text-foreground/90">

@@ -1,13 +1,12 @@
-
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, PlusSquare, Search, MessageCircle, User } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from "@/firebase";
+import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { doc, collection, query, where } from "firebase/firestore";
+import { doc } from "firebase/firestore";
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -17,17 +16,6 @@ export function BottomNav() {
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [user, db]);
   const { data: profileData } = useDoc(profileRef);
 
-  const unreadQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return query(
-      collection(db, "notifications"), 
-      where("userId", "==", user.uid), 
-      where("read", "==", false)
-    );
-  }, [db, user?.uid]);
-  
-  const { data: unreadNotifs } = useCollection(unreadQuery);
-
   const isAuthPage = pathname === '/login' || pathname === '/signup';
   if (!user || isAuthPage) return null;
 
@@ -35,7 +23,7 @@ export function BottomNav() {
     { label: "Feed", icon: Home, href: "/" },
     { label: "Search", icon: Search, href: "/search" },
     { label: "Post", icon: PlusSquare, href: "/post" },
-    { label: "Chat", icon: MessageCircle, href: "/chat", badge: !!unreadNotifs?.length },
+    { label: "Chat", icon: MessageCircle, href: "/chat" },
     { label: "Profile", icon: User, href: "/profile" },
   ];
 
@@ -72,9 +60,6 @@ export function BottomNav() {
                 ) : (
                   <div className="relative">
                     <Icon size={24} className={cn(isActive && "fill-current opacity-20")} />
-                    {item.badge && (
-                      <span className="absolute -top-1 -right-1 w-3 h-3 bg-secondary rounded-full border-2 border-white shadow-sm" />
-                    )}
                   </div>
                 )}
               </div>

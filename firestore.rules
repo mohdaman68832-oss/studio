@@ -1,68 +1,32 @@
-/**
- * InnovateSphere Security Rules
- *
- * PHILOSOPHY:
- * This ruleset enforces a strict user-ownership and collaborator-access model.
- * It is designed for privacy and performance (Authorization Independence).
- */
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // --- Global Helper Functions ---
-
     function isSignedIn() {
       return request.auth != null;
     }
-
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // --- User Profiles ---
     match /userProfiles/{userId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId);
-      allow delete: if isOwner(userId);
-      
-      // Legacy path support if needed, but app uses userProfiles
+      allow read: if isSignedIn();
+      allow write: if isOwner(userId);
     }
 
-    match /users/{userId} {
-      allow read, write: if isOwner(userId);
-    }
-
-    // --- Notifications ---
-    // Specifically restricted to the recipient
-    match /notifications/{notificationId} {
-      allow list: if isSignedIn() && request.query.limit <= 100; 
-      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
-      allow create: if isSignedIn(); // Allow others to send notifications
-      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
-      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
-    }
-
-    // --- Messages ---
     match /messages/{messageId} {
-      allow list: if isSignedIn();
-      allow get: if isSignedIn() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid);
       allow create: if isSignedIn() && request.resource.data.senderId == request.auth.uid;
+      allow read: if isSignedIn() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid);
       allow update, delete: if isSignedIn() && resource.data.senderId == request.auth.uid;
     }
 
-    // --- Ideas & Suggestions ---
     match /ideas/{ideaId} {
       allow read: if true;
-      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
 
       match /suggestions/{suggestionId} {
         allow read: if true;
         allow create: if isSignedIn();
-        allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
       }
       
       match /likes/{userId} {
@@ -71,29 +35,13 @@ service cloud.firestore {
       }
     }
 
-    // --- Groups/Unions ---
-    match /groups/{groupId} {
-      allow read: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update, delete: if isSignedIn(); // Simplified for MVP
-    }
-
-    match /unions/{unionId} {
-      allow read: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update, delete: if isSignedIn();
-    }
-
-    // --- Follows ---
     match /follows/{followId} {
       allow read: if isSignedIn();
-      allow write: if isSignedIn();
+      allow write: if isSignedIn() && followId.startsWith(request.auth.uid);
     }
-
-    // --- Global Tags ---
-    match /tags/{tagId} {
-      allow read: if true;
-      allow write: if false;
+    
+    match /groups/{groupId} {
+      allow read, write: if isSignedIn();
     }
   }
 }
