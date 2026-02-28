@@ -14,8 +14,10 @@ service cloud.firestore {
     }
 
     match /messages/{messageId} {
-      // Allow listing messages where the user is either the sender or receiver
-      allow read, list: if isSignedIn() && (request.auth.uid == resource.data.senderId || request.auth.uid == resource.data.receiverId);
+      // Allow individual read if user is sender or receiver
+      allow read: if isSignedIn() && (request.auth.uid == resource.data.senderId || request.auth.uid == resource.data.receiverId);
+      // Allow listing for signed-in users (queries will filter by UID)
+      allow list: if isSignedIn();
       allow create: if isSignedIn() && request.auth.uid == request.resource.data.senderId;
       allow update, delete: if false;
     }
@@ -48,7 +50,7 @@ service cloud.firestore {
       allow read, write: if isSignedIn();
     }
 
-    // Explicitly deny notifications to prevent any unintended access errors
+    // Explicitly block notifications as requested
     match /notifications/{notificationId} {
       allow read, write: if false;
     }

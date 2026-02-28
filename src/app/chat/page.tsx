@@ -14,23 +14,37 @@ export default function ChatPage() {
   const db = useFirestore();
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Real messages query for the current user (as sender or receiver)
-  // Note: We use senderId == current user as a base, we'll filter more precisely in useMemo
-  const myMessagesQuery = useMemoFirebase(() => {
+  // Real messages query for the current user (where they are the sender)
+  // We'll also fetch where they are the receiver to show full inbox
+  const sentMessagesQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
       collection(db, "messages"),
       where("senderId", "==", user.uid),
       orderBy("createdAt", "desc"),
-      limit(100)
+      limit(50)
     );
   }, [db, user?.uid]);
 
-  const { data: allMessages, isLoading: messagesLoading } = useCollection(myMessagesQuery);
+  const receivedMessagesQuery = useMemoFirebase(() => {
+    if (!db || !user?.uid) return null;
+    return query(
+      collection(db, "messages"),
+      where("receiverId", "==", user.uid),
+      orderBy("createdAt", "desc"),
+      limit(50)
+    );
+  }, [db, user?.uid]);
+
+  const { data: sentMessages, isLoading: sentLoading } = useCollection(sentMessagesQuery);
+  const { data: receivedMessages, isLoading: receivedLoading } = useCollection(receivedMessagesQuery);
 
   const uniqueConversations = useMemo(() => {
-    if (!allMessages || !user) return [];
+    if (!user) return [];
     
+    const allMessages = [...(sentMessages || []), ...(receivedMessages || [])];
+    allMessages.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+
     const map = new Map();
     allMessages.forEach(msg => {
       const otherId = msg.senderId === user.uid ? msg.receiverId : msg.senderId;
@@ -47,7 +61,7 @@ export default function ChatPage() {
        conv.partnerId.toLowerCase().includes(searchQuery.toLowerCase()) || 
        conv.text.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [allMessages, user, searchQuery]);
+  }, [sentMessages, receivedMessages, user, searchQuery]);
 
   if (isUserLoading) {
     return (
@@ -56,6 +70,8 @@ export default function ChatPage() {
       </div>
     );
   }
+
+  const isLoading = sentLoading || receivedLoading;
 
   return (
     <div className="max-w-md mx-auto min-h-screen bg-background pt-8 pb-24">
@@ -114,7 +130,7 @@ export default function ChatPage() {
           </div>
         ) : (
           <div className="py-24 text-center space-y-4 opacity-30 px-10">
-            {messagesLoading ? (
+            {isLoading ? (
               <div className="animate-pulse space-y-4 px-6">
                 {[1, 2, 3].map(i => <div key={i} className="h-14 w-full bg-muted rounded-2xl" />)}
               </div>
