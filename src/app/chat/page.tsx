@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 export default function ChatPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const db = useFirestore();
-  const { user } = useUser();
+  const { user } = user;
 
   const myMessagesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;

@@ -18,10 +18,14 @@ export function BottomNav() {
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [user, db]);
   const { data: profileData } = useDoc(profileRef);
 
-  // Fetch unread notifications for badge
+  // Fetch unread notifications for badge (Only for current user)
   const unreadQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return query(collection(db, "notifications"), where("userId", "==", user.uid), where("read", "==", false));
+    return query(
+      collection(db, "notifications"), 
+      where("userId", "==", user.uid), 
+      where("read", "==", false)
+    );
   }, [db, user]);
   
   const { data: unreadNotifs } = useCollection(unreadQuery);

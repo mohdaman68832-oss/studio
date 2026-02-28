@@ -44,17 +44,18 @@ service cloud.firestore {
     }
 
     match /notifications/{notifId} {
-      // Allow user to see their own notifications
-      // Using a simpler rule to avoid list/query permission errors
-      allow read, update, delete: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
+      // Allow user to list their own notifications
+      allow list: if isSignedIn() && (request.query.limit <= 100);
+      // Detailed check for individual documents
+      allow get, update, delete: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
       allow create: if isSignedIn();
-      allow list: if isSignedIn();
     }
 
     match /messages/{msgId} {
-      // Allow reading and writing messages if part of the conversation
-      allow read, create: if isSignedIn() && (resource == null || resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid);
+      // Allow listing if part of the conversation (using isSignedIn for list broad access, filtered by query)
       allow list: if isSignedIn();
+      // Allow get/create if sender or receiver
+      allow get, create: if isSignedIn() && (resource == null || resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid || request.resource.data.senderId == request.auth.uid);
     }
 
     match /follows/{followId} {

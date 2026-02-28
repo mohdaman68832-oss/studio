@@ -241,9 +241,14 @@ export default function ProfilePage() {
 
   const handleDeleteSticker = () => {
     if (editingStickerId) {
-      deleteSticker(editingStickerId);
+      const idToDelete = editingStickerId;
       setEditingStickerId(null);
-      handleSaveProfile();
+      setFormData(prev => ({
+        ...prev,
+        stickers: prev.stickers.filter(s => s.id !== idToDelete)
+      }));
+      // Call save after updating state
+      setTimeout(() => handleSaveProfile(), 100);
     }
   };
 
@@ -282,7 +287,7 @@ export default function ProfilePage() {
           </DropdownMenu>
         </header>
 
-        {/* Stickers (z-[100]) - Highest Layer, on top of everything */}
+        {/* Stickers (Highest Layer z-100) */}
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
@@ -307,7 +312,7 @@ export default function ProfilePage() {
         ))}
 
         <div className="relative w-full">
-          {/* Banner (z-[10]) */}
+          {/* Banner (Lowest z-10) */}
           <div className="relative h-52 w-full overflow-hidden z-[10]">
             <Image 
               src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} 
@@ -318,7 +323,7 @@ export default function ProfilePage() {
               unoptimized 
             />
           </div>
-          {/* Logo (z-[50]) - Below Stickers */}
+          {/* Logo (Mid z-50) */}
           <div className="relative px-6 -mt-16 flex flex-col items-center z-[50]">
             <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl">
               <AvatarImage src={formData.profilePic} className="object-cover" />
@@ -327,7 +332,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* UI Content (z-[40]) - Below Stickers and Logo */}
+        {/* Text UI (z-40) */}
         <div className="relative z-[40] w-full -mt-1">
           <div style={{ backgroundColor: colors.userInfo || "transparent" }} className="w-full pb-8">
             <div className="px-6 flex flex-col items-center">
