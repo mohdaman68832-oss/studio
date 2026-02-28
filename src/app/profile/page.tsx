@@ -227,13 +227,6 @@ export default function ProfilePage() {
     }));
   };
 
-  const deleteSticker = (id: string) => {
-    setFormData(prev => ({
-      ...prev,
-      stickers: prev.stickers.filter(s => s.id !== id)
-    }));
-  };
-
   const handleDoneSticker = () => {
     setEditingStickerId(null);
     handleSaveProfile();
@@ -247,7 +240,6 @@ export default function ProfilePage() {
         ...prev,
         stickers: prev.stickers.filter(s => s.id !== idToDelete)
       }));
-      // Call save after updating state
       setTimeout(() => handleSaveProfile(), 100);
     }
   };
@@ -287,7 +279,7 @@ export default function ProfilePage() {
           </DropdownMenu>
         </header>
 
-        {/* Stickers (Highest Layer z-100) */}
+        {/* Stickers (Top Layer z-100) */}
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
@@ -312,7 +304,6 @@ export default function ProfilePage() {
         ))}
 
         <div className="relative w-full">
-          {/* Banner (Lowest z-10) */}
           <div className="relative h-52 w-full overflow-hidden z-[10]">
             <Image 
               src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} 
@@ -323,7 +314,6 @@ export default function ProfilePage() {
               unoptimized 
             />
           </div>
-          {/* Logo (Mid z-50) */}
           <div className="relative px-6 -mt-16 flex flex-col items-center z-[50]">
             <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl">
               <AvatarImage src={formData.profilePic} className="object-cover" />
@@ -332,7 +322,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Text UI (z-40) */}
         <div className="relative z-[40] w-full -mt-1">
           <div style={{ backgroundColor: colors.userInfo || "transparent" }} className="w-full pb-8">
             <div className="px-6 flex flex-col items-center">
@@ -395,7 +384,6 @@ export default function ProfilePage() {
         </Tabs>
       </div>
 
-      {/* Sticker Studio HUD */}
       {editingStickerId && activeSticker && (
         <div className="fixed bottom-24 left-4 right-4 z-[3000] bg-white/95 backdrop-blur-md rounded-[2.5rem] border shadow-2xl p-5 animate-in slide-in-from-bottom-4">
           <div className="space-y-4">

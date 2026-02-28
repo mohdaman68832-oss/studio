@@ -12,9 +12,9 @@ import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function ChatPage() {
+  const { user } = useUser();
   const [searchQuery, setSearchQuery] = useState("");
   const db = useFirestore();
-  const { user } = user;
 
   const myMessagesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
