@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -279,7 +278,7 @@ export default function ProfilePage() {
           </DropdownMenu>
         </header>
 
-        {/* STICKERS LAYER (z-[100]) */}
+        {/* STICKERS LAYER (z-[100]) - HIGHEST PRIORITY */}
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
@@ -314,7 +313,7 @@ export default function ProfilePage() {
               unoptimized 
             />
           </div>
-          {/* LOGO LAYER (z-[50]) */}
+          {/* LOGO LAYER (z-[50]) - BELOW STICKERS */}
           <div className="relative px-6 -mt-16 flex flex-col items-center z-[50]">
             <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl">
               <AvatarImage src={formData.profilePic} className="object-cover" />
@@ -323,7 +322,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* CONTENT LAYER (z-[40]) */}
+        {/* CONTENT LAYER (z-[40]) - BELOW LOGO & STICKERS */}
         <div className="relative z-[40] w-full -mt-1">
           <div style={{ backgroundColor: colors.userInfo || "transparent" }} className="w-full pb-8">
             <div className="px-6 flex flex-col items-center">

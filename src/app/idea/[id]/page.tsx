@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -56,20 +55,8 @@ export default function IdeaDetailPage() {
       createdAt: serverTimestamp(),
     };
 
-    // Add suggestion
+    // Add suggestion only, no notification
     await addDoc(collection(db, "ideas", ideaId, "suggestions"), commentData);
-
-    // Trigger Notification for the author
-    if (idea.authorId && idea.authorId !== currentUser.uid) {
-      await addDoc(collection(db, "notifications"), {
-        userId: idea.authorId,
-        type: "suggestion",
-        message: `@${currentUser.displayName || "Someone"} shared a suggestion on your idea: "${idea.title}"`,
-        sourceId: ideaId,
-        isRead: false,
-        createdAt: serverTimestamp(),
-      });
-    }
 
     setCommentText("");
   };
