@@ -18,6 +18,7 @@ export default function ChatPage() {
 
   const myMessagesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
+    // We fetch all messages and filter in the useMemo for better UX in MVP
     return query(
       collection(db, "messages"),
       orderBy("createdAt", "desc"),
