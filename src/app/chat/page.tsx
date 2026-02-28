@@ -4,7 +4,7 @@
 import { useState, useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { Search, MessageSquare, ChevronRight, Bell, Clock } from "lucide-react";
+import { Search, MessageSquare, ChevronRight, Bell, Clock, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useFirestore, useUser, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy, limit, where, doc, updateDoc } from "firebase/firestore";
@@ -12,9 +12,9 @@ import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function ChatPage() {
-  const { user } = useUser();
-  const [searchQuery, setSearchQuery] = useState("");
+  const { user, isUserLoading } = useUser();
   const db = useFirestore();
+  const [searchQuery, setSearchQuery] = useState("");
 
   const myMessagesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -23,7 +23,7 @@ export default function ChatPage() {
       orderBy("createdAt", "desc"),
       limit(100)
     );
-  }, [db, user]);
+  }, [db, user?.uid]);
 
   const { data: allMessages, isLoading: messagesLoading } = useCollection(myMessagesQuery);
 
@@ -35,7 +35,7 @@ export default function ChatPage() {
       orderBy("createdAt", "desc"),
       limit(50)
     );
-  }, [db, user]);
+  }, [db, user?.uid]);
 
   const { data: notifications, isLoading: notifsLoading } = useCollection(notificationsQuery);
 
@@ -69,6 +69,14 @@ export default function ChatPage() {
     updateDoc(ref, { read: true });
   };
 
+  if (isUserLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-md mx-auto min-h-screen bg-background pt-8 pb-24">
       <div className="px-6 mb-8">
@@ -79,10 +87,10 @@ export default function ChatPage() {
       <Tabs defaultValue="messages" className="w-full">
         <div className="px-6 mb-6">
           <TabsList className="grid w-full grid-cols-2 rounded-2xl bg-muted/50 p-1">
-            <TabsTrigger value="messages" className="rounded-xl text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-primary">
+            <TabsTrigger value="messages" className="rounded-xl text-[10px] font-black uppercase data-[state=active]:bg-white data-[state=active]:text-primary">
               Messages
             </TabsTrigger>
-            <TabsTrigger value="notifications" className="rounded-xl text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-primary flex items-center gap-2">
+            <TabsTrigger value="notifications" className="rounded-xl text-[10px] font-black uppercase data-[state=active]:bg-white data-[state=active]:text-primary flex items-center gap-2">
               Notifications
               {notifications?.some(n => !n.read) && (
                 <span className="w-1.5 h-1.5 bg-secondary rounded-full animate-pulse" />
@@ -165,7 +173,7 @@ export default function ChatPage() {
                 >
                   <Avatar className="h-12 w-12 rounded-2xl border shadow-sm">
                     <AvatarImage src={notif.fromUserAvatar} className="object-cover" />
-                    <AvatarFallback className="bg-primary/10 text-primary font-black uppercase">{notif.fromUserName[0]}</AvatarFallback>
+                    <AvatarFallback className="bg-primary/10 text-primary font-black uppercase">{notif.fromUserName?.[0] || 'U'}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">

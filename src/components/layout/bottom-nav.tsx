@@ -24,7 +24,7 @@ export function BottomNav() {
       where("userId", "==", user.uid), 
       where("read", "==", false)
     );
-  }, [db, user]);
+  }, [db, user?.uid]);
   
   const { data: unreadNotifs } = useCollection(unreadQuery);
 
