@@ -20,6 +20,7 @@ export default function ChatPage() {
     if (!db || !user) return null;
     return query(
       collection(db, "messages"),
+      where("senderId", "in", [user.uid, "dummy"]), // Basic filter to allow list
       orderBy("createdAt", "desc"),
       limit(100)
     );
@@ -43,6 +44,7 @@ export default function ChatPage() {
     if (!allMessages || !user) return [];
     
     const map = new Map();
+    // Filter messages where user is sender or receiver
     const filteredMessages = allMessages.filter(m => m.senderId === user.uid || m.receiverId === user.uid);
 
     filteredMessages.forEach(msg => {
