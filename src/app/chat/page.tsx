@@ -8,7 +8,7 @@ import { Search, MessageSquare, ChevronRight, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useFirestore, useUser, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy, limit, where } from "firebase/firestore";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils";
 
 export default function ChatPage() {
   const { user, isUserLoading } = useUser();
@@ -31,7 +31,6 @@ export default function ChatPage() {
     if (!allMessages || !user) return [];
     
     const map = new Map();
-    // Filter messages where user is either sender or receiver
     const filteredMessages = allMessages.filter(m => m.senderId === user.uid || m.receiverId === user.uid);
 
     filteredMessages.forEach(msg => {
