@@ -1,13 +1,12 @@
 
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { 
   Settings, LogOut, Camera, 
   Loader2, 
-  PaintBucket,
   Image as LucideImage, Video, Type,
   X,
   Plus,
@@ -233,7 +232,6 @@ export default function ProfilePage() {
       ...prev,
       stickers: prev.stickers.filter(s => s.id !== id)
     }));
-    setEditingStickerId(null);
   };
 
   const handleDoneSticker = () => {
@@ -244,6 +242,7 @@ export default function ProfilePage() {
   const handleDeleteSticker = () => {
     if (editingStickerId) {
       deleteSticker(editingStickerId);
+      setEditingStickerId(null);
       handleSaveProfile();
     }
   };
@@ -283,7 +282,7 @@ export default function ProfilePage() {
           </DropdownMenu>
         </header>
 
-        {/* Stickers (z-[100]) - Sabse upar */}
+        {/* Stickers (z-[100]) - Highest Layer, on top of everything */}
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
@@ -319,7 +318,7 @@ export default function ProfilePage() {
               unoptimized 
             />
           </div>
-          {/* Logo (z-[50]) - Stickers ke niche, par text ke upar */}
+          {/* Logo (z-[50]) - Below Stickers */}
           <div className="relative px-6 -mt-16 flex flex-col items-center z-[50]">
             <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl">
               <AvatarImage src={formData.profilePic} className="object-cover" />
@@ -328,7 +327,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* UI Content (z-[40]) - Stickers ke niche */}
+        {/* UI Content (z-[40]) - Below Stickers and Logo */}
         <div className="relative z-[40] w-full -mt-1">
           <div style={{ backgroundColor: colors.userInfo || "transparent" }} className="w-full pb-8">
             <div className="px-6 flex flex-col items-center">
