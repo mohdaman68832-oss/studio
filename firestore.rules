@@ -1,3 +1,4 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -14,10 +15,8 @@ service cloud.firestore {
     }
 
     match /messages/{messageId} {
-      // Allow individual read if user is sender or receiver
-      allow read: if isSignedIn() && (request.auth.uid == resource.data.senderId || request.auth.uid == resource.data.receiverId);
-      // Allow listing for signed-in users (queries will filter by UID)
-      allow list: if isSignedIn();
+      // Allow signed-in users to list messages (the app will filter by UID)
+      allow read, list: if isSignedIn();
       allow create: if isSignedIn() && request.auth.uid == request.resource.data.senderId;
       allow update, delete: if false;
     }

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -530,7 +531,6 @@ export default function ProfilePage() {
              <div className="pt-6 space-y-4">
                 <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'banner')} />
                 <Button onClick={() => bannerInputRef.current?.click()} className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase tracking-widest">{formData.banner ? "Change Photo" : "Upload Banner Photo"}</Button>
-                {banner && <Button variant="outline" onClick={() => setShowBannerDetail(false)} className="w-full h-12 rounded-2xl font-black uppercase tracking-widest border-primary text-primary">Looks Good, Save</Button>}
              </div>
           </div>
         </DialogContent>
