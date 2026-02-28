@@ -14,9 +14,7 @@ export default function ChatPage() {
   const db = useFirestore();
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Real messages query for the current user (either sender or receiver)
-  // Note: Firestore requires composite indexes for complex queries. 
-  // We'll fetch where senderId is the user and filter the rest client-side for simplicity in this prototype.
+  // Real messages query for the current user
   const myMessagesQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
@@ -33,8 +31,6 @@ export default function ChatPage() {
     if (!allMessages || !user) return [];
     
     const map = new Map();
-    // In a real app, we'd query both senderId and receiverId, 
-    // but here we filter or aggregate from what we have.
     allMessages.forEach(msg => {
       const otherId = msg.senderId === user.uid ? msg.receiverId : msg.senderId;
       if (!map.has(otherId)) {
@@ -106,9 +102,6 @@ export default function ChatPage() {
                     <h3 className="font-black text-sm uppercase tracking-tight text-foreground truncate">
                       @{msg.partnerId.substring(0, 8)}
                     </h3>
-                    {msg.isOnline && (
-                      <span className="text-[8px] text-green-500 font-bold uppercase tracking-widest">Active</span>
-                    )}
                   </div>
                   <p className="text-[12px] text-muted-foreground line-clamp-1 mt-0.5 font-medium">
                     {msg.text}

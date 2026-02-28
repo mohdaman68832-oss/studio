@@ -14,8 +14,7 @@ service cloud.firestore {
     }
 
     match /messages/{messageId} {
-      allow read: if isSignedIn() && (request.auth.uid == resource.data.senderId || request.auth.uid == resource.data.receiverId);
-      allow list: if isSignedIn() && (request.auth.uid == resource.data.senderId || request.auth.uid == resource.data.receiverId);
+      allow read, list: if isSignedIn() && (request.auth.uid == resource.data.senderId || request.auth.uid == resource.data.receiverId);
       allow create: if isSignedIn() && request.auth.uid == request.resource.data.senderId;
       allow update, delete: if false;
     }
@@ -35,6 +34,11 @@ service cloud.firestore {
         allow write: if isOwner(userId);
       }
     }
+    
+    // Explicitly deny notifications
+    match /notifications/{notificationId} {
+      allow read, write: if false;
+    }
 
     match /follows/{followId} {
       allow read, write: if isSignedIn();
@@ -46,11 +50,6 @@ service cloud.firestore {
     
     match /unions/{unionId} {
       allow read, write: if isSignedIn();
-    }
-    
-    // Notifications explicitly denied or ignored as the feature is removed
-    match /notifications/{notificationId} {
-      allow read, write: if false;
     }
   }
 }
