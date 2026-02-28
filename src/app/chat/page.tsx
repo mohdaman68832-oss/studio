@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -30,6 +31,7 @@ export default function ChatPage() {
     if (!allMessages || !user) return [];
     
     const map = new Map();
+    // Filter messages where user is either sender or receiver
     const filteredMessages = allMessages.filter(m => m.senderId === user.uid || m.receiverId === user.uid);
 
     filteredMessages.forEach(msg => {

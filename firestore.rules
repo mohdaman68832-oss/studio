@@ -1,3 +1,4 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -16,6 +17,7 @@ service cloud.firestore {
     match /messages/{messageId} {
       allow create: if isSignedIn() && request.resource.data.senderId == request.auth.uid;
       allow read: if isSignedIn() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid);
+      allow list: if isSignedIn();
       allow update, delete: if isSignedIn() && resource.data.senderId == request.auth.uid;
     }
 
@@ -37,7 +39,7 @@ service cloud.firestore {
 
     match /follows/{followId} {
       allow read: if isSignedIn();
-      allow write: if isSignedIn() && followId.startsWith(request.auth.uid);
+      allow write: if isSignedIn() && (followId.startsWith(request.auth.uid) || followId.endsWith(request.auth.uid));
     }
     
     match /groups/{groupId} {
