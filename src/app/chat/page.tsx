@@ -8,7 +8,7 @@ import { Search, MessageSquare, ChevronRight, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useFirestore, useUser, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy, limit, where } from "firebase/firestore";
-import { cn } from "@/utils";
+import { cn } from "@/lib/utils";
 
 export default function ChatPage() {
   const { user, isUserLoading } = useUser();
@@ -16,7 +16,7 @@ export default function ChatPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const myMessagesQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
+    if (!db || !user?.uid) return null;
     return query(
       collection(db, "messages"),
       where("senderId", "==", user.uid),
@@ -31,6 +31,7 @@ export default function ChatPage() {
     if (!allMessages || !user) return [];
     
     const map = new Map();
+    // Filter messages where user is either sender or receiver
     const filteredMessages = allMessages.filter(m => m.senderId === user.uid || m.receiverId === user.uid);
 
     filteredMessages.forEach(msg => {
@@ -63,7 +64,7 @@ export default function ChatPage() {
     <div className="max-w-md mx-auto min-h-screen bg-background pt-8 pb-24">
       <div className="px-6 mb-8">
         <h1 className="text-3xl font-black text-primary uppercase tracking-tighter">Inbox</h1>
-        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Your Conversations</p>
+        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Messages</p>
       </div>
 
       <div className="px-6 mb-6">

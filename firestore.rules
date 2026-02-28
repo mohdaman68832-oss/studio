@@ -15,7 +15,9 @@ service cloud.firestore {
     }
 
     match /messages/{messageId} {
-      allow read, write: if isSignedIn();
+      allow read: if isSignedIn() && (request.auth.uid == resource.data.senderId || request.auth.uid == resource.data.receiverId);
+      allow create: if isSignedIn() && request.auth.uid == request.resource.data.senderId;
+      allow update, delete: if false;
     }
 
     match /ideas/{ideaId} {
@@ -39,6 +41,10 @@ service cloud.firestore {
     }
     
     match /groups/{groupId} {
+      allow read, write: if isSignedIn();
+    }
+    
+    match /unions/{unionId} {
       allow read, write: if isSignedIn();
     }
   }
