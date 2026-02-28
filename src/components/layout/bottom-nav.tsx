@@ -1,12 +1,13 @@
+
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, PlusSquare, Search, MessageCircle, User } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from "@/firebase";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { doc } from "firebase/firestore";
+import { doc, collection, query, where, limit } from "firebase/firestore";
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -15,6 +16,19 @@ export function BottomNav() {
 
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [user, db]);
   const { data: profileData } = useDoc(profileRef);
+
+  const notificationsQuery = useMemoFirebase(() => {
+    if (!db || !user?.uid) return null;
+    return query(
+      collection(db, "notifications"),
+      where("userId", "==", user.uid),
+      where("isRead", "==", false),
+      limit(1)
+    );
+  }, [db, user?.uid]);
+
+  const { data: unreadNotifications } = useCollection(notificationsQuery);
+  const hasUnread = unreadNotifications && unreadNotifications.length > 0;
 
   const isAuthPage = pathname === '/login' || pathname === '/signup';
   if (!user || isAuthPage) return null;
@@ -36,6 +50,7 @@ export function BottomNav() {
           const Icon = item.icon;
           const isActive = pathname === item.href;
           const isProfile = item.label === "Profile";
+          const isChat = item.label === "Chat";
 
           return (
             <Link
@@ -60,6 +75,9 @@ export function BottomNav() {
                 ) : (
                   <div className="relative">
                     <Icon size={24} className={cn(isActive && "fill-current opacity-20")} />
+                    {isChat && hasUnread && (
+                      <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-secondary rounded-full border-2 border-white" />
+                    )}
                   </div>
                 )}
               </div>
