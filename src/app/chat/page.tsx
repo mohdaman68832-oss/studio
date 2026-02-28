@@ -18,7 +18,6 @@ export default function ChatPage() {
 
   const myMessagesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    // We fetch messages where the user is either sender or receiver
     return query(
       collection(db, "messages"),
       orderBy("createdAt", "desc"),
@@ -53,7 +52,7 @@ export default function ChatPage() {
         map.set(otherId, {
           ...msg,
           partnerId: otherId,
-          isOnline: Math.random() > 0.4 // Simulated for visual indicator
+          isOnline: Math.random() > 0.4 
         });
       }
     });

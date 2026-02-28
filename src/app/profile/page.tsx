@@ -256,7 +256,6 @@ export default function ProfilePage() {
       style={{ backgroundColor: colors.background || "var(--background)" }}
     >
       <div className="relative w-full flex flex-col" ref={studioContainerRef}>
-        {/* HEADER (z-70) */}
         <div className="h-16 w-full relative z-[70]" style={{ backgroundColor: colors.header }} />
         
         <header className="absolute top-0 left-0 right-0 z-[80] px-6 flex justify-between items-center py-5">
@@ -280,7 +279,6 @@ export default function ProfilePage() {
           </DropdownMenu>
         </header>
 
-        {/* STICKERS (z-100 - HIGHEST) */}
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
@@ -305,7 +303,6 @@ export default function ProfilePage() {
         ))}
 
         <div className="relative w-full">
-          {/* BANNER (z-10) */}
           <div className="relative h-52 w-full overflow-hidden z-[10]">
             <Image 
               src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} 
@@ -316,7 +313,6 @@ export default function ProfilePage() {
               unoptimized 
             />
           </div>
-          {/* LOGO (z-50) */}
           <div className="relative px-6 -mt-16 flex flex-col items-center z-[50]">
             <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl">
               <AvatarImage src={formData.profilePic} className="object-cover" />
@@ -325,7 +321,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* UI CONTENT (z-40) */}
         <div className="relative z-[40] w-full -mt-1">
           <div style={{ backgroundColor: colors.userInfo || "transparent" }} className="w-full pb-8">
             <div className="px-6 flex flex-col items-center">

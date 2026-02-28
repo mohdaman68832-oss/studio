@@ -14,11 +14,9 @@ export function BottomNav() {
   const { user } = useUser();
   const db = useFirestore();
 
-  // Fetch real-time profile data for the bottom nav avatar
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [user, db]);
   const { data: profileData } = useDoc(profileRef);
 
-  // Fetch unread notifications for badge (Only for current user)
   const unreadQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(
@@ -41,7 +39,6 @@ export function BottomNav() {
     { label: "Profile", icon: User, href: "/profile" },
   ];
 
-  // Prioritize the Firestore profile picture URL, fallback to Auth photo, then empty
   const profilePic = profileData?.profilePictureUrl || user?.photoURL || "";
 
   return (
