@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -337,7 +336,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div style={{ backgroundColor: colors.statsSection || "transparent" }} className="w-full py-8 px-10">
+          <div style={{ backgroundColor: colors.statsSection || "transparent" }} className="w-full py-8 px-10 relative z-[40]">
             <div className="grid grid-cols-3 gap-6 w-full">
               <div className="text-center">
                 <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{profileData?.totalIdeasPosted || 0}</p>

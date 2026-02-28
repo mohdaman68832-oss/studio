@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -20,7 +19,7 @@ export default function ChatPage() {
     if (!db || !user) return null;
     return query(
       collection(db, "messages"),
-      where("senderId", "in", [user.uid, "dummy"]), // Basic filter to allow list
+      where("senderId", "==", user.uid),
       orderBy("createdAt", "desc"),
       limit(100)
     );
@@ -44,7 +43,6 @@ export default function ChatPage() {
     if (!allMessages || !user) return [];
     
     const map = new Map();
-    // Filter messages where user is sender or receiver
     const filteredMessages = allMessages.filter(m => m.senderId === user.uid || m.receiverId === user.uid);
 
     filteredMessages.forEach(msg => {
@@ -66,7 +64,7 @@ export default function ChatPage() {
   }, [allMessages, user, searchQuery]);
 
   const markAsRead = async (notifId: string) => {
-    if (!db) return;
+    if (!db || !user) return;
     const ref = doc(db, "notifications", notifId);
     updateDoc(ref, { read: true });
   };
