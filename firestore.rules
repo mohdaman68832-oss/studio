@@ -1,68 +1,173 @@
+/**
+ * InnovateSphere Security Rules
+ *
+ * PHILOSOPHY:
+ * This ruleset enforces a strict user-ownership and collaborator-access model. It is designed 
+ * for rapid prototyping, meaning it focuses heavily on "who" can access data based on 
+ * identity and relationships, while remaining flexible on the specific schema of the content.
+ *
+ * DATA STRUCTURE:
+ * - User-specific data (Profiles, Saved Ideas, Notifications) is nested under /users/{userId}.
+ * - Social content (Ideas, Ratings) are top-level or sub-collections of ideas, designed for public discovery.
+ * - Collaboration (Chat sessions, Collaboration requests) are secured via member lists or participant IDs.
+ *
+ * KEY SECURITY DECISIONS:
+ * - DENORMALIZATION: To ensure high performance and "Authorization Independence," critical 
+ *   ownership fields (like creatorId) and membership lists (participantIds) are stored 
+ *   directly on the documents they secure. This avoids expensive get() calls during rule evaluation.
+ * - STRUCTURAL SEGREGATION: Private user data is separated from public social data to 
+ *   prevent accidental exposure during list operations.
+ * - IMMUTABILITY: Relationships (like the link between a profile and a UID) are enforced 
+ *   as immutable during updates to prevent data hijacking.
+ */
 
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // --- Global Helper Functions ---
+
+    /** @description Checks if the request is from an authenticated user. */
     function isSignedIn() {
       return request.auth != null;
     }
 
+    /** @description Checks if the authenticated user matches the provided userId (path-based ownership). */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    match /userProfiles/{userId} {
-      allow read: if true;
-      allow create, update, delete: if isOwner(userId);
+    /** @description Checks if the authenticated user matches the owner field on a document. */
+    function isDocumentOwner(ownerId) {
+      return isSignedIn() && request.auth.uid == ownerId;
     }
 
+    /** @description Checks if the user is a member of a list/map (shared access). */
+    function isMember(memberList) {
+      return isSignedIn() && (request.auth.uid in memberList);
+    }
+
+    /** @description Combines ownership and existence checks for updates and deletes. */
+    function isExistingOwner(ownerId) {
+      return resource != null && isDocumentOwner(ownerId);
+    }
+
+    /** @description Combines path ownership and existence checks for updates and deletes. */
+    function isExistingPathOwner(userId) {
+      return resource != null && isOwner(userId);
+    }
+
+    // --- Collection Rules ---
+
+    /** 
+     * @description Rules for user profiles. Only the user can manage their own profile.
+     * @path /users/{userId}
+     * @allow (create) if auth.uid == "user123" and data.id == "user123"
+     * @deny (update) if auth.uid != userId
+     * @principle Restricts access to a user's own data tree and validates relational integrity.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingPathOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingPathOwner(userId);
+
+      /** 
+       * @description User's bookmarked/saved ideas.
+       * @path /users/{userId}/savedIdeas/{saveId}
+       * @allow (list) if auth.uid == userId
+       * @deny (create) if auth.uid != userId
+       */
+      match /savedIdeas/{saveId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isExistingPathOwner(userId) && request.resource.data.userId == resource.data.userId;
+        allow delete: if isExistingPathOwner(userId);
+      }
+
+      /** 
+       * @description User notifications. Addresses the requirement for auth users to read/write notifications.
+       * @path /users/{userId}/notifications/{notificationId}
+       * @allow (update) if auth.uid == userId (e.g., marking as read)
+       * @deny (get) if auth.uid != userId
+       */
+      match /notifications/{notificationId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update: if isExistingPathOwner(userId);
+        allow delete: if isExistingPathOwner(userId);
+      }
+    }
+
+    /** 
+     * @description Public innovation ideas. Readable by all, writable only by creator.
+     * @path /ideas/{ideaId}
+     * @allow (list) if true
+     * @allow (create) if data.creatorId == auth.uid
+     * @principle Public discovery with owner-only writes.
+     */
     match /ideas/{ideaId} {
-      allow read: if true;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn(); 
-      allow delete: if isSignedIn() && (resource == null || resource.data.authorId == request.auth.uid);
+      allow get, list: if true;
+      allow create: if isSignedIn() && request.resource.data.creatorId == request.auth.uid;
+      allow update: if isExistingOwner(resource.data.creatorId) && request.resource.data.creatorId == resource.data.creatorId;
+      allow delete: if isExistingOwner(resource.data.creatorId);
 
-      match /suggestions/{suggestionId} {
-        allow read: if true;
-        allow create: if isSignedIn();
+      /** 
+       * @description Ratings for an idea.
+       * @path /ideas/{ideaId}/ratings/{ratingId}
+       * @allow (create) if data.raterId == auth.uid
+       */
+      match /ratings/{ratingId} {
+        allow get, list: if true;
+        allow create: if isSignedIn() && request.resource.data.raterId == request.auth.uid;
+        allow update: if isExistingOwner(resource.data.raterId) && request.resource.data.raterId == resource.data.raterId;
+        allow delete: if isExistingOwner(resource.data.raterId);
       }
 
-      match /likes/{userId} {
-        allow read: if true;
-        allow write: if isOwner(userId);
+      /** 
+       * @description Collaborative chat sessions for an idea.
+       * @path /ideas/{ideaId}/chatSessions/{chatSessionId}
+       * @principle Shared access using denormalized participant lists.
+       */
+      match /chatSessions/{chatSessionId} {
+        allow get, list: if isSignedIn() && (isMember(resource.data.participantIds) || isDocumentOwner(resource.data.ideaCreatorId));
+        allow create: if isSignedIn() && (isMember(request.resource.data.participantIds) || isDocumentOwner(request.resource.data.ideaCreatorId));
+        allow update: if isSignedIn() && resource != null && (isMember(resource.data.participantIds) || isDocumentOwner(resource.data.ideaCreatorId));
+        allow delete: if isExistingOwner(resource.data.ideaCreatorId);
+
+        /** 
+         * @description Individual chat messages.
+         * @path /ideas/{ideaId}/chatSessions/{chatSessionId}/messages/{messageId}
+         */
+        match /messages/{messageId} {
+          allow get, list: if isSignedIn() && (isMember(resource.data.sessionParticipantIds) || isDocumentOwner(resource.data.ideaCreatorId));
+          allow create: if isSignedIn() && request.resource.data.senderId == request.auth.uid;
+          allow update: if isExistingOwner(resource.data.senderId);
+          allow delete: if isExistingOwner(resource.data.senderId) || isDocumentOwner(resource.data.ideaCreatorId);
+        }
       }
     }
 
-    match /groups/{groupId} {
-      allow read: if true;
-      allow create, update: if isSignedIn();
-      
-      match /members/{userId} {
-        allow read: if true;
-        allow write: if isOwner(userId);
-      }
+    /** 
+     * @description Global requests to collaborate on ideas.
+     * @path /collaborationRequests/{requestId}
+     * @allow (get) if auth.uid == data.requesterId or auth.uid == data.recipientId
+     */
+    match /collaborationRequests/{requestId} {
+      allow get, list: if isSignedIn() && (isDocumentOwner(resource.data.requesterId) || isDocumentOwner(resource.data.recipientId));
+      allow create: if isSignedIn() && request.resource.data.requesterId == request.auth.uid;
+      allow update: if isSignedIn() && resource != null && (isDocumentOwner(resource.data.requesterId) || isDocumentOwner(resource.data.recipientId));
+      allow delete: if isExistingOwner(resource.data.requesterId);
     }
 
-    match /notifications/{notifId} {
-      // Allow list only if querying for own userId
-      allow list: if isSignedIn() && (request.query.limit <= 100);
-      allow read, update, delete: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
-      allow create: if isSignedIn();
-    }
-
-    match /messages/{msgId} {
-      // Allow list for inbox load
-      allow list: if isSignedIn();
-      allow get, create: if isSignedIn() && (resource == null || resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid || request.resource.data.senderId == request.auth.uid);
-    }
-
-    match /follows/{followId} {
-      allow read, list: if true;
-      allow write: if isSignedIn();
-    }
-
-    match /{path=**} {
-      allow read, write: if isSignedIn();
+    /** 
+     * @description Read-only global tags for categorization.
+     * @path /tags/{tagId}
+     */
+    match /tags/{tagId} {
+      allow get, list: if true;
+      allow create, update, delete: if false;
     }
   }
 }
