@@ -55,7 +55,7 @@ export default function IdeaDetailPage() {
       createdAt: serverTimestamp(),
     };
 
-    // Add suggestion only, no notification
+    // Add suggestion to the idea subcollection
     await addDoc(collection(db, "ideas", ideaId, "suggestions"), commentData);
 
     setCommentText("");

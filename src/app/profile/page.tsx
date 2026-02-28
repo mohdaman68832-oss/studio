@@ -454,7 +454,7 @@ export default function ProfilePage() {
                </div>
             </div>
             <div className="space-y-3">
-              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Bio/Objective</Label>
+              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">About Your Expertise</Label>
               <Textarea value={formData.bio} onChange={(e) => setFormData(p => ({ ...p, bio: e.target.value }))} className="rounded-[1.5rem] min-h-[80px] bg-muted/20 border-none font-medium text-xs p-4 shadow-none focus-visible:ring-0" />
             </div>
             <div className="space-y-4">

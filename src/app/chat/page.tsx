@@ -14,7 +14,8 @@ export default function ChatPage() {
   const db = useFirestore();
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Real messages query for the current user
+  // Real messages query for the current user (as sender or receiver)
+  // Note: We use senderId == current user as a base, we'll filter more precisely in useMemo
   const myMessagesQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
@@ -60,7 +61,7 @@ export default function ChatPage() {
     <div className="max-w-md mx-auto min-h-screen bg-background pt-8 pb-24">
       <div className="px-6 mb-8">
         <h1 className="text-3xl font-black text-primary uppercase tracking-tighter">Inbox</h1>
-        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Messages Only</p>
+        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Direct Messages</p>
       </div>
 
       <div className="px-6 mb-6">
@@ -120,7 +121,7 @@ export default function ChatPage() {
             ) : (
               <>
                 <MessageSquare size={48} className="mx-auto" />
-                <p className="text-[10px] font-black uppercase tracking-[0.2em]">No messages yet</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em]">No messages found</p>
               </>
             )}
           </div>
