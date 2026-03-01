@@ -34,7 +34,7 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import Image from "next/image";
 import { useUser, useAuth, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
-import { signOut, updateProfile } from "firebase/auth";
+import { signOut } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
@@ -293,7 +293,7 @@ export default function ProfilePage() {
             </Avatar>
           </div>
 
-          {/* Stickers Layer (z-[100]) - hamesha Logo aur Text ke upar */}
+          {/* Stickers Layer (z-[100]) */}
           <div className="absolute inset-0 pointer-events-none z-[100]">
             {formData.stickers.map((sticker) => (
               <div 
@@ -384,7 +384,7 @@ export default function ProfilePage() {
 
       {/* MASTER STICKER STUDIO CONTROLS (Topmost Level) */}
       {editingStickerId && activeSticker && (
-        <div className="fixed bottom-24 left-4 right-4 z-[5000] bg-white dark:bg-zinc-900/95 backdrop-blur-md rounded-[2.5rem] border shadow-2xl p-5 animate-in slide-in-from-bottom-4">
+        <div className="fixed bottom-24 left-4 right-4 z-[5000] bg-white dark:bg-zinc-900/95 backdrop-blur-md rounded-[2.5rem] border shadow-2xl p-5 animate-in slide-in-from-bottom-4 pointer-events-auto">
           <div className="space-y-4">
             <header className="flex items-center justify-between px-1">
               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Sticker Studio</h4>
@@ -398,6 +398,7 @@ export default function ProfilePage() {
                   <span>{Math.round(activeSticker.scale * 100)}%</span>
                 </div>
                 <Slider 
+                  defaultValue={[activeSticker.scale]}
                   value={[activeSticker.scale]} 
                   min={0.2} 
                   max={4} 
@@ -412,6 +413,7 @@ export default function ProfilePage() {
                   <span>{activeSticker.rotation}°</span>
                 </div>
                 <Slider 
+                  defaultValue={[activeSticker.rotation]}
                   value={[activeSticker.rotation]} 
                   min={0} 
                   max={360} 
