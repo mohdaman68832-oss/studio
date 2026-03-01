@@ -22,7 +22,7 @@ function LogoLoader() {
             />
             <g className="animate-eye-look">
               <g className="animate-eye-blink">
-                {/* Smaller, refined eyes */}
+                {/* Refined, balanced eyes */}
                 <rect x="35" y="42" width="16" height="28" rx="8" fill="white" />
                 <rect x="69" y="42" width="16" height="28" rx="8" fill="white" />
               </g>
@@ -65,11 +65,11 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       }
     } else {
       // If user is logged in but doesn't have a profile, force setup
-      if (!profileData) {
+      if (!profileData && !isProfileLoading) {
         if (!isSetupPage) {
           router.push('/setup');
         }
-      } else {
+      } else if (profileData) {
         // If user has a profile, never let them back to auth or setup
         if (isAuthPage || isSetupPage) {
           router.push('/');
