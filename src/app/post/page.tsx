@@ -17,7 +17,8 @@ import {
   Video as VideoIcon, 
   X,
   Send,
-  Tags
+  Tags,
+  LayoutGrid
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
@@ -62,6 +63,7 @@ function PostFormContent() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isImageSheetOpen, setIsImageSheetOpen] = useState(false);
   const [isVideoSheetOpen, setIsVideoSheetOpen] = useState(false);
+  const [isCategorySheetOpen, setIsCategorySheetOpen] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -71,7 +73,6 @@ function PostFormContent() {
 
   const [category, setCategory] = useState("Technology");
   
-  // Dynamic Check: Is it a meme?
   const isMeme = category.toLowerCase() === "memes" || category.toLowerCase() === "meme";
 
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [user, db]);
@@ -350,11 +351,42 @@ function PostFormContent() {
             </div>
 
             <div className="space-y-4">
-              <Label className="text-[10px] font-black uppercase tracking-widest ml-1 flex items-center gap-2">
-                <Tags size={14} className="text-primary" /> Tag Innovation
-              </Label>
-              <div className="flex flex-wrap gap-2 max-h-[150px] overflow-y-auto no-scrollbar p-1">
-                {CATEGORY_KEYWORDS.map((keyword) => (
+              <div className="flex items-center justify-between px-1">
+                <Label className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                  <Tags size={14} className="text-primary" /> Category Hub
+                </Label>
+                <Sheet open={isCategorySheetOpen} onOpenChange={setIsCategorySheetOpen}>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-auto p-0 text-[10px] font-black uppercase text-secondary">
+                      See All <LayoutGrid size={12} className="ml-1" />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="bottom" className="rounded-t-[3rem] h-[60vh] overflow-y-auto no-scrollbar pb-10">
+                    <SheetHeader>
+                      <SheetTitle className="text-center text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-6">
+                        Select Innovation Hub
+                      </SheetTitle>
+                    </SheetHeader>
+                    <div className="grid grid-cols-2 gap-3 px-2">
+                      {CATEGORY_KEYWORDS.map((kw) => (
+                        <Button
+                          key={kw}
+                          variant={category === kw ? "default" : "outline"}
+                          onClick={() => { setCategory(kw); setIsCategorySheetOpen(false); }}
+                          className={cn(
+                            "rounded-2xl h-14 text-[9px] font-black uppercase tracking-widest",
+                            category === kw ? "bg-primary text-white border-primary shadow-lg shadow-primary/20" : "bg-white border-muted/50"
+                          )}
+                        >
+                          {kw}
+                        </Button>
+                      ))}
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              </div>
+              <div className="flex flex-wrap gap-2 p-1">
+                {CATEGORY_KEYWORDS.slice(0, 8).map((keyword) => (
                   <Button
                     key={keyword}
                     variant="outline"

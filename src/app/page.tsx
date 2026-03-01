@@ -8,7 +8,8 @@ import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@
 import { collection, query, orderBy, doc } from "firebase/firestore";
 import { useMemo, useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RefreshCcw, ImageIcon, Video, Type } from "lucide-react";
+import { RefreshCcw, ImageIcon, Video, Type, LayoutGrid } from "lucide-react";
+import Link from "next/link";
 
 const MOCK_IDEAS = [
   {
@@ -79,8 +80,7 @@ export default function FeedPage() {
     };
 
     if (activeCategory === "All") {
-      // EXCLUDE all memes from the 'All' page to keep feeds segregated
-      // AND filter by user interests if they exist
+      // EXCLUDE memes from All feed and filter by user interests if they exist
       return unique.filter(i => {
         if (isMemePost(i)) return false;
         if (userInterests.length > 0) {
@@ -94,7 +94,6 @@ export default function FeedPage() {
     }
     
     if (activeCategory === "Meme") {
-      // Show ONLY memes, strictly segregated by format
       return unique.filter(i => {
         if (!isMemePost(i)) return false;
 
@@ -180,6 +179,11 @@ export default function FeedPage() {
             {activeCategory === "All" && userInterests.length > 0 ? "Tailored to your interests" : "Innovation at your fingertips"}
           </p>
         </div>
+        <Link href="/categories">
+          <Button variant="ghost" size="icon" className="rounded-full bg-primary/5 text-primary">
+            <LayoutGrid size={20} />
+          </Button>
+        </Link>
       </header>
 
       <div className="flex w-full gap-2 -mx-4 px-4 pt-2 pb-4 mb-2 border-b border-border/50">
@@ -244,8 +248,11 @@ export default function FeedPage() {
               <div className="py-20 text-center opacity-30 flex flex-col items-center gap-3">
                 <p className="text-[10px] font-black uppercase tracking-widest">No matching content yet</p>
                 {activeCategory === "All" && userInterests.length > 0 && (
-                   <p className="text-[9px] font-medium max-w-[200px]">We couldn't find posts matching your interests. Try following more categories!</p>
+                   <p className="text-[9px] font-medium max-w-[200px] text-center">We couldn't find posts matching your interests. Try following more categories in the Explore section!</p>
                 )}
+                <Link href="/categories">
+                  <Button variant="outline" className="rounded-full mt-4 text-[10px] font-black uppercase">Explore Categories</Button>
+                </Link>
               </div>
             )}
           </>

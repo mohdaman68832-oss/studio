@@ -11,13 +11,13 @@ import { useAuth, useFirestore } from "@/firebase";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, setDoc, getDocs, collection, query, where } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ChevronRight, ChevronLeft, Camera, Image as ImageIcon, Briefcase, Monitor, Smartphone, X } from "lucide-react";
+import { Loader2, ChevronRight, ChevronLeft, Camera, Image as ImageIcon, Briefcase, Monitor, Smartphone, X, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { Progress } from "@/components/ui/progress";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
-type Step = 1 | 2 | 3;
+type Step = 1 | 2 | 3 | 4;
 
 const EXPERTISE_OPTIONS = [
   "Education", "Technology", "AI & Tools", "App Development", "Business & Startup", 
@@ -167,7 +167,7 @@ export default function SignupPage() {
     }
   };
 
-  const progress = (step / 3) * 100;
+  const progress = (step / 4) * 100;
 
   return (
     <div className="max-w-md mx-auto min-h-screen flex flex-col p-6 space-y-8 bg-background justify-center">
@@ -212,15 +212,17 @@ export default function SignupPage() {
           {step === 1 && "Start your journey"}
           {step === 2 && "Choose your identity"}
           {step === 3 && "Personalize your profile"}
+          {step === 4 && "Select your worlds"}
         </p>
       </div>
 
       <div className="space-y-2">
         <Progress value={progress} className="h-1.5 bg-muted" />
         <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-muted-foreground">
-          <span className={step >= 1 ? "text-primary" : ""}>Account Info</span>
-          <span className={step >= 2 ? "text-primary" : ""}>Username</span>
+          <span className={step >= 1 ? "text-primary" : ""}>Info</span>
+          <span className={step >= 2 ? "text-primary" : ""}>User</span>
           <span className={step >= 3 ? "text-primary" : ""}>Profile</span>
+          <span className={step >= 4 ? "text-primary" : ""}>Interests</span>
         </div>
       </div>
 
@@ -265,30 +267,43 @@ export default function SignupPage() {
               <input type="file" ref={profileInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'profile')} />
             </div>
             <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest ml-1">About Your Expertise</Label><Textarea placeholder="Tell us about your background and skills..." className="rounded-2xl h-24 bg-white border-muted" value={bio} onChange={(e) => setBio(e.target.value)} /></div>
-            <div className="space-y-3">
-              <Label className="text-[10px] font-black uppercase tracking-widest ml-1 flex items-center gap-1"><Briefcase size={12} /> Personalized Feed Interests</Label>
-              <p className="text-[8px] text-muted-foreground font-medium -mt-1 mb-2">Pick categories you want to see in your home feed.</p>
-              <div className="flex flex-wrap gap-2 max-h-[250px] overflow-y-auto no-scrollbar p-1">
-                {EXPERTISE_OPTIONS.map((opt) => (
-                  <Button 
-                    key={opt} 
-                    variant="outline" 
-                    size="sm" 
-                    className={cn(
-                      "rounded-full text-[9px] font-bold uppercase tracking-widest transition-all", 
-                      interests.includes(opt) ? "bg-primary text-white border-primary" : "bg-white"
-                    )} 
-                    onClick={() => toggleInterest(opt)}
-                  >
-                    {opt}
-                  </Button>
-                ))}
-              </div>
-            </div>
           </div>
           <div className="space-y-3 pt-4">
-            <Button onClick={handleSignup} className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase shadow-xl" disabled={loading}>{loading ? <Loader2 className="animate-spin mr-2" /> : "Complete Account Creation"}</Button>
+            <Button onClick={() => setStep(4)} className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase shadow-xl">Final Step: Categories <ChevronRight size={18} className="ml-2" /></Button>
             <Button type="button" variant="ghost" className="w-full h-10 font-bold uppercase text-[10px]" onClick={() => setStep(2)}><ChevronLeft size={14} className="mr-1" /> Back</Button>
+          </div>
+        </div>
+      )}
+
+      {step === 4 && (
+        <div className="space-y-6 animate-in slide-in-from-right-4 duration-500 h-[70vh] flex flex-col">
+          <div className="bg-primary/5 p-4 rounded-3xl border border-primary/10 flex items-center gap-3">
+            <Sparkles className="text-primary" />
+            <p className="text-[10px] font-black uppercase text-primary leading-tight">Pick at least 3 hubs to curate your feed.</p>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto no-scrollbar py-4 grid grid-cols-2 gap-2">
+            {EXPERTISE_OPTIONS.map((opt) => (
+              <Button 
+                key={opt} 
+                variant="outline" 
+                size="sm" 
+                className={cn(
+                  "rounded-2xl h-14 text-[9px] font-black uppercase tracking-widest transition-all", 
+                  interests.includes(opt) ? "bg-primary text-white border-primary shadow-lg shadow-primary/20" : "bg-white border-muted/50"
+                )} 
+                onClick={() => toggleInterest(opt)}
+              >
+                {opt}
+              </Button>
+            ))}
+          </div>
+
+          <div className="space-y-3 pt-6 border-t bg-background">
+            <Button onClick={handleSignup} className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase shadow-xl" disabled={loading || interests.length < 3}>
+              {loading ? <Loader2 className="animate-spin mr-2" /> : interests.length < 3 ? `Pick ${3 - interests.length} More` : "Launch My Sphere"}
+            </Button>
+            <Button type="button" variant="ghost" className="w-full h-10 font-bold uppercase text-[10px]" onClick={() => setStep(3)}><ChevronLeft size={14} className="mr-1" /> Back</Button>
           </div>
         </div>
       )}
