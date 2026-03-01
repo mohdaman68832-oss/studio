@@ -3,11 +3,58 @@
 
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, LayoutGrid, Sparkles, Loader2, Plus } from "lucide-react";
+import { 
+  ChevronLeft, LayoutGrid, Sparkles, Loader2, 
+  GraduationCap, Cpu, Bot, Laptop, Rocket, Briefcase, Landmark, 
+  IndianRupee, Globe, Heart, Brain, Zap, Fire, Users, Megaphone, 
+  Vote, Newspaper, BookOpen, FlaskConical, Gamepad2, Film, Music, 
+  Trophy, Laugh, PenTool, MessageSquare, Pencil, User, Smile, 
+  Eye, Wand2, Monitor as Screen, Palette, Book, MessageCircle, Medal
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 import Link from "next/link";
+
+const ICON_MAP: Record<string, any> = {
+  "Education": GraduationCap,
+  "Technology": Cpu,
+  "AI & Tools": Bot,
+  "App Development": Laptop,
+  "Business & Startup": Rocket,
+  "Career & Jobs": Briefcase,
+  "Government Exams": Landmark,
+  "Finance & Investment": IndianRupee,
+  "Earning Online": Globe,
+  "Health & Fitness": Heart,
+  "Mental Health": Brain,
+  "Self Improvement": Zap,
+  "Motivation": Fire,
+  "Relationships": Users,
+  "Social Issues": Megaphone,
+  "Politics": Vote,
+  "Current Affairs": Newspaper,
+  "History": BookOpen,
+  "Science": FlaskConical,
+  "Gaming": Gamepad2,
+  "Movies & Web Series": Film,
+  "Music": Music,
+  "Sports": Trophy,
+  "Memes": Laugh,
+  "Stories & Shayari": PenTool,
+  "Opinion / Debate": MessageSquare,
+  "Pencil Sketch": Pencil,
+  "Portrait Drawing": User,
+  "Cartoon Drawing": Smile,
+  "Realistic Drawing": Eye,
+  "Doodle Art": Wand2,
+  "Digital Art": Screen,
+  "AI Art": Sparkles,
+  "Painting": Palette,
+  "Learn Drawing": Book,
+  "Art Feedback": MessageCircle,
+  "Art Competitions": Medal
+};
 
 export default function CategoriesPage() {
   const router = useRouter();
@@ -40,30 +87,35 @@ export default function CategoriesPage() {
       </header>
 
       {userCategories.length > 0 ? (
-        <div className="grid grid-cols-2 gap-3">
-          {userCategories.map((cat: string) => (
-            <Button
-              key={cat}
-              variant="outline"
-              className="h-28 rounded-[2.5rem] flex flex-col gap-3 border-muted/50 hover:border-primary/50 hover:bg-primary/5 transition-all group"
-              onClick={() => router.push(`/?category=${cat}`)}
-            >
-              <div className="w-10 h-10 rounded-2xl bg-muted/50 flex items-center justify-center text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                <Sparkles size={18} />
-              </div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-center px-2">{cat}</span>
-            </Button>
-          ))}
+        <div className="grid grid-cols-2 gap-4">
+          {userCategories.map((cat: string) => {
+            const Icon = ICON_MAP[cat] || Sparkles;
+            return (
+              <Button
+                key={cat}
+                variant="outline"
+                className="h-36 rounded-[2.5rem] flex flex-col gap-4 border-muted/50 hover:border-primary/50 hover:bg-primary/5 transition-all group shadow-sm bg-white"
+                onClick={() => router.push(`/?category=${cat}`)}
+              >
+                <div className="w-12 h-12 rounded-2xl bg-primary/5 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
+                  <Icon size={24} />
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-center px-2 leading-tight">
+                  {cat}
+                </span>
+              </Button>
+            );
+          })}
         </div>
       ) : (
         <div className="py-20 text-center space-y-6">
           <div className="bg-primary/5 p-10 rounded-[3rem] border border-dashed border-primary/20">
             <LayoutGrid className="mx-auto text-primary/20 mb-4" size={48} />
-            <p className="text-sm font-bold text-muted-foreground">No hubs selected yet.</p>
-            <p className="text-[10px] text-muted-foreground/60 uppercase mt-2">Personalize your feed to see categories here.</p>
+            <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">No hubs selected yet.</p>
+            <p className="text-[9px] text-muted-foreground/60 uppercase mt-2">Personalize your feed to see categories here.</p>
           </div>
           <Link href="/setup">
-            <Button className="rounded-full bg-primary text-white px-8 font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20">
+            <Button className="rounded-full bg-primary text-white px-10 h-14 font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20">
               Update Interests
             </Button>
           </Link>
@@ -71,10 +123,10 @@ export default function CategoriesPage() {
       )}
 
       <div className="bg-primary/5 p-8 rounded-[3rem] border border-primary/10 text-center space-y-4">
-        <LayoutGrid className="mx-auto text-primary opacity-30" size={40} />
-        <h3 className="text-sm font-black uppercase tracking-tighter">Personal Hubs</h3>
-        <p className="text-[11px] text-muted-foreground font-medium leading-relaxed">
-          Select a category to see specialized innovations and memes from creators in your chosen hubs.
+        <Sparkles className="mx-auto text-primary opacity-30" size={40} />
+        <h3 className="text-sm font-black uppercase tracking-tighter text-primary">Personal Hubs</h3>
+        <p className="text-[11px] text-muted-foreground font-medium leading-relaxed uppercase">
+          Each hub represents a specialized world of innovation and creativity tailored to your chosen path.
         </p>
       </div>
     </div>

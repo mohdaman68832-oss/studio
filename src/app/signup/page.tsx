@@ -11,7 +11,15 @@ import { useAuth, useFirestore } from "@/firebase";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, setDoc, getDocs, collection, query, where } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ChevronRight, ChevronLeft, Camera, Image as ImageIcon, Briefcase, Monitor, Smartphone, X, Sparkles } from "lucide-react";
+import { 
+  Loader2, ChevronRight, ChevronLeft, Camera, Image as ImageIcon, 
+  Briefcase, Monitor, Smartphone, X, Sparkles,
+  GraduationCap, Cpu, Bot, Laptop, Rocket, Landmark, 
+  IndianRupee, Globe, Heart, Brain, Zap, Fire, Users, Megaphone, 
+  Vote, Newspaper, BookOpen, FlaskConical, Gamepad2, Film, Music, 
+  Trophy, Laugh, PenTool, MessageSquare, Pencil, User, Smile, 
+  Eye, Wand2, Monitor as Screen, Palette, Book, MessageCircle, Medal
+} from "lucide-react";
 import Link from "next/link";
 import { Progress } from "@/components/ui/progress";
 import Image from "next/image";
@@ -19,15 +27,44 @@ import { cn } from "@/lib/utils";
 
 type Step = 1 | 2 | 3 | 4;
 
-const EXPERTISE_OPTIONS = [
-  "Education", "Technology", "AI & Tools", "App Development", "Business & Startup", 
-  "Career & Jobs", "Government Exams", "Finance & Investment", "Earning Online", 
-  "Health & Fitness", "Mental Health", "Self Improvement", "Motivation", 
-  "Relationships", "Social Issues", "Politics", "Current Affairs", "History", 
-  "Science", "Gaming", "Movies & Web Series", "Music", "Sports", "Memes", 
-  "Stories & Shayari", "Opinion / Debate", "Pencil Sketch", "Portrait Drawing", 
-  "Cartoon Drawing", "Realistic Drawing", "Doodle Art", "Digital Art", "AI Art", 
-  "Painting", "Learn Drawing", "Art Feedback", "Art Competitions"
+const HUB_OPTIONS = [
+  { name: "Education", icon: GraduationCap },
+  { name: "Technology", icon: Cpu },
+  { name: "AI & Tools", icon: Bot },
+  { name: "App Development", icon: Laptop },
+  { name: "Business & Startup", icon: Rocket },
+  { name: "Career & Jobs", icon: Briefcase },
+  { name: "Government Exams", icon: Landmark },
+  { name: "Finance & Investment", icon: IndianRupee },
+  { name: "Earning Online", icon: Globe },
+  { name: "Health & Fitness", icon: Heart },
+  { name: "Mental Health", icon: Brain },
+  { name: "Self Improvement", icon: Zap },
+  { name: "Motivation", icon: Fire },
+  { name: "Relationships", icon: Users },
+  { name: "Social Issues", icon: Megaphone },
+  { name: "Politics", icon: Vote },
+  { name: "Current Affairs", icon: Newspaper },
+  { name: "History", icon: BookOpen },
+  { name: "Science", icon: FlaskConical },
+  { name: "Gaming", icon: Gamepad2 },
+  { name: "Movies & Web Series", icon: Film },
+  { name: "Music", icon: Music },
+  { name: "Sports", icon: Trophy },
+  { name: "Memes", icon: Laugh },
+  { name: "Stories & Shayari", icon: PenTool },
+  { name: "Opinion / Debate", icon: MessageSquare },
+  { name: "Pencil Sketch", icon: Pencil },
+  { name: "Portrait Drawing", icon: User },
+  { name: "Cartoon Drawing", icon: Smile },
+  { name: "Realistic Drawing", icon: Eye },
+  { name: "Doodle Art", icon: Wand2 },
+  { name: "Digital Art", icon: Screen },
+  { name: "AI Art", icon: Sparkles },
+  { name: "Painting", icon: Palette },
+  { name: "Learn Drawing", icon: Book },
+  { name: "Art Feedback", icon: MessageCircle },
+  { name: "Art Competitions", icon: Medal }
 ];
 
 const toBase64 = (file: File): Promise<string> =>
@@ -63,11 +100,7 @@ export default function SignupPage() {
   const handleNextStep1 = (e: React.FormEvent) => {
     e.preventDefault();
     if (password.length < 6) {
-      toast({
-        variant: "destructive",
-        title: "Weak Password",
-        description: "Password must be at least 6 characters.",
-      });
+      toast({ variant: "destructive", title: "Weak Password", description: "At least 6 characters required." });
       return;
     }
     setStep(2);
@@ -79,16 +112,10 @@ export default function SignupPage() {
 
     setLoading(true);
     try {
-      const usersRef = collection(db, "userProfiles");
-      const q = query(usersRef, where("username", "==", username.toLowerCase().trim()));
-      const querySnapshot = await getDocs(q);
-
-      if (!querySnapshot.empty) {
-        toast({
-          variant: "destructive",
-          title: "Username Taken",
-          description: `The username "@${username}" is already in use.`,
-        });
+      const q = query(collection(db, "userProfiles"), where("username", "==", username.toLowerCase().trim()));
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        toast({ variant: "destructive", title: "Username Taken", description: `@${username} is already in use.` });
         setLoading(false);
         return;
       }
@@ -106,10 +133,7 @@ export default function SignupPage() {
       try {
         const base64 = await toBase64(file);
         if (type === 'profile') setProfilePic(base64);
-        else {
-          setBanner(base64);
-          setShowBannerEditor(false);
-        }
+        else { setBanner(base64); setShowBannerEditor(false); }
       } catch (err) {
         toast({ variant: "destructive", title: "Process Failed", description: "Image processing error." });
       }
@@ -117,21 +141,18 @@ export default function SignupPage() {
   };
 
   const toggleInterest = (interest: string) => {
-    setInterests(prev => 
-      prev.includes(interest) ? prev.filter(i => i !== interest) : [...prev, interest]
-    );
+    setInterests(prev => prev.includes(interest) ? prev.filter(i => i !== interest) : [...prev, interest]);
   };
 
   const handleSignup = async () => {
-    if (interests.length === 0) {
-      toast({ title: "Pick Interests", description: "Select at least one category to customize your feed.", variant: "destructive" });
+    if (interests.length < 3) {
+      toast({ title: "Pick 3 Hubs", description: "Customize your feed with 3 categories.", variant: "destructive" });
       return;
     }
     setLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-
       await updateProfile(user, { displayName: name });
 
       await setDoc(doc(db, "userProfiles", user.uid), {
@@ -143,25 +164,15 @@ export default function SignupPage() {
         bio: bio || "Just joined InnovateSphere!",
         interests: interests,
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
         totalIdeasPosted: 0,
         totalViewsReceived: 0,
-        averageRatingReceived: 0,
-        totalIdeasSaved: 0,
-        collaborationRequestsCount: 0
+        totalIdeasSaved: 0
       });
 
-      toast({
-        title: "Welcome to the Sphere!",
-        description: `Account created successfully for @${username}.`,
-      });
+      toast({ title: "Welcome!", description: `Profile @${username} launched.` });
       router.push("/");
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Signup Failed",
-        description: error.message,
-      });
+      toast({ variant: "destructive", title: "Signup Failed", description: error.message });
     } finally {
       setLoading(false);
     }
@@ -173,134 +184,135 @@ export default function SignupPage() {
     <div className="max-w-md mx-auto min-h-screen flex flex-col p-6 space-y-8 bg-background justify-center">
       {showBannerEditor && (
         <div className="fixed inset-0 z-[100] bg-background flex flex-col animate-in slide-in-from-bottom duration-300">
-          <header className="p-4 flex items-center justify-between border-b">
-            <Button variant="ghost" size="icon" onClick={() => setShowBannerEditor(false)} className="rounded-full"><X size={20} /></Button>
-            <h2 className="text-sm font-black uppercase tracking-widest">Banner Customization</h2>
+          <header className="p-4 flex items-center justify-between border-b bg-white/80 backdrop-blur-md">
+            <Button variant="ghost" size="icon" onClick={() => setShowBannerEditor(false)}><X size={20} /></Button>
+            <h2 className="text-xs font-black uppercase tracking-widest">Banner Hub</h2>
             <div className="w-10" />
           </header>
           <div className="flex-1 overflow-y-auto p-6 space-y-8">
-            <div className="text-center space-y-2">
-               <p className="text-[10px] font-black uppercase text-primary tracking-widest">Device Preview</p>
-               <p className="text-xs text-muted-foreground font-medium">See how your banner looks across different platforms.</p>
-            </div>
             <div className="space-y-3">
-              <div className="flex items-center gap-2 text-muted-foreground"><Monitor size={16} /><span className="text-[10px] font-bold uppercase">Desktop View (PC)</span></div>
-              <div className="relative aspect-[3/1] w-full bg-muted rounded-xl overflow-hidden border shadow-inner">
-                {banner ? <Image src={banner} alt="PC Banner" fill className="object-cover" unoptimized={banner.startsWith('data:')} /> : <div className="w-full h-full flex items-center justify-center opacity-30"><ImageIcon size={40} /></div>}
+              <div className="flex items-center gap-2 text-muted-foreground"><Monitor size={16} /><span className="text-[10px] font-bold uppercase">Desktop View</span></div>
+              <div className="relative aspect-[3/1] w-full bg-muted rounded-[2rem] overflow-hidden border-2 border-primary/10 shadow-xl">
+                {banner ? <Image src={banner} alt="PC Banner" fill className="object-cover" unoptimized /> : <div className="w-full h-full flex items-center justify-center opacity-30"><ImageIcon size={40} /></div>}
               </div>
             </div>
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-muted-foreground"><Smartphone size={16} /><span className="text-[10px] font-bold uppercase">Mobile View</span></div>
               <div className="flex justify-center">
-                <div className="relative w-full max-w-[200px] aspect-[4/3] bg-muted rounded-xl overflow-hidden border shadow-inner">
-                  {banner ? <Image src={banner} alt="Mobile Banner" fill className="object-cover" unoptimized={banner.startsWith('data:')} /> : <div className="w-full h-full flex items-center justify-center opacity-30"><ImageIcon size={30} /></div>}
+                <div className="relative w-full max-w-[220px] aspect-[4/3] bg-muted rounded-[2.5rem] overflow-hidden border-2 border-primary/10 shadow-2xl">
+                  {banner ? <Image src={banner} alt="Mobile Banner" fill className="object-cover" unoptimized /> : <div className="w-full h-full flex items-center justify-center opacity-30"><ImageIcon size={30} /></div>}
                 </div>
               </div>
             </div>
             <div className="pt-6 space-y-4">
                <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'banner')} />
-               <Button onClick={() => bannerInputRef.current?.click()} className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase tracking-widest">{banner ? "Change Photo" : "Upload Banner Photo"}</Button>
-               {banner && <Button variant="outline" onClick={() => setShowBannerEditor(false)} className="w-full h-12 rounded-2xl font-black uppercase tracking-widest border-primary text-primary">Looks Good, Save</Button>}
+               <Button onClick={() => bannerInputRef.current?.click()} className="w-full h-16 rounded-[2rem] bg-primary text-white font-black uppercase tracking-widest">Upload Hub Banner</Button>
+               {banner && <Button variant="outline" onClick={() => setShowBannerEditor(false)} className="w-full h-14 rounded-2xl font-black uppercase tracking-widest border-primary text-primary">Save Preview</Button>}
             </div>
           </div>
         </div>
       )}
 
       <div className="text-center space-y-2">
-        <h1 className="text-3xl font-black text-primary uppercase tracking-tighter">Join Sphere</h1>
-        <p className="text-sm text-muted-foreground font-medium uppercase tracking-widest">
-          {step === 1 && "Start your journey"}
-          {step === 2 && "Choose your identity"}
-          {step === 3 && "Personalize your profile"}
-          {step === 4 && "Select your worlds"}
-        </p>
+        <h1 className="text-4xl font-black text-primary uppercase tracking-tighter">Join Sphere</h1>
+        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-1">Start your innovation journey</p>
       </div>
 
       <div className="space-y-2">
-        <Progress value={progress} className="h-1.5 bg-muted" />
-        <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-muted-foreground">
+        <Progress value={progress} className="h-2 bg-muted rounded-full" />
+        <div className="flex justify-between text-[8px] font-black uppercase tracking-widest text-muted-foreground">
           <span className={step >= 1 ? "text-primary" : ""}>Info</span>
-          <span className={step >= 2 ? "text-primary" : ""}>User</span>
-          <span className={step >= 3 ? "text-primary" : ""}>Profile</span>
-          <span className={step >= 4 ? "text-primary" : ""}>Interests</span>
+          <span className={step >= 2 ? "text-primary" : ""}>Handle</span>
+          <span className={step >= 3 ? "text-primary" : ""}>Style</span>
+          <span className={step >= 4 ? "text-primary" : ""}>Hubs</span>
         </div>
       </div>
 
       {step === 1 && (
-        <form onSubmit={handleNextStep1} className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-500">
-          <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest ml-1">Full Name</Label><Input placeholder="John Innovator" className="rounded-2xl h-12 bg-white border-muted" value={name} onChange={(e) => setName(e.target.value)} required /></div>
-          <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest ml-1">Email Address</Label><Input type="email" placeholder="innovator@sphere.com" className="rounded-2xl h-12 bg-white border-muted" value={email} onChange={(e) => setEmail(e.target.value)} required /></div>
-          <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest ml-1">Password</Label><Input type="password" placeholder="••••••••" className="rounded-2xl h-12 bg-white border-muted" value={password} onChange={(e) => setPassword(e.target.value)} required /></div>
-          <Button type="submit" className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase shadow-xl">Next <ChevronRight size={18} className="ml-2" /></Button>
+        <form onSubmit={handleNextStep1} className="space-y-4 animate-in slide-in-from-right-4 duration-500">
+          <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest ml-1">Full Name</Label><Input placeholder="John Innovator" className="rounded-2xl h-14 bg-white border-muted shadow-sm font-bold" value={name} onChange={(e) => setName(e.target.value)} required /></div>
+          <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest ml-1">Email Hub</Label><Input type="email" placeholder="innovator@sphere.com" className="rounded-2xl h-14 bg-white border-muted shadow-sm font-bold" value={email} onChange={(e) => setEmail(e.target.value)} required /></div>
+          <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest ml-1">Secure Password</Label><Input type="password" placeholder="••••••••" className="rounded-2xl h-14 bg-white border-muted shadow-sm font-bold" value={password} onChange={(e) => setPassword(e.target.value)} required /></div>
+          <Button type="submit" className="w-full h-16 rounded-[2rem] bg-primary text-white font-black uppercase shadow-xl hover:shadow-primary/20">Next <ChevronRight size={20} className="ml-2" /></Button>
         </form>
       )}
 
       {step === 2 && (
-        <form onSubmit={handleCheckUsername} className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+        <form onSubmit={handleCheckUsername} className="space-y-6 animate-in slide-in-from-right-4 duration-500">
           <div className="space-y-4">
-            <div className="p-4 bg-primary/5 rounded-[2rem] border border-primary/10">
-              <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-1">Identity Check</p>
-              <p className="text-xs text-muted-foreground font-medium leading-relaxed">Your username is unique. Pick something that represents your brand of innovation.</p>
+            <div className="p-5 bg-primary/5 rounded-[2rem] border border-primary/10">
+              <p className="text-[11px] font-black text-primary uppercase tracking-[0.2em] mb-1">Identity Check</p>
+              <p className="text-[10px] text-muted-foreground font-medium leading-relaxed uppercase">Your username is your unique handle in the innovation sphere. Choose wisely.</p>
             </div>
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Unique Username</Label>
-              <div className="relative"><span className="absolute left-4 top-1/2 -translate-y-1/2 text-primary font-black">@</span><Input placeholder="innovator123" className="rounded-2xl h-12 bg-white border-muted pl-8 font-bold lowercase" value={username} onChange={(e) => setUsername(e.target.value.replace(/\s/g, ""))} required /></div>
+              <div className="relative"><span className="absolute left-4 top-1/2 -translate-y-1/2 text-primary font-black">@</span><Input placeholder="innovator123" className="rounded-2xl h-14 bg-white border-muted pl-8 font-black text-lg lowercase" value={username} onChange={(e) => setUsername(e.target.value.replace(/\s/g, ""))} required /></div>
             </div>
           </div>
           <div className="space-y-3">
-            <Button type="submit" className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase shadow-xl" disabled={loading}>{loading ? <Loader2 className="animate-spin mr-2" /> : <>Next <ChevronRight size={18} className="ml-2" /></>}</Button>
+            <Button type="submit" className="w-full h-16 rounded-[2rem] bg-primary text-white font-black uppercase shadow-xl" disabled={loading}>{loading ? <Loader2 className="animate-spin mr-2" /> : <>Continue <ChevronRight size={20} className="ml-2" /></>}</Button>
             <Button type="button" variant="ghost" className="w-full h-10 font-bold uppercase text-[10px]" onClick={() => setStep(1)}><ChevronLeft size={14} className="mr-1" /> Back</Button>
           </div>
         </form>
       )}
 
       {step === 3 && (
-        <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 pb-10">
-          <div className="space-y-4">
-            <div onClick={() => setShowBannerEditor(true)} className="relative h-24 bg-muted rounded-2xl overflow-hidden group border border-dashed border-primary/20 cursor-pointer">
-              {banner ? <Image src={banner} alt="Banner" fill className="object-cover" unoptimized={banner.startsWith('data:')} /> : <div className="w-full h-full flex items-center justify-center"><div className="flex flex-col items-center gap-1"><ImageIcon className="text-muted-foreground/40" /><span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/40">Tap to Preview & Upload Banner</span></div></div>}
+        <div className="space-y-6 animate-in slide-in-from-right-4 duration-500 pb-10">
+          <div className="space-y-6">
+            <div onClick={() => setShowBannerEditor(true)} className="relative h-32 bg-muted rounded-[2rem] overflow-hidden group border-2 border-dashed border-primary/20 cursor-pointer shadow-inner">
+              {banner ? <Image src={banner} alt="Banner" fill className="object-cover" unoptimized /> : <div className="w-full h-full flex items-center justify-center flex-col gap-2"><ImageIcon className="text-muted-foreground/40" size={28} /><span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Set Profile Banner</span></div>}
               <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"><Camera size={20} /></div>
             </div>
-            <div className="relative -mt-12 ml-4 w-20 h-20 rounded-full border-4 border-background bg-muted overflow-hidden group shadow-lg">
-              {profilePic ? <Image src={profilePic} alt="Profile" fill className="object-cover" unoptimized={profilePic.startsWith('data:')} /> : <div className="w-full h-full flex items-center justify-center"><Camera className="text-muted-foreground/40" /></div>}
-              <button onClick={() => profileInputRef.current?.click()} className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"><Camera size={16} /></button>
+            <div className="relative -mt-16 ml-6 w-24 h-24 rounded-[2rem] border-4 border-background bg-white overflow-hidden group shadow-2xl">
+              {profilePic ? <Image src={profilePic} alt="Profile" fill className="object-cover" unoptimized /> : <div className="w-full h-full flex items-center justify-center"><Camera className="text-muted-foreground/20" size={32} /></div>}
+              <button onClick={() => profileInputRef.current?.click()} className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"><Camera size={20} /></button>
               <input type="file" ref={profileInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'profile')} />
             </div>
-            <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest ml-1">About Your Expertise</Label><Textarea placeholder="Tell us about your background and skills..." className="rounded-2xl h-24 bg-white border-muted" value={bio} onChange={(e) => setBio(e.target.value)} /></div>
+            <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest ml-1">Innovation Bio</Label><Textarea placeholder="Tell us about your background, skills, and what you aim to build..." className="rounded-[2rem] h-32 bg-white border-muted shadow-inner p-5 text-sm font-medium" value={bio} onChange={(e) => setBio(e.target.value)} /></div>
           </div>
           <div className="space-y-3 pt-4">
-            <Button onClick={() => setStep(4)} className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase shadow-xl">Final Step: Categories <ChevronRight size={18} className="ml-2" /></Button>
+            <Button onClick={() => setStep(4)} className="w-full h-16 rounded-[2rem] bg-primary text-white font-black uppercase shadow-xl">Final Step <ChevronRight size={20} className="ml-2" /></Button>
             <Button type="button" variant="ghost" className="w-full h-10 font-bold uppercase text-[10px]" onClick={() => setStep(2)}><ChevronLeft size={14} className="mr-1" /> Back</Button>
           </div>
         </div>
       )}
 
       {step === 4 && (
-        <div className="space-y-6 animate-in slide-in-from-right-4 duration-500 h-[70vh] flex flex-col">
-          <div className="bg-primary/5 p-4 rounded-3xl border border-primary/10 flex items-center gap-3">
-            <Sparkles className="text-primary" />
-            <p className="text-[10px] font-black uppercase text-primary leading-tight">Pick at least 3 hubs to curate your feed.</p>
+        <div className="space-y-6 animate-in slide-in-from-right-4 duration-500 h-[65vh] flex flex-col">
+          <div className="bg-primary/5 p-5 rounded-[2rem] border border-primary/10 flex items-center gap-4">
+            <Sparkles className="text-primary shrink-0" size={24} />
+            <div>
+              <p className="text-[11px] font-black uppercase text-primary leading-tight">Curate Your Sphere</p>
+              <p className="text-[9px] font-medium text-muted-foreground uppercase mt-0.5">Select 3 or more interest hubs</p>
+            </div>
           </div>
           
-          <div className="flex-1 overflow-y-auto no-scrollbar py-4 grid grid-cols-2 gap-2">
-            {EXPERTISE_OPTIONS.map((opt) => (
-              <Button 
-                key={opt} 
-                variant="outline" 
-                size="sm" 
-                className={cn(
-                  "rounded-2xl h-14 text-[9px] font-black uppercase tracking-widest transition-all", 
-                  interests.includes(opt) ? "bg-primary text-white border-primary shadow-lg shadow-primary/20" : "bg-white border-muted/50"
-                )} 
-                onClick={() => toggleInterest(opt)}
-              >
-                {opt}
-              </Button>
-            ))}
+          <div className="flex-1 overflow-y-auto no-scrollbar py-4 grid grid-cols-2 gap-3 px-1">
+            {HUB_OPTIONS.map((opt) => {
+              const Icon = opt.icon;
+              const isSelected = interests.includes(opt.name);
+              return (
+                <button 
+                  key={opt.name} 
+                  onClick={() => toggleInterest(opt.name)}
+                  className={cn(
+                    "flex flex-col items-center justify-center p-6 rounded-[2.5rem] border-2 transition-all gap-3 h-32",
+                    isSelected 
+                      ? "bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-[1.02]" 
+                      : "bg-white border-muted/50 hover:border-primary/30 text-muted-foreground"
+                  )}
+                >
+                  <Icon size={28} className={cn(isSelected ? "text-white" : "text-primary opacity-60")} />
+                  <span className="text-[10px] font-black uppercase tracking-tighter text-center leading-tight">
+                    {opt.name}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
           <div className="space-y-3 pt-6 border-t bg-background">
-            <Button onClick={handleSignup} className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase shadow-xl" disabled={loading || interests.length < 3}>
+            <Button onClick={handleSignup} className="w-full h-16 rounded-[2rem] bg-primary text-white font-black uppercase shadow-2xl hover:scale-[1.02] transition-transform" disabled={loading || interests.length < 3}>
               {loading ? <Loader2 className="animate-spin mr-2" /> : interests.length < 3 ? `Pick ${3 - interests.length} More` : "Launch My Sphere"}
             </Button>
             <Button type="button" variant="ghost" className="w-full h-10 font-bold uppercase text-[10px]" onClick={() => setStep(3)}><ChevronLeft size={14} className="mr-1" /> Back</Button>
