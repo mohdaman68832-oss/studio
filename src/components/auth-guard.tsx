@@ -7,9 +7,51 @@ import { useEffect } from 'react';
 import { doc } from 'firebase/firestore';
 
 /**
+ * Animated Logo Loader Component
+ */
+function LogoLoader() {
+  return (
+    <div className="flex flex-col items-center gap-8 animate-in fade-in duration-700">
+      <div className="relative w-40 h-40 flex items-center justify-center">
+        {/* Main 'm' Speech Bubble with Vertical Spin */}
+        <div className="relative z-10 animate-logo-spin-y">
+          <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* The 'm' Shape stylized as a speech bubble */}
+            <path 
+              d="M20 40C20 28.9543 28.9543 20 40 20H80C91.0457 20 100 28.9543 100 40V70C100 81.0457 91.0457 90 80 90H45L20 105V40Z" 
+              fill="#FF4500" 
+            />
+            {/* Blinking Eyes (Rectangular Slits) */}
+            <rect x="45" y="45" width="6" height="15" rx="3" fill="white" className="animate-eye-blink" />
+            <rect x="69" y="45" width="6" height="15" rx="3" fill="white" className="animate-eye-blink" />
+            
+            {/* Top Right Dot from the original logo */}
+            <circle cx="105" cy="15" r="8" fill="#FF4500" />
+          </svg>
+        </div>
+
+        {/* Orbiting Ring */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="w-[160px] h-[60px] border-[6px] border-[#FF4500] rounded-[100%] opacity-80 animate-ring-orbit" 
+               style={{ transform: 'rotateX(75deg)' }}>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-col items-center gap-2">
+        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary animate-pulse">
+          Launching Sphere
+        </p>
+        <div className="h-0.5 w-12 bg-primary/20 rounded-full overflow-hidden">
+          <div className="h-full bg-primary animate-progress-fast" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
  * AuthGuard handles the global authentication flow.
- * Redirects unauthenticated users to /login.
- * Redirects authenticated users with no profile to /setup.
  */
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
@@ -26,32 +68,22 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!isUserLoading && !isProfileLoading) {
       if (!user && !isAuthPage) {
-        // Not logged in -> login
         router.push('/login');
       } else if (user) {
         if (!profileData && !isSetupPage && !isAuthPage) {
-          // Logged in but no profile -> setup
           router.push('/setup');
         } else if (profileData && (isAuthPage || isSetupPage)) {
-          // Logged in and has profile -> home
           router.push('/');
         }
       }
     }
   }, [user, isUserLoading, isProfileLoading, profileData, isAuthPage, isSetupPage, router]);
 
-  // Loading state
+  // Premium Animated Loading State
   if ((isUserLoading || (user && isProfileLoading)) && !isAuthPage && !isSetupPage) {
     return (
-      <div className="h-screen w-full flex items-center justify-center bg-background/50">
-        <div className="flex flex-col items-center gap-2">
-          <div className="h-1 w-24 bg-primary/20 rounded-full overflow-hidden">
-            <div className="h-full bg-primary animate-progress-fast" />
-          </div>
-          <p className="text-[8px] font-black uppercase tracking-[0.2em] text-primary/40">
-            Syncing Identity...
-          </p>
-        </div>
+      <div className="h-screen w-full flex items-center justify-center bg-background overflow-hidden">
+        <LogoLoader />
       </div>
     );
   }
