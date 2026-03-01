@@ -17,11 +17,11 @@ service cloud.firestore {
 
     // Ideas and Posts Rules
     match /ideas/{ideaId} {
-      // Allow everyone to view posts and list the feed
+      // Publicly readable for everyone (list and get)
       allow read: if true;
       allow create: if isSignedIn();
       
-      // Allow update if user is creator OR if they are only updating the 'likes' count
+      // Allow update if user is creator OR if they are updating 'likes'
       allow update: if isSignedIn() && (
         resource.data.authorId == request.auth.uid || 
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes'])
@@ -37,7 +37,7 @@ service cloud.firestore {
       
       // Likes tracking subcollection
       match /likes/{userId} {
-        allow read: if true;
+        allow read: if isSignedIn();
         allow write: if isOwner(userId);
       }
     }
@@ -45,6 +45,7 @@ service cloud.firestore {
     // Notifications Rules
     match /users/{userId}/notifications/{notificationId} {
       allow read, update, delete: if isOwner(userId);
+      // Allow others to create notifications (e.g. for comments)
       allow create: if isSignedIn();
     }
 
@@ -62,7 +63,8 @@ service cloud.firestore {
     
     // Follow System
     match /follows/{followId} {
-      allow read, write: if isSignedIn();
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
     }
   }
 }

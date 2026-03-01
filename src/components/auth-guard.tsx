@@ -8,7 +8,7 @@ import { doc } from 'firebase/firestore';
 
 /**
  * Animated Logo Loader Component
- * Horizontal Swaying with Bigger expressive eyes.
+ * Horizontal Swaying with Refined expressive eyes.
  */
 function LogoLoader() {
   return (
@@ -22,8 +22,9 @@ function LogoLoader() {
             />
             <g className="animate-eye-look">
               <g className="animate-eye-blink">
-                <rect x="32" y="36" width="22" height="38" rx="11" fill="white" />
-                <rect x="66" y="36" width="22" height="38" rx="11" fill="white" />
+                {/* Smaller, refined eyes */}
+                <rect x="35" y="42" width="16" height="28" rx="8" fill="white" />
+                <rect x="69" y="42" width="16" height="28" rx="8" fill="white" />
               </g>
             </g>
             <circle cx="105" cy="15" r="8" fill="#FF4500" />
@@ -63,11 +64,13 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         router.push('/login');
       }
     } else {
+      // If user is logged in but doesn't have a profile, force setup
       if (!profileData) {
         if (!isSetupPage) {
           router.push('/setup');
         }
       } else {
+        // If user has a profile, never let them back to auth or setup
         if (isAuthPage || isSetupPage) {
           router.push('/');
         }
