@@ -10,6 +10,7 @@ import { useMemo, useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RefreshCcw, ImageIcon, Video, Type, LayoutGrid } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const MOCK_IDEAS = [
   {
@@ -50,6 +51,7 @@ const MEME_FORMATS = [
 export default function FeedPage() {
   const db = useFirestore();
   const { user } = useUser();
+  const router = useRouter();
   const [activeCategory, setActiveCategory] = useState("All");
   const [activeMemeFormat, setActiveMemeFormat] = useState("image");
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -187,22 +189,31 @@ export default function FeedPage() {
       </header>
 
       <div className="flex w-full gap-2 -mx-4 px-4 pt-2 pb-4 mb-2 border-b border-border/50">
-        {CATEGORIES.map((cat) => (
-          <Button 
-            key={cat} 
-            variant={cat === activeCategory ? "default" : "secondary"} 
-            onClick={() => {
-              setActiveCategory(cat);
-              if (cat === "Meme") setActiveMemeFormat("image");
-            }}
-            className={cn(
-              "flex-1 rounded-full h-9 text-[10px] font-black uppercase tracking-widest transition-all",
-              cat === activeCategory ? "bg-primary shadow-lg shadow-primary/20 text-white" : "bg-white border-none text-muted-foreground hover:text-primary"
-            )}
-          >
-            {cat}
-          </Button>
-        ))}
+        {CATEGORIES.map((cat) => {
+          const isAll = cat === "All";
+          const displayLabel = (isAll && userInterests.length === 0) ? "Explore Hubs" : cat;
+          
+          return (
+            <Button 
+              key={cat} 
+              variant={cat === activeCategory ? "default" : "secondary"} 
+              onClick={() => {
+                if (isAll && userInterests.length === 0) {
+                  router.push("/categories");
+                  return;
+                }
+                setActiveCategory(cat);
+                if (cat === "Meme") setActiveMemeFormat("image");
+              }}
+              className={cn(
+                "flex-1 rounded-full h-9 text-[10px] font-black uppercase tracking-widest transition-all",
+                cat === activeCategory ? "bg-primary shadow-lg shadow-primary/20 text-white" : "bg-white border-none text-muted-foreground hover:text-primary"
+              )}
+            >
+              {displayLabel}
+            </Button>
+          );
+        })}
       </div>
 
       {activeCategory === "Meme" && (
