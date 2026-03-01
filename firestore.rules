@@ -14,16 +14,15 @@ service cloud.firestore {
       allow write: if isOwner(userId);
     }
 
+    // Allow anyone to create a notification for another user, but only owner can read/manage
     match /users/{userId}/notifications/{notificationId} {
-      allow read, write: if isOwner(userId);
+      allow read, update, delete: if isOwner(userId);
+      allow create: if isSignedIn();
     }
 
+    // Private messages rules
     match /messages/{messageId} {
-      allow read, list: if isSignedIn() && (
-        resource.data.senderId == request.auth.uid || 
-        resource.data.receiverId == request.auth.uid ||
-        request.query.limit <= 50
-      );
+      allow read, list: if isSignedIn();
       allow create: if isSignedIn();
       allow update, delete: if false;
     }
@@ -31,7 +30,13 @@ service cloud.firestore {
     match /ideas/{ideaId} {
       allow read: if true;
       allow create: if isSignedIn();
-      allow update, delete: if isSignedIn() && (resource.data.authorId == request.auth.uid || resource.data.creatorId == request.auth.uid);
+      // Allow update if user is creator OR if they are only updating the 'likes' count
+      allow update: if isSignedIn() && (
+        resource.data.authorId == request.auth.uid || 
+        resource.data.creatorId == request.auth.uid || 
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes'])
+      );
+      allow delete: if isSignedIn() && (resource.data.authorId == request.auth.uid || resource.data.creatorId == request.auth.uid);
 
       match /suggestions/{suggestionId} {
         allow read: if true;
