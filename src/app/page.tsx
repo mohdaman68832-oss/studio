@@ -8,7 +8,7 @@ import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@
 import { collection, query, orderBy, doc } from "firebase/firestore";
 import { useMemo, useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RefreshCcw } from "lucide-react";
+import { RefreshCcw, ImageIcon, Video, Type } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 
@@ -42,17 +42,20 @@ const MOCK_IDEAS = [
 ];
 
 const CATEGORIES = ["All", "Meme"];
+const MEME_FORMATS = [
+  { label: "Image", id: "image", icon: ImageIcon },
+  { label: "Video", id: "video", icon: Video },
+  { label: "Text", id: "text", icon: Type },
+];
 
 export default function FeedPage() {
   const db = useFirestore();
   const { user } = useUser();
   const [activeCategory, setActiveCategory] = useState("All");
+  const [activeMemeFormat, setActiveMemeFormat] = useState("image");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showRefresh, setShowRefresh] = useState(false);
   const [touchStart, setTouchStart] = useState(0);
-
-  const userProfileRef = useMemoFirebase(() => (db && user ? doc(db, "userProfiles", user.uid) : null), [db, user]);
-  const { data: profile } = useDoc(userProfileRef);
 
   const ideasQuery = useMemoFirebase(() => {
     if (!db) return null;
@@ -66,8 +69,20 @@ export default function FeedPage() {
     const unique = Array.from(new Map(base.map(item => [item.id, item])).values());
     
     if (activeCategory === "All") return unique;
+    
+    // Filtering for Memes specifically
+    if (activeCategory === "Meme") {
+      return unique.filter(i => {
+        const isMeme = i.category?.toLowerCase() === "meme" || i.tags?.some((t: string) => t.toLowerCase() === "meme");
+        if (!isMeme) return false;
+
+        const mediaType = i.mediaUrl ? (i.mediaUrl.includes('mp4') || i.mediaUrl.includes('video') ? 'video' : 'image') : 'text';
+        return mediaType === activeMemeFormat;
+      });
+    }
+
     return unique.filter(i => i.category?.toLowerCase() === activeCategory.toLowerCase());
-  }, [firestoreIdeas, activeCategory]);
+  }, [firestoreIdeas, activeCategory, activeMemeFormat]);
 
   useEffect(() => {
     const handleTouchStart = (e: TouchEvent) => {
@@ -145,6 +160,27 @@ export default function FeedPage() {
           </Button>
         ))}
       </div>
+
+      {activeCategory === "Meme" && (
+        <div className="flex gap-2 overflow-x-auto no-scrollbar py-3 mb-4 animate-in slide-in-from-top-2 duration-300">
+          {MEME_FORMATS.map((fmt) => (
+            <Button
+              key={fmt.id}
+              variant={activeMemeFormat === fmt.id ? "default" : "outline"}
+              onClick={() => setActiveMemeFormat(fmt.id)}
+              className={cn(
+                "rounded-full h-10 px-6 flex items-center gap-2 shrink-0 transition-all",
+                activeMemeFormat === fmt.id 
+                  ? "bg-secondary text-white border-secondary shadow-md" 
+                  : "bg-white text-muted-foreground border-muted hover:border-secondary/50"
+              )}
+            >
+              <fmt.icon size={14} />
+              <span className="text-[10px] font-black uppercase tracking-widest">{fmt.label}</span>
+            </Button>
+          ))}
+        </div>
+      )}
 
       <div className="space-y-8 mt-4">
         {loading ? (
