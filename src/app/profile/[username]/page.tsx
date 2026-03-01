@@ -3,14 +3,15 @@
 import { use, useState, useMemo, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, MessageSquare, Loader2, UserPlus, UserCheck, LayoutGrid } from "lucide-react";
+import { ChevronLeft, MessageSquare, Loader2, UserPlus, UserCheck, LayoutGrid, Image as LucideImage } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from "@/firebase";
-import { collection as fsCollection, query, where, limit, doc, setDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
+import { collection as fsCollection, query, where, limit, doc, setDoc, deleteDoc, serverTimestamp, orderBy } from "firebase/firestore";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { IdeaCard } from "@/components/feed/idea-card";
 
 interface Sticker {
   id: string;
@@ -57,6 +58,18 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
 
   const { data: userProfiles, isLoading } = useCollection(userQuery);
   const profileData = userProfiles?.[0];
+
+  // Posts query for this user
+  const userPostsQuery = useMemoFirebase(() => {
+    if (!db || !profileData) return null;
+    return query(
+      fsCollection(db, "ideas"),
+      where("authorId", "==", profileData.id),
+      orderBy("createdAt", "desc")
+    );
+  }, [db, profileData]);
+
+  const { data: userPosts, isLoading: isPostsLoading } = useCollection(userPostsQuery);
 
   const followRef = useMemoFirebase(() => {
     if (!db || !currentUser || !profileData) return null;
@@ -170,7 +183,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       <div style={{ backgroundColor: colors.statsSection || "transparent" }} className="w-full py-8 px-10 relative z-[40]">
         <div className="grid grid-cols-3 gap-6 w-full">
           <div className="text-center">
-            <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{profileData.totalIdeasPosted || 0}</p>
+            <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{userPosts?.length || profileData.totalIdeasPosted || 0}</p>
             <p className="text-[8px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(colors.statsSection) }}>Post</p>
           </div>
           <div className="text-center">
@@ -193,8 +206,23 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
           </TabsList>
           
           <div className="p-4 space-y-6">
-            <TabsContent value="overview" className="py-16 text-center opacity-20">
-               <p className="text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(colors.tabsContent) }}>Innovator Activity Hidden</p>
+            <TabsContent value="overview" className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+               {isPostsLoading ? (
+                 <div className="flex justify-center py-20">
+                   <Loader2 className="animate-spin text-primary opacity-20" size={32} />
+                 </div>
+               ) : userPosts && userPosts.length > 0 ? (
+                 <div className="space-y-8">
+                   {userPosts.map((idea) => (
+                     <IdeaCard key={idea.id} idea={idea as any} />
+                   ))}
+                 </div>
+               ) : (
+                 <div className="py-24 text-center opacity-20 space-y-4">
+                    <LucideImage size={48} className="mx-auto" />
+                    <p className="text-[10px] font-black uppercase tracking-[0.3em]">No innovations found</p>
+                 </div>
+               )}
             </TabsContent>
           </div>
         </Tabs>

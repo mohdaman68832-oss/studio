@@ -29,10 +29,11 @@ import { Switch } from "@/components/ui/switch";
 import Image from "next/image";
 import { useUser, useAuth, useFirestore, useDoc, useMemoFirebase, useCollection } from "@/firebase";
 import { signOut } from "firebase/auth";
-import { doc, updateDoc, collection as fsCollection, query, where } from "firebase/firestore";
+import { doc, updateDoc, collection as fsCollection, query, where, orderBy } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { IdeaCard } from "@/components/feed/idea-card";
 
 interface Sticker {
   id: string;
@@ -100,6 +101,18 @@ export default function ProfilePage() {
 
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [db, user]);
   const { data: profileData, isLoading: isProfileLoading } = useDoc(profileRef);
+
+  // My Posts Query - Using authorId to filter only my posts
+  const myPostsQuery = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return query(
+      fsCollection(db, "ideas"),
+      where("authorId", "==", user.uid),
+      orderBy("createdAt", "desc")
+    );
+  }, [db, user]);
+
+  const { data: myPosts, isLoading: isPostsLoading } = useCollection(myPostsQuery);
 
   const followingQuery = useMemoFirebase(() => (db && user ? query(fsCollection(db, "follows"), where("followerId", "==", user.uid)) : null), [db, user]);
   const followersQuery = useMemoFirebase(() => (db && user ? query(fsCollection(db, "follows"), where("followedId", "==", user.uid)) : null), [db, user]);
@@ -177,7 +190,7 @@ export default function ProfilePage() {
     : "none";
 
   return (
-    <div className="max-w-md mx-auto min-h-screen flex flex-col transition-all duration-500 overflow-x-hidden no-scrollbar" style={{ backgroundColor: formData.customColors.background || "var(--background)" }}>
+    <div className="max-w-md mx-auto min-h-screen flex flex-col transition-all duration-500 overflow-x-hidden no-scrollbar pb-24" style={{ backgroundColor: formData.customColors.background || "var(--background)" }}>
       <div className="relative w-full shrink-0">
         <div className="h-16 w-full relative z-[70]" style={{ backgroundColor: formData.customColors.header }} />
         <header className="absolute top-0 left-0 right-0 z-[80] px-6 py-5 flex justify-between items-center">
@@ -230,7 +243,7 @@ export default function ProfilePage() {
         <div style={{ backgroundColor: formData.customColors.statsSection }} className="w-full py-10 px-10 relative">
           <div className="grid grid-cols-3 gap-6 w-full">
             <div className="text-center">
-              <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{profileData?.totalIdeasPosted || 0}</p>
+              <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{myPosts?.length || profileData?.totalIdeasPosted || 0}</p>
               <p className="text-[8px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(formData.customColors.statsSection) }}>Post</p>
             </div>
             <div className="text-center">
@@ -245,7 +258,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <div style={{ backgroundColor: formData.customColors.tabsContent }} className="flex-1 relative z-[40] pb-32">
+      <div style={{ backgroundColor: formData.customColors.tabsContent }} className="flex-1 relative z-[40]">
         <Tabs defaultValue="overview" className="w-full">
           <TabsList className="w-full bg-transparent h-14 border-b border-border/20" style={{ backgroundColor: formData.customColors.tabsList }}>
             <TabsTrigger value="overview" className="flex-1 border-b-4 border-transparent data-[state=active]:border-primary transition-all">
@@ -253,10 +266,25 @@ export default function ProfilePage() {
             </TabsTrigger>
           </TabsList>
           
-          <div className="p-4 space-y-6">
-            <TabsContent value="overview" className="py-24 text-center opacity-20">
-               <p className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(formData.customColors.tabsContent) }}>Innovator Portfolio Ready</p>
-               <p className="text-[9px] mt-2 font-medium">Explore the main feed to see more content.</p>
+          <div className="p-4 space-y-8">
+            <TabsContent value="overview" className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+               {isPostsLoading ? (
+                 <div className="flex justify-center py-20">
+                   <Loader2 className="animate-spin text-primary opacity-20" size={32} />
+                 </div>
+               ) : myPosts && myPosts.length > 0 ? (
+                 <div className="space-y-8">
+                   {myPosts.map((idea) => (
+                     <IdeaCard key={idea.id} idea={idea as any} />
+                   ))}
+                 </div>
+               ) : (
+                 <div className="py-24 text-center space-y-4 opacity-20">
+                    <LucideImage size={48} className="mx-auto" />
+                    <p className="text-[10px] font-black uppercase tracking-[0.3em]">No Innovations Shared</p>
+                    <p className="text-[9px] font-medium">Start sharing your vision on the main feed.</p>
+                 </div>
+               )}
             </TabsContent>
           </div>
         </Tabs>
