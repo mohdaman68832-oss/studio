@@ -24,14 +24,10 @@ service cloud.firestore {
       // Allow update if user is creator OR if they are only updating the 'likes' count
       allow update: if isSignedIn() && (
         resource.data.authorId == request.auth.uid || 
-        resource.data.creatorId == request.auth.uid || 
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes'])
       );
       
-      allow delete: if isSignedIn() && (
-        resource.data.authorId == request.auth.uid || 
-        resource.data.creatorId == request.auth.uid
-      );
+      allow delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
 
       // Suggestions (Comments) within a post
       match /suggestions/{suggestionId} {
@@ -44,14 +40,6 @@ service cloud.firestore {
         allow get, list: if true;
         allow write: if isOwner(userId);
       }
-      
-      // Collaboration Chat Sessions
-      match /chatSessions/{chatId} {
-        allow read, write: if isSignedIn();
-        match /messages/{msgId} {
-          allow read, write: if isSignedIn();
-        }
-      }
     }
 
     // Notifications Rules
@@ -60,31 +48,20 @@ service cloud.firestore {
       allow create: if isSignedIn();
     }
 
-    // Private Messages
+    // Messages
     match /messages/{messageId} {
-      allow read, list: if isSignedIn();
+      allow read: if isSignedIn() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid);
       allow create: if isSignedIn();
-      allow update, delete: if false;
     }
     
-    // Community Groups
+    // Groups
     match /groups/{groupId} {
-      allow read, write: if isSignedIn();
-    }
-    
-    // Professional Unions
-    match /unions/{unionId} {
-      allow read, write: if isSignedIn();
-    }
-
-    // Follow System
-    match /follows/{followId} {
-      allow read: if isSignedIn();
+      allow read, list: if true;
       allow write: if isSignedIn();
     }
     
-    // Collaboration Requests
-    match /collaborationRequests/{requestId} {
+    // Follow System
+    match /{path=**}/follows/{followId} {
       allow read, write: if isSignedIn();
     }
   }

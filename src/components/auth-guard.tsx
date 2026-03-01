@@ -27,8 +27,8 @@ function LogoLoader() {
             <g className="animate-eye-look">
               <g className="animate-eye-blink">
                 {/* Blinking Eyes (Enlarged Rectangles) */}
-                <rect x="38" y="38" width="14" height="30" rx="7" fill="white" />
-                <rect x="68" y="38" width="14" height="30" rx="7" fill="white" />
+                <rect x="34" y="38" width="18" height="34" rx="9" fill="white" />
+                <rect x="68" y="38" width="18" height="34" rx="9" fill="white" />
               </g>
             </g>
             
@@ -54,7 +54,7 @@ function LogoLoader() {
  * AuthGuard handles the global authentication flow and ensures users don't see pages they shouldn't.
  */
 export function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { user, isUserLoading } = useUser();
+  const { user, loading: isUserLoading } = useUser();
   const db = useFirestore();
   const router = useRouter();
   const pathname = usePathname();
@@ -91,7 +91,6 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   }, [user, isUserLoading, isProfileLoading, profileData, isAuthPage, isSetupPage, router]);
 
   // Determine if we should show the children or the loader.
-  // We only show children if we are on a page that matches the current auth state.
   const shouldShowChildren = () => {
     if (isUserLoading || isProfileLoading) return false;
     

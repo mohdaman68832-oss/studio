@@ -112,14 +112,12 @@ export default function ProfilePage() {
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [db, user]);
   const { data: profileData, isLoading: isProfileLoading } = useDoc(profileRef);
 
-  // Fetch Circling (Following) and Circle (Followers)
   const followingQuery = useMemoFirebase(() => (db && user ? query(collection(db, "follows"), where("followerId", "==", user.uid)) : null), [db, user]);
   const followersQuery = useMemoFirebase(() => (db && user ? query(collection(db, "follows"), where("followedId", "==", user.uid)) : null), [db, user]);
   
   const { data: circlingData } = useCollection(followingQuery);
   const { data: circleData } = useCollection(followersQuery);
 
-  // Fetch My Posts
   const myPostsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(collection(db, "ideas"), where("authorId", "==", user.uid), orderBy("createdAt", "desc"));
