@@ -248,10 +248,10 @@ export default function FeedPage() {
               <div className="py-20 text-center opacity-30 flex flex-col items-center gap-3">
                 <p className="text-[10px] font-black uppercase tracking-widest">No matching content yet</p>
                 {activeCategory === "All" && userInterests.length > 0 && (
-                   <p className="text-[9px] font-medium max-w-[200px] text-center">We couldn't find posts matching your interests. Try following more categories in the Explore section!</p>
+                   <p className="text-[9px] font-medium max-w-[200px] text-center">We couldn't find posts matching your interests in followed categories.</p>
                 )}
                 <Link href="/categories">
-                  <Button variant="outline" className="rounded-full mt-4 text-[10px] font-black uppercase">Explore Categories</Button>
+                  <Button variant="outline" className="rounded-full mt-4 text-[10px] font-black uppercase">Explore Your Hubs</Button>
                 </Link>
               </div>
             )}
