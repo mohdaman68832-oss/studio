@@ -103,34 +103,35 @@ export default function HubPage() {
             notifications.map((notif) => (
               <Link key={notif.id} href={notif.type === 'newComment' ? `/idea/${notif.sourceId}` : '#'}>
                 <div className={cn(
-                  "flex items-start gap-4 p-4 rounded-[2rem] border shadow-sm transition-all bg-card mb-4",
-                  notif.isRead ? "border-border/30 opacity-60" : "border-primary/20 shadow-primary/5 hover:border-primary/40"
+                  "flex items-start gap-4 p-5 rounded-[2.5rem] border shadow-md transition-all bg-card mb-4",
+                  notif.isRead ? "border-border/30 opacity-60" : "border-primary/20 shadow-primary/10 hover:border-primary/40"
                 )}>
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0 shadow-inner">
                     {notif.type === 'newComment' ? (
-                      <MessageCircle size={18} className="text-primary" />
+                      <MessageCircle size={22} className="text-primary" />
                     ) : (
-                      <Bell size={18} className="text-primary" />
+                      <Bell size={22} className="text-primary" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    {notif.postTitle ? (
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[8px] font-black uppercase bg-primary text-white px-1.5 py-0.5 rounded-sm">Post</span>
-                          <p className="text-[10px] font-black text-primary uppercase truncate tracking-tight">{notif.postTitle}</p>
-                        </div>
-                        <p className="text-[11px] font-medium text-foreground leading-snug">
-                          <span className="font-black text-secondary mr-1 uppercase text-[9px]">@{notif.senderName || "User"}:</span>
-                          {notif.commentText || notif.message}
-                        </p>
-                      </div>
-                    ) : (
-                      <p className="text-[11px] font-bold text-foreground leading-snug">{notif.message}</p>
-                    )}
-                    <p className="text-[9px] text-muted-foreground font-black uppercase mt-1">
-                      {notif.createdAt && new Date(notif.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </p>
+                    <div className="flex justify-between items-start mb-1">
+                       {notif.postTitle && (
+                         <div className="flex items-center gap-1.5">
+                           <span className="text-[7px] font-black uppercase bg-primary text-white px-1.5 py-0.5 rounded-sm">Hub Update</span>
+                           <p className="text-[11px] font-black text-primary uppercase truncate tracking-tight max-w-[150px]">{notif.postTitle}</p>
+                         </div>
+                       )}
+                       <p className="text-[8px] text-muted-foreground font-black uppercase ml-auto">
+                         {notif.createdAt && new Date(notif.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                       </p>
+                    </div>
+                    
+                    <div className="bg-muted/30 p-3 rounded-2xl border border-border/20 mt-1">
+                      <p className="text-[12px] font-medium text-foreground leading-snug">
+                        <span className="font-black text-secondary mr-1 uppercase text-[9px]">@{notif.senderName || "Innovator"}:</span>
+                        {notif.commentText || notif.message}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </Link>
