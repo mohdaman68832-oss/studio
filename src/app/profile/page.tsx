@@ -62,12 +62,6 @@ interface CustomColors {
   textOutline?: string;
 }
 
-const COLOR_CATEGORIES = {
-  "Vibrant Orange": ["#FF4500", "#FF6347", "#FF8C00", "#FFA500", "#FFD700", "#FF7F50", "#FFDAB9", "#E65100", "#BF360C"],
-  "Deep Neutrals": ["#0F172A", "#18181B", "#171717", "#1C1917", "#450A0A", "#422006", "#3F2E0E", "#064E3B", "#134E4A", "#1E1B4B"],
-  "Soft Tones": ["#FFFFFF", "#F8FAFC", "#F0FDF4", "#ECFDF5", "#EFF6FF", "#F5F3FF", "#FDF2F8"]
-};
-
 function getContrastColor(hexColor: string | undefined): string {
   if (!hexColor || !hexColor.startsWith('#')) return 'hsl(var(--primary))';
   const hex = hexColor.replace('#', '');
@@ -143,7 +137,6 @@ export default function ProfilePage() {
     else document.documentElement.classList.remove('dark');
   }, [isDarkMode]);
 
-  // Handle interaction restore
   useEffect(() => {
     if (!isOptimizeModalOpen && !showBannerDetail && !isColorPickerOpen) {
       document.body.style.pointerEvents = 'auto';
@@ -173,7 +166,7 @@ export default function ProfilePage() {
         updatedAt: new Date().toISOString()
       }, { merge: true });
 
-      toast({ title: "Profile Optimized", description: "All changes synced." });
+      toast({ title: "Profile Synced", description: "All changes updated successfully." });
       setTimeout(() => setIsOptimizeModalOpen(false), 300);
     } catch (error: any) {
       toast({ variant: "destructive", title: "Save Error", description: error.message });
@@ -237,7 +230,7 @@ export default function ProfilePage() {
         ...prev,
         stickers: prev.stickers.filter(s => s.id !== idToRemove)
       }));
-      toast({ title: "Sticker Removed" });
+      toast({ title: "Sticker Deleted" });
     }
   };
 
@@ -252,7 +245,6 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-md mx-auto min-h-screen flex flex-col transition-all duration-500 overflow-x-hidden no-scrollbar" style={{ backgroundColor: formData.customColors.background || "var(--background)" }}>
-      {/* HEADER & BANNER SECTION */}
       <div className="relative w-full shrink-0">
         <div className="h-16 w-full relative z-[70]" style={{ backgroundColor: formData.customColors.header }} />
         <header className="absolute top-0 left-0 right-0 z-[80] px-6 py-5 flex justify-between items-center">
@@ -263,14 +255,14 @@ export default function ProfilePage() {
                 <Settings size={24} style={{ color: getContrastColor(formData.customColors.header) }} />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="rounded-3xl p-2 z-[2000]">
-              <DropdownMenuItem onClick={() => setIsOptimizeModalOpen(true)} className="rounded-2xl h-12 cursor-pointer gap-3">
+            <DropdownMenuContent align="end" className="rounded-[2.5rem] p-3 z-[2000] border-2 border-primary/10 shadow-2xl bg-white/95 backdrop-blur-md">
+              <DropdownMenuItem onClick={() => setIsOptimizeModalOpen(true)} className="rounded-[1.5rem] h-12 cursor-pointer gap-3 hover:bg-primary/5">
                 <UserCog size={18} className="text-primary" />
-                <span className="text-xs font-black uppercase tracking-widest">Optimize</span>
+                <span className="text-[10px] font-black uppercase tracking-widest">Optimize Profile</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleSignOut} className="rounded-2xl h-12 cursor-pointer gap-3 text-secondary">
+              <DropdownMenuItem onClick={handleSignOut} className="rounded-[1.5rem] h-12 cursor-pointer gap-3 text-secondary hover:bg-secondary/5">
                 <LogOut size={18} />
-                <span className="text-xs font-black uppercase tracking-widest">Logout</span>
+                <span className="text-[10px] font-black uppercase tracking-widest">Logout</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -292,8 +284,8 @@ export default function ProfilePage() {
               <div 
                 key={sticker.id} 
                 className={cn(
-                  "absolute select-none touch-none",
-                  editingStickerId === sticker.id ? "pointer-events-auto cursor-move ring-4 ring-primary ring-offset-4 rounded-xl" : "pointer-events-none"
+                  "absolute select-none touch-none transition-transform duration-200",
+                  editingStickerId === sticker.id ? "pointer-events-auto cursor-move ring-4 ring-primary ring-offset-4 rounded-xl shadow-2xl" : "pointer-events-none"
                 )} 
                 style={{ 
                   left: `${sticker.x}%`, top: `${sticker.y}%`, 
@@ -319,7 +311,7 @@ export default function ProfilePage() {
             <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(formData.customColors.userInfo), textShadow: textShadowStyle }}>{formData.name || "Innovator"}</h2>
             <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(formData.customColors.userInfo), textShadow: textShadowStyle }}>@{formData.username}</p>
           </div>
-          <div className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-xl" style={{ backgroundColor: formData.customColors.bioCard || "hsl(var(--card))" }}>
+          <div className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-xl border-border/50" style={{ backgroundColor: formData.customColors.bioCard || "hsl(var(--card))" }}>
             <p className="text-center text-[12px] leading-relaxed font-bold italic" style={{ color: getContrastColor(formData.customColors.bioCard) }}>
               {formData.bio || "Innovating the future, one idea at a time."}
             </p>
@@ -346,143 +338,164 @@ export default function ProfilePage() {
 
       <div style={{ backgroundColor: formData.customColors.tabsContent }} className="flex-1 relative z-[40] pb-32">
         <Tabs defaultValue="photo" className="w-full">
-          <TabsList className="w-full bg-transparent h-14" style={{ backgroundColor: formData.customColors.tabsList }}>
-            <TabsTrigger value="photo" className="flex-1 border-b-4 border-transparent data-[state=active]:border-primary">
+          <TabsList className="w-full bg-transparent h-14 border-b border-border/20" style={{ backgroundColor: formData.customColors.tabsList }}>
+            <TabsTrigger value="photo" className="flex-1 border-b-4 border-transparent data-[state=active]:border-primary transition-all">
               <LucideImage size={20} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
             </TabsTrigger>
-            <TabsTrigger value="video" className="flex-1 border-b-4 border-transparent data-[state=active]:border-primary">
+            <TabsTrigger value="video" className="flex-1 border-b-4 border-transparent data-[state=active]:border-primary transition-all">
               <Video size={20} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
             </TabsTrigger>
-            <TabsTrigger value="text" className="flex-1 border-b-4 border-transparent data-[state=active]:border-primary">
+            <TabsTrigger value="text" className="flex-1 border-b-4 border-transparent data-[state=active]:border-primary transition-all">
               <Type size={20} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
             </TabsTrigger>
           </TabsList>
-          <div className="py-20 text-center">
-             <p className="opacity-20 text-[9px] font-black uppercase tracking-[0.3em]">No Records Found</p>
+          <div className="py-24 text-center opacity-20">
+             <Plus size={48} className="mx-auto mb-4" />
+             <p className="text-[9px] font-black uppercase tracking-[0.3em]">No Content Shared Yet</p>
           </div>
         </Tabs>
       </div>
 
-      {/* STICKER STUDIO CONTROLS (z-[6000]) */}
       {editingStickerId && activeSticker && (
-        <div className="fixed bottom-24 left-4 right-4 z-[6000] bg-white dark:bg-zinc-900 rounded-[3rem] border-2 border-primary shadow-2xl p-6 animate-in slide-in-from-bottom-4 pointer-events-auto">
-          <div className="space-y-5">
-            <header className="flex items-center justify-between"><h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Sticker Studio</h4><X onClick={() => setEditingStickerId(null)} size={20} className="cursor-pointer" /></header>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1"><Label className="text-[8px] font-black uppercase opacity-40">Scale {Math.round(activeSticker.scale * 100)}%</Label><Slider value={[activeSticker.scale]} min={0.2} max={4} step={0.01} onValueChange={([v]) => updateSticker(activeSticker.id, { scale: v })} /></div>
-              <div className="space-y-1"><Label className="text-[8px] font-black uppercase opacity-40">Rotation {activeSticker.rotation}°</Label><Slider value={[activeSticker.rotation]} min={0} max={360} step={1} onValueChange={([v]) => updateSticker(activeSticker.id, { rotation: v })} /></div>
+        <div className="fixed bottom-24 left-4 right-4 z-[6000] bg-white dark:bg-zinc-900 rounded-[3rem] border-4 border-primary shadow-2xl p-8 animate-in slide-in-from-bottom-6 pointer-events-auto">
+          <div className="space-y-6">
+            <header className="flex items-center justify-between">
+              <h4 className="text-[12px] font-black uppercase tracking-[0.3em] text-primary">Sticker Studio</h4>
+              <X onClick={() => setEditingStickerId(null)} size={24} className="cursor-pointer text-muted-foreground hover:text-primary transition-colors" />
+            </header>
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label className="text-[9px] font-black uppercase opacity-40">Scale {Math.round(activeSticker.scale * 100)}%</Label>
+                <Slider value={[activeSticker.scale]} min={0.2} max={4} step={0.01} onValueChange={([v]) => updateSticker(activeSticker.id, { scale: v })} className="py-2" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[9px] font-black uppercase opacity-40">Rotation {activeSticker.rotation}°</Label>
+                <Slider value={[activeSticker.rotation]} min={0} max={360} step={1} onValueChange={([v]) => updateSticker(activeSticker.id, { rotation: v })} className="py-2" />
+              </div>
             </div>
-            <div className="flex gap-2 pt-2">
-               <Button variant="destructive" className="flex-1 rounded-2xl h-12 font-black uppercase text-[10px]" onClick={handleDeleteSticker}><Trash2 size={16} className="mr-2" /> Delete</Button>
-               <Button className="flex-1 rounded-2xl h-12 font-black uppercase text-[10px] bg-primary text-white" onClick={() => { setEditingStickerId(null); handleSaveProfile(); }}><CheckCircle size={16} className="mr-2" /> Done</Button>
+            <div className="flex gap-3 pt-2">
+               <Button variant="destructive" className="flex-1 rounded-2xl h-14 font-black uppercase text-[10px] tracking-widest shadow-lg" onClick={handleDeleteSticker}>
+                 <Trash2 size={16} className="mr-2" /> Delete
+               </Button>
+               <Button className="flex-1 rounded-2xl h-14 font-black uppercase text-[10px] tracking-widest bg-primary text-white shadow-xl" onClick={() => { setEditingStickerId(null); handleSaveProfile(); }}>
+                 <CheckCircle size={16} className="mr-2" /> Done
+               </Button>
             </div>
           </div>
         </div>
       )}
 
       <Dialog open={isOptimizeModalOpen} onOpenChange={setIsOptimizeModalOpen}>
-        <DialogContent className="max-w-md w-[95%] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col z-[4000]" onOpenAutoFocus={e => e.preventDefault()}>
-          <div className="p-6 border-b shrink-0"><DialogTitle className="text-xl font-black uppercase tracking-tighter text-primary">Optimize Profile</DialogTitle></div>
-          <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar">
-            <div className="flex items-center justify-between bg-muted/20 p-5 rounded-[2rem] border border-primary/10">
-              <div className="flex items-center gap-3">{isDarkMode ? <Moon className="text-primary" /> : <Sun className="text-primary" />}<div><p className="text-[10px] font-black uppercase tracking-widest">Dark Mode</p></div></div>
+        <DialogContent className="max-w-md w-[95%] rounded-[3.5rem] p-0 overflow-hidden border-none shadow-2xl max-h-[85vh] flex flex-col z-[5000]" onOpenAutoFocus={e => e.preventDefault()}>
+          <div className="p-8 border-b shrink-0 bg-white/50 backdrop-blur-sm flex items-center justify-between">
+            <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-primary">Optimize Profile</DialogTitle>
+            <Button variant="ghost" size="icon" onClick={() => setIsOptimizeModalOpen(false)} className="rounded-full"><X /></Button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-8 space-y-10 no-scrollbar">
+            <div className="flex items-center justify-between bg-muted/20 p-6 rounded-[2.5rem] border border-primary/10 shadow-sm">
+              <div className="flex items-center gap-4">
+                {isDarkMode ? <Moon className="text-primary w-6 h-6" /> : <Sun className="text-primary w-6 h-6" />}
+                <div><p className="text-[10px] font-black uppercase tracking-widest">Dark Mode Theme</p></div>
+              </div>
               <Switch checked={isDarkMode} onCheckedChange={setIsDarkMode} />
             </div>
 
-            <div className="space-y-4"><Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Banner Update</Label><div onClick={() => setShowBannerDetail(true)} className="relative h-32 bg-muted rounded-[2.5rem] overflow-hidden border-2 border-dashed border-primary/20 cursor-pointer">{formData.banner ? <Image src={formData.banner} alt="b" fill className="object-cover" unoptimized /> : <Camera className="absolute inset-0 m-auto opacity-20" size={32} />}</div></div>
-
-            <div className="space-y-4"><Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Identity</Label><div className="flex gap-4"><Avatar className="h-20 w-20 cursor-pointer" onClick={() => profileInputRef.current?.click()}><AvatarImage src={formData.profilePic} /><AvatarFallback>{formData.name?.[0]}</AvatarFallback></Avatar><div className="flex-1 space-y-3"><Input value={formData.name} onChange={e => setFormData(p => ({ ...p, name: e.target.value }))} placeholder="Display Name" className="h-10 rounded-xl font-bold text-xs" /><Input value={formData.username} disabled className="h-10 rounded-xl font-bold text-xs bg-muted/50 cursor-not-allowed opacity-60" placeholder="Username (Locked)" /></div></div></div>
-
-            <div className="space-y-3"><Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Expertise Bio</Label><Textarea value={formData.bio} onChange={e => setFormData(p => ({ ...p, bio: e.target.value }))} className="rounded-[1.5rem] min-h-[80px] text-xs p-4" /></div>
-
-            <div className="space-y-4"><Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Theme Colors</Label><div className="grid grid-cols-2 gap-3">
-              {['header', 'userInfo', 'bioCard', 'statsSection', 'tabsList', 'background', 'textOutline'].map(key => (
-                <Button key={key} variant="outline" className="h-14 rounded-2xl flex-col gap-1" onClick={() => { setActiveColorSection(key as any); setIsColorPickerOpen(true); }}>
-                  <span className="text-[7px] font-black uppercase">{key}</span>
-                  <div className="w-8 h-2 rounded-full border" style={{ backgroundColor: (formData.customColors as any)[key] || '#eee' }} />
-                </Button>
-              ))}
-            </div></div>
-
             <div className="space-y-4">
-              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Manage Stickers</Label>
-              <div className="flex flex-wrap gap-3">
-                {formData.stickers.map((s) => (
-                  <div key={s.id} className="relative group">
-                    <div className="w-16 h-16 bg-muted rounded-2xl overflow-hidden border p-1">
-                      <Image src={s.url} alt="sticker preview" width={64} height={64} className="object-contain w-full h-full" unoptimized />
-                    </div>
-                    <Button 
-                      size="icon" 
-                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-primary shadow-lg scale-0 group-hover:scale-100 transition-transform"
-                      onClick={() => {
-                        setEditingStickerId(s.id);
-                        setIsOptimizeModalOpen(false);
-                      }}
-                    >
-                      <Pencil size={10} className="text-white" />
-                    </Button>
-                  </div>
-                ))}
-                <Button onClick={() => stickerInputRef.current?.click()} className="w-16 h-16 rounded-2xl bg-primary/10 text-primary border-2 border-dashed border-primary/20 flex flex-col items-center justify-center">
-                  <Plus size={20} />
-                </Button>
+              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2">Sphere Banner</Label>
+              <div onClick={() => setShowBannerDetail(true)} className="relative h-40 bg-muted rounded-[3rem] overflow-hidden border-2 border-dashed border-primary/20 cursor-pointer group shadow-inner">
+                {formData.banner ? <Image src={formData.banner} alt="banner preview" fill className="object-cover transition-transform group-hover:scale-105" unoptimized /> : <Camera className="absolute inset-0 m-auto opacity-10" size={40} />}
+                <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"><Camera /></div>
               </div>
             </div>
-          </div>
-          <div className="p-6 bg-white dark:bg-zinc-950 border-t shrink-0"><Button className="w-full h-14 rounded-[1.5rem] bg-primary text-white font-black uppercase tracking-widest shadow-xl" onClick={handleSaveProfile} disabled={isSaving}>{isSaving ? <Loader2 className="animate-spin mr-2" /> : "Sync Changes"}</Button></div>
-        </DialogContent>
-      </Dialog>
 
-      <Dialog open={isColorPickerOpen} onOpenChange={setIsColorPickerOpen}>
-        <DialogContent className="max-w-xs rounded-[3rem] p-6 z-[6000]">
-          <DialogHeader><DialogTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-center mb-6">Pick a Vibe</DialogTitle></DialogHeader>
-          <div className="space-y-8 max-h-[50vh] overflow-y-auto no-scrollbar pb-4">
-            {Object.entries(COLOR_CATEGORIES).map(([cat, colors]) => (
-              <div key={cat} className="space-y-3">
-                <h3 className="text-[8px] font-black uppercase opacity-40 ml-1">{cat}</h3>
-                <div className="grid grid-cols-5 gap-3">
-                  {colors.map(c => (
-                    <button key={c} onClick={() => { 
-                      if(activeColorSection) { 
-                        setFormData(p => ({ ...p, customColors: { ...p.customColors, [activeColorSection]: c } })); 
-                        setIsColorPickerOpen(false); 
-                      } 
-                    }} className="aspect-square rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: c }} />
-                  ))}
-                  <button onClick={() => {
-                    if(activeColorSection) {
-                      setFormData(p => ({ ...p, customColors: { ...p.customColors, [activeColorSection]: "transparent" } }));
-                      setIsColorPickerOpen(false);
-                    }
-                  }} className="aspect-square rounded-full border-2 border-dashed border-red-500 flex items-center justify-center text-[8px] font-bold">None</button>
+            <div className="space-y-6">
+              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2">Identity Hub</Label>
+              <div className="flex gap-6 items-center">
+                <div className="relative group cursor-pointer" onClick={() => profileInputRef.current?.click()}>
+                   <Avatar className="h-24 w-24 border-4 border-white shadow-xl">
+                    <AvatarImage src={formData.profilePic} className="object-cover" />
+                    <AvatarFallback className="text-xl font-black">{formData.name?.[0]}</AvatarFallback>
+                  </Avatar>
+                  <div className="absolute inset-0 bg-black/30 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"><Camera size={20} /></div>
+                </div>
+                <div className="flex-1 space-y-4">
+                  <div className="space-y-1">
+                    <Label className="text-[8px] font-black uppercase opacity-40 ml-1">Display Name</Label>
+                    <Input value={formData.name} onChange={e => setFormData(p => ({ ...p, name: e.target.value }))} placeholder="Public Name" className="h-12 rounded-2xl font-bold text-sm bg-muted/30 border-none" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[8px] font-black uppercase opacity-40 ml-1">Unique Username (Locked)</Label>
+                    <Input value={formData.username} disabled className="h-12 rounded-2xl font-bold text-sm bg-muted/50 border-none cursor-not-allowed opacity-60" />
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
+            </div>
 
-      <Dialog open={showBannerDetail} onOpenChange={setShowBannerDetail}>
-        <DialogContent className="max-w-md w-[95%] rounded-[3rem] h-[80vh] flex flex-col z-[5000]">
-          <div className="p-6 border-b text-center"><DialogTitle className="text-sm font-black uppercase">Banner Preview</DialogTitle></div>
-          <div className="flex-1 overflow-y-auto p-6 space-y-10 no-scrollbar">
             <div className="space-y-3">
-              <div className="flex items-center gap-2 opacity-50"><Monitor size={14} /><span className="text-[8px] font-black uppercase">Desktop</span></div>
-              <div className="relative aspect-[3/1] bg-muted rounded-2xl overflow-hidden border">{formData.banner && <Image src={formData.banner} alt="p" fill className="object-cover" unoptimized />}</div>
+              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2">Expertise Bio</Label>
+              <Textarea value={formData.bio} onChange={e => setFormData(p => ({ ...p, bio: e.target.value }))} placeholder="Tell your innovation story..." className="rounded-[2rem] min-h-[100px] text-sm p-5 font-medium border-muted shadow-inner" />
             </div>
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 opacity-50"><Smartphone size={14} /><span className="text-[8px] font-black uppercase">Mobile</span></div>
-              <div className="flex justify-center"><div className="relative w-full max-w-[200px] aspect-[4/3] bg-muted rounded-2xl overflow-hidden border">{formData.banner && <Image src={formData.banner} alt="m" fill className="object-cover" unoptimized />}</div></div>
+
+            <div className="space-y-6">
+              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2">Vibe Personalization</Label>
+              <div className="grid grid-cols-2 gap-4">
+                {['header', 'userInfo', 'bioCard', 'statsSection', 'tabsList', 'background', 'textOutline'].map(key => (
+                  <Button key={key} variant="outline" className="h-16 rounded-[1.5rem] flex-col gap-1 border-muted/50 shadow-sm hover:border-primary/30 transition-all" onClick={() => { setActiveColorSection(key as any); setIsColorPickerOpen(true); }}>
+                    <span className="text-[7px] font-black uppercase opacity-60">{key === 'textOutline' ? 'Text Glow' : key}</span>
+                    <div className="w-10 h-2 rounded-full border border-black/5" style={{ backgroundColor: (formData.customColors as any)[key] || '#eee' }} />
+                  </Button>
+                ))}
+              </div>
             </div>
-            <div className="pt-6 space-y-4">
-               <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={e => handleImageChange(e, 'banner')} />
-               <Button onClick={() => bannerInputRef.current?.click()} className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase">Change Photo</Button>
+
+            <div className="space-y-4">
+              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2">Manage Stickers</Label>
+              <div className="flex flex-wrap gap-4">
+                {formData.stickers.map((s) => (
+                  <div key={s.id} className="relative group">
+                    <div className="w-20 h-20 bg-muted/50 rounded-[1.5rem] overflow-hidden border-2 border-primary/5 p-2 shadow-inner">
+                      <Image src={s.url} alt="sticker item" width={80} height={80} className="object-contain w-full h-full" unoptimized />
+                    </div>
+                    <div className="absolute -top-3 -right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button 
+                        size="icon" 
+                        className="h-8 w-8 rounded-full bg-primary text-white shadow-lg"
+                        onClick={() => {
+                          setEditingStickerId(s.id);
+                          setIsOptimizeModalOpen(false);
+                        }}
+                      >
+                        <Pencil size={12} />
+                      </Button>
+                      <Button 
+                        size="icon" 
+                        variant="destructive"
+                        className="h-8 w-8 rounded-full shadow-lg"
+                        onClick={() => setFormData(p => ({ ...p, stickers: p.stickers.filter(stick => stick.id !== s.id) }))}
+                      >
+                        <Trash2 size={12} />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+                <Button onClick={() => stickerInputRef.current?.click()} className="w-20 h-20 rounded-[1.5rem] bg-primary/5 text-primary border-4 border-dashed border-primary/10 flex flex-col items-center justify-center hover:bg-primary/10 transition-colors">
+                  <Plus size={24} />
+                  <span className="text-[8px] font-black uppercase mt-1">Add</span>
+                </Button>
+              </div>
             </div>
+          </div>
+          <div className="p-8 bg-white/80 backdrop-blur-md border-t shrink-0">
+            <Button className="w-full h-16 rounded-[2rem] bg-primary text-white font-black uppercase tracking-[0.2em] shadow-2xl hover:scale-[1.02] transition-transform" onClick={handleSaveProfile} disabled={isSaving}>
+              {isSaving ? <Loader2 className="animate-spin mr-3" /> : <CheckCircle className="mr-3" />}
+              {isSaving ? "Syncing..." : "Apply Changes"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
-      <input type="file" ref={profileInputRef} className="hidden" accept="image/*" onChange={e => handleImageChange(e, 'profile')} /><input type="file" ref={stickerInputRef} className="hidden" accept="image/*" onChange={e => handleImageChange(e, 'sticker')} />
+      <input type="file" ref={profileInputRef} className="hidden" accept="image/*" onChange={e => handleImageChange(e, 'profile')} />
+      <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={e => handleImageChange(e, 'banner')} />
+      <input type="file" ref={stickerInputRef} className="hidden" accept="image/*" onChange={e => handleImageChange(e, 'sticker')} />
     </div>
   );
 }
