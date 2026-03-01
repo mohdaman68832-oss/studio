@@ -37,7 +37,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 type Step = 1 | 2 | 3;
 
 const CATEGORY_KEYWORDS = [
-  "Technology", "Art", "Sustainability", "Healthcare", "Business", "Education", "Science", "Music", "Meme"
+  "Education", "Technology", "AI & Tools", "App Development", "Business & Startup", 
+  "Career & Jobs", "Government Exams", "Finance & Investment", "Earning Online", 
+  "Health & Fitness", "Mental Health", "Self Improvement", "Motivation", 
+  "Relationships", "Social Issues", "Politics", "Current Affairs", "History", 
+  "Science", "Gaming", "Movies & Web Series", "Music", "Sports", "Memes", 
+  "Stories & Shayari", "Opinion / Debate", "Pencil Sketch", "Portrait Drawing", 
+  "Cartoon Drawing", "Realistic Drawing", "Doodle Art", "Digital Art", "AI Art", 
+  "Painting", "Learn Drawing", "Art Feedback", "Art Competitions"
 ];
 
 const toBase64 = (file: File): Promise<string> =>
@@ -65,7 +72,7 @@ function PostFormContent() {
   const [category, setCategory] = useState("Technology");
   
   // Dynamic Check: Is it a meme?
-  const isMeme = category.toLowerCase() === "meme";
+  const isMeme = category.toLowerCase() === "memes" || category.toLowerCase() === "meme";
 
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [user, db]);
   const { data: profileData } = useDoc(profileRef);
@@ -138,7 +145,7 @@ function PostFormContent() {
     try {
       await addDoc(collection(db, "ideas"), {
         title: formData.title,
-        problem: isMeme ? "Meme content" : formData.problem,
+        problem: isMeme ? "Meme content" : (formData.problem || "N/A"),
         description: formData.description,
         category: category,
         userName: user.displayName || profileData?.username || "Innovator",
@@ -151,7 +158,8 @@ function PostFormContent() {
           category.toLowerCase(), 
           mediaType || "text", 
           "sphere",
-          ...(formData.description.toLowerCase().includes("meme") ? ["meme"] : [])
+          ...(category.toLowerCase().includes("meme") ? ["meme"] : []),
+          ...(formData.description.toLowerCase().includes("#meme") ? ["meme"] : [])
         ],
         createdAt: serverTimestamp(),
         likes: 0
@@ -345,7 +353,7 @@ function PostFormContent() {
               <Label className="text-[10px] font-black uppercase tracking-widest ml-1 flex items-center gap-2">
                 <Tags size={14} className="text-primary" /> Tag Innovation
               </Label>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 max-h-[150px] overflow-y-auto no-scrollbar p-1">
                 {CATEGORY_KEYWORDS.map((keyword) => (
                   <Button
                     key={keyword}
@@ -353,7 +361,7 @@ function PostFormContent() {
                     size="sm"
                     onClick={() => setCategory(keyword)}
                     className={cn(
-                      "rounded-full text-[10px] font-black uppercase tracking-widest transition-all h-9 px-5",
+                      "rounded-full text-[9px] font-black uppercase tracking-widest transition-all h-9 px-4",
                       category === keyword 
                         ? "bg-primary text-white border-primary shadow-lg shadow-primary/20" 
                         : "bg-white border-muted text-muted-foreground hover:border-primary/50"

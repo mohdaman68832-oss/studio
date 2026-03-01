@@ -11,7 +11,7 @@ import { useAuth, useFirestore } from "@/firebase";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, setDoc, getDocs, collection, query, where } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ChevronRight, ChevronLeft, Check, Camera, Image as ImageIcon, Briefcase, Monitor, Smartphone, X } from "lucide-react";
+import { Loader2, ChevronRight, ChevronLeft, Camera, Image as ImageIcon, Briefcase, Monitor, Smartphone, X } from "lucide-react";
 import Link from "next/link";
 import { Progress } from "@/components/ui/progress";
 import Image from "next/image";
@@ -20,7 +20,14 @@ import { cn } from "@/lib/utils";
 type Step = 1 | 2 | 3;
 
 const EXPERTISE_OPTIONS = [
-  "Art", "Game", "Study", "Technology", "Sustainability", "Healthcare", "Business", "Education", "Science", "Music"
+  "Education", "Technology", "AI & Tools", "App Development", "Business & Startup", 
+  "Career & Jobs", "Government Exams", "Finance & Investment", "Earning Online", 
+  "Health & Fitness", "Mental Health", "Self Improvement", "Motivation", 
+  "Relationships", "Social Issues", "Politics", "Current Affairs", "History", 
+  "Science", "Gaming", "Movies & Web Series", "Music", "Sports", "Memes", 
+  "Stories & Shayari", "Opinion / Debate", "Pencil Sketch", "Portrait Drawing", 
+  "Cartoon Drawing", "Realistic Drawing", "Doodle Art", "Digital Art", "AI Art", 
+  "Painting", "Learn Drawing", "Art Feedback", "Art Competitions"
 ];
 
 const toBase64 = (file: File): Promise<string> =>
@@ -116,13 +123,15 @@ export default function SignupPage() {
   };
 
   const handleSignup = async () => {
+    if (interests.length === 0) {
+      toast({ title: "Pick Interests", description: "Select at least one category to customize your feed.", variant: "destructive" });
+      return;
+    }
     setLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // We do NOT update auth.photoURL if it's a large Base64 string to avoid Firebase errors.
-      // Firestore handles the large Base64 profile picture string.
       await updateProfile(user, { displayName: name });
 
       await setDoc(doc(db, "userProfiles", user.uid), {
@@ -257,8 +266,24 @@ export default function SignupPage() {
             </div>
             <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest ml-1">About Your Expertise</Label><Textarea placeholder="Tell us about your background and skills..." className="rounded-2xl h-24 bg-white border-muted" value={bio} onChange={(e) => setBio(e.target.value)} /></div>
             <div className="space-y-3">
-              <Label className="text-[10px] font-black uppercase tracking-widest ml-1 flex items-center gap-1"><Briefcase size={12} /> Choose Your Fields</Label>
-              <div className="flex flex-wrap gap-2">{EXPERTISE_OPTIONS.map((opt) => <Button key={opt} variant="outline" size="sm" className={cn("rounded-full text-[10px] font-bold uppercase tracking-widest transition-all", interests.includes(opt) ? "bg-primary text-white border-primary" : "bg-white")} onClick={() => toggleInterest(opt)}>{opt}</Button>)}</div>
+              <Label className="text-[10px] font-black uppercase tracking-widest ml-1 flex items-center gap-1"><Briefcase size={12} /> Personalized Feed Interests</Label>
+              <p className="text-[8px] text-muted-foreground font-medium -mt-1 mb-2">Pick categories you want to see in your home feed.</p>
+              <div className="flex flex-wrap gap-2 max-h-[250px] overflow-y-auto no-scrollbar p-1">
+                {EXPERTISE_OPTIONS.map((opt) => (
+                  <Button 
+                    key={opt} 
+                    variant="outline" 
+                    size="sm" 
+                    className={cn(
+                      "rounded-full text-[9px] font-bold uppercase tracking-widest transition-all", 
+                      interests.includes(opt) ? "bg-primary text-white border-primary" : "bg-white"
+                    )} 
+                    onClick={() => toggleInterest(opt)}
+                  >
+                    {opt}
+                  </Button>
+                ))}
+              </div>
             </div>
           </div>
           <div className="space-y-3 pt-4">

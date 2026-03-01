@@ -4,8 +4,8 @@
 import { IdeaCard } from "@/components/feed/idea-card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection, query, orderBy } from "firebase/firestore";
+import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
+import { collection, query, orderBy, doc } from "firebase/firestore";
 import { useMemo, useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RefreshCcw, ImageIcon, Video, Type } from "lucide-react";
@@ -55,6 +55,11 @@ export default function FeedPage() {
   const [showRefresh, setShowRefresh] = useState(false);
   const [touchStart, setTouchStart] = useState(0);
 
+  // Fetch User Profile for Interests
+  const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [user, db]);
+  const { data: profileData } = useDoc(profileRef);
+  const userInterests = profileData?.interests || [];
+
   const ideasQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, "ideas"), orderBy("createdAt", "desc"));
@@ -67,7 +72,7 @@ export default function FeedPage() {
     const unique = Array.from(new Map(base.map(item => [item.id, item])).values());
     
     const isMemePost = (i: any) => {
-      const categoryMatch = i.category?.toLowerCase() === "meme";
+      const categoryMatch = i.category?.toLowerCase() === "meme" || i.category?.toLowerCase() === "memes";
       const tagMatch = i.tags?.some((t: string) => t.toLowerCase() === "meme");
       const descriptionMatch = i.description?.toLowerCase().includes("#meme") || i.description?.toLowerCase().includes("meme");
       return !!(categoryMatch || tagMatch || descriptionMatch);
@@ -75,7 +80,17 @@ export default function FeedPage() {
 
     if (activeCategory === "All") {
       // EXCLUDE all memes from the 'All' page to keep feeds segregated
-      return unique.filter(i => !isMemePost(i));
+      // AND filter by user interests if they exist
+      return unique.filter(i => {
+        if (isMemePost(i)) return false;
+        if (userInterests.length > 0) {
+          return userInterests.some((interest: string) => 
+            i.category?.toLowerCase() === interest.toLowerCase() || 
+            i.tags?.some((t: string) => t.toLowerCase() === interest.toLowerCase())
+          );
+        }
+        return true;
+      });
     }
     
     if (activeCategory === "Meme") {
@@ -102,7 +117,7 @@ export default function FeedPage() {
     }
 
     return unique.filter(i => i.category?.toLowerCase() === activeCategory.toLowerCase());
-  }, [firestoreIdeas, activeCategory, activeMemeFormat]);
+  }, [firestoreIdeas, activeCategory, activeMemeFormat, userInterests]);
 
   useEffect(() => {
     const handleTouchStart = (e: TouchEvent) => {
@@ -161,7 +176,9 @@ export default function FeedPage() {
       <header className="mb-6 px-1 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-black text-primary uppercase tracking-tighter leading-none">Sphere Feed</h1>
-          <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-1">Innovation at your fingertips</p>
+          <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-1">
+            {activeCategory === "All" && userInterests.length > 0 ? "Tailored to your interests" : "Innovation at your fingertips"}
+          </p>
         </div>
       </header>
 
@@ -226,6 +243,9 @@ export default function FeedPage() {
             ) : (
               <div className="py-20 text-center opacity-30 flex flex-col items-center gap-3">
                 <p className="text-[10px] font-black uppercase tracking-widest">No matching content yet</p>
+                {activeCategory === "All" && userInterests.length > 0 && (
+                   <p className="text-[9px] font-medium max-w-[200px]">We couldn't find posts matching your interests. Try following more categories!</p>
+                )}
               </div>
             )}
           </>
