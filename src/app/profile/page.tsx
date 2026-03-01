@@ -75,7 +75,7 @@ function getContrastColor(hexColor: string | undefined): string {
   const g = parseInt(hex.substring(2, 4), 16);
   const b = parseInt(hex.substring(4, 6), 16);
   const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-  // If background is light, use primary orange instead of dark grey for the Orange Edition
+  // Use primary orange for high contrast on light backgrounds
   return brightness >= 128 ? 'hsl(var(--primary))' : '#FFFFFF';
 }
 
@@ -144,7 +144,7 @@ export default function ProfilePage() {
     else document.documentElement.classList.remove('dark');
   }, [isDarkMode]);
 
-  // CRITICAL FIX: Ensure background interaction is restored when modals close
+  // Ensure background interaction is restored when modals close
   useEffect(() => {
     if (!isOptimizeModalOpen && !showBannerDetail && !isColorPickerOpen) {
       document.body.style.pointerEvents = 'auto';
@@ -164,7 +164,7 @@ export default function ProfilePage() {
       await setDoc(profileRef, {
         id: user.uid,
         name: formData.name,
-        username: (formData.username || '').toLowerCase().replace(/\s/g, ''),
+        // Username is not changeable
         bio: formData.bio,
         profilePictureUrl: formData.profilePic,
         bannerUrl: formData.banner,
@@ -392,7 +392,7 @@ export default function ProfilePage() {
               <Switch checked={isDarkMode} onCheckedChange={setIsDarkMode} />
             </div>
             <div className="space-y-4"><Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Banner Update</Label><div onClick={() => setShowBannerDetail(true)} className="relative h-32 bg-muted rounded-[2.5rem] overflow-hidden border-2 border-dashed border-primary/20 cursor-pointer">{formData.banner ? <Image src={formData.banner} alt="b" fill className="object-cover" unoptimized /> : <Camera className="absolute inset-0 m-auto opacity-20" size={32} />}</div></div>
-            <div className="space-y-4"><Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Identity</Label><div className="flex gap-4"><Avatar className="h-20 w-20 cursor-pointer" onClick={() => profileInputRef.current?.click()}><AvatarImage src={formData.profilePic} /><AvatarFallback>{formData.name?.[0]}</AvatarFallback></Avatar><div className="flex-1 space-y-3"><Input value={formData.name} onChange={e => setFormData(p => ({ ...p, name: e.target.value }))} className="h-10 rounded-xl font-bold text-xs" /><Input value={formData.username} onChange={e => setFormData(p => ({ ...p, username: e.target.value }))} className="h-10 rounded-xl font-bold text-xs" /></div></div></div>
+            <div className="space-y-4"><Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Identity</Label><div className="flex gap-4"><Avatar className="h-20 w-20 cursor-pointer" onClick={() => profileInputRef.current?.click()}><AvatarImage src={formData.profilePic} /><AvatarFallback>{formData.name?.[0]}</AvatarFallback></Avatar><div className="flex-1 space-y-3"><Input value={formData.name} onChange={e => setFormData(p => ({ ...p, name: e.target.value }))} placeholder="Display Name" className="h-10 rounded-xl font-bold text-xs" /><Input value={formData.username} disabled className="h-10 rounded-xl font-bold text-xs bg-muted/50 cursor-not-allowed opacity-60" placeholder="Username" /></div></div></div>
             <div className="space-y-3"><Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Expertise Bio</Label><Textarea value={formData.bio} onChange={e => setFormData(p => ({ ...p, bio: e.target.value }))} className="rounded-[1.5rem] min-h-[80px] text-xs p-4" /></div>
             <div className="space-y-4"><Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Theme Colors</Label><div className="grid grid-cols-2 gap-3">
               {['header', 'userInfo', 'bioCard', 'statsSection', 'tabsList', 'background', 'textOutline'].map(key => (
