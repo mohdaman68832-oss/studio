@@ -1,7 +1,7 @@
 
 "use client";
 
-import { use, useState, useMemo } from "react";
+import { use, useState, useMemo, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, MessageSquare, Loader2, UserPlus, UserCheck, Image as LucideImage, Video, Type } from "lucide-react";
@@ -48,6 +48,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
   const db = useFirestore();
   const { user: currentUser } = useUser();
   const { toast } = useToast();
+  const viewerContainerRef = useRef<HTMLDivElement>(null);
 
   const userQuery = useMemoFirebase(() => {
     if (!db) return null;
@@ -89,7 +90,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden flex flex-col no-scrollbar" 
       style={{ backgroundColor: colors.background || "var(--background)" }}
     >
-      <div className="relative w-full shrink-0">
+      <div className="relative w-full shrink-0" ref={viewerContainerRef}>
         <div className="h-16 w-full relative z-[70]" style={{ backgroundColor: colors.header }} />
         
         <header className="absolute top-0 left-0 right-0 z-[80] px-6 flex justify-between items-center py-5">
