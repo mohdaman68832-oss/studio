@@ -9,17 +9,10 @@ import {
   Loader2, 
   Image as LucideImage, Video, Type,
   X,
-  Plus,
-  Monitor,
-  Smartphone,
-  ChevronRight,
   UserCog,
-  Trash2,
   CheckCircle,
-  Pencil,
   Sun,
-  Moon,
-  Palette
+  Moon
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -32,12 +25,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import Image from "next/image";
 import { useUser, useAuth, useFirestore, useDoc, useMemoFirebase, useCollection } from "@/firebase";
 import { signOut } from "firebase/auth";
-import { doc, setDoc, collection, query, where, orderBy } from "firebase/firestore";
+import { doc, setDoc, collection as fsCollection, query, where, orderBy } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -92,9 +84,7 @@ export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   
-  const [editingStickerId, setEditingStickerId] = useState<string | null>(null);
   const stickerContainerRef = useRef<HTMLDivElement>(null);
-
   const profileInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
@@ -112,15 +102,15 @@ export default function ProfilePage() {
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [db, user]);
   const { data: profileData, isLoading: isProfileLoading } = useDoc(profileRef);
 
-  const followingQuery = useMemoFirebase(() => (db && user ? query(collection(db, "follows"), where("followerId", "==", user.uid)) : null), [db, user]);
-  const followersQuery = useMemoFirebase(() => (db && user ? query(collection(db, "follows"), where("followedId", "==", user.uid)) : null), [db, user]);
+  const followingQuery = useMemoFirebase(() => (db && user ? query(fsCollection(db, "follows"), where("followerId", "==", user.uid)) : null), [db, user]);
+  const followersQuery = useMemoFirebase(() => (db && user ? query(fsCollection(db, "follows"), where("followedId", "==", user.uid)) : null), [db, user]);
   
   const { data: circlingData } = useCollection(followingQuery);
   const { data: circleData } = useCollection(followersQuery);
 
   const myPostsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return query(collection(db, "ideas"), where("authorId", "==", user.uid), orderBy("createdAt", "desc"));
+    return query(fsCollection(db, "ideas"), where("authorId", "==", user.uid), orderBy("createdAt", "desc"));
   }, [db, user]);
 
   const { data: myPosts } = useCollection(myPostsQuery);
@@ -238,27 +228,6 @@ export default function ProfilePage() {
               <AvatarImage src={formData.profilePic} className="object-cover" />
               <AvatarFallback className="text-2xl font-black uppercase">{formData.name?.[0]}</AvatarFallback>
             </Avatar>
-          </div>
-
-          <div className="absolute inset-0 pointer-events-none z-[100]">
-            {formData.stickers.map((sticker) => (
-              <div 
-                key={sticker.id} 
-                className={cn(
-                  "absolute select-none touch-none transition-transform duration-200",
-                  editingStickerId === sticker.id ? "pointer-events-auto cursor-move ring-4 ring-primary ring-offset-4 rounded-xl shadow-2xl" : "pointer-events-none"
-                )} 
-                style={{ 
-                  left: `${sticker.x}%`, top: `${sticker.y}%`, 
-                  transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`, 
-                  touchAction: 'none'
-                }}
-              >
-                <div className="relative w-24 h-24">
-                  <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized />
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </div>
