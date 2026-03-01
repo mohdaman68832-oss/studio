@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -16,7 +15,9 @@ import {
   UserCog,
   Trash2,
   CheckCircle,
-  Pencil
+  Pencil,
+  Sun,
+  Moon
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -30,6 +31,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import Image from "next/image";
 import { useUser, useAuth, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { signOut, updateProfile } from "firebase/auth";
@@ -60,8 +62,8 @@ interface CustomColors {
 type ColorSection = keyof CustomColors;
 
 const COLOR_CATEGORIES = {
+  "Vibrant": ["#FF4500", "#FF6347", "#FF8C00", "#FFA500", "#FFD700", "#FF7F50", "#FFDAB9", "#E65100", "#BF360C"],
   "Pastels": ["#FFFFFF", "#F8FAFC", "#F0FDF4", "#ECFDF5", "#EFF6FF", "#F5F3FF", "#FDF2F8", "#FFF7ED", "#FFFBEB", "#FEF2F2", "#ECFEFF", "#F5F5F5"],
-  "Vibrant": ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899", "#06B6D4", "#F97316", "#14B8A6", "#6366F1"],
   "Deep": ["#0F172A", "#18181B", "#171717", "#1C1917", "#450A0A", "#422006", "#3F2E0E", "#064E3B", "#134E4A", "#1E1B4B", "#312E81", "#4C1D95", "#581C87", "#701A75", "#831843", "#7F1D1D"]
 };
 
@@ -95,6 +97,7 @@ export default function ProfilePage() {
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [activeColorSection, setActiveColorSection] = useState<ColorSection | null>(null);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   
   const [editingStickerId, setEditingStickerId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -130,8 +133,17 @@ export default function ProfilePage() {
         stickers: profileData.stickers || [],
         customColors: profileData.customColors || {}
       });
+      setIsDarkMode(profileData.theme === 'dark');
     }
   }, [profileData, user]);
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
 
   const handleSignOut = async () => { 
     await signOut(auth); 
@@ -155,6 +167,7 @@ export default function ProfilePage() {
         bannerOffset: formData.bannerOffset,
         stickers: formData.stickers,
         customColors: formData.customColors,
+        theme: isDarkMode ? 'dark' : 'light',
         updatedAt: new Date().toISOString()
       }, { merge: true });
 
@@ -332,7 +345,7 @@ export default function ProfilePage() {
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>@{formData.username || "handle"}</p>
               </div>
               
-              <div className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-xl" style={{ backgroundColor: colors.bioCard || "#FFFFFF" }}>
+              <div className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-xl" style={{ backgroundColor: colors.bioCard || "hsl(var(--card))" }}>
                 <p className="text-center text-[12px] leading-relaxed font-bold italic" style={{ color: getContrastColor(colors.bioCard) }}>
                   {formData.bio || "Building the future of shared intelligence in the sphere."}
                 </p>
@@ -387,7 +400,7 @@ export default function ProfilePage() {
       </div>
 
       {editingStickerId && activeSticker && (
-        <div className="fixed bottom-24 left-4 right-4 z-[3000] bg-white/95 backdrop-blur-md rounded-[2.5rem] border shadow-2xl p-5 animate-in slide-in-from-bottom-4">
+        <div className="fixed bottom-24 left-4 right-4 z-[3000] bg-white dark:bg-zinc-900/95 backdrop-blur-md rounded-[2.5rem] border shadow-2xl p-5 animate-in slide-in-from-bottom-4">
           <div className="space-y-4">
             <header className="flex items-center justify-between px-1">
               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Sticker Studio</h4>
@@ -425,6 +438,17 @@ export default function ProfilePage() {
             <DialogTitle className="text-xl font-black uppercase tracking-tighter text-primary">Optimize Profile</DialogTitle>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar">
+            <div className="flex items-center justify-between bg-muted/20 p-4 rounded-3xl border border-primary/10">
+              <div className="flex items-center gap-3">
+                {isDarkMode ? <Moon className="w-5 h-5 text-primary" /> : <Sun className="w-5 h-5 text-primary" />}
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest">Dark Mode</p>
+                  <p className="text-[8px] text-muted-foreground font-bold">Switch between light and dark themes</p>
+                </div>
+              </div>
+              <Switch checked={isDarkMode} onCheckedChange={setIsDarkMode} />
+            </div>
+
             <div className="space-y-4">
                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Profile Banner</Label>
                <div onClick={() => setShowBannerDetail(true)} className="relative h-32 bg-muted rounded-[2rem] overflow-hidden border-2 border-dashed border-primary/20 group cursor-pointer">
@@ -500,7 +524,7 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
-          <div className="p-6 bg-white border-t shrink-0">
+          <div className="p-6 bg-white dark:bg-zinc-950 border-t shrink-0">
              <Button className="w-full h-14 rounded-[1.5rem] bg-primary text-white font-black uppercase tracking-widest shadow-xl" onClick={handleSaveProfile} disabled={isSaving}>
                {isSaving ? <Loader2 className="animate-spin mr-2" /> : "Save All Changes"}
              </Button>

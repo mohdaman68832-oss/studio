@@ -10,7 +10,7 @@ import { AuthGuard } from '@/components/auth-guard';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: 'InnovateSphere | Share & Scale Your Ideas',
+  title: 'InnovateSphere | Orange Edition',
   description: 'The premier platform for innovators to share, analyze, and collaborate on groundbreaking ideas.',
 };
 
@@ -21,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={inter.variable}>
-      <body className="font-body antialiased bg-background">
+      <body className="font-body antialiased bg-background text-foreground transition-colors duration-300">
         <FirebaseClientProvider>
           <FirebaseErrorListener />
           <AuthGuard>
