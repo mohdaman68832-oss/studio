@@ -14,9 +14,10 @@ import {
   Loader2, 
   Image as ImageIcon, 
   Type, 
-  Video, 
+  Video as VideoIcon, 
   X,
-  Send
+  Send,
+  Tags
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
@@ -36,7 +37,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 type Step = 1 | 2 | 3;
 
 const CATEGORY_KEYWORDS = [
-  "Art", "Game", "Study", "Technology", "Sustainability", "Healthcare", "Business", "Education", "Science", "Music", "Meme"
+  "Technology", "Art", "Sustainability", "Healthcare", "Business", "Education", "Science", "Music", "Meme"
 ];
 
 const toBase64 = (file: File): Promise<string> =>
@@ -79,7 +80,7 @@ function PostFormContent() {
     if (type && ["text", "image", "video"].includes(type)) {
       setMediaType(type);
       if (type === "text") {
-        setStep(2); // Skip Step 1 for Text memes
+        setStep(2);
       }
     }
     if (cat) {
@@ -174,7 +175,7 @@ function PostFormContent() {
         <header className="flex items-center justify-between">
            <div>
             <h1 className="text-2xl font-black text-primary uppercase tracking-tighter">
-                {isMeme ? `${mediaType?.toUpperCase()} MEME` : "New Innovation"}
+                New Innovation
             </h1>
             <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">
                 {step === 3 ? "Complete" : `Step ${step} of 2`}
@@ -193,7 +194,7 @@ function PostFormContent() {
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="space-y-4">
             <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground text-center block">
-                {isMeme ? "Select Media Format" : "Choose Format"}
+                Choose Format
             </Label>
             <div className="grid grid-cols-3 gap-3">
               <Sheet open={isImageSheetOpen} onOpenChange={setIsImageSheetOpen}>
@@ -213,7 +214,7 @@ function PostFormContent() {
                 <SheetContent side="bottom" className="rounded-t-[2.5rem] h-[35vh]" onOpenAutoFocus={(e) => e.preventDefault()}>
                   <SheetHeader>
                     <SheetTitle className="text-center text-[10px] font-black uppercase tracking-widest">
-                      Upload Image Meme
+                      Upload Image
                     </SheetTitle>
                   </SheetHeader>
                   <div className="flex flex-col items-center justify-center h-full gap-4 pb-8">
@@ -244,14 +245,14 @@ function PostFormContent() {
                     )}
                     onClick={() => handleMediaSelect("video")}
                   >
-                    <Video className="w-8 h-8" />
+                    <VideoIcon className="w-8 h-8" />
                     <span className="text-[10px] font-black uppercase tracking-widest">Video</span>
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="bottom" className="rounded-t-[2.5rem] h-[35vh]" onOpenAutoFocus={(e) => e.preventDefault()}>
                   <SheetHeader>
                     <SheetTitle className="text-center text-[10px] font-black uppercase tracking-widest">
-                      Upload Video Meme
+                      Upload Video
                     </SheetTitle>
                   </SheetHeader>
                   <div className="flex flex-col items-center justify-center h-full gap-4 pb-8">
@@ -324,20 +325,44 @@ function PostFormContent() {
         <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
           <div className="space-y-6">
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Meme Title</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Title</Label>
               <Input 
-                placeholder="Catchy headline..." 
+                placeholder="Innovation title..." 
                 className="rounded-2xl h-14 bg-muted/30 border-none focus-visible:ring-primary/20 text-sm font-bold"
                 value={formData.title}
                 onChange={(e) => updateFormData("title", e.target.value)}
               />
             </div>
 
+            <div className="space-y-4">
+              <Label className="text-[10px] font-black uppercase tracking-widest ml-1 flex items-center gap-2">
+                <Tags size={14} className="text-primary" /> Tag Innovation
+              </Label>
+              <div className="flex flex-wrap gap-2">
+                {CATEGORY_KEYWORDS.map((keyword) => (
+                  <Button
+                    key={keyword}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCategory(keyword)}
+                    className={cn(
+                      "rounded-full text-[10px] font-black uppercase tracking-widest transition-all h-9 px-5",
+                      category === keyword 
+                        ? "bg-primary text-white border-primary shadow-lg shadow-primary/20" 
+                        : "bg-white border-muted text-muted-foreground hover:border-primary/50"
+                    )}
+                  >
+                    {keyword}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
             {!isMeme && (
-              <div className="space-y-2">
+              <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest ml-1">The Challenge</Label>
                 <Input 
-                  placeholder="What are you solving?" 
+                  placeholder="What problem are you solving?" 
                   className="rounded-2xl h-14 bg-muted/30 border-none focus-visible:ring-primary/20 text-sm font-bold"
                   value={formData.problem}
                   onChange={(e) => updateFormData("problem", e.target.value)}
@@ -346,38 +371,16 @@ function PostFormContent() {
             )}
             
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Caption / Description</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest ml-1">
+                {isMeme ? "Meme Caption" : "Description"}
+              </Label>
               <Textarea 
-                placeholder="Write something funny or insightful..." 
+                placeholder={isMeme ? "Write something funny..." : "Detailed explanation..."} 
                 className="rounded-2xl min-h-[140px] bg-muted/30 border-none focus-visible:ring-primary/20 text-sm font-medium"
                 value={formData.description}
                 onChange={(e) => updateFormData("description", e.target.value)}
               />
             </div>
-
-            {!isMeme && (
-                <div className="space-y-4">
-                  <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Category</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {CATEGORY_KEYWORDS.filter(k => k !== 'Meme').map((keyword) => (
-                      <Button
-                        key={keyword}
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setCategory(keyword)}
-                        className={cn(
-                          "rounded-full text-[10px] font-black uppercase tracking-widest transition-all",
-                          category === keyword 
-                            ? "bg-primary text-white border-primary shadow-md" 
-                            : "bg-white border-muted-foreground/20"
-                        )}
-                      >
-                        {keyword}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-            )}
           </div>
 
           <Button 
@@ -391,7 +394,7 @@ function PostFormContent() {
               </>
             ) : (
               <>
-                <Send className="mr-2 h-5 w-5" /> Post Meme
+                <Send className="mr-2 h-5 w-5" /> Post Innovation
               </>
             )}
           </Button>
@@ -405,7 +408,7 @@ function PostFormContent() {
                <CheckCircle2 className="w-10 h-10 text-primary" />
             </div>
             <h2 className="text-2xl font-black uppercase tracking-tighter text-primary">Live in Sphere</h2>
-            <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Meme successfully shared!</p>
+            <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Shared successfully!</p>
           </div>
 
           <div className="flex flex-col gap-4">

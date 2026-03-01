@@ -8,8 +8,7 @@ import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@
 import { collection, query, orderBy, doc } from "firebase/firestore";
 import { useMemo, useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RefreshCcw, Plus } from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { RefreshCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 
@@ -167,7 +166,6 @@ export default function FeedPage() {
               ))
             ) : (
               <div className="py-20 text-center opacity-30 flex flex-col items-center gap-3">
-                <Plus size={32} className="text-primary/20" />
                 <p className="text-[10px] font-black uppercase tracking-widest">No matching content yet</p>
               </div>
             )}
