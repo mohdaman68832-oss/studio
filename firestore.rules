@@ -2,6 +2,7 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Helper functions
     function isSignedIn() {
       return request.auth != null;
     }
@@ -9,19 +10,18 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // User Profiles Rules
+    // User Profiles: Publicly readable for search/browsing
     match /userProfiles/{userId} {
-      allow read, list: if isSignedIn();
+      allow read, list: if true;
       allow write: if isOwner(userId);
     }
 
-    // Ideas and Posts Rules
+    // Ideas and Posts: Publicly readable
     match /ideas/{ideaId} {
-      // Publicly readable for everyone (list and get)
       allow read, list: if true;
       allow create: if isSignedIn();
       
-      // Allow update if user is creator OR if they are updating 'likes'
+      // Allow update if owner OR if they are only changing 'likes' count
       allow update: if isSignedIn() && (
         resource.data.authorId == request.auth.uid || 
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes'])
@@ -37,24 +37,24 @@ service cloud.firestore {
       
       // Likes tracking subcollection
       match /likes/{userId} {
-        allow read, list: if isSignedIn();
+        allow read, list: if true;
         allow write: if isOwner(userId);
       }
     }
 
-    // Notifications Rules
+    // Notifications: Anyone can create (to send alert), only owner can read/manage
     match /users/{userId}/notifications/{notificationId} {
-      allow read, list, update, delete: if isOwner(userId);
       allow create: if isSignedIn();
+      allow read, list, update, delete: if isOwner(userId);
     }
 
-    // Messages
+    // Private Messages
     match /messages/{messageId} {
-      allow read, list: if isSignedIn() && (
-        resource.data.senderId == request.auth.uid || 
-        resource.data.receiverId == request.auth.uid
-      );
       allow create: if isSignedIn();
+      allow read, list: if isSignedIn() && (
+        request.auth.uid == resource.data.senderId || 
+        request.auth.uid == resource.data.receiverId
+      );
     }
     
     // Groups
@@ -65,8 +65,11 @@ service cloud.firestore {
     
     // Follow System
     match /follows/{followId} {
-      allow read, list: if isSignedIn();
-      allow write: if isSignedIn();
+      allow read, list: if true;
+      allow write: if isSignedIn() && (
+        request.resource.data.followerId == request.auth.uid ||
+        resource.data.followerId == request.auth.uid
+      );
     }
   }
 }
