@@ -29,7 +29,7 @@ import { Switch } from "@/components/ui/switch";
 import Image from "next/image";
 import { useUser, useAuth, useFirestore, useDoc, useMemoFirebase, useCollection } from "@/firebase";
 import { signOut } from "firebase/auth";
-import { doc, setDoc, collection, query, where, orderBy } from "firebase/firestore";
+import { doc, setDoc, collection, query, where, orderBy, increment, updateDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -155,7 +155,7 @@ export default function ProfilePage() {
     if (!user || !profileRef) return;
     setIsSaving(true);
     try {
-      await setDoc(profileRef, {
+      await updateDoc(profileRef, {
         id: user.uid,
         name: formData.name,
         bio: formData.bio,
@@ -166,7 +166,7 @@ export default function ProfilePage() {
         customColors: formData.customColors,
         theme: isDarkMode ? 'dark' : 'light',
         updatedAt: new Date().toISOString()
-      }, { merge: true });
+      });
 
       toast({ title: "Profile Synced", description: "All changes updated successfully." });
       setTimeout(() => setIsOptimizeModalOpen(false), 300);
