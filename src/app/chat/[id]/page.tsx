@@ -13,14 +13,6 @@ import { doc, collection, query, where, orderBy, addDoc, serverTimestamp, limit 
 import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-interface Message {
-  id: string;
-  senderId: string;
-  receiverId: string;
-  text: string;
-  createdAt: any;
-}
-
 export default function ChatDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -32,7 +24,6 @@ export default function ChatDetailPage() {
   const recipientRef = useMemoFirebase(() => (db ? doc(db, "userProfiles", recipientId) : null), [db, recipientId]);
   const { data: recipient, isLoading: isRecipientLoading } = useDoc(recipientRef);
 
-  // Mutual follow logic
   const iFollowRef = useMemoFirebase(() => 
     (db && currentUser && recipientId) ? doc(db, "follows", `${currentUser.uid}_${recipientId}`) : null
   , [db, currentUser, recipientId]);
@@ -46,7 +37,6 @@ export default function ChatDetailPage() {
 
   const isMutual = !!iFollow && !!followsMe;
 
-  // Real messages query
   const messagesQuery = useMemoFirebase(() => {
     if (!db || !currentUser || !recipientId) return null;
     return query(
@@ -121,7 +111,10 @@ export default function ChatDetailPage() {
         </Avatar>
         <div className="flex-1 min-w-0">
           <h2 className="font-black text-sm truncate uppercase tracking-tight">{recipient?.username || "Innovator"}</h2>
-          <span className="text-[10px] text-green-500 font-bold uppercase">Online</span>
+          <div className="flex items-center gap-1">
+            <Lock size={8} className="text-green-500" />
+            <span className="text-[9px] text-green-500 font-bold uppercase">End-to-End Chat</span>
+          </div>
         </div>
         <div className="flex items-center gap-1">
           <TooltipProvider>
@@ -175,37 +168,40 @@ export default function ChatDetailPage() {
           </div>
         )}
         
-        {filteredMessages.map((msg) => (
-          <div 
-            key={msg.id} 
-            className={cn(
-              "flex w-full max-w-[85%] flex-col gap-1",
-              msg.senderId === currentUser?.uid ? "ml-auto items-end" : "items-start"
-            )}
-          >
+        {filteredMessages.map((msg) => {
+          const isMe = msg.senderId === currentUser?.uid;
+          return (
             <div 
+              key={msg.id} 
               className={cn(
-                "px-4 py-3 rounded-2xl text-[13px] leading-relaxed font-medium shadow-sm",
-                msg.senderId === currentUser?.uid 
-                  ? "bg-primary text-white rounded-tr-none" 
-                  : "bg-white text-foreground rounded-tl-none border border-border/50"
+                "flex w-full max-w-[85%] flex-col gap-1 animate-in fade-in slide-in-from-bottom-1 duration-300",
+                isMe ? "ml-auto items-end" : "items-start"
               )}
             >
-              {msg.text}
+              <div 
+                className={cn(
+                  "px-4 py-3 rounded-2xl text-[13px] leading-relaxed font-medium shadow-sm",
+                  isMe 
+                    ? "bg-primary text-white rounded-tr-none" 
+                    : "bg-white text-foreground rounded-tl-none border border-border/50"
+                )}
+              >
+                {msg.text}
+              </div>
+              {msg.createdAt && (
+                <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest opacity-60">
+                  {new Date(msg.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              )}
             </div>
-            {msg.createdAt && (
-              <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest opacity-60">
-                {new Date(msg.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </span>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="p-4 bg-white border-t sticky bottom-0 z-50">
         <div className="flex items-center gap-2 bg-muted/30 rounded-2xl pl-4 pr-1 py-1 border">
           <Input 
-            placeholder="Type a message..." 
+            placeholder="Type a private message..." 
             className="border-none bg-transparent focus-visible:ring-0 shadow-none h-11 p-0 text-sm font-medium"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}

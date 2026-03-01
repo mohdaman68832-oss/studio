@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -7,12 +8,13 @@ import { collection, addDoc, query, orderBy, serverTimestamp, doc } from "fireba
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, Send, Sparkles, MessageCircle, ChevronDown, ChevronUp, Maximize2 } from "lucide-react";
+import { ChevronLeft, Send, Sparkles, MessageCircle, ChevronDown, ChevronUp, Maximize2, Globe, Lock } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogHeader } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 
 export default function IdeaDetailPage() {
   const params = useParams();
@@ -55,10 +57,8 @@ export default function IdeaDetailPage() {
       createdAt: serverTimestamp(),
     };
 
-    // Add suggestion to the idea subcollection
     addDoc(collection(db, "ideas", ideaId, "suggestions"), commentData);
 
-    // Send notification to post creator if it's not the same person
     const postCreatorId = idea.authorId || idea.creatorId;
     if (postCreatorId && postCreatorId !== currentUser.uid) {
       addDoc(collection(db, "users", postCreatorId, "notifications"), {
@@ -94,7 +94,6 @@ export default function IdeaDetailPage() {
     );
   }
 
-  const isVideo = idea?.mediaUrl && (idea?.mediaUrl?.endsWith('.mp4') || idea?.mediaUrl?.includes('gtv-videos-bucket') || idea?.mediaUrl?.startsWith('data:video'));
   const isTextPost = !idea?.mediaUrl || idea?.mediaUrl === "";
 
   return (
@@ -105,47 +104,29 @@ export default function IdeaDetailPage() {
         </Button>
         <div className="flex-1 min-w-0">
           <h1 className="font-black text-sm uppercase tracking-tighter truncate">{idea?.title}</h1>
-          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest leading-none mt-1">Conversation</p>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <Globe size={10} className="text-muted-foreground" />
+            <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest leading-none">Public Conversation</p>
+          </div>
         </div>
       </header>
 
       <div className="flex-1 overflow-y-auto no-scrollbar" ref={scrollContainerRef}>
         <div className="p-4 space-y-6 pb-24">
           {!isTextPost && (
-            <Dialog>
-              <DialogTrigger asChild>
-                <div className="relative aspect-video w-full rounded-[2rem] overflow-hidden border shadow-xl bg-black cursor-zoom-in group">
-                  {isVideo ? (
-                    <video src={idea?.mediaUrl} className="w-full h-full object-contain" />
-                  ) : (
-                    <Image src={idea?.mediaUrl || "https://picsum.photos/seed/placeholder/800/800"} alt={idea?.title} fill className="object-cover group-hover:scale-105 transition-transform" />
-                  )}
-                  <div className="absolute top-4 right-4 z-10">
-                    <Badge className="bg-secondary/90 text-white border-none backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-1.5">
-                      <Sparkles size={12} className="fill-current" />
-                      <span className="text-[10px] font-black uppercase tracking-wider">{idea?.innovationScore}</span>
-                    </Badge>
-                  </div>
-                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Maximize2 className="text-white" size={32} />
-                  </div>
-                </div>
-              </DialogTrigger>
-              <DialogContent className="max-w-[95vw] h-[80vh] p-0 overflow-hidden border-none bg-black/95 rounded-[2.5rem] flex items-center justify-center" onOpenAutoFocus={(e) => e.preventDefault()}>
-                 <DialogHeader className="sr-only">
-                    <DialogTitle>{idea?.title} - Full Preview</DialogTitle>
-                 </DialogHeader>
-                 <div className="relative w-full h-full p-4 flex items-center justify-center">
-                    {isVideo ? (
-                      <video src={idea?.mediaUrl} controls autoPlay className="max-w-full max-h-full rounded-2xl" />
-                    ) : (
-                      <div className="relative w-full h-full flex items-center justify-center overflow-auto no-scrollbar">
-                        <img src={idea?.mediaUrl} alt={idea?.title} className="max-w-full max-h-full object-contain" />
-                      </div>
-                    )}
-                 </div>
-              </DialogContent>
-            </Dialog>
+            <div className="relative aspect-video w-full rounded-[2rem] overflow-hidden border shadow-xl bg-black">
+              {idea?.mediaUrl?.includes('.mp4') || idea?.mediaUrl?.includes('gtv-videos-bucket') ? (
+                <video src={idea?.mediaUrl} className="w-full h-full object-contain" controls />
+              ) : (
+                <Image src={idea?.mediaUrl || "https://picsum.photos/seed/placeholder/800/800"} alt={idea?.title} fill className="object-cover" />
+              )}
+              <div className="absolute top-4 right-4 z-10">
+                <Badge className="bg-secondary/90 text-white border-none backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-1.5">
+                  <Sparkles size={12} className="fill-current" />
+                  <span className="text-[10px] font-black uppercase tracking-wider">{idea?.innovationScore}</span>
+                </Badge>
+              </div>
+            </div>
           )}
 
           <div className="space-y-4 bg-white/50 backdrop-blur-sm p-5 rounded-[2rem] border border-border/50">
@@ -171,7 +152,7 @@ export default function IdeaDetailPage() {
 
               {isTextPost || showFullDescription ? (
                 <div className="mt-4 pt-4 border-t border-muted animate-in fade-in slide-in-from-top-2">
-                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-primary mb-2">Detailed Idea</p>
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-primary mb-2">Detailed Post</p>
                   <p className="text-sm text-foreground/70 leading-relaxed font-medium">
                     {idea?.description}
                   </p>
@@ -188,7 +169,7 @@ export default function IdeaDetailPage() {
                   {showFullDescription ? (
                     <span className="flex items-center gap-1">Less <ChevronUp size={12} /></span>
                   ) : (
-                    <span className="flex items-center gap-1">Full Description <ChevronDown size={12} /></span>
+                    <span className="flex items-center gap-1">Full Post <ChevronDown size={12} /></span>
                   )}
                 </Button>
               )}
@@ -198,28 +179,42 @@ export default function IdeaDetailPage() {
           <div className="space-y-6 pt-4">
             <div className="flex items-center gap-3 sticky top-0 bg-background/95 backdrop-blur-sm py-2 z-10">
                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 flex items-center gap-2">
-                 <MessageCircle size={14} /> Messages
+                 <Globe size={14} /> Global Chat
                </span>
                <Separator className="flex-1 opacity-50" />
             </div>
 
             <div className="space-y-4">
-              {suggestions?.map((suggestion) => (
-                <div key={suggestion.id} className="flex gap-3 items-start animate-in fade-in slide-in-from-bottom-2 duration-300">
-                  <Avatar className="h-8 w-8 border border-muted/50 shadow-sm shrink-0">
-                    <AvatarImage src={suggestion.userAvatar} />
-                    <AvatarFallback>{suggestion.userName?.[0]}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 bg-white p-3.5 rounded-2xl rounded-tl-none border border-border/50 shadow-sm">
-                    <p className="text-[12px] leading-relaxed text-foreground/90">
-                        <span className="font-black text-primary mr-1.5 uppercase text-[9px]">
-                          {suggestion.userName}
-                        </span>
-                        {suggestion.text}
-                    </p>
+              {suggestions?.map((suggestion) => {
+                const isMe = suggestion.userId === currentUser?.uid;
+                return (
+                  <div key={suggestion.id} className={cn(
+                    "flex w-full gap-3 items-start animate-in fade-in slide-in-from-bottom-2 duration-300",
+                    isMe ? "flex-row-reverse" : "flex-row"
+                  )}>
+                    <Avatar className="h-8 w-8 border border-muted/50 shadow-sm shrink-0">
+                      <AvatarImage src={suggestion.userAvatar} />
+                      <AvatarFallback>{suggestion.userName?.[0]}</AvatarFallback>
+                    </Avatar>
+                    <div className={cn(
+                      "max-w-[80%] p-3.5 rounded-2xl shadow-sm border",
+                      isMe 
+                        ? "bg-primary text-white border-primary/20 rounded-tr-none" 
+                        : "bg-white text-foreground border-border/50 rounded-tl-none"
+                    )}>
+                      <p className="text-[12px] leading-relaxed">
+                          <span className={cn(
+                            "font-black mr-1.5 uppercase text-[9px]",
+                            isMe ? "text-white/80" : "text-primary"
+                          )}>
+                            {suggestion.userName}
+                          </span>
+                          {suggestion.text}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
@@ -233,7 +228,7 @@ export default function IdeaDetailPage() {
           </Avatar>
           <div className="flex-1 flex items-center pr-1">
             <Input 
-              placeholder="Send a message..." 
+              placeholder="Post a public suggestion..." 
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               className="border-none bg-transparent focus-visible:ring-0 shadow-none text-xs h-10 px-0 placeholder:text-muted-foreground/60 font-medium"
