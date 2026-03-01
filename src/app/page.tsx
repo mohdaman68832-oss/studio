@@ -5,15 +5,13 @@ import { IdeaCard } from "@/components/feed/idea-card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
-import { collection, query, orderBy, doc, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, query, orderBy, doc } from "firebase/firestore";
 import { useMemo, useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RefreshCcw, ImageIcon, Video, Type, Plus, Loader2 } from "lucide-react";
+import { RefreshCcw, ImageIcon, Video, Type, Plus } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import Link from "next/link";
 
 const MOCK_IDEAS = [
   {
@@ -61,11 +59,7 @@ export default function FeedPage() {
   const [showRefresh, setShowRefresh] = useState(false);
   const [touchStart, setTouchStart] = useState(0);
 
-  // Quick Meme Post State
   const [isMemeSheetOpen, setIsMemeSheetOpen] = useState(false);
-  const [memeTitle, setMemeTitle] = useState("");
-  const [memeDesc, setMemeDesc] = useState("");
-  const [isPosting, setIsPosting] = useState(false);
 
   const userProfileRef = useMemoFirebase(() => (db && user ? doc(db, "userProfiles", user.uid) : null), [db, user]);
   const { data: profile } = useDoc(userProfileRef);
@@ -99,34 +93,6 @@ export default function FeedPage() {
 
     return filtered;
   }, [firestoreIdeas, activeCategory, activeMemeType]);
-
-  const handlePostMeme = async () => {
-    if (!db || !user || !memeTitle.trim()) return;
-    setIsPosting(true);
-    try {
-      await addDoc(collection(db, "ideas"), {
-        title: memeTitle,
-        description: memeDesc,
-        category: "Meme",
-        userName: profile?.username || user.displayName || "Innovator",
-        userAvatar: profile?.profilePictureUrl || user.photoURL || "https://picsum.photos/seed/me/100/100",
-        authorId: user.uid,
-        mediaUrl: "", // Text meme
-        innovationScore: 50,
-        tags: ["Meme", "Text"],
-        createdAt: serverTimestamp(),
-        likes: 0
-      });
-      toast({ title: "Meme Posted!", description: "Your text meme is now live." });
-      setIsMemeSheetOpen(false);
-      setMemeTitle("");
-      setMemeDesc("");
-    } catch (e) {
-      toast({ title: "Error", description: "Failed to post meme.", variant: "destructive" });
-    } finally {
-      setIsPosting(false);
-    }
-  };
 
   useEffect(() => {
     const handleTouchStart = (e: TouchEvent) => {
@@ -197,38 +163,27 @@ export default function FeedPage() {
             </SheetTrigger>
             <SheetContent 
               side="bottom" 
-              className="rounded-t-[2.5rem] h-[50vh] bg-background"
+              className="rounded-t-[2.5rem] h-[45vh] bg-background border-none shadow-2xl"
               onOpenAutoFocus={(e) => e.preventDefault()}
             >
               <SheetHeader>
-                <SheetTitle className="text-center text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-6">Quick Meme Post</SheetTitle>
+                <SheetTitle className="text-center text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-8">
+                  Choose Meme Format
+                </SheetTitle>
               </SheetHeader>
-              <div className="space-y-6 px-2">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Meme Title</Label>
-                  <Input 
-                    placeholder="Short & funny..." 
-                    className="rounded-2xl h-12 bg-muted/30 border-none"
-                    value={memeTitle}
-                    onChange={(e) => setMemeTitle(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Funny Description</Label>
-                  <Textarea 
-                    placeholder="What makes it funny?" 
-                    className="rounded-2xl min-h-[100px] bg-muted/30 border-none"
-                    value={memeDesc}
-                    onChange={(e) => setMemeDesc(e.target.value)}
-                  />
-                </div>
-                <Button 
-                  className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase shadow-xl"
-                  onClick={handlePostMeme}
-                  disabled={isPosting || !memeTitle.trim()}
-                >
-                  {isPosting ? <Loader2 className="animate-spin" /> : "Post Meme"}
-                </Button>
+              <div className="grid grid-cols-3 gap-5 px-4">
+                <Link href="/post?mediaType=image&category=Meme" className="flex flex-col items-center gap-4 p-7 bg-white rounded-[2.5rem] border-2 border-border/50 hover:border-primary transition-all shadow-sm">
+                  <ImageIcon className="w-8 h-8 text-primary" />
+                  <span className="text-[9px] font-black uppercase tracking-widest">Image</span>
+                </Link>
+                <Link href="/post?mediaType=video&category=Meme" className="flex flex-col items-center gap-4 p-7 bg-white rounded-[2.5rem] border-2 border-border/50 hover:border-primary transition-all shadow-sm">
+                  <Video className="w-8 h-8 text-secondary" />
+                  <span className="text-[9px] font-black uppercase tracking-widest">Video</span>
+                </Link>
+                <Link href="/post?mediaType=text&category=Meme" className="flex flex-col items-center gap-4 p-7 bg-white rounded-[2.5rem] border-2 border-border/50 hover:border-primary transition-all shadow-sm">
+                  <Type className="w-8 h-8 text-muted-foreground" />
+                  <span className="text-[9px] font-black uppercase tracking-widest">Text</span>
+                </Link>
               </div>
             </SheetContent>
           </Sheet>

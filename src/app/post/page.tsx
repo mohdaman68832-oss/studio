@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,12 +31,12 @@ import {
 import { cn } from "@/lib/utils";
 import { useFirestore, useUser, useDoc, useMemoFirebase } from "@/firebase";
 import { collection, addDoc, serverTimestamp, doc } from "firebase/firestore";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 type Step = 1 | 2 | 3;
 
 const CATEGORY_KEYWORDS = [
-  "Art", "Game", "Study", "Technology", "Sustainability", "Healthcare", "Business", "Education", "Science", "Music"
+  "Art", "Game", "Study", "Technology", "Sustainability", "Healthcare", "Business", "Education", "Science", "Music", "Meme"
 ];
 
 const toBase64 = (file: File): Promise<string> =>
@@ -46,7 +47,7 @@ const toBase64 = (file: File): Promise<string> =>
     reader.onerror = (error) => reject(error);
   });
 
-export default function PostPage() {
+function PostFormContent() {
   const [step, setStep] = useState<Step>(1);
   const [isPosting, setIsPosting] = useState(false);
   const [mediaType, setMediaType] = useState<"text" | "image" | "video" | null>(null);
@@ -55,6 +56,7 @@ export default function PostPage() {
   const [isVideoSheetOpen, setIsVideoSheetOpen] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const db = useFirestore();
   const { user } = useUser();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -68,6 +70,17 @@ export default function PostPage() {
     description: "",
     targetUsers: "Technology",
   });
+
+  useEffect(() => {
+    const type = searchParams.get("mediaType") as any;
+    const cat = searchParams.get("category");
+    if (type && ["text", "image", "video"].includes(type)) {
+      setMediaType(type);
+    }
+    if (cat) {
+      setFormData(p => ({ ...p, targetUsers: cat }));
+    }
+  }, [searchParams]);
 
   const updateFormData = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -182,7 +195,7 @@ export default function PostPage() {
                     <span className="text-[10px] font-bold uppercase tracking-widest">Image</span>
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="bottom" className="rounded-t-[2.5rem] h-[35vh]">
+                <SheetContent side="bottom" className="rounded-t-[2.5rem] h-[35vh]" onOpenAutoFocus={(e) => e.preventDefault()}>
                   <SheetHeader>
                     <SheetTitle className="text-center text-sm font-black uppercase">
                       Upload Image
@@ -220,7 +233,7 @@ export default function PostPage() {
                     <span className="text-[10px] font-bold uppercase tracking-widest">Video</span>
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="bottom" className="rounded-t-[2.5rem] h-[35vh]">
+                <SheetContent side="bottom" className="rounded-t-[2.5rem] h-[35vh]" onOpenAutoFocus={(e) => e.preventDefault()}>
                   <SheetHeader>
                     <SheetTitle className="text-center text-sm font-black uppercase">
                       Upload Video
@@ -387,5 +400,13 @@ export default function PostPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function PostPage() {
+  return (
+    <Suspense fallback={<div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>}>
+      <PostFormContent />
+    </Suspense>
   );
 }
