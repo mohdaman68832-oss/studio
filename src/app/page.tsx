@@ -8,7 +8,7 @@ import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@
 import { collection, query, orderBy, doc } from "firebase/firestore";
 import { useMemo, useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RefreshCcw, ImageIcon, Video, Type, Plus } from "lucide-react";
+import { RefreshCcw, Plus } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
@@ -43,17 +43,11 @@ const MOCK_IDEAS = [
 ];
 
 const CATEGORIES = ["All", "Meme"];
-const MEME_TYPES = [
-  { id: "image", label: "Image", icon: ImageIcon },
-  { id: "video", label: "Video", icon: Video },
-  { id: "text", label: "Text", icon: Type },
-];
 
 export default function FeedPage() {
   const db = useFirestore();
   const { user } = useUser();
   const [activeCategory, setActiveCategory] = useState("All");
-  const [activeMemeType, setActiveMemeType] = useState("image");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showRefresh, setShowRefresh] = useState(false);
   const [touchStart, setTouchStart] = useState(0);
@@ -72,24 +66,9 @@ export default function FeedPage() {
     const base = firestoreIdeas && firestoreIdeas.length > 0 ? [...firestoreIdeas] : MOCK_IDEAS;
     const unique = Array.from(new Map(base.map(item => [item.id, item])).values());
     
-    let filtered = unique;
-
-    if (activeCategory === "Meme") {
-      filtered = unique.filter(i => i.category?.toLowerCase() === "meme");
-      filtered = filtered.filter(i => {
-        const isVideo = i.mediaUrl && (i.mediaUrl.endsWith('.mp4') || i.mediaUrl.includes('gtv-videos-bucket') || i.mediaUrl.startsWith('data:video'));
-        const isText = !i.mediaUrl || i.mediaUrl === "";
-        const isImage = i.mediaUrl && !isVideo && !isText;
-
-        if (activeMemeType === "video") return isVideo;
-        if (activeMemeType === "text") return isText;
-        if (activeMemeType === "image") return isImage;
-        return true;
-      });
-    }
-
-    return filtered;
-  }, [firestoreIdeas, activeCategory, activeMemeType]);
+    if (activeCategory === "All") return unique;
+    return unique.filter(i => i.category?.toLowerCase() === activeCategory.toLowerCase());
+  }, [firestoreIdeas, activeCategory]);
 
   useEffect(() => {
     const handleTouchStart = (e: TouchEvent) => {
@@ -157,10 +136,7 @@ export default function FeedPage() {
           <Button 
             key={cat} 
             variant={cat === activeCategory ? "default" : "secondary"} 
-            onClick={() => {
-              setActiveCategory(cat);
-              if (cat === "Meme") setActiveMemeType("image");
-            }}
+            onClick={() => setActiveCategory(cat)}
             className={cn(
               "flex-1 rounded-full h-9 text-[10px] font-black uppercase tracking-widest transition-all",
               cat === activeCategory ? "bg-primary shadow-lg shadow-primary/20 text-white" : "bg-white border-none text-muted-foreground hover:text-primary"
@@ -170,30 +146,6 @@ export default function FeedPage() {
           </Button>
         ))}
       </div>
-
-      {activeCategory === "Meme" && (
-        <div className="flex gap-2 overflow-x-auto no-scrollbar py-3 mb-4 animate-in slide-in-from-top-2 duration-300">
-          {MEME_TYPES.map((type) => {
-            const Icon = type.icon;
-            return (
-              <Button
-                key={type.id}
-                variant={activeMemeType === type.id ? "default" : "outline"}
-                onClick={() => setActiveMemeType(type.id)}
-                className={cn(
-                  "rounded-full h-10 px-6 flex items-center gap-2 shrink-0 transition-all shadow-sm",
-                  activeMemeType === type.id 
-                    ? "bg-secondary text-white border-secondary shadow-md" 
-                    : "bg-white border-muted text-muted-foreground hover:border-secondary/50"
-                )}
-              >
-                <Icon size={14} />
-                <span className="text-[9px] font-black uppercase tracking-widest">{type.label}</span>
-              </Button>
-            );
-          })}
-        </div>
-      )}
 
       <div className="space-y-8 mt-4">
         {loading ? (
@@ -216,7 +168,7 @@ export default function FeedPage() {
             ) : (
               <div className="py-20 text-center opacity-30 flex flex-col items-center gap-3">
                 <Plus size={32} className="text-primary/20" />
-                <p className="text-[10px] font-black uppercase tracking-widest">No matching memes yet</p>
+                <p className="text-[10px] font-black uppercase tracking-widest">No matching content yet</p>
               </div>
             )}
           </>
