@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -113,7 +114,20 @@ export default function HubPage() {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[11px] font-bold text-foreground leading-snug">{notif.message}</p>
+                    {notif.postTitle ? (
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[8px] font-black uppercase bg-primary text-white px-1.5 py-0.5 rounded-sm">Post</span>
+                          <p className="text-[10px] font-black text-primary uppercase truncate tracking-tight">{notif.postTitle}</p>
+                        </div>
+                        <p className="text-[11px] font-medium text-foreground leading-snug">
+                          <span className="font-black text-secondary mr-1 uppercase text-[9px]">@{notif.senderName || "User"}:</span>
+                          {notif.commentText || notif.message}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-[11px] font-bold text-foreground leading-snug">{notif.message}</p>
+                    )}
                     <p className="text-[9px] text-muted-foreground font-black uppercase mt-1">
                       {notif.createdAt && new Date(notif.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
