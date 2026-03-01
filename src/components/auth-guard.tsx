@@ -8,31 +8,31 @@ import { doc } from 'firebase/firestore';
 
 /**
  * Animated Logo Loader Component
- * Custom: 'm' bubble floats and looks around, ring removed.
+ * Custom: 'm' bubble is smaller, eyes are larger, sways left-to-right.
  */
 function LogoLoader() {
   return (
     <div className="flex flex-col items-center gap-8 animate-in fade-in duration-700">
-      <div className="relative w-40 h-40 flex items-center justify-center">
-        {/* Main 'm' Speech Bubble with Floating and Looking animation */}
-        <div className="relative z-10 animate-bubble-float">
-          <svg width="140" height="140" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <div className="relative w-32 h-32 flex items-center justify-center">
+        {/* Main 'm' Speech Bubble with Horizontal Swaying animation */}
+        <div className="relative z-10 animate-bubble-sway">
+          <svg width="110" height="110" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
             {/* The 'm' Shape stylized as a speech bubble */}
             <path 
               d="M20 40C20 28.9543 28.9543 20 40 20H80C91.0457 20 100 28.9543 100 40V70C100 81.0457 91.0457 90 80 90H45L20 105V40Z" 
               fill="#FF4500" 
             />
             
-            {/* Eyes Group with Look Around & Blink animations */}
+            {/* Eyes Group with Look Around & Blink animations - Larger Eyes */}
             <g className="animate-eye-look">
               <g className="animate-eye-blink">
-                {/* Blinking Eyes (Rectangular Slits) */}
-                <rect x="45" y="45" width="6" height="15" rx="3" fill="white" />
-                <rect x="69" y="45" width="6" height="15" rx="3" fill="white" />
+                {/* Blinking Eyes (Enlarged Rectangles) */}
+                <rect x="42" y="42" width="10" height="22" rx="5" fill="white" />
+                <rect x="68" y="42" width="10" height="22" rx="5" fill="white" />
               </g>
             </g>
             
-            {/* Top Right Dot from the original logo */}
+            {/* Top Right Dot */}
             <circle cx="105" cy="15" r="8" fill="#FF4500" />
           </svg>
         </div>
@@ -54,7 +54,7 @@ function LogoLoader() {
  * AuthGuard handles the global authentication flow.
  */
 export function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { user, isUserLoading } = useUser();
+  const { user, loading: isUserLoading } = useUser();
   const db = useFirestore();
   const router = useRouter();
   const pathname = usePathname();

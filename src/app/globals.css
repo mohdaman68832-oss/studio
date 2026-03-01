@@ -83,11 +83,11 @@
 }
 
 /* Custom Logo Animations */
-@keyframes bubble-float {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  25% { transform: translateY(-8px) rotate(-3deg); }
-  50% { transform: translateY(4px) rotate(0deg); }
-  75% { transform: translateY(-4px) rotate(3deg); }
+@keyframes bubble-sway {
+  0%, 100% { transform: translateX(0) translateY(0) rotate(0deg); }
+  25% { transform: translateX(-20px) translateY(-2px) rotate(-6deg); }
+  50% { transform: translateX(0) translateY(4px) rotate(0deg); }
+  75% { transform: translateX(20px) translateY(-2px) rotate(6deg); }
 }
 
 @keyframes eye-blink {
@@ -97,12 +97,12 @@
 
 @keyframes eye-look {
   0%, 20%, 80%, 100% { transform: translateX(0); }
-  30%, 45% { transform: translateX(-5px); }
-  55%, 70% { transform: translateX(5px); }
+  30%, 45% { transform: translateX(-8px); }
+  55%, 70% { transform: translateX(8px); }
 }
 
-.animate-bubble-float {
-  animation: bubble-float 4s ease-in-out infinite;
+.animate-bubble-sway {
+  animation: bubble-sway 2.5s ease-in-out infinite;
 }
 
 .animate-eye-blink {
@@ -111,5 +111,5 @@
 }
 
 .animate-eye-look {
-  animation: eye-look 5s ease-in-out infinite;
+  animation: eye-look 4s ease-in-out infinite;
 }
