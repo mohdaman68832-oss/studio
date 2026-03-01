@@ -14,7 +14,7 @@ import {
   Loader2, ChevronRight, ChevronLeft, Camera, Image as ImageIcon, 
   Monitor, Smartphone, X, Sparkles,
   GraduationCap, Cpu, Bot, Laptop, Rocket, Briefcase, Landmark, 
-  IndianRupee, Globe, Heart, Brain, Zap, Fire, Users, Megaphone, 
+  IndianRupee, Globe, Heart, Brain, Zap, Flame, Users, Megaphone, 
   Vote, Newspaper, BookOpen, FlaskConical, Gamepad2, Film, Music, 
   Trophy, Laugh, PenTool, MessageSquare, Pencil, User, Smile, 
   Eye, Wand2, Monitor as Screen, Palette, Book, MessageCircle, Medal
@@ -38,7 +38,7 @@ const CATEGORIES = [
   { name: "Health & Fitness", icon: Heart },
   { name: "Mental Health", icon: Brain },
   { name: "Self Improvement", icon: Zap },
-  { name: "Motivation", icon: Fire },
+  { name: "Motivation", icon: Flame },
   { name: "Relationships", icon: Users },
   { name: "Social Issues", icon: Megaphone },
   { name: "Politics", icon: Vote },

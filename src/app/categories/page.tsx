@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { 
   ChevronLeft, LayoutGrid, Sparkles, Loader2, 
   GraduationCap, Cpu, Bot, Laptop, Rocket, Briefcase, Landmark, 
-  IndianRupee, Globe, Heart, Brain, Zap, Fire, Users, Megaphone, 
+  IndianRupee, Globe, Heart, Brain, Zap, Flame, Users, Megaphone, 
   Vote, Newspaper, BookOpen, FlaskConical, Gamepad2, Film, Music, 
   Trophy, Laugh, PenTool, MessageSquare, Pencil, User, Smile, 
   Eye, Wand2, Monitor as Screen, Palette, Book, MessageCircle, Medal
@@ -29,7 +29,7 @@ const ICON_MAP: Record<string, any> = {
   "Health & Fitness": Heart,
   "Mental Health": Brain,
   "Self Improvement": Zap,
-  "Motivation": Fire,
+  "Motivation": Flame,
   "Relationships": Users,
   "Social Issues": Megaphone,
   "Politics": Vote,
