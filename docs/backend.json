@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -20,18 +21,12 @@
           "format": "email"
         },
         "profilePictureUrl": {
-          "type": "array",
-          "description": "URL to the user's profile picture.",
-          "items": {
-            "type": "string"
-          }
+          "type": "string",
+          "description": "URL to the user's profile picture."
         },
         "bio": {
-          "type": "array",
-          "description": "A short biographical description provided by the user.",
-          "items": {
-            "type": "string"
-          }
+          "type": "string",
+          "description": "A short biographical description provided by the user."
         },
         "registeredAt": {
           "type": "string",
@@ -40,7 +35,7 @@
         },
         "totalIdeasPosted": {
           "type": "number",
-          "description": "The total number of ideas posted by this user."
+          "description": "The total number of posts shared by this user."
         },
         "totalViewsReceived": {
           "type": "number",
@@ -53,42 +48,28 @@
         "totalIdeasSaved": {
           "type": "number",
           "description": "The total number of ideas saved or bookmarked by this user."
-        },
-        "totalCollaborationRequestsSent": {
-          "type": "number",
-          "description": "The total number of collaboration requests initiated by this user."
-        },
-        "totalCollaborationRequestsReceived": {
-          "type": "number",
-          "description": "The total number of collaboration requests received by this user."
         }
       },
       "required": [
         "id",
         "username",
         "email",
-        "registeredAt",
-        "totalIdeasPosted",
-        "totalViewsReceived",
-        "averageRating",
-        "totalIdeasSaved",
-        "totalCollaborationRequestsSent",
-        "totalCollaborationRequestsReceived"
+        "totalIdeasPosted"
       ]
     },
     "Idea": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Idea",
       "type": "object",
-      "description": "Represents an innovation idea submitted by a user, including its details, media, and AI analysis.",
+      "description": "Represents an innovation idea or post submitted by a user.",
       "properties": {
         "id": {
           "type": "string",
           "description": "Unique identifier for the Idea entity."
         },
-        "creatorId": {
+        "authorId": {
           "type": "string",
-          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Idea)"
+          "description": "Reference to UserProfile ID."
         },
         "title": {
           "type": "string",
@@ -98,379 +79,33 @@
           "type": "string",
           "description": "A brief description of the idea."
         },
-        "problem": {
-          "type": "string",
-          "description": "The problem that the idea aims to solve."
-        },
-        "solution": {
-          "type": "string",
-          "description": "The proposed solution or implementation of the idea."
-        },
-        "targetUsers": {
-          "type": "string",
-          "description": "Description of the primary target audience or user group for the idea."
-        },
         "category": {
           "type": "string",
-          "description": "The main category or domain of the idea (e.g., Technology, Healthcare, Education)."
+          "description": "The main category or domain of the idea."
         },
-        "desiredFeedback": {
+        "mediaUrl": {
           "type": "string",
-          "description": "Specific areas where the creator desires feedback (e.g., 'market viability', 'technical feasibility')."
-        },
-        "mediaUrls": {
-          "type": "array",
-          "description": "An array of URLs pointing to images or videos associated with the idea, used for media previews.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the idea was first posted.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "array",
-          "description": "Timestamp indicating when the idea was last updated.",
-          "items": {
-            "type": "string"
-          }
+          "description": "URL pointing to image or video associated with the post."
         },
         "innovationScore": {
           "type": "number",
-          "description": "AI-generated score representing the innovation level of the idea (e.g., 0-100)."
+          "description": "AI-generated score for the idea."
         },
-        "marketPotentialScore": {
+        "likes": {
           "type": "number",
-          "description": "AI-generated score representing the market potential of the idea (e.g., 0-100)."
+          "description": "The total number of likes received for this idea."
         },
-        "uniquenessScore": {
-          "type": "number",
-          "description": "AI-generated score representing the uniqueness level of the idea (e.g., 0-100)."
-        },
-        "improvementSuggestions": {
-          "type": "array",
-          "description": "AI-generated suggestions for improving the idea based on analysis.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "viewCount": {
-          "type": "number",
-          "description": "The total number of times this idea has been viewed."
-        },
-        "averageRating": {
-          "type": "number",
-          "description": "The average rating received for this idea."
-        },
-        "savedCount": {
-          "type": "number",
-          "description": "The total number of times this idea has been saved by users."
-        },
-        "tagIds": {
-          "type": "array",
-          "description": "References to Tag entities associated with this idea. (Relationship: Tag N:N Idea)",
-          "items": {
-            "type": "string"
-          }
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
         }
       },
       "required": [
         "id",
-        "creatorId",
+        "authorId",
         "title",
         "description",
-        "problem",
-        "solution",
-        "targetUsers",
         "category",
-        "desiredFeedback",
-        "createdAt",
-        "innovationScore",
-        "marketPotentialScore",
-        "uniquenessScore",
-        "viewCount",
-        "averageRating",
-        "savedCount"
-      ]
-    },
-    "Tag": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Tag",
-      "type": "object",
-      "description": "Represents a tag used to categorize ideas, enabling better searchability and organization.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Tag entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "The name of the tag (e.g., 'Technology', 'Sustainability')."
-        },
-        "description": {
-          "type": "array",
-          "description": "A brief description of what the tag represents.",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "required": [
-        "id",
-        "name"
-      ]
-    },
-    "Rating": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Rating",
-      "type": "object",
-      "description": "Represents a user's numerical rating and optional textual feedback for a specific idea.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Rating entity."
-        },
-        "ideaId": {
-          "type": "string",
-          "description": "Reference to Idea. (Relationship: Idea 1:N Rating)"
-        },
-        "raterId": {
-          "type": "string",
-          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Rating)"
-        },
-        "score": {
-          "type": "number",
-          "description": "The numerical score given to the idea (e.g., 1 to 5)."
-        },
-        "comment": {
-          "type": "array",
-          "description": "Optional textual feedback provided along with the rating.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the rating was submitted.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "ideaId",
-        "raterId",
-        "score",
-        "createdAt"
-      ]
-    },
-    "Save": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Save",
-      "type": "object",
-      "description": "Represents a user saving or bookmarking an idea for future reference.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Save entity."
-        },
-        "ideaId": {
-          "type": "string",
-          "description": "Reference to Idea. (Relationship: Idea 1:N Save)"
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Save)"
-        },
-        "savedAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the idea was saved.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "ideaId",
-        "userId",
-        "savedAt"
-      ]
-    },
-    "ChatSession": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "ChatSession",
-      "type": "object",
-      "description": "Represents a real-time collaboration chat session associated with a specific idea, involving multiple users.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the ChatSession entity."
-        },
-        "ideaId": {
-          "type": "string",
-          "description": "Reference to Idea. (Relationship: Idea 1:N ChatSession)"
-        },
-        "participantIds": {
-          "type": "array",
-          "description": "References to UserProfile entities participating in this chat session. (Relationship: UserProfile N:N ChatSession)",
-          "items": {
-            "type": "string"
-          }
-        },
-        "startedAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the chat session started.",
-          "format": "date-time"
-        },
-        "endedAt": {
-          "type": "array",
-          "description": "Timestamp indicating when the chat session ended, if applicable.",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "required": [
-        "id",
-        "ideaId",
-        "participantIds",
-        "startedAt"
-      ]
-    },
-    "ChatMessage": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "ChatMessage",
-      "type": "object",
-      "description": "Represents an individual message within a collaboration chat session.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the ChatMessage entity."
-        },
-        "chatSessionId": {
-          "type": "string",
-          "description": "Reference to ChatSession. (Relationship: ChatSession 1:N ChatMessage)"
-        },
-        "senderId": {
-          "type": "string",
-          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N ChatMessage)"
-        },
-        "content": {
-          "type": "string",
-          "description": "The textual content of the chat message."
-        },
-        "sentAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the message was sent.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "chatSessionId",
-        "senderId",
-        "content",
-        "sentAt"
-      ]
-    },
-    "CollaborationRequest": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "CollaborationRequest",
-      "type": "object",
-      "description": "Represents a request from one user to collaborate on another user's idea.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the CollaborationRequest entity."
-        },
-        "ideaId": {
-          "type": "string",
-          "description": "Reference to Idea. (Relationship: Idea 1:N CollaborationRequest)"
-        },
-        "requesterId": {
-          "type": "string",
-          "description": "Reference to UserProfile (the user initiating the request). (Relationship: UserProfile 1:N CollaborationRequest)"
-        },
-        "recipientId": {
-          "type": "string",
-          "description": "Reference to UserProfile (the idea creator receiving the request). (Relationship: UserProfile 1:N CollaborationRequest)"
-        },
-        "status": {
-          "type": "string",
-          "description": "The current status of the collaboration request (e.g., 'pending', 'accepted', 'rejected')."
-        },
-        "message": {
-          "type": "array",
-          "description": "An optional message included by the requester.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "requestedAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the request was sent.",
-          "format": "date-time"
-        },
-        "respondedAt": {
-          "type": "array",
-          "description": "Timestamp indicating when the request was responded to, if applicable.",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "required": [
-        "id",
-        "ideaId",
-        "requesterId",
-        "recipientId",
-        "status",
-        "requestedAt"
-      ]
-    },
-    "Notification": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Notification",
-      "type": "object",
-      "description": "Represents a notification sent to a user, alerting them of relevant events or updates within the application.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Notification entity."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Notification)"
-        },
-        "type": {
-          "type": "string",
-          "description": "The type of notification (e.g., 'newRating', 'collaborationRequestAccepted', 'chatMessageReceived')."
-        },
-        "sourceId": {
-          "type": "string",
-          "description": "Reference to the ID of the related entity (e.g., Idea ID, ChatSession ID, CollaborationRequest ID) that triggered this notification."
-        },
-        "message": {
-          "type": "string",
-          "description": "The display message content for the notification."
-        },
-        "isRead": {
-          "type": "boolean",
-          "description": "Boolean flag indicating whether the user has marked the notification as read."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the notification was created.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "userId",
-        "type",
-        "sourceId",
-        "message",
-        "isRead",
         "createdAt"
       ]
     }
@@ -478,25 +113,20 @@
   "auth": {
     "providers": [
       "password",
+      "google.com",
       "anonymous"
     ]
   },
   "firestore": {
     "structure": [
       {
-        "path": "/users/{userId}",
+        "path": "/userProfiles/{userId}",
         "definition": {
           "entityName": "UserProfile",
           "schema": {
             "$ref": "#/backend/entities/UserProfile"
           },
-          "description": "Stores user profile information. The 'userId' in the path directly links to the authenticated user's ID, enabling path-based ownership for secure access. The 'id' field within the document should match the 'userId' parameter.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique ID of the user, corresponding to Firebase Authentication UID."
-            }
-          ]
+          "description": "Stores user profile information. The 'userId' in the path directly links to the authenticated user's ID."
         }
       },
       {
@@ -506,152 +136,23 @@
           "schema": {
             "$ref": "#/backend/entities/Idea"
           },
-          "description": "Stores details of innovation ideas. Each document includes a 'creatorId' field for direct authorization checks, ensuring that only the idea's creator can modify it. Ideas are globally readable for the 'Idea Feed' feature.",
-          "params": [
-            {
-              "name": "ideaId",
-              "description": "The unique ID of the innovation idea."
-            }
-          ]
+          "description": "Stores details of innovation ideas and posts."
         }
       },
       {
-        "path": "/ideas/{ideaId}/ratings/{ratingId}",
+        "path": "/ideas/{ideaId}/suggestions/{suggestionId}",
         "definition": {
-          "entityName": "Rating",
-          "schema": {
-            "$ref": "#/backend/entities/Rating"
-          },
-          "description": "Stores individual user ratings for a specific idea. Each rating document includes a 'raterId' field, allowing direct authorization for the rater to modify their own rating. Ratings are publicly readable.",
-          "params": [
-            {
-              "name": "ideaId",
-              "description": "The unique ID of the idea to which the rating belongs."
-            },
-            {
-              "name": "ratingId",
-              "description": "The unique ID of the specific rating."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/savedIdeas/{saveId}",
-        "definition": {
-          "entityName": "Save",
-          "schema": {
-            "$ref": "#/backend/entities/Save"
-          },
-          "description": "Stores records of ideas saved by a user. The 'userId' in the path ensures that only the authenticated user can access their list of saved ideas. The document includes the 'ideaId' of the saved idea.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique ID of the user who saved the idea."
-            },
-            {
-              "name": "saveId",
-              "description": "The unique ID of the save record."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/ideas/{ideaId}/chatSessions/{chatSessionId}",
-        "definition": {
-          "entityName": "ChatSession",
-          "schema": {
-            "$ref": "#/backend/entities/ChatSession"
-          },
-          "description": "Stores real-time collaboration chat sessions associated with an idea. Includes denormalized 'ideaCreatorId' (from parent idea) and 'participantIds' for direct, rule-based authorization without 'get()' calls.",
-          "params": [
-            {
-              "name": "ideaId",
-              "description": "The unique ID of the idea related to this chat session."
-            },
-            {
-              "name": "chatSessionId",
-              "description": "The unique ID of the chat session."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/ideas/{ideaId}/chatSessions/{chatSessionId}/messages/{messageId}",
-        "definition": {
-          "entityName": "ChatMessage",
-          "schema": {
-            "$ref": "#/backend/entities/ChatMessage"
-          },
-          "description": "Stores individual messages within a chat session. Includes denormalized 'sessionParticipantIds' (from parent chat session) and 'ideaCreatorId' (from grandparent idea) in addition to 'senderId' for full authorization independence without 'get()' calls.",
-          "params": [
-            {
-              "name": "ideaId",
-              "description": "The unique ID of the idea related to the chat session."
-            },
-            {
-              "name": "chatSessionId",
-              "description": "The unique ID of the chat session to which this message belongs."
-            },
-            {
-              "name": "messageId",
-              "description": "The unique ID of the chat message."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/collaborationRequests/{requestId}",
-        "definition": {
-          "entityName": "CollaborationRequest",
-          "schema": {
-            "$ref": "#/backend/entities/CollaborationRequest"
-          },
-          "description": "Stores requests for collaboration on ideas. Each document includes 'requesterId' and 'recipientId' (the idea's creator) for direct authorization checks by both parties.",
-          "params": [
-            {
-              "name": "requestId",
-              "description": "The unique ID of the collaboration request."
-            }
-          ]
+          "entityName": "Suggestion",
+          "description": "Public comments and suggestions on a post."
         }
       },
       {
         "path": "/users/{userId}/notifications/{notificationId}",
         "definition": {
           "entityName": "Notification",
-          "schema": {
-            "$ref": "#/backend/entities/Notification"
-          },
-          "description": "Stores notifications for a specific user. The 'userId' in the path ensures that only the authenticated user can read and update (e.g., mark as read) their own notifications.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique ID of the user receiving the notification."
-            },
-            {
-              "name": "notificationId",
-              "description": "The unique ID of the notification."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/tags/{tagId}",
-        "definition": {
-          "entityName": "Tag",
-          "schema": {
-            "$ref": "#/backend/entities/Tag"
-          },
-          "description": "Stores global tags for categorizing ideas. These tags are generally read-only for all authenticated users.",
-          "params": [
-            {
-              "name": "tagId",
-              "description": "The unique ID of the tag."
-            }
-          ]
+          "description": "Private notifications for a specific user."
         }
       }
-    ],
-    "reasoning": "The Firestore structure is designed to adhere strictly to the core design principles, especially Authorization Independence (avoiding 'get()' calls in rules), Structural Segregation, and Access Modeling, to ensure security, scalability, and debuggability. All authorization checks are handled by either the path itself (for user-owned data) or denormalized fields within the document, ensuring atomic and efficient rule evaluation. QAPs (Query-Able Paths) are supported by structuring collections to allow direct queries using document fields for authorization.\n\nHere's how Authorization Independence and QAPs are achieved for key entities:\n\n*   **UserProfile:** Stored in `/users/{userId}`. Authorization is path-based: `request.auth.uid == userId`. This inherently ensures Authorization Independence and supports QAPs for individual user profiles.\n\n*   **Idea:** Stored in `/ideas/{ideaId}`. Each `Idea` document contains a `creatorId` field. Rules can directly check `resource.data.creatorId == request.auth.uid` for write access, eliminating the need for `get()` calls. For the 'Idea Feed' feature, the `/ideas` collection allows for a simple `list` operation, as ideas are assumed to be public-readable, facilitating QAPs.\n\n*   **Rating:** Stored as a subcollection `/ideas/{ideaId}/ratings/{ratingId}`. Each `Rating` document contains a `raterId`. This allows any authenticated user to read all ratings for an idea, while only the `raterId` can modify or delete their own rating, directly checking `resource.data.raterId == request.auth.uid`. No `get()` is needed for authorization against parent `idea` data.\n\n*   **Save:** Stored in `/users/{userId}/savedIdeas/{saveId}`. This collection is user-specific, with `userId` in the path. Authorization is `request.auth.uid == userId`, making it highly secure and supporting QAPs for a user to retrieve their saved ideas.\n\n*   **ChatSession:** Stored as a subcollection `/ideas/{ideaId}/chatSessions/{chatSessionId}`. To achieve Authorization Independence for chat sessions, each `ChatSession` document will include denormalized fields: `ideaCreatorId` (copied from the parent `Idea` document) and `participantIds` (an array from its own schema). Rules can then check `request.auth.uid == resource.data.ideaCreatorId` or `request.auth.uid in resource.data.participantIds` without any `get()` operations. QAPs are supported by allowing users to query `chatSessions` where `participantIds` contains their UID, as this filters on document content.\n\n*   **ChatMessage:** Stored as a nested subcollection `/ideas/{ideaId}/chatSessions/{chatSessionId}/messages/{messageId}`. For authorization independence, each `ChatMessage` document will extensively denormalize: `senderId` (from its own schema), `sessionParticipantIds` (copied from the parent `ChatSession`), and `ideaCreatorId` (copied from the grandparent `Idea`). This allows rules to check `request.auth.uid == resource.data.senderId` or `request.auth.uid in resource.data.sessionParticipantIds` or `request.auth.uid == resource.data.ideaCreatorId` directly within the `ChatMessage` document, fully avoiding hierarchical `get()` calls.\n\n*   **CollaborationRequest:** Stored in `/collaborationRequests/{requestId}`. Each request document contains `requesterId` and `recipientId` (which is the idea creator's ID). Authorization is direct: `request.auth.uid == resource.data.requesterId` or `request.auth.uid == resource.data.recipientId`. This enables QAPs for users to list requests they have sent or received using `where()` clauses on these fields.\n\n*   **Notification:** Stored in `/users/{userId}/notifications/{notificationId}`. This structure places notifications directly under the owning user's path, making authorization explicit: `request.auth.uid == userId`. This ensures only the authenticated user can read and update (e.g., mark as read) their own notifications, directly addressing the user's request for read/write permissions for authenticated users on notifications and supporting QAPs for fetching a user's notifications.\n\nThis design prioritizes embedding authorization context directly into documents or paths, minimizing complex rule logic, and enabling efficient and secure access patterns."
+    ]
   }
 }

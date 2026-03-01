@@ -9,45 +9,43 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    // User Profiles Rules
     match /userProfiles/{userId} {
       allow read: if isSignedIn();
       allow write: if isOwner(userId);
     }
 
-    // Allow anyone to create a notification for another user, but only owner can read/manage
-    match /users/{userId}/notifications/{notificationId} {
-      allow read, update, delete: if isOwner(userId);
-      allow create: if isSignedIn();
-    }
-
-    // Private messages rules
-    match /messages/{messageId} {
-      allow read, list: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update, delete: if false;
-    }
-
+    // Ideas and Posts Rules
     match /ideas/{ideaId} {
-      allow read: if true;
+      // Allow everyone to view posts and list the feed
+      allow get, list: if true;
       allow create: if isSignedIn();
+      
       // Allow update if user is creator OR if they are only updating the 'likes' count
       allow update: if isSignedIn() && (
         resource.data.authorId == request.auth.uid || 
         resource.data.creatorId == request.auth.uid || 
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes'])
       );
-      allow delete: if isSignedIn() && (resource.data.authorId == request.auth.uid || resource.data.creatorId == request.auth.uid);
+      
+      allow delete: if isSignedIn() && (
+        resource.data.authorId == request.auth.uid || 
+        resource.data.creatorId == request.auth.uid
+      );
 
+      // Suggestions (Comments) within a post
       match /suggestions/{suggestionId} {
-        allow read: if true;
+        allow get, list: if true;
         allow create: if isSignedIn();
       }
       
+      // Likes tracking
       match /likes/{userId} {
-        allow read: if true;
+        allow get, list: if true;
         allow write: if isOwner(userId);
       }
       
+      // Collaboration Chat Sessions
       match /chatSessions/{chatId} {
         allow read, write: if isSignedIn();
         match /messages/{msgId} {
@@ -55,20 +53,37 @@ service cloud.firestore {
         }
       }
     }
+
+    // Notifications Rules
+    match /users/{userId}/notifications/{notificationId} {
+      allow read, update, delete: if isOwner(userId);
+      allow create: if isSignedIn();
+    }
+
+    // Private Messages
+    match /messages/{messageId} {
+      allow read, list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if false;
+    }
     
+    // Community Groups
     match /groups/{groupId} {
       allow read, write: if isSignedIn();
     }
     
+    // Professional Unions
     match /unions/{unionId} {
       allow read, write: if isSignedIn();
     }
 
+    // Follow System
     match /follows/{followId} {
       allow read: if isSignedIn();
       allow write: if isSignedIn();
     }
     
+    // Collaboration Requests
     match /collaborationRequests/{requestId} {
       allow read, write: if isSignedIn();
     }
