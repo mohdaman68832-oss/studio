@@ -69,13 +69,12 @@ const COLOR_CATEGORIES = {
 };
 
 function getContrastColor(hexColor: string | undefined): string {
-  if (!hexColor || !hexColor.startsWith('#')) return 'inherit';
+  if (!hexColor || !hexColor.startsWith('#')) return 'hsl(var(--primary))';
   const hex = hexColor.replace('#', '');
   const r = parseInt(hex.substring(0, 2), 16);
   const g = parseInt(hex.substring(2, 4), 16);
   const b = parseInt(hex.substring(4, 6), 16);
   const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-  // Use primary orange for high contrast on light backgrounds
   return brightness >= 128 ? 'hsl(var(--primary))' : '#FFFFFF';
 }
 
@@ -164,7 +163,6 @@ export default function ProfilePage() {
       await setDoc(profileRef, {
         id: user.uid,
         name: formData.name,
-        // Username is not changeable
         bio: formData.bio,
         profilePictureUrl: formData.profilePic,
         bannerUrl: formData.banner,
@@ -391,9 +389,13 @@ export default function ProfilePage() {
               <div className="flex items-center gap-3">{isDarkMode ? <Moon className="text-primary" /> : <Sun className="text-primary" />}<div><p className="text-[10px] font-black uppercase tracking-widest">Dark Mode</p></div></div>
               <Switch checked={isDarkMode} onCheckedChange={setIsDarkMode} />
             </div>
+
             <div className="space-y-4"><Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Banner Update</Label><div onClick={() => setShowBannerDetail(true)} className="relative h-32 bg-muted rounded-[2.5rem] overflow-hidden border-2 border-dashed border-primary/20 cursor-pointer">{formData.banner ? <Image src={formData.banner} alt="b" fill className="object-cover" unoptimized /> : <Camera className="absolute inset-0 m-auto opacity-20" size={32} />}</div></div>
+
             <div className="space-y-4"><Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Identity</Label><div className="flex gap-4"><Avatar className="h-20 w-20 cursor-pointer" onClick={() => profileInputRef.current?.click()}><AvatarImage src={formData.profilePic} /><AvatarFallback>{formData.name?.[0]}</AvatarFallback></Avatar><div className="flex-1 space-y-3"><Input value={formData.name} onChange={e => setFormData(p => ({ ...p, name: e.target.value }))} placeholder="Display Name" className="h-10 rounded-xl font-bold text-xs" /><Input value={formData.username} disabled className="h-10 rounded-xl font-bold text-xs bg-muted/50 cursor-not-allowed opacity-60" placeholder="Username" /></div></div></div>
+
             <div className="space-y-3"><Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Expertise Bio</Label><Textarea value={formData.bio} onChange={e => setFormData(p => ({ ...p, bio: e.target.value }))} className="rounded-[1.5rem] min-h-[80px] text-xs p-4" /></div>
+
             <div className="space-y-4"><Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Theme Colors</Label><div className="grid grid-cols-2 gap-3">
               {['header', 'userInfo', 'bioCard', 'statsSection', 'tabsList', 'background', 'textOutline'].map(key => (
                 <Button key={key} variant="outline" className="h-14 rounded-2xl flex-col gap-1" onClick={() => { setActiveColorSection(key as any); setIsColorPickerOpen(true); }}>
@@ -402,7 +404,32 @@ export default function ProfilePage() {
                 </Button>
               ))}
             </div></div>
-            <div className="pb-6"><Button onClick={() => stickerInputRef.current?.click()} className="w-full h-14 rounded-3xl bg-primary/10 text-primary border-2 border-dashed border-primary/20 font-black uppercase tracking-widest"><Plus size={18} className="mr-2" /> Add Sticker</Button></div>
+
+            <div className="space-y-4">
+              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Manage Stickers</Label>
+              <div className="flex flex-wrap gap-3">
+                {formData.stickers.map((s) => (
+                  <div key={s.id} className="relative group">
+                    <div className="w-16 h-16 bg-muted rounded-2xl overflow-hidden border p-1">
+                      <Image src={s.url} alt="sticker preview" width={64} height={64} className="object-contain w-full h-full" unoptimized />
+                    </div>
+                    <Button 
+                      size="icon" 
+                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-primary shadow-lg scale-0 group-hover:scale-100 transition-transform"
+                      onClick={() => {
+                        setEditingStickerId(s.id);
+                        setIsOptimizeModalOpen(false);
+                      }}
+                    >
+                      <Pencil size={10} className="text-white" />
+                    </Button>
+                  </div>
+                ))}
+                <Button onClick={() => stickerInputRef.current?.click()} className="w-16 h-16 rounded-2xl bg-primary/10 text-primary border-2 border-dashed border-primary/20 flex flex-col items-center justify-center">
+                  <Plus size={20} />
+                </Button>
+              </div>
+            </div>
           </div>
           <div className="p-6 bg-white dark:bg-zinc-950 border-t shrink-0"><Button className="w-full h-14 rounded-[1.5rem] bg-primary text-white font-black uppercase tracking-widest shadow-xl" onClick={handleSaveProfile} disabled={isSaving}>{isSaving ? <Loader2 className="animate-spin mr-2" /> : "Sync Changes"}</Button></div>
         </DialogContent>
