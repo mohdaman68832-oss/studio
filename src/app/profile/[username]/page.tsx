@@ -30,6 +30,7 @@ interface CustomColors {
   tabsList?: string;
   tabsContent?: string;
   background?: string;
+  textOutline?: string;
 }
 
 function getContrastColor(hexColor: string | undefined): string {
@@ -39,7 +40,6 @@ function getContrastColor(hexColor: string | undefined): string {
   const g = parseInt(hex.substring(2, 4), 16);
   const b = parseInt(hex.substring(4, 6), 16);
   const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-  // If background is light, use primary orange instead of dark grey
   return brightness >= 128 ? 'hsl(var(--primary))' : '#FFFFFF';
 }
 
@@ -85,6 +85,10 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
 
   const colors: CustomColors = profileData.customColors || {};
   const stickers: Sticker[] = profileData.stickers || [];
+  const outlineColor = colors.textOutline || "transparent";
+  const textShadowStyle = outlineColor !== "transparent" 
+    ? `-1px -1px 0 ${outlineColor}, 1px -1px 0 ${outlineColor}, -1px 1px 0 ${outlineColor}, 1px 1px 0 ${outlineColor}`
+    : "none";
 
   return (
     <div 
@@ -114,7 +118,6 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
             </Avatar>
           </div>
 
-          {/* STICKERS LAYER (z-[100]) - Percentage based for responsiveness */}
           <div className="absolute inset-0 pointer-events-none z-[100]">
             {stickers.map((sticker) => (
               <div 
@@ -138,8 +141,8 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       <div style={{ backgroundColor: colors.userInfo || "transparent" }} className="w-full relative -mt-1 z-[40]">
         <div className="px-6 flex flex-col items-center pb-8">
           <div className="text-center mt-4">
-            <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{profileData.name || profileData.username}</h2>
-            <p className="text-[10px] font-black tracking-[0.2em] uppercase opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>Sphere Innovator</p>
+            <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo), textShadow: textShadowStyle }}>{profileData.name || profileData.username}</h2>
+            <p className="text-[10px] font-black tracking-[0.2em] uppercase opacity-50" style={{ color: getContrastColor(colors.userInfo), textShadow: textShadowStyle }}>Sphere Innovator</p>
           </div>
           
           <div className="flex gap-3 w-full mt-6 px-4">

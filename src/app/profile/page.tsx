@@ -18,7 +18,8 @@ import {
   CheckCircle,
   Pencil,
   Sun,
-  Moon
+  Moon,
+  Palette
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -58,6 +59,7 @@ interface CustomColors {
   tabsList?: string;
   tabsContent?: string;
   background?: string;
+  textOutline?: string;
 }
 
 const COLOR_CATEGORIES = {
@@ -73,7 +75,7 @@ function getContrastColor(hexColor: string | undefined): string {
   const g = parseInt(hex.substring(2, 4), 16);
   const b = parseInt(hex.substring(4, 6), 16);
   const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-  // If background is light, use primary orange instead of dark grey
+  // If background is light, use primary orange instead of dark grey for the Orange Edition
   return brightness >= 128 ? 'hsl(var(--primary))' : '#FFFFFF';
 }
 
@@ -142,12 +144,13 @@ export default function ProfilePage() {
     else document.documentElement.classList.remove('dark');
   }, [isDarkMode]);
 
-  // Force body interaction cleanup after modal closes
+  // CRITICAL FIX: Ensure background interaction is restored when modals close
   useEffect(() => {
-    if (!isOptimizeModalOpen) {
+    if (!isOptimizeModalOpen && !showBannerDetail && !isColorPickerOpen) {
       document.body.style.pointerEvents = 'auto';
+      document.body.style.overflow = 'auto';
     }
-  }, [isOptimizeModalOpen]);
+  }, [isOptimizeModalOpen, showBannerDetail, isColorPickerOpen]);
 
   const handleSignOut = async () => { 
     await signOut(auth); 
@@ -244,6 +247,10 @@ export default function ProfilePage() {
   if (!user) return null;
 
   const activeSticker = formData.stickers.find(s => s.id === editingStickerId);
+  const outlineColor = formData.customColors.textOutline || "transparent";
+  const textShadowStyle = outlineColor !== "transparent" 
+    ? `-1px -1px 0 ${outlineColor}, 1px -1px 0 ${outlineColor}, -1px 1px 0 ${outlineColor}, 1px 1px 0 ${outlineColor}`
+    : "none";
 
   return (
     <div className="max-w-md mx-auto min-h-screen flex flex-col transition-all duration-500 overflow-x-hidden no-scrollbar" style={{ backgroundColor: formData.customColors.background || "var(--background)" }}>
@@ -271,7 +278,6 @@ export default function ProfilePage() {
           </DropdownMenu>
         </header>
 
-        {/* PERSISTENT STICKER CONTAINER - Percentage based logic */}
         <div className="relative w-full" ref={stickerContainerRef}>
           <div className="relative h-56 w-full overflow-hidden z-[10]">
             <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized />
@@ -313,8 +319,8 @@ export default function ProfilePage() {
       <div className="relative z-[40] w-full -mt-1">
         <div style={{ backgroundColor: formData.customColors.userInfo }} className="px-6 flex flex-col items-center pb-8">
           <div className="text-center mt-4">
-            <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(formData.customColors.userInfo) }}>{formData.name || "Innovator"}</h2>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(formData.customColors.userInfo) }}>@{formData.username}</p>
+            <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(formData.customColors.userInfo), textShadow: textShadowStyle }}>{formData.name || "Innovator"}</h2>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(formData.customColors.userInfo), textShadow: textShadowStyle }}>@{formData.username}</p>
           </div>
           <div className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-xl" style={{ backgroundColor: formData.customColors.bioCard || "hsl(var(--card))" }}>
             <p className="text-center text-[12px] leading-relaxed font-bold italic" style={{ color: getContrastColor(formData.customColors.bioCard) }}>
@@ -388,15 +394,68 @@ export default function ProfilePage() {
             <div className="space-y-4"><Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Banner Update</Label><div onClick={() => setShowBannerDetail(true)} className="relative h-32 bg-muted rounded-[2.5rem] overflow-hidden border-2 border-dashed border-primary/20 cursor-pointer">{formData.banner ? <Image src={formData.banner} alt="b" fill className="object-cover" unoptimized /> : <Camera className="absolute inset-0 m-auto opacity-20" size={32} />}</div></div>
             <div className="space-y-4"><Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Identity</Label><div className="flex gap-4"><Avatar className="h-20 w-20 cursor-pointer" onClick={() => profileInputRef.current?.click()}><AvatarImage src={formData.profilePic} /><AvatarFallback>{formData.name?.[0]}</AvatarFallback></Avatar><div className="flex-1 space-y-3"><Input value={formData.name} onChange={e => setFormData(p => ({ ...p, name: e.target.value }))} className="h-10 rounded-xl font-bold text-xs" /><Input value={formData.username} onChange={e => setFormData(p => ({ ...p, username: e.target.value }))} className="h-10 rounded-xl font-bold text-xs" /></div></div></div>
             <div className="space-y-3"><Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Expertise Bio</Label><Textarea value={formData.bio} onChange={e => setFormData(p => ({ ...p, bio: e.target.value }))} className="rounded-[1.5rem] min-h-[80px] text-xs p-4" /></div>
-            <div className="space-y-4"><Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Theme Colors</Label><div className="grid grid-cols-2 gap-3">{Object.keys(formData.customColors).length === 0 ? <Button onClick={() => setIsColorPickerOpen(true)} className="col-span-2 rounded-2xl h-12 bg-primary/10 text-primary uppercase text-[10px] font-black">Configure Colors</Button> : ['header', 'userInfo', 'bioCard', 'statsSection', 'tabsList', 'background'].map(key => (<Button key={key} variant="outline" className="h-14 rounded-2xl flex-col gap-1" onClick={() => { setActiveColorSection(key as any); setIsColorPickerOpen(true); }}><span className="text-[7px] font-black uppercase">{key}</span><div className="w-8 h-2 rounded-full border" style={{ backgroundColor: (formData.customColors as any)[key] || '#eee' }} /></Button>))}</div></div>
+            <div className="space-y-4"><Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Theme Colors</Label><div className="grid grid-cols-2 gap-3">
+              {['header', 'userInfo', 'bioCard', 'statsSection', 'tabsList', 'background', 'textOutline'].map(key => (
+                <Button key={key} variant="outline" className="h-14 rounded-2xl flex-col gap-1" onClick={() => { setActiveColorSection(key as any); setIsColorPickerOpen(true); }}>
+                  <span className="text-[7px] font-black uppercase">{key}</span>
+                  <div className="w-8 h-2 rounded-full border" style={{ backgroundColor: (formData.customColors as any)[key] || '#eee' }} />
+                </Button>
+              ))}
+            </div></div>
             <div className="pb-6"><Button onClick={() => stickerInputRef.current?.click()} className="w-full h-14 rounded-3xl bg-primary/10 text-primary border-2 border-dashed border-primary/20 font-black uppercase tracking-widest"><Plus size={18} className="mr-2" /> Add Sticker</Button></div>
           </div>
           <div className="p-6 bg-white dark:bg-zinc-950 border-t shrink-0"><Button className="w-full h-14 rounded-[1.5rem] bg-primary text-white font-black uppercase tracking-widest shadow-xl" onClick={handleSaveProfile} disabled={isSaving}>{isSaving ? <Loader2 className="animate-spin mr-2" /> : "Sync Changes"}</Button></div>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isColorPickerOpen} onOpenChange={setIsColorPickerOpen}><DialogContent className="max-w-xs rounded-[3rem] p-6 z-[6000]"><DialogHeader><DialogTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-center mb-6">Pick a Vibe</DialogTitle></DialogHeader><div className="space-y-8 max-h-[50vh] overflow-y-auto no-scrollbar pb-4">{Object.entries(COLOR_CATEGORIES).map(([cat, colors]) => (<div key={cat} className="space-y-3"><h3 className="text-[8px] font-black uppercase opacity-40 ml-1">{cat}</h3><div className="grid grid-cols-5 gap-3">{colors.map(c => (<button key={c} onClick={() => { if(activeColorSection) { setFormData(p => ({ ...p, customColors: { ...p.customColors, [activeColorSection]: c } })); setIsColorPickerOpen(false); } }} className="aspect-square rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: c }} />))}</div></div>))}</div></DialogContent></Dialog>
-      <Dialog open={showBannerDetail} onOpenChange={setShowBannerDetail}><DialogContent className="max-w-md w-[95%] rounded-[3rem] h-[80vh] flex flex-col z-[5000]"><div className="p-6 border-b text-center"><DialogTitle className="text-sm font-black uppercase">Banner Preview</DialogTitle></div><div className="flex-1 overflow-y-auto p-6 space-y-10 no-scrollbar"><div className="space-y-3"><div className="flex items-center gap-2 opacity-50"><Monitor size={14} /><span className="text-[8px] font-black uppercase">Desktop</span></div><div className="relative aspect-[3/1] bg-muted rounded-2xl overflow-hidden border">{formData.banner && <Image src={formData.banner} alt="p" fill className="object-cover" unoptimized />}</div></div><div className="space-y-3"><div className="flex items-center gap-2 opacity-50"><Smartphone size={14} /><span className="text-[8px] font-black uppercase">Mobile</span></div><div className="flex justify-center"><div className="relative w-full max-w-[200px] aspect-[4/3] bg-muted rounded-2xl overflow-hidden border">{formData.banner && <Image src={formData.banner} alt="m" fill className="object-cover" unoptimized />}</div></div></div><div className="pt-6 space-y-4"><input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={e => handleImageChange(e, 'banner')} /><Button onClick={() => bannerInputRef.current?.click()} className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase">Change Photo</Button></div></div></DialogContent></Dialog>
+      <Dialog open={isColorPickerOpen} onOpenChange={setIsColorPickerOpen}>
+        <DialogContent className="max-w-xs rounded-[3rem] p-6 z-[6000]">
+          <DialogHeader><DialogTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-center mb-6">Pick a Vibe</DialogTitle></DialogHeader>
+          <div className="space-y-8 max-h-[50vh] overflow-y-auto no-scrollbar pb-4">
+            {Object.entries(COLOR_CATEGORIES).map(([cat, colors]) => (
+              <div key={cat} className="space-y-3">
+                <h3 className="text-[8px] font-black uppercase opacity-40 ml-1">{cat}</h3>
+                <div className="grid grid-cols-5 gap-3">
+                  {colors.map(c => (
+                    <button key={c} onClick={() => { 
+                      if(activeColorSection) { 
+                        setFormData(p => ({ ...p, customColors: { ...p.customColors, [activeColorSection]: c } })); 
+                        setIsColorPickerOpen(false); 
+                      } 
+                    }} className="aspect-square rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: c }} />
+                  ))}
+                  <button onClick={() => {
+                    if(activeColorSection) {
+                      setFormData(p => ({ ...p, customColors: { ...p.customColors, [activeColorSection]: "transparent" } }));
+                      setIsColorPickerOpen(false);
+                    }
+                  }} className="aspect-square rounded-full border-2 border-dashed border-red-500 flex items-center justify-center text-[8px] font-bold">None</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showBannerDetail} onOpenChange={setShowBannerDetail}>
+        <DialogContent className="max-w-md w-[95%] rounded-[3rem] h-[80vh] flex flex-col z-[5000]">
+          <div className="p-6 border-b text-center"><DialogTitle className="text-sm font-black uppercase">Banner Preview</DialogTitle></div>
+          <div className="flex-1 overflow-y-auto p-6 space-y-10 no-scrollbar">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 opacity-50"><Monitor size={14} /><span className="text-[8px] font-black uppercase">Desktop</span></div>
+              <div className="relative aspect-[3/1] bg-muted rounded-2xl overflow-hidden border">{formData.banner && <Image src={formData.banner} alt="p" fill className="object-cover" unoptimized />}</div>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 opacity-50"><Smartphone size={14} /><span className="text-[8px] font-black uppercase">Mobile</span></div>
+              <div className="flex justify-center"><div className="relative w-full max-w-[200px] aspect-[4/3] bg-muted rounded-2xl overflow-hidden border">{formData.banner && <Image src={formData.banner} alt="m" fill className="object-cover" unoptimized />}</div></div>
+            </div>
+            <div className="pt-6 space-y-4">
+               <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={e => handleImageChange(e, 'banner')} />
+               <Button onClick={() => bannerInputRef.current?.click()} className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase">Change Photo</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
       <input type="file" ref={profileInputRef} className="hidden" accept="image/*" onChange={e => handleImageChange(e, 'profile')} /><input type="file" ref={stickerInputRef} className="hidden" accept="image/*" onChange={e => handleImageChange(e, 'sticker')} />
     </div>
   );
