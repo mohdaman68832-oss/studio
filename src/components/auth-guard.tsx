@@ -7,8 +7,7 @@ import { doc } from 'firebase/firestore';
 
 /**
  * Animated Logo Loader Component
- * Horizontal Swaying with Balanced expressive eyes.
- * Optimized size for premium feel.
+ * Balanced expressive eyes for a premium feel.
  */
 function LogoLoader() {
   return (
@@ -22,9 +21,9 @@ function LogoLoader() {
             />
             <g className="animate-eye-look">
               <g className="animate-eye-blink">
-                {/* Balanced eyes as requested */}
-                <rect x="44" y="50" width="10" height="16" rx="5" fill="white" />
-                <rect x="66" y="50" width="10" height="16" rx="5" fill="white" />
+                {/* Balanced eyes as requested - slightly smaller for elegance */}
+                <rect x="46" y="52" width="8" height="14" rx="4" fill="white" />
+                <rect x="66" y="52" width="8" height="14" rx="4" fill="white" />
               </g>
             </g>
             <circle cx="105" cy="15" r="8" fill="#FF4500" />
