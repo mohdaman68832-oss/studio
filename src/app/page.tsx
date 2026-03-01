@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
 import { collection, query, orderBy, doc } from "firebase/firestore";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RefreshCcw, ImageIcon, Video, Type, LayoutGrid } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const MOCK_IDEAS = [
   {
@@ -41,17 +41,20 @@ const MOCK_IDEAS = [
   }
 ];
 
-const CATEGORIES = ["All", "Meme"];
+const CATEGORIES_LIST = ["All", "Meme"];
 const MEME_FORMATS = [
   { label: "Image", id: "image", icon: ImageIcon },
   { label: "Video", id: "video", icon: Video },
   { label: "Text", id: "text", icon: Type },
 ];
 
-export default function FeedPage() {
+function FeedContent() {
   const db = useFirestore();
   const { user } = useUser();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const urlCategory = searchParams.get("category");
+
   const [activeCategory, setActiveCategory] = useState("All");
   const [activeMemeFormat, setActiveMemeFormat] = useState("image");
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -81,7 +84,10 @@ export default function FeedPage() {
       return !!(categoryMatch || tagMatch || descriptionMatch);
     };
 
-    if (activeCategory === "All") {
+    // Determine what we are actually filtering by on the first tab
+    const effectiveCategory = activeCategory === "All" && urlCategory ? urlCategory : activeCategory;
+
+    if (effectiveCategory === "All") {
       // EXCLUDE memes from All feed and filter by user interests if they exist
       return unique.filter(i => {
         if (isMemePost(i)) return false;
@@ -95,7 +101,7 @@ export default function FeedPage() {
       });
     }
     
-    if (activeCategory === "Meme") {
+    if (effectiveCategory === "Meme") {
       return unique.filter(i => {
         if (!isMemePost(i)) return false;
 
@@ -117,8 +123,9 @@ export default function FeedPage() {
       });
     }
 
-    return unique.filter(i => i.category?.toLowerCase() === activeCategory.toLowerCase());
-  }, [firestoreIdeas, activeCategory, activeMemeFormat, userInterests]);
+    // Filter by specific category (Selected from URL or manually)
+    return unique.filter(i => i.category?.toLowerCase() === effectiveCategory.toLowerCase());
+  }, [firestoreIdeas, activeCategory, activeMemeFormat, userInterests, urlCategory]);
 
   useEffect(() => {
     const handleTouchStart = (e: TouchEvent) => {
@@ -178,7 +185,7 @@ export default function FeedPage() {
         <div>
           <h1 className="text-3xl font-black text-primary uppercase tracking-tighter leading-none">Sphere Feed</h1>
           <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-1">
-            {activeCategory === "All" && userInterests.length > 0 ? "Tailored to your interests" : "Innovation at your fingertips"}
+            {activeCategory === "All" && urlCategory ? `Exploring ${urlCategory}` : (activeCategory === "All" && userInterests.length > 0 ? "Tailored to your interests" : "Innovation at your fingertips")}
           </p>
         </div>
         <Link href="/categories">
@@ -189,16 +196,24 @@ export default function FeedPage() {
       </header>
 
       <div className="flex w-full gap-2 -mx-4 px-4 pt-2 pb-4 mb-2 border-b border-border/50">
-        {CATEGORIES.map((cat) => {
+        {CATEGORIES_LIST.map((cat) => {
           const isAll = cat === "All";
-          const displayLabel = (isAll && userInterests.length === 0) ? "Explore Hubs" : cat;
+          let displayLabel = cat;
+          
+          if (isAll) {
+            if (urlCategory) {
+              displayLabel = urlCategory;
+            } else if (userInterests.length === 0) {
+              displayLabel = "Explore Hubs";
+            }
+          }
           
           return (
             <Button 
               key={cat} 
               variant={cat === activeCategory ? "default" : "secondary"} 
               onClick={() => {
-                if (isAll && userInterests.length === 0) {
+                if (isAll && !urlCategory && userInterests.length === 0) {
                   router.push("/categories");
                   return;
                 }
@@ -258,9 +273,9 @@ export default function FeedPage() {
             ) : (
               <div className="py-20 text-center opacity-30 flex flex-col items-center gap-3">
                 <p className="text-[10px] font-black uppercase tracking-widest">No matching content yet</p>
-                {activeCategory === "All" && userInterests.length > 0 && (
-                   <p className="text-[9px] font-medium max-w-[200px] text-center">We couldn't find posts matching your interests in followed categories.</p>
-                )}
+                <p className="text-[9px] font-medium max-w-[200px] text-center">
+                  {urlCategory ? `We couldn't find any posts in the ${urlCategory} category.` : "We couldn't find posts matching your interests."}
+                </p>
                 <Link href="/categories">
                   <Button variant="outline" className="rounded-full mt-4 text-[10px] font-black uppercase">Explore Your Hubs</Button>
                 </Link>
@@ -271,4 +286,20 @@ export default function FeedPage() {
       </div>
     </div>
   );
+}
+
+export default function FeedPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-screen items-center justify-center bg-background">
+        <Loader2 className="animate-spin text-primary h-8 w-8" />
+      </div>
+    }>
+      <FeedContent />
+    </Suspense>
+  );
+}
+
+function Loader2({ className, ...props }: any) {
+  return <RefreshCcw className={cn("animate-spin", className)} {...props} />
 }
