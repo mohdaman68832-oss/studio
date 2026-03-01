@@ -7,13 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ChevronLeft, ShieldCheck, Loader2, Users } from "lucide-react";
+import { ChevronLeft, Loader2, Users } from "lucide-react";
 import { useFirestore } from "@/firebase";
 import { collection, addDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-
-const FORMATION_FEE = 500;
 
 export default function CreateGroupPage() {
   const router = useRouter();
@@ -39,8 +37,8 @@ export default function CreateGroupPage() {
 
     setLoading(true);
     try {
-      // Simulate Payment
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Simulate direct creation without payment
+      await new Promise(resolve => setTimeout(resolve, 800));
 
       await addDoc(collection(db, "groups"), {
         ...formData,
@@ -120,17 +118,16 @@ export default function CreateGroupPage() {
         </div>
       </div>
 
-      <div className="bg-secondary/10 p-6 rounded-[2.5rem] border border-secondary/20 flex items-center justify-between">
+      <div className="bg-primary/5 p-6 rounded-[2.5rem] border border-primary/10 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="bg-secondary w-10 h-10 rounded-xl text-white flex items-center justify-center font-black text-xl">
-            ₹
+          <div className="bg-primary/10 w-10 h-10 rounded-xl text-primary flex items-center justify-center">
+            <Users size={20} />
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase text-secondary">Formation Fee</p>
-            <p className="text-lg font-black text-foreground">₹{FORMATION_FEE}</p>
+            <p className="text-[10px] font-black uppercase text-primary tracking-widest">Free Formation</p>
+            <p className="text-sm font-bold text-foreground">Community Builder</p>
           </div>
         </div>
-        <Users className="text-secondary opacity-20" size={32} />
       </div>
 
       <Button 
@@ -141,7 +138,7 @@ export default function CreateGroupPage() {
         {loading ? (
           <Loader2 className="animate-spin mr-2" />
         ) : (
-          `Pay & Create Group`
+          `Create Group`
         )}
       </Button>
 
