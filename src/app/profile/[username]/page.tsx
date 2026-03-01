@@ -67,6 +67,13 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
   const { data: followDoc, isLoading: followLoading } = useDoc(followRef);
   const isFollowing = !!followDoc;
 
+  // Fetch Followers (Circle) and Following (Circling) for this user
+  const followingQuery = useMemoFirebase(() => (db && profileData ? query(collection(db, "follows"), where("followerId", "==", profileData.id)) : null), [db, profileData]);
+  const followersQuery = useMemoFirebase(() => (db && profileData ? query(collection(db, "follows"), where("followedId", "==", profileData.id)) : null), [db, profileData]);
+  
+  const { data: followingData } = useCollection(followingQuery);
+  const { data: followersData } = useCollection(followersQuery);
+
   const handleFollowToggle = async () => {
     if (!db || !currentUser || !profileData) return;
     const docId = `${currentUser.uid}_${profileData.id}`;
@@ -169,12 +176,12 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
             <p className="text-[8px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(colors.statsSection) }}>Ideas</p>
           </div>
           <div className="text-center">
-            <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{(profileData.totalViewsReceived || 0).toLocaleString()}</p>
-            <p className="text-[8px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(colors.statsSection) }}>Views</p>
+            <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{followersData?.length || 0}</p>
+            <p className="text-[8px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(colors.statsSection) }}>Circle</p>
           </div>
           <div className="text-center">
-            <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{(profileData.totalIdeasSaved || 0).toLocaleString()}</p>
-            <p className="text-[8px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(colors.statsSection) }}>Saves</p>
+            <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{followingData?.length || 0}</p>
+            <p className="text-[8px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(colors.statsSection) }}>Circling</p>
           </div>
         </div>
       </div>
