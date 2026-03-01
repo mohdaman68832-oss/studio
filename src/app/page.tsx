@@ -9,7 +9,6 @@ import { collection, query, orderBy } from "firebase/firestore";
 import { useMemo, useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RefreshCcw, ImageIcon, Video, Type } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 
 const MOCK_IDEAS = [
   {
@@ -67,7 +66,6 @@ export default function FeedPage() {
     const base = firestoreIdeas && firestoreIdeas.length > 0 ? [...firestoreIdeas] : MOCK_IDEAS;
     const unique = Array.from(new Map(base.map(item => [item.id, item])).values());
     
-    // Helper to identify if a post is a meme
     const isMemePost = (i: any) => {
       const categoryMatch = i.category?.toLowerCase() === "meme";
       const tagMatch = i.tags?.some((t: string) => t.toLowerCase() === "meme");
@@ -76,23 +74,20 @@ export default function FeedPage() {
     };
 
     if (activeCategory === "All") {
-      // EXCLUDE memes from the 'All' page as per user request
+      // EXCLUDE all memes from the 'All' page
       return unique.filter(i => !isMemePost(i));
     }
     
     if (activeCategory === "Meme") {
-      // Show ONLY memes, filtered by selected format
+      // Show ONLY memes, filtered by format
       return unique.filter(i => {
         if (!isMemePost(i)) return false;
 
         let mediaType = "text";
         if (i.mediaUrl && i.mediaUrl !== "") {
           const url = i.mediaUrl.toLowerCase();
-          if (url.includes('mp4') || url.includes('video') || url.includes('mov') || url.startsWith('data:video')) {
-            mediaType = "video";
-          } else {
-            mediaType = "image";
-          }
+          const isVideoUrl = url.includes('mp4') || url.includes('video') || url.includes('mov') || url.startsWith('data:video');
+          mediaType = isVideoUrl ? "video" : "image";
         }
         
         return mediaType === activeMemeFormat;
