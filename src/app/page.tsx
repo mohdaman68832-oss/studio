@@ -58,8 +58,6 @@ export default function FeedPage() {
   const [showRefresh, setShowRefresh] = useState(false);
   const [touchStart, setTouchStart] = useState(0);
 
-  const [isMemeSheetOpen, setIsMemeSheetOpen] = useState(false);
-
   const userProfileRef = useMemoFirebase(() => (db && user ? doc(db, "userProfiles", user.uid) : null), [db, user]);
   const { data: profile } = useDoc(userProfileRef);
 
@@ -152,41 +150,6 @@ export default function FeedPage() {
           <h1 className="text-3xl font-black text-primary uppercase tracking-tighter leading-none">Sphere Feed</h1>
           <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-1">Innovation at your fingertips</p>
         </div>
-        
-        {activeCategory === "Meme" && (
-          <Sheet open={isMemeSheetOpen} onOpenChange={setIsMemeSheetOpen}>
-            <SheetTrigger asChild>
-              <Button size="icon" className="rounded-full h-12 w-12 bg-primary shadow-lg shadow-primary/20 text-white">
-                <Plus size={24} />
-              </Button>
-            </SheetTrigger>
-            <SheetContent 
-              side="bottom" 
-              className="rounded-t-[3rem] h-[45vh] bg-background border-none shadow-2xl z-[5000]"
-              onOpenAutoFocus={(e) => e.preventDefault()}
-            >
-              <SheetHeader>
-                <SheetTitle className="text-center text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-8">
-                  Choose Meme Format
-                </SheetTitle>
-              </SheetHeader>
-              <div className="grid grid-cols-3 gap-5 px-4">
-                <Link href="/post?mediaType=image&category=Meme" className="flex flex-col items-center gap-4 p-7 bg-white rounded-[2.5rem] border-2 border-border/50 hover:border-primary transition-all shadow-sm group">
-                  <ImageIcon className="w-8 h-8 text-primary group-hover:scale-110 transition-transform" />
-                  <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground group-hover:text-primary">Image</span>
-                </Link>
-                <Link href="/post?mediaType=video&category=Meme" className="flex flex-col items-center gap-4 p-7 bg-white rounded-[2.5rem] border-2 border-border/50 hover:border-primary transition-all shadow-sm group">
-                  <Video className="w-8 h-8 text-secondary group-hover:scale-110 transition-transform" />
-                  <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground group-hover:text-primary">Video</span>
-                </Link>
-                <Link href="/post?mediaType=text&category=Meme" className="flex flex-col items-center gap-4 p-7 bg-white rounded-[2.5rem] border-2 border-border/50 hover:border-primary transition-all shadow-sm group">
-                  <Type className="w-8 h-8 text-muted-foreground group-hover:scale-110 transition-transform" />
-                  <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground group-hover:text-primary">Text</span>
-                </Link>
-              </div>
-            </SheetContent>
-          </Sheet>
-        )}
       </header>
 
       <div className="flex w-full gap-2 -mx-4 px-4 pt-2 pb-4 mb-2 border-b border-border/50">
