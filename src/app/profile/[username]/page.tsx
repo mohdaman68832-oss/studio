@@ -1,4 +1,3 @@
-
 "use client";
 
 import { use, useState, useMemo, useRef } from "react";
@@ -48,7 +47,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
   const db = useFirestore();
   const { user: currentUser } = useUser();
   const { toast } = useToast();
-  const viewerContainerRef = useRef<HTMLDivElement>(null);
+  const stickerContainerRef = useRef<HTMLDivElement>(null);
 
   const userQuery = useMemoFirebase(() => {
     if (!db) return null;
@@ -90,7 +89,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden flex flex-col no-scrollbar" 
       style={{ backgroundColor: colors.background || "var(--background)" }}
     >
-      <div className="relative w-full shrink-0" ref={viewerContainerRef}>
+      <div className="relative w-full shrink-0">
         <div className="h-16 w-full relative z-[70]" style={{ backgroundColor: colors.header }} />
         
         <header className="absolute top-0 left-0 right-0 z-[80] px-6 flex justify-between items-center py-5">
@@ -101,39 +100,43 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
           <div className="w-10" />
         </header>
 
-        {/* STICKERS LAYER (Top Layer: z-[100]) */}
-        {stickers.map((sticker) => (
-          <div 
-            key={sticker.id} 
-            className="absolute pointer-events-none select-none z-[100]" 
-            style={{ 
-              left: `${sticker.x}%`, 
-              top: `${sticker.y}%`, 
-              transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`, 
-            }}
-          >
-            <div className="relative w-24 h-24">
-              <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized />
-            </div>
-          </div>
-        ))}
-
-        <div className="relative w-full">
-          {/* Banner (z-[10]) */}
+        {/* STABLE STICKER CONTAINER (Viewer Side) */}
+        <div className="relative w-full" ref={stickerContainerRef}>
+          {/* Banner */}
           <div className="relative h-52 w-full overflow-hidden z-[10]">
             <Image src={profileData.bannerUrl || `https://picsum.photos/seed/banner${profileData.id}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${profileData.bannerOffset || 50}%` }} unoptimized />
           </div>
-          {/* Logo (z-[50]) - Below Stickers */}
+
+          {/* Avatar Section */}
           <div className="relative px-6 -mt-16 flex flex-col items-center z-[50]">
             <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl">
               <AvatarImage src={profileData.profilePictureUrl} className="object-cover" />
               <AvatarFallback className="text-2xl font-black uppercase">{profileData.username?.[0]}</AvatarFallback>
             </Avatar>
           </div>
+
+          {/* STICKERS LAYER (z-[100]) - Perfectly aligned with editor side */}
+          <div className="absolute inset-0 pointer-events-none z-[100]">
+            {stickers.map((sticker) => (
+              <div 
+                key={sticker.id} 
+                className="absolute pointer-events-none select-none" 
+                style={{ 
+                  left: `${sticker.x}%`, 
+                  top: `${sticker.y}%`, 
+                  transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`, 
+                }}
+              >
+                <div className="relative w-24 h-24">
+                  <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* USER INFO SECTION (z-[40]) - Below Stickers & Logo */}
+      {/* USER INFO SECTION (z-[40]) */}
       <div style={{ backgroundColor: colors.userInfo || "transparent" }} className="w-full relative -mt-1 z-[40]">
         <div className="px-6 flex flex-col items-center pb-8">
           <div className="text-center mt-4">

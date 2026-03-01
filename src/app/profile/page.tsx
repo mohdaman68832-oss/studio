@@ -101,7 +101,7 @@ export default function ProfilePage() {
   
   const [editingStickerId, setEditingStickerId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const studioContainerRef = useRef<HTMLDivElement>(null);
+  const stickerContainerRef = useRef<HTMLDivElement>(null);
 
   const profileInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
@@ -212,9 +212,9 @@ export default function ProfilePage() {
   };
 
   const handleStickerPointerMove = (e: React.PointerEvent, id: string) => {
-    if (!isDragging || !studioContainerRef.current || id !== editingStickerId) return;
+    if (!isDragging || !stickerContainerRef.current || id !== editingStickerId) return;
     
-    const rect = studioContainerRef.current.getBoundingClientRect();
+    const rect = stickerContainerRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
 
@@ -268,7 +268,8 @@ export default function ProfilePage() {
       className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden flex flex-col no-scrollbar"
       style={{ backgroundColor: colors.background || "var(--background)" }}
     >
-      <div className="relative w-full flex flex-col" ref={studioContainerRef}>
+      <div className="relative w-full flex flex-col">
+        {/* Header Bar */}
         <div className="h-16 w-full relative z-[70]" style={{ backgroundColor: colors.header }} />
         
         <header className="absolute top-0 left-0 right-0 z-[80] px-6 flex justify-between items-center py-5">
@@ -292,31 +293,9 @@ export default function ProfilePage() {
           </DropdownMenu>
         </header>
 
-        {/* STICKERS LAYER (z-[100]) - MASTER TOP LAYER */}
-        {formData.stickers.map((sticker) => (
-          <div 
-            key={sticker.id} 
-            className={cn(
-              "absolute select-none touch-none z-[100]",
-              editingStickerId === sticker.id ? "pointer-events-auto cursor-move ring-4 ring-primary ring-offset-4 rounded-xl z-[150]" : "pointer-events-none"
-            )} 
-            style={{ 
-              left: `${sticker.x}%`, 
-              top: `${sticker.y}%`, 
-              transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`, 
-              touchAction: 'none'
-            }}
-            onPointerDown={(e) => handleStickerPointerDown(e, sticker.id)}
-            onPointerMove={(e) => handleStickerPointerMove(e, sticker.id)}
-            onPointerUp={handleStickerPointerUp}
-          >
-            <div className="relative w-24 h-24">
-              <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized />
-            </div>
-          </div>
-        ))}
-
-        <div className="relative w-full">
+        {/* STABLE STICKER CONTAINER (Wraps Banner & Avatar) */}
+        <div className="relative w-full" ref={stickerContainerRef}>
+          {/* Banner */}
           <div className="relative h-52 w-full overflow-hidden z-[10]">
             <Image 
               src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} 
@@ -327,16 +306,43 @@ export default function ProfilePage() {
               unoptimized 
             />
           </div>
-          {/* LOGO LAYER (z-[50]) - BELOW STICKERS */}
+
+          {/* Avatar Section */}
           <div className="relative px-6 -mt-16 flex flex-col items-center z-[50]">
             <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl">
               <AvatarImage src={formData.profilePic} className="object-cover" />
               <AvatarFallback className="text-2xl font-black uppercase">{formData.name?.[0] || "U"}</AvatarFallback>
             </Avatar>
           </div>
+
+          {/* STICKERS LAYER (z-[100]) - Relative to this stable container */}
+          <div className="absolute inset-0 pointer-events-none z-[100]">
+            {formData.stickers.map((sticker) => (
+              <div 
+                key={sticker.id} 
+                className={cn(
+                  "absolute select-none touch-none",
+                  editingStickerId === sticker.id ? "pointer-events-auto cursor-move ring-4 ring-primary ring-offset-4 rounded-xl" : "pointer-events-none"
+                )} 
+                style={{ 
+                  left: `${sticker.x}%`, 
+                  top: `${sticker.y}%`, 
+                  transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`, 
+                  touchAction: 'none'
+                }}
+                onPointerDown={(e) => handleStickerPointerDown(e, sticker.id)}
+                onPointerMove={(e) => handleStickerPointerMove(e, sticker.id)}
+                onPointerUp={handleStickerPointerUp}
+              >
+                <div className="relative w-24 h-24">
+                  <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* CONTENT LAYER (z-[40]) - BELOW LOGO & STICKERS */}
+        {/* CONTENT LAYER (z-[40]) - Below Logo & Stickers */}
         <div className="relative z-[40] w-full -mt-1">
           <div style={{ backgroundColor: colors.userInfo || "transparent" }} className="w-full pb-8">
             <div className="px-6 flex flex-col items-center">
