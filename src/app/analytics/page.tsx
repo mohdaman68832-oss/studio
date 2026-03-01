@@ -20,7 +20,7 @@ const DATA = [
 
 export default function AnalyticsPage() {
   const stats = [
-    { label: "Total Ideas", value: "12", icon: Briefcase, color: "text-blue-500" },
+    { label: "Total Posts", value: "12", icon: Briefcase, color: "text-blue-500" },
     { label: "Total Views", value: "4.2k", icon: Eye, color: "text-purple-500" },
     { label: "Avg Rating", value: "4.8", icon: Star, color: "text-yellow-500" },
     { label: "Collabs", value: "8", icon: Users, color: "text-green-500" },
@@ -52,7 +52,7 @@ export default function AnalyticsPage() {
       <Card className="border-none idea-card-shadow rounded-2xl overflow-hidden">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-bold uppercase text-muted-foreground flex items-center gap-2">
-            <Eye size={16} /> Idea Views Trend
+            <Eye size={16} /> Post Views Trend
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0 pr-4">

@@ -113,7 +113,7 @@ export default function SearchPage() {
     <div className="max-w-md mx-auto min-h-screen bg-background p-6 pb-24 space-y-6">
       <header>
         <h1 className="text-2xl font-black text-primary uppercase tracking-tighter">Global Search</h1>
-        <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Profiles • Ideas • Groups</p>
+        <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Profiles • Posts • Groups</p>
       </header>
 
       <div className="flex gap-2 sticky top-4 z-50">
@@ -241,7 +241,7 @@ export default function SearchPage() {
           {filteredResults.ideas.length > 0 && (
             <section className="space-y-4">
               <h3 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2 bg-primary/5 px-3 py-1.5 rounded-full inline-flex">
-                <Lightbulb size={14} /> Ideas ({filteredResults.ideas.length})
+                <Lightbulb size={14} /> Post ({filteredResults.ideas.length})
               </h3>
               <div className="space-y-8">
                 {filteredResults.ideas.map(idea => (
