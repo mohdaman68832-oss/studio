@@ -5,10 +5,15 @@ import { IdeaCard } from "@/components/feed/idea-card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
-import { collection, query, orderBy, doc } from "firebase/firestore";
+import { collection, query, orderBy, doc, addDoc, serverTimestamp } from "firebase/firestore";
 import { useMemo, useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RefreshCcw, ImageIcon, Video, Type } from "lucide-react";
+import { RefreshCcw, ImageIcon, Video, Type, Plus, Loader2 } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 
 const MOCK_IDEAS = [
   {
@@ -36,19 +41,6 @@ const MOCK_IDEAS = [
     innovationScore: 88,
     tags: ["Health", "AI", "VideoDemo"],
     likes: 89,
-  },
-  {
-    id: "3",
-    title: "Minimalist Productivity System",
-    problem: "App overload and digital distraction.",
-    description: "A text-based, ultra-fast productivity system that works in the terminal or as a simple web app. No distractions, just focus.",
-    category: "Business",
-    userName: "Marcus Vane",
-    userAvatar: "https://picsum.photos/seed/user3/100/100",
-    mediaUrl: "", // Text post
-    innovationScore: 76,
-    tags: ["Focus", "Minimalism"],
-    likes: 45,
   }
 ];
 
@@ -62,11 +54,18 @@ const MEME_TYPES = [
 export default function FeedPage() {
   const db = useFirestore();
   const { user } = useUser();
+  const { toast } = useToast();
   const [activeCategory, setActiveCategory] = useState("All");
-  const [activeMemeType, setActiveMemeType] = useState("image"); // Default to Image if "All Memes" is removed
+  const [activeMemeType, setActiveMemeType] = useState("image");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showRefresh, setShowRefresh] = useState(false);
   const [touchStart, setTouchStart] = useState(0);
+
+  // Quick Meme Post State
+  const [isMemeSheetOpen, setIsMemeSheetOpen] = useState(false);
+  const [memeTitle, setMemeTitle] = useState("");
+  const [memeDesc, setMemeDesc] = useState("");
+  const [isPosting, setIsPosting] = useState(false);
 
   const userProfileRef = useMemoFirebase(() => (db && user ? doc(db, "userProfiles", user.uid) : null), [db, user]);
   const { data: profile } = useDoc(userProfileRef);
@@ -86,8 +85,6 @@ export default function FeedPage() {
 
     if (activeCategory === "Meme") {
       filtered = unique.filter(i => i.category?.toLowerCase() === "meme");
-      
-      // Since "all" is removed, we filter strictly by activeMemeType
       filtered = filtered.filter(i => {
         const isVideo = i.mediaUrl && (i.mediaUrl.endsWith('.mp4') || i.mediaUrl.includes('gtv-videos-bucket') || i.mediaUrl.startsWith('data:video'));
         const isText = !i.mediaUrl || i.mediaUrl === "";
@@ -102,6 +99,34 @@ export default function FeedPage() {
 
     return filtered;
   }, [firestoreIdeas, activeCategory, activeMemeType]);
+
+  const handlePostMeme = async () => {
+    if (!db || !user || !memeTitle.trim()) return;
+    setIsPosting(true);
+    try {
+      await addDoc(collection(db, "ideas"), {
+        title: memeTitle,
+        description: memeDesc,
+        category: "Meme",
+        userName: profile?.username || user.displayName || "Innovator",
+        userAvatar: profile?.profilePictureUrl || user.photoURL || "https://picsum.photos/seed/me/100/100",
+        authorId: user.uid,
+        mediaUrl: "", // Text meme
+        innovationScore: 50,
+        tags: ["Meme", "Text"],
+        createdAt: serverTimestamp(),
+        likes: 0
+      });
+      toast({ title: "Meme Posted!", description: "Your text meme is now live." });
+      setIsMemeSheetOpen(false);
+      setMemeTitle("");
+      setMemeDesc("");
+    } catch (e) {
+      toast({ title: "Error", description: "Failed to post meme.", variant: "destructive" });
+    } finally {
+      setIsPosting(false);
+    }
+  };
 
   useEffect(() => {
     const handleTouchStart = (e: TouchEvent) => {
@@ -122,19 +147,13 @@ export default function FeedPage() {
       }, 5000);
     };
 
-    const handleScroll = () => {
-      if (window.scrollY > 300) setShowRefresh(false);
-    };
-
     window.addEventListener('touchstart', handleTouchStart);
     window.addEventListener('touchmove', handleTouchMove);
     window.addEventListener('touchend', handleTouchEnd);
-    window.addEventListener('scroll', handleScroll);
     return () => {
       window.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleTouchEnd);
-      window.removeEventListener('scroll', handleScroll);
     };
   }, [touchStart]);
 
@@ -153,7 +172,7 @@ export default function FeedPage() {
       )}>
         <Button 
           onClick={handleReload}
-          className="rounded-full bg-primary text-white shadow-2xl px-6 py-2 flex items-center gap-2 border-2 border-white/20 hover:scale-105 transition-transform"
+          className="rounded-full bg-primary text-white shadow-2xl px-6 py-2 flex items-center gap-2 border-2 border-white/20"
           disabled={isRefreshing}
         >
           <RefreshCcw size={16} className={cn(isRefreshing && "animate-spin")} />
@@ -163,11 +182,53 @@ export default function FeedPage() {
         </Button>
       </div>
 
-      <header className="mb-6 px-1 flex justify-between items-end">
+      <header className="mb-6 px-1 flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-black text-primary uppercase tracking-tighter">Sphere Feed</h1>
-          <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Innovation at your fingertips</p>
+          <h1 className="text-3xl font-black text-primary uppercase tracking-tighter leading-none">Sphere Feed</h1>
+          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1">Innovation at your fingertips</p>
         </div>
+        
+        {activeCategory === "Meme" && (
+          <Sheet open={isMemeSheetOpen} onOpenChange={setIsMemeSheetOpen}>
+            <SheetTrigger asChild>
+              <Button size="icon" className="rounded-full h-12 w-12 bg-primary shadow-lg shadow-primary/20">
+                <Plus size={24} />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="rounded-t-[2.5rem] h-[50vh] bg-background">
+              <SheetHeader>
+                <SheetTitle className="text-center text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-6">Quick Meme Post</SheetTitle>
+              </SheetHeader>
+              <div className="space-y-6 px-2">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Meme Title</Label>
+                  <Input 
+                    placeholder="Short & funny..." 
+                    className="rounded-2xl h-12 bg-muted/30 border-none"
+                    value={memeTitle}
+                    onChange={(e) => setMemeTitle(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Funny Description</Label>
+                  <Textarea 
+                    placeholder="What makes it funny?" 
+                    className="rounded-2xl min-h-[100px] bg-muted/30 border-none"
+                    value={memeDesc}
+                    onChange={(e) => setMemeDesc(e.target.value)}
+                  />
+                </div>
+                <Button 
+                  className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase shadow-xl"
+                  onClick={handlePostMeme}
+                  disabled={isPosting || !memeTitle.trim()}
+                >
+                  {isPosting ? <Loader2 className="animate-spin" /> : "Post Meme"}
+                </Button>
+              </div>
+            </SheetContent>
+          </Sheet>
+        )}
       </header>
 
       <div className="flex w-full gap-2 -mx-4 px-4 pt-2 pb-4 mb-2 border-b border-border/50">
@@ -177,7 +238,7 @@ export default function FeedPage() {
             variant={cat === activeCategory ? "default" : "secondary"} 
             onClick={() => {
               setActiveCategory(cat);
-              if (cat === "Meme") setActiveMemeType("image"); // Default to image when switching to Meme
+              if (cat === "Meme") setActiveMemeType("image");
             }}
             className={cn(
               "flex-1 rounded-full h-9 text-[10px] font-black uppercase tracking-widest transition-all",
@@ -228,12 +289,12 @@ export default function FeedPage() {
             {ideasToDisplay.length > 0 ? (
               ideasToDisplay.map((idea, index) => (
                 <div key={idea.id} className="animate-in fade-in slide-in-from-bottom-4 duration-300">
-                  <IdeaCard idea={idea as any} priority={index < 2} isMemeView={activeCategory === "Meme"} />
+                  <IdeaCard idea={idea as any} priority={index < 2} />
                 </div>
               ))
             ) : (
               <div className="py-20 text-center opacity-30">
-                <p className="text-xs font-black uppercase tracking-widest">No matching memes found</p>
+                <p className="text-[10px] font-black uppercase tracking-widest">No matching content found</p>
               </div>
             )}
           </>
