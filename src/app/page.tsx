@@ -75,7 +75,16 @@ export default function FeedPage() {
         const isMeme = i.category?.toLowerCase() === "meme" || i.tags?.some((t: string) => t.toLowerCase() === "meme");
         if (!isMeme) return false;
 
-        const mediaType = i.mediaUrl ? (i.mediaUrl.includes('mp4') || i.mediaUrl.includes('video') ? 'video' : 'image') : 'text';
+        let mediaType = "text";
+        if (i.mediaUrl && i.mediaUrl !== "") {
+          const url = i.mediaUrl.toLowerCase();
+          if (url.includes('mp4') || url.includes('video') || url.includes('mov') || url.startsWith('data:video')) {
+            mediaType = "video";
+          } else {
+            mediaType = "image";
+          }
+        }
+        
         return mediaType === activeMemeFormat;
       });
     }

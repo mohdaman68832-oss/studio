@@ -137,7 +137,6 @@ function PostFormContent() {
     try {
       await addDoc(collection(db, "ideas"), {
         title: formData.title,
-        // If it's a meme, we skip the problem field
         problem: isMeme ? "Meme content" : formData.problem,
         description: formData.description,
         category: category,
@@ -147,7 +146,7 @@ function PostFormContent() {
         authorUsername: profileData?.username || "user",
         mediaUrl: mediaType === 'text' ? "" : (previewUrl || ""),
         innovationScore: isMeme ? 100 : 75,
-        // Include category and media type in tags
+        // Always include category in tags to ensure Feed filtering works
         tags: [category, mediaType || "text"],
         createdAt: serverTimestamp(),
         likes: 0
