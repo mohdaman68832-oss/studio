@@ -29,7 +29,7 @@ import { Switch } from "@/components/ui/switch";
 import Image from "next/image";
 import { useUser, useAuth, useFirestore, useDoc, useMemoFirebase, useCollection } from "@/firebase";
 import { signOut } from "firebase/auth";
-import { doc, setDoc, collection, query, where, orderBy, increment, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, collection, query, where, orderBy } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
