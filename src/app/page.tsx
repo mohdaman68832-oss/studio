@@ -74,19 +74,19 @@ export default function FeedPage() {
     };
 
     if (activeCategory === "All") {
-      // EXCLUDE all memes from the 'All' page
+      // EXCLUDE all memes from the 'All' page to keep feeds segregated
       return unique.filter(i => !isMemePost(i));
     }
     
     if (activeCategory === "Meme") {
-      // Show ONLY memes, filtered by format
+      // Show ONLY memes, strictly segregated by format
       return unique.filter(i => {
         if (!isMemePost(i)) return false;
 
         let mediaType = "text";
         if (i.mediaUrl && i.mediaUrl !== "") {
           const url = i.mediaUrl.toLowerCase();
-          const isVideoUrl = url.includes('mp4') || url.includes('video') || url.includes('mov') || url.startsWith('data:video');
+          const isVideoUrl = url.includes('mp4') || url.includes('video') || url.includes('mov') || url.includes('webm') || url.startsWith('data:video');
           mediaType = isVideoUrl ? "video" : "image";
         }
         
