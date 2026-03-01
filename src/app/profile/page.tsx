@@ -6,15 +6,15 @@ import { Button } from "@/components/ui/button";
 import { 
   Settings, LogOut, Camera, 
   Loader2, 
-  Image as LucideImage, Video, Type,
   X,
   UserCog,
   CheckCircle,
   Sun,
   Moon,
-  LayoutGrid
+  Palette,
+  Sticker as StickerIcon,
+  Trash2
 } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -29,11 +29,10 @@ import { Switch } from "@/components/ui/switch";
 import Image from "next/image";
 import { useUser, useAuth, useFirestore, useDoc, useMemoFirebase, useCollection } from "@/firebase";
 import { signOut } from "firebase/auth";
-import { doc, updateDoc, collection as fsCollection, query, where, orderBy } from "firebase/firestore";
+import { doc, updateDoc, collection as fsCollection, query, where } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { IdeaCard } from "@/components/feed/idea-card";
 
 interface Sticker {
   id: string;
@@ -84,7 +83,6 @@ export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   
-  const stickerContainerRef = useRef<HTMLDivElement>(null);
   const profileInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
@@ -101,18 +99,6 @@ export default function ProfilePage() {
 
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [db, user]);
   const { data: profileData, isLoading: isProfileLoading } = useDoc(profileRef);
-
-  // My Posts Query - Using authorId to filter only my posts
-  const myPostsQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return query(
-      fsCollection(db, "ideas"),
-      where("authorId", "==", user.uid),
-      orderBy("createdAt", "desc")
-    );
-  }, [db, user]);
-
-  const { data: myPosts, isLoading: isPostsLoading } = useCollection(myPostsQuery);
 
   const followingQuery = useMemoFirebase(() => (db && user ? query(fsCollection(db, "follows"), where("followerId", "==", user.uid)) : null), [db, user]);
   const followersQuery = useMemoFirebase(() => (db && user ? query(fsCollection(db, "follows"), where("followedId", "==", user.uid)) : null), [db, user]);
@@ -181,6 +167,18 @@ export default function ProfilePage() {
     }
   };
 
+  const addSticker = (url: string) => {
+    const newSticker: Sticker = {
+      id: Math.random().toString(36).substr(2, 9),
+      url,
+      x: 50,
+      y: 50,
+      rotation: Math.random() * 20 - 10,
+      scale: 1
+    };
+    setFormData(prev => ({ ...prev, stickers: [...prev.stickers, newSticker] }));
+  };
+
   if (isUserLoading || isProfileLoading) return <div className="flex h-screen items-center justify-center bg-background"><Loader2 className="animate-spin text-primary h-8 w-8" /></div>;
   if (!user) return null;
 
@@ -214,7 +212,7 @@ export default function ProfilePage() {
           </DropdownMenu>
         </header>
 
-        <div className="relative w-full" ref={stickerContainerRef}>
+        <div className="relative w-full">
           <div className="relative h-56 w-full overflow-hidden z-[10]">
             <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized />
           </div>
@@ -223,6 +221,25 @@ export default function ProfilePage() {
               <AvatarImage src={formData.profilePic} className="object-cover" />
               <AvatarFallback className="text-2xl font-black uppercase">{formData.name?.[0]}</AvatarFallback>
             </Avatar>
+          </div>
+
+          {/* Stickers Rendering */}
+          <div className="absolute inset-0 pointer-events-none z-[60]">
+            {formData.stickers.map((sticker) => (
+              <div 
+                key={sticker.id} 
+                className="absolute pointer-events-none select-none" 
+                style={{ 
+                  left: `${sticker.x}%`, 
+                  top: `${sticker.y}%`, 
+                  transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg) scale(${sticker.scale})`, 
+                }}
+              >
+                <div className="relative w-20 h-20">
+                  <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -243,7 +260,7 @@ export default function ProfilePage() {
         <div style={{ backgroundColor: formData.customColors.statsSection }} className="w-full py-10 px-10 relative">
           <div className="grid grid-cols-3 gap-6 w-full">
             <div className="text-center">
-              <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{myPosts?.length || profileData?.totalIdeasPosted || 0}</p>
+              <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{profileData?.totalIdeasPosted || 0}</p>
               <p className="text-[8px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(formData.customColors.statsSection) }}>Post</p>
             </div>
             <div className="text-center">
@@ -256,38 +273,6 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
-      </div>
-
-      <div style={{ backgroundColor: formData.customColors.tabsContent }} className="flex-1 relative z-[40]">
-        <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="w-full bg-transparent h-14 border-b border-border/20" style={{ backgroundColor: formData.customColors.tabsList }}>
-            <TabsTrigger value="overview" className="flex-1 border-b-4 border-transparent data-[state=active]:border-primary transition-all">
-              <LayoutGrid size={20} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
-            </TabsTrigger>
-          </TabsList>
-          
-          <div className="p-4 space-y-8">
-            <TabsContent value="overview" className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-               {isPostsLoading ? (
-                 <div className="flex justify-center py-20">
-                   <Loader2 className="animate-spin text-primary opacity-20" size={32} />
-                 </div>
-               ) : myPosts && myPosts.length > 0 ? (
-                 <div className="space-y-8">
-                   {myPosts.map((idea) => (
-                     <IdeaCard key={idea.id} idea={idea as any} />
-                   ))}
-                 </div>
-               ) : (
-                 <div className="py-24 text-center space-y-4 opacity-20">
-                    <LucideImage size={48} className="mx-auto" />
-                    <p className="text-[10px] font-black uppercase tracking-[0.3em]">No Innovations Shared</p>
-                    <p className="text-[9px] font-medium">Start sharing your vision on the main feed.</p>
-                 </div>
-               )}
-            </TabsContent>
-          </div>
-        </Tabs>
       </div>
 
       <Dialog open={isOptimizeModalOpen} onOpenChange={setIsOptimizeModalOpen}>
@@ -303,6 +288,41 @@ export default function ProfilePage() {
                 <div><p className="text-[10px] font-black uppercase tracking-widest">Dark Mode Theme</p></div>
               </div>
               <Switch checked={isDarkMode} onCheckedChange={setIsDarkMode} />
+            </div>
+
+            <div className="space-y-4">
+              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2"><Palette size={14}/> Custom Colors</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {['#FF4500', '#FFD700', '#000000', '#FFFFFF', '#F5F5F5', '#8B4513'].map(color => (
+                  <button 
+                    key={color} 
+                    className="h-8 rounded-full border border-border" 
+                    style={{ backgroundColor: color }}
+                    onClick={() => setFormData(p => ({ ...p, customColors: { ...p.customColors, background: color } }))}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2"><StickerIcon size={14}/> Add Sticker</Label>
+              <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
+                {[
+                  "https://picsum.photos/seed/sticker1/100/100",
+                  "https://picsum.photos/seed/sticker2/100/100",
+                  "https://picsum.photos/seed/sticker3/100/100",
+                  "https://picsum.photos/seed/sticker4/100/100"
+                ].map(url => (
+                  <button key={url} className="shrink-0 w-16 h-16 rounded-2xl border-2 border-dashed border-primary/20 p-1" onClick={() => addSticker(url)}>
+                    <Image src={url} alt="sticker option" width={60} height={60} className="object-contain" />
+                  </button>
+                ))}
+              </div>
+              {formData.stickers.length > 0 && (
+                <Button variant="ghost" size="sm" className="text-[8px] font-black uppercase text-secondary" onClick={() => setFormData(p => ({ ...p, stickers: [] }))}>
+                  <Trash2 size={10} className="mr-1" /> Clear All Stickers
+                </Button>
+              )}
             </div>
 
             <div className="space-y-4">

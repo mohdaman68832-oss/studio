@@ -3,15 +3,13 @@
 import { use, useState, useMemo, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, MessageSquare, Loader2, UserPlus, UserCheck, LayoutGrid, Image as LucideImage } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ChevronLeft, MessageSquare, Loader2, UserPlus, UserCheck } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from "@/firebase";
-import { collection as fsCollection, query, where, limit, doc, setDoc, deleteDoc, serverTimestamp, orderBy } from "firebase/firestore";
+import { collection as fsCollection, query, where, limit, doc, setDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { IdeaCard } from "@/components/feed/idea-card";
 
 interface Sticker {
   id: string;
@@ -49,7 +47,6 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
   const db = useFirestore();
   const { user: currentUser } = useUser();
   const { toast } = useToast();
-  const stickerContainerRef = useRef<HTMLDivElement>(null);
 
   const userQuery = useMemoFirebase(() => {
     if (!db) return null;
@@ -58,18 +55,6 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
 
   const { data: userProfiles, isLoading } = useCollection(userQuery);
   const profileData = userProfiles?.[0];
-
-  // Posts query for this user
-  const userPostsQuery = useMemoFirebase(() => {
-    if (!db || !profileData) return null;
-    return query(
-      fsCollection(db, "ideas"),
-      where("authorId", "==", profileData.id),
-      orderBy("createdAt", "desc")
-    );
-  }, [db, profileData]);
-
-  const { data: userPosts, isLoading: isPostsLoading } = useCollection(userPostsQuery);
 
   const followRef = useMemoFirebase(() => {
     if (!db || !currentUser || !profileData) return null;
@@ -124,7 +109,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
           <div className="w-10" />
         </header>
 
-        <div className="relative w-full" ref={stickerContainerRef}>
+        <div className="relative w-full">
           <div className="relative h-52 w-full overflow-hidden z-[10]">
             <Image src={profileData.bannerUrl || `https://picsum.photos/seed/banner${profileData.id}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${profileData.bannerOffset || 50}%` }} unoptimized />
           </div>
@@ -180,10 +165,10 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         </div>
       </div>
 
-      <div style={{ backgroundColor: colors.statsSection || "transparent" }} className="w-full py-8 px-10 relative z-[40]">
-        <div className="grid grid-cols-3 gap-6 w-full">
+      <div style={{ backgroundColor: colors.statsSection || "transparent" }} className="w-full py-8 px-10 relative z-[40] flex-1">
+        <div className="grid grid-cols-3 gap-6 w-full mt-10">
           <div className="text-center">
-            <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{userPosts?.length || profileData.totalIdeasPosted || 0}</p>
+            <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{profileData.totalIdeasPosted || 0}</p>
             <p className="text-[8px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(colors.statsSection) }}>Post</p>
           </div>
           <div className="text-center">
@@ -195,37 +180,6 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
             <p className="text-[8px] uppercase font-black opacity-40 tracking-widest" style={{ color: getContrastColor(colors.statsSection) }}>Circling</p>
           </div>
         </div>
-      </div>
-
-      <div style={{ backgroundColor: colors.tabsContent || "transparent" }} className="w-full flex-1 relative z-[40]">
-        <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="w-full bg-transparent border-none rounded-none px-6 h-14" style={{ backgroundColor: colors.tabsList }}>
-            <TabsTrigger value="overview" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
-              <LayoutGrid size={20} style={{ color: getContrastColor(colors.tabsList) }} />
-            </TabsTrigger>
-          </TabsList>
-          
-          <div className="p-4 space-y-6">
-            <TabsContent value="overview" className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-               {isPostsLoading ? (
-                 <div className="flex justify-center py-20">
-                   <Loader2 className="animate-spin text-primary opacity-20" size={32} />
-                 </div>
-               ) : userPosts && userPosts.length > 0 ? (
-                 <div className="space-y-8">
-                   {userPosts.map((idea) => (
-                     <IdeaCard key={idea.id} idea={idea as any} />
-                   ))}
-                 </div>
-               ) : (
-                 <div className="py-24 text-center opacity-20 space-y-4">
-                    <LucideImage size={48} className="mx-auto" />
-                    <p className="text-[10px] font-black uppercase tracking-[0.3em]">No innovations found</p>
-                 </div>
-               )}
-            </TabsContent>
-          </div>
-        </Tabs>
       </div>
     </div>
   );
