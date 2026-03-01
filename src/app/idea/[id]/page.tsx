@@ -56,7 +56,20 @@ export default function IdeaDetailPage() {
     };
 
     // Add suggestion to the idea subcollection
-    await addDoc(collection(db, "ideas", ideaId, "suggestions"), commentData);
+    addDoc(collection(db, "ideas", ideaId, "suggestions"), commentData);
+
+    // Send notification to post creator if it's not the same person
+    const postCreatorId = idea.authorId || idea.creatorId;
+    if (postCreatorId && postCreatorId !== currentUser.uid) {
+      addDoc(collection(db, "users", postCreatorId, "notifications"), {
+        userId: postCreatorId,
+        type: "newComment",
+        sourceId: ideaId,
+        message: `${currentUser.displayName || "An innovator"} messaged on your post: "${commentText.substring(0, 40)}${commentText.length > 40 ? '...' : ''}"`,
+        isRead: false,
+        createdAt: serverTimestamp(),
+      });
+    }
 
     setCommentText("");
   };

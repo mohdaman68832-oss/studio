@@ -1,10 +1,9 @@
-
 "use client";
 
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { Search, Bell, Globe, Loader2, Plus } from "lucide-react";
+import { Search, Bell, Globe, Loader2, Plus, MessageCircle } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy, limit } from "firebase/firestore";
 import { cn } from "@/lib/utils";
@@ -101,20 +100,26 @@ export default function HubPage() {
             </div>
           ) : notifications && notifications.length > 0 ? (
             notifications.map((notif) => (
-              <div key={notif.id} className={cn(
-                "flex items-start gap-4 p-4 rounded-[2rem] border shadow-sm transition-all bg-card",
-                notif.isRead ? "border-border/30 opacity-60" : "border-primary/20 shadow-primary/5"
-              )}>
-                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                  <Bell size={18} className="text-primary" />
+              <Link key={notif.id} href={notif.type === 'newComment' ? `/idea/${notif.sourceId}` : '#'}>
+                <div className={cn(
+                  "flex items-start gap-4 p-4 rounded-[2rem] border shadow-sm transition-all bg-card mb-4",
+                  notif.isRead ? "border-border/30 opacity-60" : "border-primary/20 shadow-primary/5 hover:border-primary/40"
+                )}>
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    {notif.type === 'newComment' ? (
+                      <MessageCircle size={18} className="text-primary" />
+                    ) : (
+                      <Bell size={18} className="text-primary" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-bold text-foreground leading-snug">{notif.message}</p>
+                    <p className="text-[9px] text-muted-foreground font-black uppercase mt-1">
+                      {notif.createdAt && new Date(notif.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[11px] font-bold text-foreground leading-snug">{notif.message}</p>
-                  <p className="text-[9px] text-muted-foreground font-black uppercase mt-1">
-                    {notif.createdAt && new Date(notif.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </p>
-                </div>
-              </div>
+              </Link>
             ))
           ) : (
             <div className="py-24 text-center space-y-4 opacity-30">
