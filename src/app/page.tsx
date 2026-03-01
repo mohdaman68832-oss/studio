@@ -69,10 +69,14 @@ export default function FeedPage() {
     
     if (activeCategory === "All") return unique;
     
-    // Filtering for Memes specifically (by category OR tag)
+    // Advanced Meme Tag Detection (Case-Insensitive)
     if (activeCategory === "Meme") {
       return unique.filter(i => {
-        const isMeme = i.category?.toLowerCase() === "meme" || i.tags?.some((t: string) => t.toLowerCase() === "meme");
+        const categoryMatch = i.category?.toLowerCase() === "meme";
+        const tagMatch = i.tags?.some((t: string) => t.toLowerCase() === "meme");
+        const descriptionMatch = i.description?.toLowerCase().includes("#meme");
+        
+        const isMeme = categoryMatch || tagMatch || descriptionMatch;
         if (!isMeme) return false;
 
         let mediaType = "text";

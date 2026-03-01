@@ -63,7 +63,6 @@ function PostFormContent() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [category, setCategory] = useState("Technology");
-  // Check if current selection is a Meme
   const isMeme = category.toLowerCase() === "meme";
 
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [user, db]);
@@ -146,8 +145,8 @@ function PostFormContent() {
         authorUsername: profileData?.username || "user",
         mediaUrl: mediaType === 'text' ? "" : (previewUrl || ""),
         innovationScore: isMeme ? 100 : 75,
-        // Always include category in tags to ensure Feed filtering works
-        tags: [category, mediaType || "text"],
+        // Tags must include the category for cross-page real-time filtering
+        tags: [category.toLowerCase(), mediaType || "text", "sphere"],
         createdAt: serverTimestamp(),
         likes: 0
       });
