@@ -10,7 +10,7 @@
     --card-foreground: 25 20% 12%;
     --popover: 0 0% 100%;
     --popover-foreground: 25 20% 12%;
-    --primary: 25 100% 45%; /* Deep Vibrant Orange */
+    --primary: 25 100% 45%; /* Deep Vibrant Orange (Darker for Light Mode) */
     --primary-foreground: 0 0% 100%;
     --secondary: 35 100% 50%; /* Golden Orange */
     --secondary-foreground: 0 0% 100%;
@@ -33,7 +33,7 @@
     --card-foreground: 25 10% 95%;
     --popover: 25 12% 10%;
     --popover-foreground: 25 10% 95%;
-    --primary: 35 100% 65%; /* Bright Orange for visibility */
+    --primary: 35 100% 65%; /* Bright Orange (Lighter for Dark Mode) */
     --primary-foreground: 25 10% 5%;
     --secondary: 35 90% 55%;
     --secondary-foreground: 25 10% 5%;

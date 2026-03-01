@@ -26,7 +26,7 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogPortal } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -237,13 +237,13 @@ export default function ProfilePage() {
   const activeSticker = formData.stickers.find(s => s.id === editingStickerId);
 
   return (
-    <div className="max-w-md mx-auto min-h-screen flex flex-col transition-all duration-500" style={{ backgroundColor: formData.customColors.background || "var(--background)" }}>
+    <div className="max-w-md mx-auto min-h-screen flex flex-col transition-all duration-500 overflow-x-hidden no-scrollbar" style={{ backgroundColor: formData.customColors.background || "var(--background)" }}>
       {/* HEADER & BANNER SECTION */}
       <div className="relative w-full shrink-0">
         <div className="h-16 w-full relative z-[70]" style={{ backgroundColor: formData.customColors.header }} />
         <header className="absolute top-0 left-0 right-0 z-[80] px-6 py-5 flex justify-between items-center">
           <h1 className="text-2xl font-black uppercase tracking-tighter" style={{ color: getContrastColor(formData.customColors.header) }}>Sphere</h1>
-          <DropdownMenu>
+          <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full">
                 <Settings size={24} style={{ color: getContrastColor(formData.customColors.header) }} />

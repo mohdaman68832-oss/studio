@@ -34,7 +34,11 @@ export default function ChatPage() {
     );
   }
 
-  if (!user) return null;
+  if (!user) return (
+    <div className="flex h-screen items-center justify-center bg-background p-10 text-center">
+      <p className="text-sm font-black uppercase text-muted-foreground">Please sign in to view messages.</p>
+    </div>
+  );
 
   return (
     <div className="max-w-md mx-auto min-h-screen bg-background pt-8 pb-24">
