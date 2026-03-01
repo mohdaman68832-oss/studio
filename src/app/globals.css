@@ -83,32 +83,33 @@
 }
 
 /* Custom Logo Animations */
-@keyframes ring-orbit {
-  0% { transform: rotate(0deg) translateY(-8px); }
-  50% { transform: rotate(180deg) translateY(8px); }
-  100% { transform: rotate(360deg) translateY(-8px); }
-}
-
-@keyframes logo-spin-y {
-  0% { transform: perspective(1000px) rotateY(0deg); }
-  100% { transform: perspective(1000px) rotateY(360deg); }
+@keyframes bubble-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-8px) rotate(-3deg); }
+  50% { transform: translateY(4px) rotate(0deg); }
+  75% { transform: translateY(-4px) rotate(3deg); }
 }
 
 @keyframes eye-blink {
-  0%, 45%, 55%, 100% { transform: scaleY(1); opacity: 1; }
-  50% { transform: scaleY(0.1); opacity: 0.7; }
+  0%, 45%, 55%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(0.1); }
 }
 
-.animate-ring-orbit {
-  animation: ring-orbit 4s linear infinite;
-  transform-origin: center;
+@keyframes eye-look {
+  0%, 20%, 80%, 100% { transform: translateX(0); }
+  30%, 45% { transform: translateX(-5px); }
+  55%, 70% { transform: translateX(5px); }
 }
 
-.animate-logo-spin-y {
-  animation: logo-spin-y 12s ease-in-out infinite;
+.animate-bubble-float {
+  animation: bubble-float 4s ease-in-out infinite;
 }
 
 .animate-eye-blink {
   animation: eye-blink 3s ease-in-out infinite;
   transform-origin: center;
+}
+
+.animate-eye-look {
+  animation: eye-look 5s ease-in-out infinite;
 }

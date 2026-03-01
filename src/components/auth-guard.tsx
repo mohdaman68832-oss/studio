@@ -8,33 +8,33 @@ import { doc } from 'firebase/firestore';
 
 /**
  * Animated Logo Loader Component
+ * Custom: 'm' bubble floats and looks around, ring removed.
  */
 function LogoLoader() {
   return (
     <div className="flex flex-col items-center gap-8 animate-in fade-in duration-700">
       <div className="relative w-40 h-40 flex items-center justify-center">
-        {/* Main 'm' Speech Bubble with Vertical Spin */}
-        <div className="relative z-10 animate-logo-spin-y">
-          <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* Main 'm' Speech Bubble with Floating and Looking animation */}
+        <div className="relative z-10 animate-bubble-float">
+          <svg width="140" height="140" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
             {/* The 'm' Shape stylized as a speech bubble */}
             <path 
               d="M20 40C20 28.9543 28.9543 20 40 20H80C91.0457 20 100 28.9543 100 40V70C100 81.0457 91.0457 90 80 90H45L20 105V40Z" 
               fill="#FF4500" 
             />
-            {/* Blinking Eyes (Rectangular Slits) */}
-            <rect x="45" y="45" width="6" height="15" rx="3" fill="white" className="animate-eye-blink" />
-            <rect x="69" y="45" width="6" height="15" rx="3" fill="white" className="animate-eye-blink" />
+            
+            {/* Eyes Group with Look Around & Blink animations */}
+            <g className="animate-eye-look">
+              <g className="animate-eye-blink">
+                {/* Blinking Eyes (Rectangular Slits) */}
+                <rect x="45" y="45" width="6" height="15" rx="3" fill="white" />
+                <rect x="69" y="45" width="6" height="15" rx="3" fill="white" />
+              </g>
+            </g>
             
             {/* Top Right Dot from the original logo */}
             <circle cx="105" cy="15" r="8" fill="#FF4500" />
           </svg>
-        </div>
-
-        {/* Orbiting Ring */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-[160px] h-[60px] border-[6px] border-[#FF4500] rounded-[100%] opacity-80 animate-ring-orbit" 
-               style={{ transform: 'rotateX(75deg)' }}>
-          </div>
         </div>
       </div>
 
