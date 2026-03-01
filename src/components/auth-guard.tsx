@@ -22,7 +22,7 @@ function LogoLoader() {
             />
             <g className="animate-eye-look">
               <g className="animate-eye-blink">
-                {/* Refined, balanced eyes - Smaller size for elegance */}
+                {/* Balanced eyes - 16x28 size as requested */}
                 <rect x="35" y="42" width="16" height="28" rx="8" fill="white" />
                 <rect x="69" y="42" width="16" height="28" rx="8" fill="white" />
               </g>
