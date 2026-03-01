@@ -69,7 +69,7 @@ export default function FeedPage() {
     const isMemePost = (i: any) => {
       const categoryMatch = i.category?.toLowerCase() === "meme";
       const tagMatch = i.tags?.some((t: string) => t.toLowerCase() === "meme");
-      const descriptionMatch = i.description?.toLowerCase().includes("#meme");
+      const descriptionMatch = i.description?.toLowerCase().includes("#meme") || i.description?.toLowerCase().includes("meme");
       return !!(categoryMatch || tagMatch || descriptionMatch);
     };
 
@@ -83,14 +83,21 @@ export default function FeedPage() {
       return unique.filter(i => {
         if (!isMemePost(i)) return false;
 
-        let mediaType = "text";
+        let detectedType = "text";
         if (i.mediaUrl && i.mediaUrl !== "") {
           const url = i.mediaUrl.toLowerCase();
-          const isVideoUrl = url.includes('mp4') || url.includes('video') || url.includes('mov') || url.includes('webm') || url.startsWith('data:video');
-          mediaType = isVideoUrl ? "video" : "image";
+          const isVideoUrl = 
+            url.endsWith('.mp4') || 
+            url.endsWith('.mov') || 
+            url.endsWith('.webm') || 
+            url.endsWith('.avi') ||
+            url.includes('gtv-videos-bucket') || 
+            url.startsWith('data:video');
+          
+          detectedType = isVideoUrl ? "video" : "image";
         }
         
-        return mediaType === activeMemeFormat;
+        return detectedType === activeMemeFormat;
       });
     }
 
@@ -163,7 +170,10 @@ export default function FeedPage() {
           <Button 
             key={cat} 
             variant={cat === activeCategory ? "default" : "secondary"} 
-            onClick={() => setActiveCategory(cat)}
+            onClick={() => {
+              setActiveCategory(cat);
+              if (cat === "Meme") setActiveMemeFormat("image");
+            }}
             className={cn(
               "flex-1 rounded-full h-9 text-[10px] font-black uppercase tracking-widest transition-all",
               cat === activeCategory ? "bg-primary shadow-lg shadow-primary/20 text-white" : "bg-white border-none text-muted-foreground hover:text-primary"

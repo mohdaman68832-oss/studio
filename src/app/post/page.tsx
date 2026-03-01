@@ -63,7 +63,8 @@ function PostFormContent() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [category, setCategory] = useState("Technology");
-  // Check if current category or description contains meme tag
+  
+  // Dynamic Check: Is it a meme?
   const isMeme = category.toLowerCase() === "meme";
 
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [user, db]);
@@ -146,7 +147,6 @@ function PostFormContent() {
         authorUsername: profileData?.username || "user",
         mediaUrl: mediaType === 'text' ? "" : (previewUrl || ""),
         innovationScore: isMeme ? 100 : 75,
-        // Ensure 'meme' is in tags if selected or in description
         tags: [
           category.toLowerCase(), 
           mediaType || "text", 
