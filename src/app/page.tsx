@@ -195,7 +195,11 @@ export default function FeedPage() {
                 <Plus size={24} />
               </Button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="rounded-t-[2.5rem] h-[50vh] bg-background">
+            <SheetContent 
+              side="bottom" 
+              className="rounded-t-[2.5rem] h-[50vh] bg-background"
+              onOpenAutoFocus={(e) => e.preventDefault()}
+            >
               <SheetHeader>
                 <SheetTitle className="text-center text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-6">Quick Meme Post</SheetTitle>
               </SheetHeader>
