@@ -21,9 +21,9 @@ function LogoLoader() {
             />
             <g className="animate-eye-look">
               <g className="animate-eye-blink">
-                {/* Balanced eyes as requested - slightly smaller for elegance */}
-                <rect x="48" y="54" width="6" height="10" rx="3" fill="white" />
-                <rect x="66" y="54" width="6" height="10" rx="3" fill="white" />
+                {/* Balanced eyes as requested - Elegant smaller size */}
+                <rect x="49" y="56" width="4" height="8" rx="2" fill="white" />
+                <rect x="67" y="56" width="4" height="8" rx="2" fill="white" />
               </g>
             </g>
             <circle cx="105" cy="15" r="8" fill="#FF4500" />
@@ -44,7 +44,7 @@ function LogoLoader() {
 }
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { user, loading: isUserLoading } = useUser();
+  const { user, isUserLoading } = useUser();
   const db = useFirestore();
   const router = useRouter();
   const pathname = usePathname();
@@ -63,13 +63,11 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         router.push('/login');
       }
     } else {
-      // If user is logged in but doesn't have a profile, force setup
       if (!profileData && !isProfileLoading) {
         if (!isSetupPage) {
           router.push('/setup');
         }
       } else if (profileData) {
-        // If user has a profile, never let them back to auth or setup
         if (isAuthPage || isSetupPage) {
           router.push('/');
         }
