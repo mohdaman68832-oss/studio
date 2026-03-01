@@ -67,17 +67,23 @@ export default function FeedPage() {
     const base = firestoreIdeas && firestoreIdeas.length > 0 ? [...firestoreIdeas] : MOCK_IDEAS;
     const unique = Array.from(new Map(base.map(item => [item.id, item])).values());
     
-    if (activeCategory === "All") return unique;
+    // Helper to identify if a post is a meme
+    const isMemePost = (i: any) => {
+      const categoryMatch = i.category?.toLowerCase() === "meme";
+      const tagMatch = i.tags?.some((t: string) => t.toLowerCase() === "meme");
+      const descriptionMatch = i.description?.toLowerCase().includes("#meme");
+      return !!(categoryMatch || tagMatch || descriptionMatch);
+    };
+
+    if (activeCategory === "All") {
+      // EXCLUDE memes from the 'All' page as per user request
+      return unique.filter(i => !isMemePost(i));
+    }
     
-    // Advanced Meme Tag Detection (Case-Insensitive)
     if (activeCategory === "Meme") {
+      // Show ONLY memes, filtered by selected format
       return unique.filter(i => {
-        const categoryMatch = i.category?.toLowerCase() === "meme";
-        const tagMatch = i.tags?.some((t: string) => t.toLowerCase() === "meme");
-        const descriptionMatch = i.description?.toLowerCase().includes("#meme");
-        
-        const isMeme = categoryMatch || tagMatch || descriptionMatch;
-        if (!isMeme) return false;
+        if (!isMemePost(i)) return false;
 
         let mediaType = "text";
         if (i.mediaUrl && i.mediaUrl !== "") {
