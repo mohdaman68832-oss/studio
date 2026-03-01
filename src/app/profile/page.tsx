@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -72,7 +73,8 @@ function getContrastColor(hexColor: string | undefined): string {
   const g = parseInt(hex.substring(2, 4), 16);
   const b = parseInt(hex.substring(4, 6), 16);
   const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-  return brightness >= 128 ? '#1A1A1A' : '#FFFFFF';
+  // If background is light, use primary orange instead of dark grey
+  return brightness >= 128 ? 'hsl(var(--primary))' : '#FFFFFF';
 }
 
 const toBase64 = (file: File): Promise<string> =>
@@ -140,6 +142,13 @@ export default function ProfilePage() {
     else document.documentElement.classList.remove('dark');
   }, [isDarkMode]);
 
+  // Force body interaction cleanup after modal closes
+  useEffect(() => {
+    if (!isOptimizeModalOpen) {
+      document.body.style.pointerEvents = 'auto';
+    }
+  }, [isOptimizeModalOpen]);
+
   const handleSignOut = async () => { 
     await signOut(auth); 
     router.push("/login"); 
@@ -164,7 +173,7 @@ export default function ProfilePage() {
       }, { merge: true });
 
       toast({ title: "Profile Optimized", description: "All changes synced." });
-      setIsOptimizeModalOpen(false);
+      setTimeout(() => setIsOptimizeModalOpen(false), 300);
     } catch (error: any) {
       toast({ variant: "destructive", title: "Save Error", description: error.message });
     } finally {
@@ -231,7 +240,7 @@ export default function ProfilePage() {
     }
   };
 
-  if (isUserLoading || isProfileLoading) return <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin text-primary h-8 w-8" /></div>;
+  if (isUserLoading || isProfileLoading) return <div className="flex h-screen items-center justify-center bg-background"><Loader2 className="animate-spin text-primary h-8 w-8" /></div>;
   if (!user) return null;
 
   const activeSticker = formData.stickers.find(s => s.id === editingStickerId);
@@ -262,7 +271,7 @@ export default function ProfilePage() {
           </DropdownMenu>
         </header>
 
-        {/* PERSISTENT STICKER CONTAINER */}
+        {/* PERSISTENT STICKER CONTAINER - Percentage based logic */}
         <div className="relative w-full" ref={stickerContainerRef}>
           <div className="relative h-56 w-full overflow-hidden z-[10]">
             <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized />
@@ -301,7 +310,6 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* CONTENT LAYER */}
       <div className="relative z-[40] w-full -mt-1">
         <div style={{ backgroundColor: formData.customColors.userInfo }} className="px-6 flex flex-col items-center pb-8">
           <div className="text-center mt-4">
@@ -333,13 +341,18 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* TABS LAYER */}
       <div style={{ backgroundColor: formData.customColors.tabsContent }} className="flex-1 relative z-[40] pb-32">
         <Tabs defaultValue="photo" className="w-full">
           <TabsList className="w-full bg-transparent h-14" style={{ backgroundColor: formData.customColors.tabsList }}>
-            <TabsTrigger value="photo" className="flex-1 border-b-4 border-transparent data-[state=active]:border-primary"><LucideImage size={20} style={{ color: getContrastColor(formData.customColors.tabsList) }} /></TabsTrigger>
-            <TabsTrigger value="video" className="flex-1 border-b-4 border-transparent data-[state=active]:border-primary"><Video size={20} style={{ color: getContrastColor(formData.customColors.tabsList) }} /></TabsTrigger>
-            <TabsTrigger value="text" className="flex-1 border-b-4 border-transparent data-[state=active]:border-primary"><Type size={20} style={{ color: getContrastColor(formData.customColors.tabsList) }} /></TabsTrigger>
+            <TabsTrigger value="photo" className="flex-1 border-b-4 border-transparent data-[state=active]:border-primary">
+              <LucideImage size={20} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
+            </TabsTrigger>
+            <TabsTrigger value="video" className="flex-1 border-b-4 border-transparent data-[state=active]:border-primary">
+              <Video size={20} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
+            </TabsTrigger>
+            <TabsTrigger value="text" className="flex-1 border-b-4 border-transparent data-[state=active]:border-primary">
+              <Type size={20} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
+            </TabsTrigger>
           </TabsList>
           <div className="py-20 text-center">
              <p className="opacity-20 text-[9px] font-black uppercase tracking-[0.3em]">No Records Found</p>
@@ -347,9 +360,9 @@ export default function ProfilePage() {
         </Tabs>
       </div>
 
-      {/* STICKER STUDIO CONTROLS (z-[5000]) */}
+      {/* STICKER STUDIO CONTROLS (z-[6000]) */}
       {editingStickerId && activeSticker && (
-        <div className="fixed bottom-24 left-4 right-4 z-[5000] bg-white dark:bg-zinc-900 rounded-[3rem] border-2 border-primary shadow-2xl p-6 animate-in slide-in-from-bottom-4 pointer-events-auto">
+        <div className="fixed bottom-24 left-4 right-4 z-[6000] bg-white dark:bg-zinc-900 rounded-[3rem] border-2 border-primary shadow-2xl p-6 animate-in slide-in-from-bottom-4 pointer-events-auto">
           <div className="space-y-5">
             <header className="flex items-center justify-between"><h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Sticker Studio</h4><X onClick={() => setEditingStickerId(null)} size={20} className="cursor-pointer" /></header>
             <div className="grid grid-cols-2 gap-4">
@@ -364,7 +377,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* MODALS SECTION */}
       <Dialog open={isOptimizeModalOpen} onOpenChange={setIsOptimizeModalOpen}>
         <DialogContent className="max-w-md w-[95%] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col z-[4000]" onOpenAutoFocus={e => e.preventDefault()}>
           <div className="p-6 border-b shrink-0"><DialogTitle className="text-xl font-black uppercase tracking-tighter text-primary">Optimize Profile</DialogTitle></div>

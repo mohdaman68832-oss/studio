@@ -1,3 +1,4 @@
+
 "use client";
 
 import { use, useState, useMemo, useRef } from "react";
@@ -38,7 +39,8 @@ function getContrastColor(hexColor: string | undefined): string {
   const g = parseInt(hex.substring(2, 4), 16);
   const b = parseInt(hex.substring(4, 6), 16);
   const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-  return brightness >= 128 ? '#1A1A1A' : '#FFFFFF';
+  // If background is light, use primary orange instead of dark grey
+  return brightness >= 128 ? 'hsl(var(--primary))' : '#FFFFFF';
 }
 
 export default function UserProfilePage({ params }: { params: Promise<{ username: string }> }) {
@@ -100,14 +102,11 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
           <div className="w-10" />
         </header>
 
-        {/* STABLE STICKER CONTAINER (Viewer Side) */}
         <div className="relative w-full" ref={stickerContainerRef}>
-          {/* Banner */}
           <div className="relative h-52 w-full overflow-hidden z-[10]">
             <Image src={profileData.bannerUrl || `https://picsum.photos/seed/banner${profileData.id}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${profileData.bannerOffset || 50}%` }} unoptimized />
           </div>
 
-          {/* Avatar Section */}
           <div className="relative px-6 -mt-16 flex flex-col items-center z-[50]">
             <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl">
               <AvatarImage src={profileData.profilePictureUrl} className="object-cover" />
@@ -115,7 +114,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
             </Avatar>
           </div>
 
-          {/* STICKERS LAYER (z-[100]) - Perfectly aligned with editor side */}
+          {/* STICKERS LAYER (z-[100]) - Percentage based for responsiveness */}
           <div className="absolute inset-0 pointer-events-none z-[100]">
             {stickers.map((sticker) => (
               <div 
@@ -136,7 +135,6 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         </div>
       </div>
 
-      {/* USER INFO SECTION (z-[40]) */}
       <div style={{ backgroundColor: colors.userInfo || "transparent" }} className="w-full relative -mt-1 z-[40]">
         <div className="px-6 flex flex-col items-center pb-8">
           <div className="text-center mt-4">
@@ -161,7 +159,6 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         </div>
       </div>
 
-      {/* STATS SECTION (z-[40]) */}
       <div style={{ backgroundColor: colors.statsSection || "transparent" }} className="w-full py-8 px-10 relative z-[40]">
         <div className="grid grid-cols-3 gap-6 w-full">
           <div className="text-center">
@@ -179,7 +176,6 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         </div>
       </div>
 
-      {/* TABS SECTION (z-[40]) */}
       <div style={{ backgroundColor: colors.tabsContent || "transparent" }} className="w-full flex-1 relative z-[40]">
         <Tabs defaultValue="photo" className="w-full">
           <TabsList className="w-full bg-transparent border-none rounded-none px-6 h-14" style={{ backgroundColor: colors.tabsList }}>
