@@ -14,8 +14,7 @@ service cloud.firestore {
     }
 
     match /messages/{messageId} {
-      // Permission fix: Allow list/read if the user is a sender or receiver.
-      // This ensures Inbox loads correctly for the user.
+      // Allow users to read/list messages where they are the sender or receiver
       allow read, list: if isSignedIn() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid);
       allow create: if isSignedIn();
       allow update, delete: if false;

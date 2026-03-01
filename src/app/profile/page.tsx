@@ -60,9 +60,9 @@ interface CustomColors {
 }
 
 const COLOR_CATEGORIES = {
-  "Vibrant": ["#FF4500", "#FF6347", "#FF8C00", "#FFA500", "#FFD700", "#FF7F50", "#FFDAB9", "#E65100", "#BF360C"],
-  "Pastels": ["#FFFFFF", "#F8FAFC", "#F0FDF4", "#ECFDF5", "#EFF6FF", "#F5F3FF", "#FDF2F8", "#FFF7ED", "#FFFBEB", "#FEF2F2", "#ECFEFF", "#F5F5F5"],
-  "Deep": ["#0F172A", "#18181B", "#171717", "#1C1917", "#450A0A", "#422006", "#3F2E0E", "#064E3B", "#134E4A", "#1E1B4B", "#312E81", "#4C1D95", "#581C87", "#701A75", "#831843", "#7F1D1D"]
+  "Vibrant Orange": ["#FF4500", "#FF6347", "#FF8C00", "#FFA500", "#FFD700", "#FF7F50", "#FFDAB9", "#E65100", "#BF360C"],
+  "Soft Neutrals": ["#FFFFFF", "#F8FAFC", "#F0FDF4", "#ECFDF5", "#EFF6FF", "#F5F3FF", "#FDF2F8", "#FFF7ED", "#FFFBEB", "#FEF2F2", "#ECFEFF", "#F5F5F5"],
+  "Deep Tech": ["#0F172A", "#18181B", "#171717", "#1C1917", "#450A0A", "#422006", "#3F2E0E", "#064E3B", "#134E4A", "#1E1B4B", "#312E81", "#4C1D95", "#581C87", "#701A75", "#831843", "#7F1D1D"]
 };
 
 function getContrastColor(hexColor: string | undefined): string {
@@ -84,7 +84,7 @@ const toBase64 = (file: File): Promise<string> =>
   });
 
 export default function ProfilePage() {
-  const { user, isUserLoading } = useUser();
+  const { user, loading: isUserLoading } = useUser();
   const auth = useAuth();
   const db = useFirestore();
   const router = useRouter();
@@ -166,9 +166,9 @@ export default function ProfilePage() {
         updatedAt: new Date().toISOString()
       }, { merge: true });
 
-      toast({ title: "Profile Updated", description: "Your changes have been saved." });
+      toast({ title: "Profile Optimized", description: "Changes saved to the Sphere." });
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Error", description: error.message });
+      toast({ variant: "destructive", title: "Sync Failed", description: error.message });
     } finally {
       setIsSaving(false);
     }
@@ -232,7 +232,7 @@ export default function ProfilePage() {
         ...prev,
         stickers: prev.stickers.filter(s => s.id !== idToRemove)
       }));
-      toast({ title: "Sticker Deleted" });
+      toast({ title: "Sticker Removed" });
     }
   };
 
@@ -271,7 +271,7 @@ export default function ProfilePage() {
           </DropdownMenu>
         </header>
 
-        {/* Stable Sticker Container (Percentage-Based Positioning) */}
+        {/* Stable Percentage-Based Sticker Container */}
         <div className="relative w-full" ref={stickerContainerRef}>
           {/* Banner */}
           <div className="relative h-52 w-full overflow-hidden z-[10]">
@@ -382,9 +382,9 @@ export default function ProfilePage() {
         </Tabs>
       </div>
 
-      {/* Sticker Studio Controls (z-[3000]) */}
+      {/* MASTER STICKER STUDIO CONTROLS (Topmost Level) */}
       {editingStickerId && activeSticker && (
-        <div className="fixed bottom-24 left-4 right-4 z-[3000] bg-white dark:bg-zinc-900/95 backdrop-blur-md rounded-[2.5rem] border shadow-2xl p-5 animate-in slide-in-from-bottom-4">
+        <div className="fixed bottom-24 left-4 right-4 z-[5000] bg-white dark:bg-zinc-900/95 backdrop-blur-md rounded-[2.5rem] border shadow-2xl p-5 animate-in slide-in-from-bottom-4">
           <div className="space-y-4">
             <header className="flex items-center justify-between px-1">
               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Sticker Studio</h4>
