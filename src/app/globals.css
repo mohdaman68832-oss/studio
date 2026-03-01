@@ -10,7 +10,7 @@
     --card-foreground: 25 10% 15%;
     --popover: 0 0% 100%;
     --popover-foreground: 25 10% 15%;
-    --primary: 25 100% 45%; /* Deep Dark Orange for Light Mode */
+    --primary: 25 100% 45%; /* Deep Orange for Light Mode */
     --primary-foreground: 0 0% 100%;
     --secondary: 35 100% 50%; /* Vibrant Orange */
     --secondary-foreground: 0 0% 100%;
@@ -24,18 +24,16 @@
     --input: 25 10% 88%;
     --ring: 25 100% 45%;
     --radius: 1.5rem;
-    --chart-1: 25 100% 45%;
-    --chart-2: 35 100% 50%;
   }
 
   .dark {
-    --background: 25 10% 8%; /* Deep Dark Warm Background */
+    --background: 25 10% 8%; /* Deep Dark Background */
     --foreground: 25 10% 95%;
     --card: 25 10% 12%;
     --card-foreground: 25 10% 95%;
     --popover: 25 10% 12%;
     --popover-foreground: 25 10% 95%;
-    --primary: 35 100% 65%; /* Lighter Orange for Dark Mode Visibility */
+    --primary: 35 100% 65%; /* Lighter Orange for Dark Mode */
     --primary-foreground: 25 10% 5%;
     --secondary: 35 80% 55%;
     --secondary-foreground: 25 10% 5%;
@@ -55,7 +53,6 @@
   }
   body {
     @apply bg-background text-foreground font-body transition-colors duration-300;
-    background-image: radial-gradient(circle at 50% 0%, rgba(255, 165, 0, 0.05) 0%, transparent 50%);
   }
 }
 
@@ -74,14 +71,4 @@
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
-}
-
-@keyframes progress-fast {
-  0% { transform: translateX(-100%); }
-  50% { transform: translateX(0%); }
-  100% { transform: translateX(100%); }
-}
-
-.animate-progress-fast {
-  animation: progress-fast 0.8s infinite linear;
 }

@@ -293,7 +293,7 @@ export default function ProfilePage() {
           </DropdownMenu>
         </header>
 
-        {/* STABLE STICKER CONTAINER (Wraps Banner & Avatar) */}
+        {/* STABLE STICKER CONTAINER */}
         <div className="relative w-full" ref={stickerContainerRef}>
           {/* Banner */}
           <div className="relative h-52 w-full overflow-hidden z-[10]">
@@ -315,7 +315,7 @@ export default function ProfilePage() {
             </Avatar>
           </div>
 
-          {/* STICKERS LAYER (z-[100]) - Relative to this stable container */}
+          {/* STICKERS LAYER (z-[100]) */}
           <div className="absolute inset-0 pointer-events-none z-[100]">
             {formData.stickers.map((sticker) => (
               <div 
@@ -342,7 +342,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* CONTENT LAYER (z-[40]) - Below Logo & Stickers */}
+        {/* CONTENT LAYER (z-[40]) */}
         <div className="relative z-[40] w-full -mt-1">
           <div style={{ backgroundColor: colors.userInfo || "transparent" }} className="w-full pb-8">
             <div className="px-6 flex flex-col items-center">
@@ -405,6 +405,7 @@ export default function ProfilePage() {
         </Tabs>
       </div>
 
+      {/* STICKER STUDIO CONTROLS - HIGHEST PRIORITY (z-[3000]) */}
       {editingStickerId && activeSticker && (
         <div className="fixed bottom-24 left-4 right-4 z-[3000] bg-white dark:bg-zinc-900/95 backdrop-blur-md rounded-[2.5rem] border shadow-2xl p-5 animate-in slide-in-from-bottom-4">
           <div className="space-y-4">
