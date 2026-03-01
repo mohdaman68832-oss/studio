@@ -1,158 +1,50 @@
-
 {
   "entities": {
     "UserProfile": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "UserProfile",
       "type": "object",
-      "description": "Represents a user profile within the InnovateSphere application, storing personal information and aggregated analytics.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the UserProfile entity."
-        },
-        "username": {
-          "type": "string",
-          "description": "A unique username chosen by the user."
-        },
-        "email": {
-          "type": "string",
-          "description": "The user's email address.",
-          "format": "email"
-        },
-        "profilePictureUrl": {
-          "type": "string",
-          "description": "URL to the user's profile picture."
-        },
-        "bio": {
-          "type": "string",
-          "description": "A short biographical description provided by the user."
-        },
-        "registeredAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the user registered.",
-          "format": "date-time"
-        },
-        "totalIdeasPosted": {
-          "type": "number",
-          "description": "The total number of posts shared by this user."
-        },
-        "totalViewsReceived": {
-          "type": "number",
-          "description": "The total number of views across all ideas posted by this user."
-        },
-        "averageRating": {
-          "type": "number",
-          "description": "The average rating received on all ideas posted by this user."
-        },
-        "totalIdeasSaved": {
-          "type": "number",
-          "description": "The total number of ideas saved or bookmarked by this user."
-        }
+        "id": { "type": "string" },
+        "username": { "type": "string" },
+        "email": { "type": "string" },
+        "profilePictureUrl": { "type": "string" },
+        "bannerUrl": { "type": "string" },
+        "bio": { "type": "string" },
+        "stickers": { "type": "array" },
+        "customColors": { "type": "object" },
+        "createdAt": { "type": "string" }
       },
-      "required": [
-        "id",
-        "username",
-        "email",
-        "totalIdeasPosted"
-      ]
+      "required": ["id", "username", "email"]
     },
-    "Idea": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Idea",
+    "Post": {
+      "title": "Post",
       "type": "object",
-      "description": "Represents an innovation idea or post submitted by a user.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Idea entity."
-        },
-        "authorId": {
-          "type": "string",
-          "description": "Reference to UserProfile ID."
-        },
-        "title": {
-          "type": "string",
-          "description": "The title of the innovation idea."
-        },
-        "description": {
-          "type": "string",
-          "description": "A brief description of the idea."
-        },
-        "category": {
-          "type": "string",
-          "description": "The main category or domain of the idea."
-        },
-        "mediaUrl": {
-          "type": "string",
-          "description": "URL pointing to image or video associated with the post."
-        },
-        "innovationScore": {
-          "type": "number",
-          "description": "AI-generated score for the idea."
-        },
-        "likes": {
-          "type": "number",
-          "description": "The total number of likes received for this idea."
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "uid": { "type": "string" },
+        "username": { "type": "string" },
+        "content": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "mediaUrl": { "type": "string" },
+        "innovationScore": { "type": "number" },
+        "likes": { "type": "number" },
+        "createdAt": { "type": "string" }
       },
-      "required": [
-        "id",
-        "authorId",
-        "title",
-        "description",
-        "category",
-        "createdAt"
-      ]
+      "required": ["id", "uid", "content", "createdAt"]
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "google.com",
-      "anonymous"
-    ]
+    "providers": ["password", "google.com"]
   },
   "firestore": {
-    "structure": [
-      {
-        "path": "/userProfiles/{userId}",
-        "definition": {
-          "entityName": "UserProfile",
-          "schema": {
-            "$ref": "#/backend/entities/UserProfile"
-          },
-          "description": "Stores user profile information. The 'userId' in the path directly links to the authenticated user's ID."
-        }
-      },
-      {
-        "path": "/ideas/{ideaId}",
-        "definition": {
-          "entityName": "Idea",
-          "schema": {
-            "$ref": "#/backend/entities/Idea"
-          },
-          "description": "Stores details of innovation ideas and posts."
-        }
-      },
-      {
-        "path": "/ideas/{ideaId}/suggestions/{suggestionId}",
-        "definition": {
-          "entityName": "Suggestion",
-          "description": "Public comments and suggestions on a post."
-        }
-      },
-      {
-        "path": "/users/{userId}/notifications/{notificationId}",
-        "definition": {
-          "entityName": "Notification",
-          "description": "Private notifications for a specific user."
-        }
-      }
-    ]
+    "/userProfiles/{userId}": {
+      "schema": { "$ref": "#/backend/entities/UserProfile" },
+      "description": "Stores user profiles with customization."
+    },
+    "/posts/{postId}": {
+      "schema": { "$ref": "#/backend/entities/Post" },
+      "description": "Stores user posts and innovations."
+    }
   }
 }
