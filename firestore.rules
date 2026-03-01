@@ -2,8 +2,8 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // TESTING MODE: Allows all read/write operations for development.
-    // WARNING: Do not use this in a production environment.
+    // TESTING MODE: Sab kuch open hai taaki koi permission error na aaye.
+    // WARNING: Production mein ise badalna zaroori hai.
     match /{document=**} {
       allow read, write: if true;
     }

@@ -8,7 +8,7 @@ import { doc } from 'firebase/firestore';
 
 /**
  * Animated Logo Loader Component
- * Horizontal Swaying with Refined expressive eyes.
+ * Horizontal Swaying with Balanced expressive eyes.
  */
 function LogoLoader() {
   return (
