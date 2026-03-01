@@ -89,19 +89,14 @@ export default function ProfilePage() {
   const { toast } = useToast();
 
   const [isOptimizeModalOpen, setIsOptimizeModalOpen] = useState(false);
-  const [showBannerDetail, setShowBannerDetail] = useState(false);
-  const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [activeColorSection, setActiveColorSection] = useState<keyof CustomColors | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
   
   const [editingStickerId, setEditingStickerId] = useState<string | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
   const stickerContainerRef = useRef<HTMLDivElement>(null);
 
   const profileInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
-  const stickerInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -117,7 +112,7 @@ export default function ProfilePage() {
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [db, user]);
   const { data: profileData, isLoading: isProfileLoading } = useDoc(profileRef);
 
-  // Fetch Circle (Followers) and Circling (Following)
+  // Fetch Circling (Following) and Circle (Followers)
   const followingQuery = useMemoFirebase(() => (db && user ? query(collection(db, "follows"), where("followerId", "==", user.uid)) : null), [db, user]);
   const followersQuery = useMemoFirebase(() => (db && user ? query(collection(db, "follows"), where("followedId", "==", user.uid)) : null), [db, user]);
   
@@ -130,7 +125,7 @@ export default function ProfilePage() {
     return query(collection(db, "ideas"), where("authorId", "==", user.uid), orderBy("createdAt", "desc"));
   }, [db, user]);
 
-  const { data: myPosts, isLoading: postsLoading } = useCollection(myPostsQuery);
+  const { data: myPosts } = useCollection(myPostsQuery);
 
   const categorizedPosts = useMemo(() => {
     if (!myPosts) return { photos: [], videos: [], text: [] };
@@ -194,28 +189,18 @@ export default function ProfilePage() {
     }
   };
 
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'banner' | 'sticker') => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'banner') => {
     const file = e.target.files?.[0];
     if (file) {
       const base64 = await toBase64(file);
       if (type === 'profile') setFormData(prev => ({ ...prev, profilePic: base64 }));
       else if (type === 'banner') setFormData(prev => ({ ...prev, banner: base64 }));
-      else if (type === 'sticker') {
-        const newSticker: Sticker = { 
-          id: Math.random().toString(36).substr(2, 9), 
-          url: base64, x: 50, y: 30, rotation: 0, scale: 1 
-        };
-        setFormData(prev => ({ ...prev, stickers: [...prev.stickers, newSticker] }));
-        setIsOptimizeModalOpen(false);
-        setEditingStickerId(newSticker.id);
-      }
     }
   };
 
   if (isUserLoading || isProfileLoading) return <div className="flex h-screen items-center justify-center bg-background"><Loader2 className="animate-spin text-primary h-8 w-8" /></div>;
   if (!user) return null;
 
-  const activeSticker = formData.stickers.find(s => s.id === editingStickerId);
   const outlineColor = formData.customColors.textOutline || "transparent";
   const textShadowStyle = outlineColor !== "transparent" 
     ? `-1px -1px 0 ${outlineColor}, 1px -1px 0 ${outlineColor}, -1px 1px 0 ${outlineColor}, 1px 1px 0 ${outlineColor}`
@@ -332,7 +317,7 @@ export default function ProfilePage() {
               ) : (
                 <div className="py-24 text-center opacity-20">
                   <LucideImage size={48} className="mx-auto mb-4" />
-                  <p className="text-[9px] font-black uppercase tracking-[0.3em]">No Photos Shared Yet</p>
+                  <p className="text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(formData.customColors.tabsContent) }}>No Photos Shared Yet</p>
                 </div>
               )}
             </TabsContent>
@@ -342,7 +327,7 @@ export default function ProfilePage() {
               ) : (
                 <div className="py-24 text-center opacity-20">
                   <Video size={48} className="mx-auto mb-4" />
-                  <p className="text-[9px] font-black uppercase tracking-[0.3em]">No Videos Shared Yet</p>
+                  <p className="text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(formData.customColors.tabsContent) }}>No Videos Shared Yet</p>
                 </div>
               )}
             </TabsContent>
@@ -352,7 +337,7 @@ export default function ProfilePage() {
               ) : (
                 <div className="py-24 text-center opacity-20">
                   <Type size={48} className="mx-auto mb-4" />
-                  <p className="text-[9px] font-black uppercase tracking-[0.3em]">No Text Posts Shared Yet</p>
+                  <p className="text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(formData.customColors.tabsContent) }}>No Text Posts Shared Yet</p>
                 </div>
               )}
             </TabsContent>

@@ -8,13 +8,13 @@ import { doc } from 'firebase/firestore';
 
 /**
  * Animated Logo Loader Component
- * Custom: 'm' bubble is smaller (scale-75), eyes are larger, sways left-to-right.
+ * Refined: Larger eyes, Left-to-Right Horizontal Swaying.
  */
 function LogoLoader() {
   return (
     <div className="flex flex-col items-center gap-8 animate-in fade-in duration-700">
       <div className="relative w-24 h-24 flex items-center justify-center">
-        {/* Main 'm' Speech Bubble with Horizontal Swaying animation - Scaled down */}
+        {/* Main 'm' Speech Bubble with Horizontal Swaying animation - Scaled down for compact look */}
         <div className="relative z-10 animate-bubble-sway scale-75">
           <svg width="110" height="110" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
             {/* The 'm' Shape stylized as a speech bubble */}
@@ -23,12 +23,12 @@ function LogoLoader() {
               fill="#FF4500" 
             />
             
-            {/* Eyes Group with Look Around & Blink animations - Larger Eyes */}
+            {/* Eyes Group with Look Around & Blink animations - Larger, more expressive eyes */}
             <g className="animate-eye-look">
               <g className="animate-eye-blink">
                 {/* Blinking Eyes (Enlarged Rectangles) */}
-                <rect x="40" y="40" width="12" height="26" rx="6" fill="white" />
-                <rect x="68" y="40" width="12" height="26" rx="6" fill="white" />
+                <rect x="38" y="38" width="14" height="30" rx="7" fill="white" />
+                <rect x="68" y="38" width="14" height="30" rx="7" fill="white" />
               </g>
             </g>
             
@@ -51,10 +51,10 @@ function LogoLoader() {
 }
 
 /**
- * AuthGuard handles the global authentication flow.
+ * AuthGuard handles the global authentication flow and ensures users don't see pages they shouldn't.
  */
 export function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { user, loading: isUserLoading } = useUser();
+  const { user, isUserLoading } = useUser();
   const db = useFirestore();
   const router = useRouter();
   const pathname = usePathname();
@@ -66,43 +66,46 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const isSetupPage = pathname === '/setup';
 
   useEffect(() => {
-    if (!isUserLoading && !isProfileLoading) {
-      if (!user) {
-        if (!isAuthPage) {
-          router.push('/login');
+    // If we're still loading the user state or profile, don't do anything yet.
+    if (isUserLoading || isProfileLoading) return;
+
+    if (!user) {
+      // Not logged in: Redirect to login unless already on auth page.
+      if (!isAuthPage) {
+        router.push('/login');
+      }
+    } else {
+      // Logged in:
+      if (!profileData) {
+        // No profile: Redirect to setup unless already there.
+        if (!isSetupPage) {
+          router.push('/setup');
         }
       } else {
-        // User exists
-        if (!profileData) {
-          if (!isSetupPage) {
-            router.push('/setup');
-          }
-        } else {
-          // Profile exists
-          if (isAuthPage || isSetupPage) {
-            router.push('/');
-          }
+        // Profile exists: Redirect away from setup or auth pages back home.
+        if (isAuthPage || isSetupPage) {
+          router.push('/');
         }
       }
     }
   }, [user, isUserLoading, isProfileLoading, profileData, isAuthPage, isSetupPage, router]);
 
-  // Determine if we should show the children or the loader
-  // This prevents the "feed flash" by only rendering children when we're on the correct page
+  // Determine if we should show the children or the loader.
+  // We only show children if we are on a page that matches the current auth state.
   const shouldShowChildren = () => {
     if (isUserLoading || isProfileLoading) return false;
     
     if (!user) {
-      return isAuthPage; // Only show children if on login/signup page
+      return isAuthPage;
     }
     
     // User is logged in
     if (!profileData) {
-      return isSetupPage; // Only show children if on setup page
+      return isSetupPage;
     }
     
     // User has profile
-    return !isAuthPage && !isSetupPage; // Show children only if NOT on auth/setup pages
+    return !isAuthPage && !isSetupPage;
   };
 
   if (!shouldShowChildren()) {
