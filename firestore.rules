@@ -15,7 +15,7 @@ service cloud.firestore {
 
     match /messages/{messageId} {
       allow read: if isSignedIn() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid);
-      allow list: if isSignedIn() && (request.query.filters.receiverId == request.auth.uid || request.query.filters.senderId == request.auth.uid);
+      allow list: if isSignedIn() && (request.query.limit <= 50);
       allow create: if isSignedIn();
       allow update, delete: if false;
     }

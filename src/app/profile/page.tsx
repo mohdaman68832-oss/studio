@@ -274,7 +274,7 @@ export default function ProfilePage() {
         
         <header className="absolute top-0 left-0 right-0 z-[80] px-6 flex justify-between items-center py-5">
           <h1 className="text-2xl font-black uppercase tracking-tighter" style={{ color: getContrastColor(colors.header) }}>Sphere</h1>
-          <DropdownMenu>
+          <DropdownMenu modal={true}>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full">
                 <Settings size={24} style={{ color: getContrastColor(colors.header) }} />
@@ -439,7 +439,7 @@ export default function ProfilePage() {
       )}
 
       <Dialog open={isOptimizeModalOpen} onOpenChange={setIsOptimizeModalOpen}>
-        <DialogContent onOpenAutoFocus={(e) => e.preventDefault()} className="max-w-md w-[95%] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col z-[2000]">
+        <DialogContent onOpenAutoFocus={(e) => e.preventDefault()} className="max-w-md w-[95%] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col z-[4000]">
           <DialogHeader className="p-6 shrink-0 border-b">
             <DialogTitle className="text-xl font-black uppercase tracking-tighter text-primary">Optimize Profile</DialogTitle>
           </DialogHeader>
@@ -539,7 +539,7 @@ export default function ProfilePage() {
       </Dialog>
 
       <Dialog open={showBannerDetail} onOpenChange={setShowBannerDetail}>
-        <DialogContent className="max-w-md w-[95%] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl h-[85vh] flex flex-col z-[2000]">
+        <DialogContent className="max-w-md w-[95%] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl h-[85vh] flex flex-col z-[5000]">
           <DialogHeader className="p-6 shrink-0 border-b">
             <DialogTitle className="text-sm font-black uppercase tracking-widest text-center">Banner Preview</DialogTitle>
           </DialogHeader>
@@ -570,7 +570,7 @@ export default function ProfilePage() {
       <input type="file" ref={stickerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'sticker')} />
 
       <Dialog open={isColorPickerOpen} onOpenChange={setIsColorPickerOpen}>
-        <DialogContent className="max-w-xs w-[90%] rounded-[2.5rem] p-6 border-none shadow-2xl z-[3000]">
+        <DialogContent className="max-w-xs w-[90%] rounded-[2.5rem] p-6 border-none shadow-2xl z-[6000]">
           <DialogHeader><DialogTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-center mb-6">Pick a Vibe</DialogTitle></DialogHeader>
           <div className="space-y-8 max-h-[50vh] overflow-y-auto no-scrollbar pb-6">
             {Object.entries(COLOR_CATEGORIES).map(([category, colors]) => (

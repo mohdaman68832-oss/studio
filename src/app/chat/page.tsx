@@ -34,6 +34,8 @@ export default function ChatPage() {
     );
   }
 
+  if (!user) return null;
+
   return (
     <div className="max-w-md mx-auto min-h-screen bg-background pt-8 pb-24">
       <div className="px-6 mb-8">
@@ -45,7 +47,7 @@ export default function ChatPage() {
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
           <Input 
-            placeholder="Search innovators..." 
+            placeholder="Search messages..." 
             className="pl-12 h-14 bg-card border-none rounded-2xl shadow-xl focus-visible:ring-primary/20 text-sm font-medium"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
