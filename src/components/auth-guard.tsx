@@ -8,14 +8,14 @@ import { doc } from 'firebase/firestore';
 
 /**
  * Animated Logo Loader Component
- * Custom: 'm' bubble is smaller, eyes are larger, sways left-to-right.
+ * Custom: 'm' bubble is smaller (scale-75), eyes are larger, sways left-to-right.
  */
 function LogoLoader() {
   return (
     <div className="flex flex-col items-center gap-8 animate-in fade-in duration-700">
-      <div className="relative w-32 h-32 flex items-center justify-center">
-        {/* Main 'm' Speech Bubble with Horizontal Swaying animation */}
-        <div className="relative z-10 animate-bubble-sway">
+      <div className="relative w-24 h-24 flex items-center justify-center">
+        {/* Main 'm' Speech Bubble with Horizontal Swaying animation - Scaled down */}
+        <div className="relative z-10 animate-bubble-sway scale-75">
           <svg width="110" height="110" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
             {/* The 'm' Shape stylized as a speech bubble */}
             <path 
@@ -27,8 +27,8 @@ function LogoLoader() {
             <g className="animate-eye-look">
               <g className="animate-eye-blink">
                 {/* Blinking Eyes (Enlarged Rectangles) */}
-                <rect x="42" y="42" width="10" height="22" rx="5" fill="white" />
-                <rect x="68" y="42" width="10" height="22" rx="5" fill="white" />
+                <rect x="40" y="40" width="12" height="26" rx="6" fill="white" />
+                <rect x="68" y="40" width="12" height="26" rx="6" fill="white" />
               </g>
             </g>
             
@@ -67,20 +67,45 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isUserLoading && !isProfileLoading) {
-      if (!user && !isAuthPage) {
-        router.push('/login');
-      } else if (user) {
-        if (!profileData && !isSetupPage && !isAuthPage) {
-          router.push('/setup');
-        } else if (profileData && (isAuthPage || isSetupPage)) {
-          router.push('/');
+      if (!user) {
+        if (!isAuthPage) {
+          router.push('/login');
+        }
+      } else {
+        // User exists
+        if (!profileData) {
+          if (!isSetupPage) {
+            router.push('/setup');
+          }
+        } else {
+          // Profile exists
+          if (isAuthPage || isSetupPage) {
+            router.push('/');
+          }
         }
       }
     }
   }, [user, isUserLoading, isProfileLoading, profileData, isAuthPage, isSetupPage, router]);
 
-  // Premium Animated Loading State
-  if ((isUserLoading || (user && isProfileLoading)) && !isAuthPage && !isSetupPage) {
+  // Determine if we should show the children or the loader
+  // This prevents the "feed flash" by only rendering children when we're on the correct page
+  const shouldShowChildren = () => {
+    if (isUserLoading || isProfileLoading) return false;
+    
+    if (!user) {
+      return isAuthPage; // Only show children if on login/signup page
+    }
+    
+    // User is logged in
+    if (!profileData) {
+      return isSetupPage; // Only show children if on setup page
+    }
+    
+    // User has profile
+    return !isAuthPage && !isSetupPage; // Show children only if NOT on auth/setup pages
+  };
+
+  if (!shouldShowChildren()) {
     return (
       <div className="h-screen w-full flex items-center justify-center bg-background overflow-hidden">
         <LogoLoader />
