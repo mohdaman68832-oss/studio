@@ -61,10 +61,6 @@
   box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
 }
 
-.idea-card-shadow {
-  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08);
-}
-
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
