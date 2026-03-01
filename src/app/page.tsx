@@ -4,13 +4,12 @@
 import { IdeaCard } from "@/components/feed/idea-card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
-import { collection, query, orderBy, doc } from "firebase/firestore";
+import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
+import { collection, query, orderBy } from "firebase/firestore";
 import { useMemo, useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RefreshCcw, ImageIcon, Video, Type } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import Link from "next/link";
 
 const MOCK_IDEAS = [
   {
@@ -70,7 +69,7 @@ export default function FeedPage() {
     
     if (activeCategory === "All") return unique;
     
-    // Filtering for Memes specifically
+    // Filtering for Memes specifically (by category OR tag)
     if (activeCategory === "Meme") {
       return unique.filter(i => {
         const isMeme = i.category?.toLowerCase() === "meme" || i.tags?.some((t: string) => t.toLowerCase() === "meme");

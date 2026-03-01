@@ -12,7 +12,7 @@ import {
   Upload, 
   CheckCircle2, 
   Loader2, 
-  Image as ImageIcon, 
+  ImageIcon, 
   Type, 
   Video as VideoIcon, 
   X,
@@ -63,7 +63,8 @@ function PostFormContent() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [category, setCategory] = useState("Technology");
-  const isMeme = category === "Meme";
+  // Check if current selection is a Meme
+  const isMeme = category.toLowerCase() === "meme";
 
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [user, db]);
   const { data: profileData } = useDoc(profileRef);
@@ -136,7 +137,8 @@ function PostFormContent() {
     try {
       await addDoc(collection(db, "ideas"), {
         title: formData.title,
-        problem: isMeme ? "" : formData.problem,
+        // If it's a meme, we skip the problem field
+        problem: isMeme ? "Meme content" : formData.problem,
         description: formData.description,
         category: category,
         userName: user.displayName || profileData?.username || "Innovator",
@@ -145,6 +147,7 @@ function PostFormContent() {
         authorUsername: profileData?.username || "user",
         mediaUrl: mediaType === 'text' ? "" : (previewUrl || ""),
         innovationScore: isMeme ? 100 : 75,
+        // Include category and media type in tags
         tags: [category, mediaType || "text"],
         createdAt: serverTimestamp(),
         likes: 0
