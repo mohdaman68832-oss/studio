@@ -8,7 +8,7 @@ import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@
 import { collection, query, orderBy, doc } from "firebase/firestore";
 import { useMemo, useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RefreshCcw, ImageIcon, Video, Type, LayoutGrid } from "lucide-react";
+import { RefreshCcw, ImageIcon, Video, Type } from "lucide-react";
 
 const MOCK_IDEAS = [
   {
@@ -54,7 +54,6 @@ const MOCK_IDEAS = [
 
 const CATEGORIES = ["All", "Meme"];
 const MEME_TYPES = [
-  { id: "all", label: "All Memes", icon: LayoutGrid },
   { id: "image", label: "Image", icon: ImageIcon },
   { id: "video", label: "Video", icon: Video },
   { id: "text", label: "Text", icon: Type },
@@ -64,7 +63,7 @@ export default function FeedPage() {
   const db = useFirestore();
   const { user } = useUser();
   const [activeCategory, setActiveCategory] = useState("All");
-  const [activeMemeType, setActiveMemeType] = useState("all");
+  const [activeMemeType, setActiveMemeType] = useState("image"); // Default to Image if "All Memes" is removed
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showRefresh, setShowRefresh] = useState(false);
   const [touchStart, setTouchStart] = useState(0);
@@ -88,18 +87,17 @@ export default function FeedPage() {
     if (activeCategory === "Meme") {
       filtered = unique.filter(i => i.category?.toLowerCase() === "meme");
       
-      if (activeMemeType !== "all") {
-        filtered = filtered.filter(i => {
-          const isVideo = i.mediaUrl && (i.mediaUrl.endsWith('.mp4') || i.mediaUrl.includes('gtv-videos-bucket') || i.mediaUrl.startsWith('data:video'));
-          const isText = !i.mediaUrl || i.mediaUrl === "";
-          const isImage = i.mediaUrl && !isVideo && !isText;
+      // Since "all" is removed, we filter strictly by activeMemeType
+      filtered = filtered.filter(i => {
+        const isVideo = i.mediaUrl && (i.mediaUrl.endsWith('.mp4') || i.mediaUrl.includes('gtv-videos-bucket') || i.mediaUrl.startsWith('data:video'));
+        const isText = !i.mediaUrl || i.mediaUrl === "";
+        const isImage = i.mediaUrl && !isVideo && !isText;
 
-          if (activeMemeType === "video") return isVideo;
-          if (activeMemeType === "text") return isText;
-          if (activeMemeType === "image") return isImage;
-          return true;
-        });
-      }
+        if (activeMemeType === "video") return isVideo;
+        if (activeMemeType === "text") return isText;
+        if (activeMemeType === "image") return isImage;
+        return true;
+      });
     }
 
     return filtered;
@@ -179,7 +177,7 @@ export default function FeedPage() {
             variant={cat === activeCategory ? "default" : "secondary"} 
             onClick={() => {
               setActiveCategory(cat);
-              if (cat !== "Meme") setActiveMemeType("all");
+              if (cat === "Meme") setActiveMemeType("image"); // Default to image when switching to Meme
             }}
             className={cn(
               "flex-1 rounded-full h-9 text-[10px] font-black uppercase tracking-widest transition-all",
