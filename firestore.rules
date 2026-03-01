@@ -2,7 +2,6 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // TESTING MODE: Global access allowed for all read and write operations.
-    // WARNING: This should be restricted before moving to production.
     match /{document=**} {
       allow read, write: if true;
     }

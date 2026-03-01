@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { 
@@ -11,7 +11,8 @@ import {
   UserCog,
   CheckCircle,
   Sun,
-  Moon
+  Moon,
+  LayoutGrid
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -28,11 +29,10 @@ import { Switch } from "@/components/ui/switch";
 import Image from "next/image";
 import { useUser, useAuth, useFirestore, useDoc, useMemoFirebase, useCollection } from "@/firebase";
 import { signOut } from "firebase/auth";
-import { doc, updateDoc, collection as fsCollection, query, where, orderBy } from "firebase/firestore";
+import { doc, updateDoc, collection as fsCollection, query, where } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { IdeaCard } from "@/components/feed/idea-card";
 
 interface Sticker {
   id: string;
@@ -106,23 +106,6 @@ export default function ProfilePage() {
   
   const { data: circlingData } = useCollection(followingQuery);
   const { data: circleData } = useCollection(followersQuery);
-
-  const myPostsQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return query(fsCollection(db, "ideas"), where("authorId", "==", user.uid), orderBy("createdAt", "desc"));
-  }, [db, user]);
-
-  const { data: myPosts } = useCollection(myPostsQuery);
-
-  const categorizedPosts = useMemo(() => {
-    if (!myPosts) return { photos: [], videos: [], text: [] };
-    
-    return {
-      photos: myPosts.filter(p => p.mediaUrl && !p.mediaUrl.includes('.mp4') && !p.mediaUrl.includes('gtv-videos-bucket')),
-      videos: myPosts.filter(p => p.mediaUrl && (p.mediaUrl.includes('.mp4') || p.mediaUrl.includes('gtv-videos-bucket'))),
-      text: myPosts.filter(p => !p.mediaUrl || p.mediaUrl === "")
-    };
-  }, [myPosts]);
 
   useEffect(() => {
     if (profileData) {
@@ -263,49 +246,17 @@ export default function ProfilePage() {
       </div>
 
       <div style={{ backgroundColor: formData.customColors.tabsContent }} className="flex-1 relative z-[40] pb-32">
-        <Tabs defaultValue="photo" className="w-full">
+        <Tabs defaultValue="overview" className="w-full">
           <TabsList className="w-full bg-transparent h-14 border-b border-border/20" style={{ backgroundColor: formData.customColors.tabsList }}>
-            <TabsTrigger value="photo" className="flex-1 border-b-4 border-transparent data-[state=active]:border-primary transition-all">
-              <LucideImage size={20} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
-            </TabsTrigger>
-            <TabsTrigger value="video" className="flex-1 border-b-4 border-transparent data-[state=active]:border-primary transition-all">
-              <Video size={20} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
-            </TabsTrigger>
-            <TabsTrigger value="text" className="flex-1 border-b-4 border-transparent data-[state=active]:border-primary transition-all">
-              <Type size={20} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
+            <TabsTrigger value="overview" className="flex-1 border-b-4 border-transparent data-[state=active]:border-primary transition-all">
+              <LayoutGrid size={20} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
             </TabsTrigger>
           </TabsList>
           
           <div className="p-4 space-y-6">
-            <TabsContent value="photo" className="space-y-6">
-              {categorizedPosts.photos.length > 0 ? (
-                categorizedPosts.photos.map(p => <IdeaCard key={p.id} idea={p as any} />)
-              ) : (
-                <div className="py-24 text-center opacity-20">
-                  <LucideImage size={48} className="mx-auto mb-4" />
-                  <p className="text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(formData.customColors.tabsContent) }}>No Photos Shared Yet</p>
-                </div>
-              )}
-            </TabsContent>
-            <TabsContent value="video" className="space-y-6">
-              {categorizedPosts.videos.length > 0 ? (
-                categorizedPosts.videos.map(p => <IdeaCard key={p.id} idea={p as any} />)
-              ) : (
-                <div className="py-24 text-center opacity-20">
-                  <Video size={48} className="mx-auto mb-4" />
-                  <p className="text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(formData.customColors.tabsContent) }}>No Videos Shared Yet</p>
-                </div>
-              )}
-            </TabsContent>
-            <TabsContent value="text" className="space-y-6">
-              {categorizedPosts.text.length > 0 ? (
-                categorizedPosts.text.map(p => <IdeaCard key={p.id} idea={p as any} />)
-              ) : (
-                <div className="py-24 text-center opacity-20">
-                  <Type size={48} className="mx-auto mb-4" />
-                  <p className="text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(formData.customColors.tabsContent) }}>No Text Posts Shared Yet</p>
-                </div>
-              )}
+            <TabsContent value="overview" className="py-24 text-center opacity-20">
+               <p className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(formData.customColors.tabsContent) }}>Innovator Portfolio Ready</p>
+               <p className="text-[9px] mt-2 font-medium">Explore the main feed to see more content.</p>
             </TabsContent>
           </div>
         </Tabs>

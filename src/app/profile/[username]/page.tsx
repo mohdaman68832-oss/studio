@@ -3,15 +3,14 @@
 import { use, useState, useMemo, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, MessageSquare, Loader2, UserPlus, UserCheck, Image as LucideImage, Video, Type } from "lucide-react";
+import { ChevronLeft, MessageSquare, Loader2, UserPlus, UserCheck, LayoutGrid } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from "@/firebase";
-import { collection as fsCollection, query, where, limit, doc, setDoc, deleteDoc, serverTimestamp, orderBy } from "firebase/firestore";
+import { collection as fsCollection, query, where, limit, doc, setDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { IdeaCard } from "@/components/feed/idea-card";
 
 interface Sticker {
   id: string;
@@ -67,30 +66,11 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
   const { data: followDoc, isLoading: followLoading } = useDoc(followRef);
   const isFollowing = !!followDoc;
 
-  // Fetch Followers (Circle) and Following (Circling) for this user
   const followingQuery = useMemoFirebase(() => (db && profileData ? query(fsCollection(db, "follows"), where("followerId", "==", profileData.id)) : null), [db, profileData]);
   const followersQuery = useMemoFirebase(() => (db && profileData ? query(fsCollection(db, "follows"), where("followedId", "==", profileData.id)) : null), [db, profileData]);
   
   const { data: followingData } = useCollection(followingQuery);
   const { data: followersData } = useCollection(followersQuery);
-
-  // Fetch User Posts
-  const userPostsQuery = useMemoFirebase(() => {
-    if (!db || !profileData) return null;
-    return query(fsCollection(db, "ideas"), where("authorId", "==", profileData.id), orderBy("createdAt", "desc"));
-  }, [db, profileData]);
-
-  const { data: userPosts, isLoading: postsLoading } = useCollection(userPostsQuery);
-
-  const categorizedPosts = useMemo(() => {
-    if (!userPosts) return { photos: [], videos: [], text: [] };
-    
-    return {
-      photos: userPosts.filter(p => p.mediaUrl && !p.mediaUrl.includes('.mp4') && !p.mediaUrl.includes('gtv-videos-bucket')),
-      videos: userPosts.filter(p => p.mediaUrl && (p.mediaUrl.includes('.mp4') || p.mediaUrl.includes('gtv-videos-bucket'))),
-      text: userPosts.filter(p => !p.mediaUrl || p.mediaUrl === "")
-    };
-  }, [userPosts]);
 
   const handleFollowToggle = async () => {
     if (!db || !currentUser || !profileData) return;
@@ -205,46 +185,16 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       </div>
 
       <div style={{ backgroundColor: colors.tabsContent || "transparent" }} className="w-full flex-1 relative z-[40]">
-        <Tabs defaultValue="photo" className="w-full">
+        <Tabs defaultValue="overview" className="w-full">
           <TabsList className="w-full bg-transparent border-none rounded-none px-6 h-14" style={{ backgroundColor: colors.tabsList }}>
-            <TabsTrigger value="photo" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
-              <LucideImage size={20} style={{ color: getContrastColor(colors.tabsList) }} />
-            </TabsTrigger>
-            <TabsTrigger value="video" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
-              <Video size={20} style={{ color: getContrastColor(colors.tabsList) }} />
-            </TabsTrigger>
-            <TabsTrigger value="text" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
-              <Type size={20} style={{ color: getContrastColor(colors.tabsList) }} />
+            <TabsTrigger value="overview" className="flex-1 rounded-none border-b-4 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
+              <LayoutGrid size={20} style={{ color: getContrastColor(colors.tabsList) }} />
             </TabsTrigger>
           </TabsList>
           
           <div className="p-4 space-y-6">
-            <TabsContent value="photo" className="space-y-6">
-              {categorizedPosts.photos.length > 0 ? (
-                categorizedPosts.photos.map(p => <IdeaCard key={p.id} idea={p as any} />)
-              ) : (
-                <div className="py-16 text-center opacity-20">
-                  <p className="text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(colors.tabsContent) }}>No Photo Innovations</p>
-                </div>
-              )}
-            </TabsContent>
-            <TabsContent value="video" className="space-y-6">
-              {categorizedPosts.videos.length > 0 ? (
-                categorizedPosts.videos.map(p => <IdeaCard key={p.id} idea={p as any} />)
-              ) : (
-                <div className="py-16 text-center opacity-20">
-                  <p className="text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(colors.tabsContent) }}>No Video Innovations</p>
-                </div>
-              )}
-            </TabsContent>
-            <TabsContent value="text" className="space-y-6">
-              {categorizedPosts.text.length > 0 ? (
-                categorizedPosts.text.map(p => <IdeaCard key={p.id} idea={p as any} />)
-              ) : (
-                <div className="py-16 text-center opacity-20">
-                  <p className="text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(colors.tabsContent) }}>No Text-Based Ideas</p>
-                </div>
-              )}
+            <TabsContent value="overview" className="py-16 text-center opacity-20">
+               <p className="text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(colors.tabsContent) }}>Innovator Activity Hidden</p>
             </TabsContent>
           </div>
         </Tabs>
