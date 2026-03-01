@@ -9,22 +9,23 @@ import { doc } from 'firebase/firestore';
 /**
  * Animated Logo Loader Component
  * Horizontal Swaying with Balanced expressive eyes.
+ * Redined small size for premium feel.
  */
 function LogoLoader() {
   return (
     <div className="flex flex-col items-center gap-8 animate-in fade-in duration-700">
-      <div className="relative w-24 h-24 flex items-center justify-center">
+      <div className="relative w-20 h-20 flex items-center justify-center">
         <div className="relative z-10 animate-bubble-sway scale-75">
-          <svg width="110" height="110" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg width="100" height="100" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path 
               d="M20 40C20 28.9543 28.9543 20 40 20H80C91.0457 20 100 28.9543 100 40V70C100 81.0457 91.0457 90 80 90H45L20 105V40Z" 
               fill="#FF4500" 
             />
             <g className="animate-eye-look">
               <g className="animate-eye-blink">
-                {/* Balanced eyes - Refined small size as requested */}
-                <rect x="38" y="44" width="14" height="24" rx="7" fill="white" />
-                <rect x="68" y="44" width="14" height="24" rx="7" fill="white" />
+                {/* Refined small eyes as requested */}
+                <rect x="42" y="48" width="12" height="20" rx="6" fill="white" />
+                <rect x="66" y="48" width="12" height="20" rx="6" fill="white" />
               </g>
             </g>
             <circle cx="105" cy="15" r="8" fill="#FF4500" />

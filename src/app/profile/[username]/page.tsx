@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from "@/firebase";
-import { collection, query, where, limit, doc, setDoc, deleteDoc, serverTimestamp, orderBy } from "firebase/firestore";
+import { collection as fsCollection, query, where, limit, doc, setDoc, deleteDoc, serverTimestamp, orderBy } from "firebase/firestore";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { IdeaCard } from "@/components/feed/idea-card";
@@ -54,7 +54,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
 
   const userQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, "userProfiles"), where("username", "==", username.toLowerCase()), limit(1));
+    return query(fsCollection(db, "userProfiles"), where("username", "==", username.toLowerCase()), limit(1));
   }, [db, username]);
 
   const { data: userProfiles, isLoading } = useCollection(userQuery);
@@ -69,8 +69,8 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
   const isFollowing = !!followDoc;
 
   // Fetch Followers (Circle) and Following (Circling) for this user
-  const followingQuery = useMemoFirebase(() => (db && profileData ? query(collection(db, "follows"), where("followerId", "==", profileData.id)) : null), [db, profileData]);
-  const followersQuery = useMemoFirebase(() => (db && profileData ? query(collection(db, "follows"), where("followedId", "==", profileData.id)) : null), [db, profileData]);
+  const followingQuery = useMemoFirebase(() => (db && profileData ? query(fsCollection(db, "follows"), where("followerId", "==", profileData.id)) : null), [db, profileData]);
+  const followersQuery = useMemoFirebase(() => (db && profileData ? query(fsCollection(db, "follows"), where("followedId", "==", profileData.id)) : null), [db, profileData]);
   
   const { data: followingData } = useCollection(followingQuery);
   const { data: followersData } = useCollection(followersQuery);
@@ -78,7 +78,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
   // Fetch User Posts
   const userPostsQuery = useMemoFirebase(() => {
     if (!db || !profileData) return null;
-    return query(collection(db, "ideas"), where("authorId", "==", profileData.id), orderBy("createdAt", "desc"));
+    return query(fsCollection(db, "ideas"), where("authorId", "==", profileData.id), orderBy("createdAt", "desc"));
   }, [db, profileData]);
 
   const { data: userPosts, isLoading: postsLoading } = useCollection(userPostsQuery);
