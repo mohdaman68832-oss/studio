@@ -4,13 +4,14 @@
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { Search, Bell, Globe, Loader2, Plus, MessageSquare } from "lucide-react";
+import { Search, Bell, Globe, Loader2, Plus } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy, limit, where } from "firebase/firestore";
+import { collection, query, orderBy, limit } from "firebase/firestore";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 export default function HubPage() {
   const { user, loading: isUserLoading } = useUser();
@@ -157,5 +158,3 @@ export default function HubPage() {
     </div>
   );
 }
-
-import { Button } from "@/components/ui/button";
