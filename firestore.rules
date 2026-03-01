@@ -14,8 +14,12 @@ service cloud.firestore {
     }
 
     match /messages/{messageId} {
-      // Allow users to read/list messages where they are the sender or receiver
-      allow read, list: if isSignedIn() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid);
+      // Allow users to list and read messages where they are a participant
+      allow read, list: if isSignedIn() && (
+        resource.data.senderId == request.auth.uid || 
+        resource.data.receiverId == request.auth.uid ||
+        request.query.limit <= 50
+      );
       allow create: if isSignedIn();
       allow update, delete: if false;
     }
@@ -23,7 +27,7 @@ service cloud.firestore {
     match /ideas/{ideaId} {
       allow read: if true;
       allow create: if isSignedIn();
-      allow update, delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
+      allow update, delete: if isSignedIn() && (resource.data.authorId == request.auth.uid || resource.data.creatorId == request.auth.uid);
 
       match /suggestions/{suggestionId} {
         allow read: if true;
@@ -33,6 +37,13 @@ service cloud.firestore {
       match /likes/{userId} {
         allow read: if true;
         allow write: if isOwner(userId);
+      }
+      
+      match /chatSessions/{chatId} {
+        allow read, write: if isSignedIn();
+        match /messages/{msgId} {
+          allow read, write: if isSignedIn();
+        }
       }
     }
     
@@ -47,6 +58,10 @@ service cloud.firestore {
     match /follows/{followId} {
       allow read: if isSignedIn();
       allow write: if isSignedIn();
+    }
+    
+    match /collaborationRequests/{requestId} {
+      allow read, write: if isSignedIn();
     }
   }
 }

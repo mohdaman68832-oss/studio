@@ -4,17 +4,17 @@
 
 @layer base {
   :root {
-    --background: 25 30% 98%; /* Warm Off-White */
-    --foreground: 25 10% 12%; /* Deep Brownish Charcoal */
+    --background: 25 40% 98%; /* Warm Creamy White */
+    --foreground: 25 20% 12%; /* Deep Brownish Charcoal */
     --card: 0 0% 100%;
-    --card-foreground: 25 10% 12%;
+    --card-foreground: 25 20% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 25 10% 12%;
+    --popover-foreground: 25 20% 12%;
     --primary: 25 100% 45%; /* Deep Vibrant Orange */
     --primary-foreground: 0 0% 100%;
     --secondary: 35 100% 50%; /* Golden Orange */
     --secondary-foreground: 0 0% 100%;
-    --muted: 25 20% 94%;
+    --muted: 25 20% 95%;
     --muted-foreground: 25 10% 40%;
     --accent: 35 100% 50%;
     --accent-foreground: 0 0% 100%;
@@ -23,26 +23,26 @@
     --border: 25 20% 90%;
     --input: 25 20% 90%;
     --ring: 25 100% 45%;
-    --radius: 1.5rem;
+    --radius: 2rem;
   }
 
   .dark {
-    --background: 25 15% 8%; /* Deep Dark Warm Background */
+    --background: 25 15% 5%; /* Deep Obsidian */
     --foreground: 25 10% 95%;
-    --card: 25 10% 12%;
+    --card: 25 12% 10%;
     --card-foreground: 25 10% 95%;
-    --popover: 25 10% 12%;
+    --popover: 25 12% 10%;
     --popover-foreground: 25 10% 95%;
-    --primary: 35 100% 65%; /* Lighter Orange for Visibility */
+    --primary: 35 100% 65%; /* Bright Orange for visibility */
     --primary-foreground: 25 10% 5%;
-    --secondary: 35 80% 55%;
+    --secondary: 35 90% 55%;
     --secondary-foreground: 25 10% 5%;
-    --muted: 25 15% 18%;
+    --muted: 25 15% 15%;
     --muted-foreground: 25 10% 70%;
     --accent: 35 100% 65%;
     --accent-foreground: 25 10% 5%;
-    --border: 25 15% 22%;
-    --input: 25 15% 22%;
+    --border: 25 15% 20%;
+    --input: 25 15% 20%;
     --ring: 35 100% 65%;
   }
 }
@@ -57,12 +57,12 @@
 }
 
 .idea-card-shadow {
-  box-shadow: 0 10px 30px -10px rgba(255, 69, 0, 0.15);
+  box-shadow: 0 10px 40px -10px rgba(255, 69, 0, 0.2);
 }
 
 .bottom-nav-blur {
-  @apply bg-background/80 backdrop-blur-md;
-  box-shadow: 0 -2px 15px rgba(255, 69, 0, 0.08);
+  @apply bg-background/80 backdrop-blur-xl;
+  box-shadow: 0 -4px 20px rgba(255, 69, 0, 0.1);
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -78,5 +78,5 @@
   to { transform: translateX(100%); }
 }
 .animate-progress-fast {
-  animation: progress-fast 1s infinite linear;
+  animation: progress-fast 0.8s infinite linear;
 }
