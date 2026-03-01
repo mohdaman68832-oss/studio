@@ -9,9 +9,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from "@/firebase";
-import { collection, query, where, limit, doc, setDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
+import { collection, query, where, limit, doc, setDoc, deleteDoc, serverTimestamp, orderBy } from "firebase/firestore";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { IdeaCard } from "@/components/feed/idea-card";
 
 interface Sticker {
   id: string;
@@ -73,6 +74,24 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
   
   const { data: followingData } = useCollection(followingQuery);
   const { data: followersData } = useCollection(followersQuery);
+
+  // Fetch User Posts
+  const userPostsQuery = useMemoFirebase(() => {
+    if (!db || !profileData) return null;
+    return query(collection(db, "ideas"), where("authorId", "==", profileData.id), orderBy("createdAt", "desc"));
+  }, [db, profileData]);
+
+  const { data: userPosts, isLoading: postsLoading } = useCollection(userPostsQuery);
+
+  const categorizedPosts = useMemo(() => {
+    if (!userPosts) return { photos: [], videos: [], text: [] };
+    
+    return {
+      photos: userPosts.filter(p => p.mediaUrl && !p.mediaUrl.includes('.mp4') && !p.mediaUrl.includes('gtv-videos-bucket')),
+      videos: userPosts.filter(p => p.mediaUrl && (p.mediaUrl.includes('.mp4') || p.mediaUrl.includes('gtv-videos-bucket'))),
+      text: userPosts.filter(p => !p.mediaUrl || p.mediaUrl === "")
+    };
+  }, [userPosts]);
 
   const handleFollowToggle = async () => {
     if (!db || !currentUser || !profileData) return;
@@ -199,15 +218,34 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
               <Type size={20} style={{ color: getContrastColor(colors.tabsList) }} />
             </TabsTrigger>
           </TabsList>
-          <div className="min-h-[300px] pb-32">
-            <TabsContent value="photo" className="mt-0 py-16 text-center">
-              <p className="opacity-20 text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(colors.tabsContent) }}>No Photo Innovations</p>
+          
+          <div className="p-4 space-y-6">
+            <TabsContent value="photo" className="space-y-6">
+              {categorizedPosts.photos.length > 0 ? (
+                categorizedPosts.photos.map(p => <IdeaCard key={p.id} idea={p as any} />)
+              ) : (
+                <div className="py-16 text-center opacity-20">
+                  <p className="text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(colors.tabsContent) }}>No Photo Innovations</p>
+                </div>
+              )}
             </TabsContent>
-            <TabsContent value="video" className="mt-0 py-16 text-center">
-              <p className="opacity-20 text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(colors.tabsContent) }}>No Video Innovations</p>
+            <TabsContent value="video" className="space-y-6">
+              {categorizedPosts.videos.length > 0 ? (
+                categorizedPosts.videos.map(p => <IdeaCard key={p.id} idea={p as any} />)
+              ) : (
+                <div className="py-16 text-center opacity-20">
+                  <p className="text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(colors.tabsContent) }}>No Video Innovations</p>
+                </div>
+              )}
             </TabsContent>
-            <TabsContent value="text" className="mt-0 py-16 text-center">
-              <p className="opacity-20 text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(colors.tabsContent) }}>No Text-Based Ideas</p>
+            <TabsContent value="text" className="space-y-6">
+              {categorizedPosts.text.length > 0 ? (
+                categorizedPosts.text.map(p => <IdeaCard key={p.id} idea={p as any} />)
+              ) : (
+                <div className="py-16 text-center opacity-20">
+                  <p className="text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: getContrastColor(colors.tabsContent) }}>No Text-Based Ideas</p>
+                </div>
+              )}
             </TabsContent>
           </div>
         </Tabs>

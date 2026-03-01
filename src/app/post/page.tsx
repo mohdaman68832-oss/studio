@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
-import { collection, addDoc, serverTimestamp, doc } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, doc, updateDoc, increment } from "firebase/firestore";
 import { useRouter, useSearchParams } from "next/navigation";
 
 type Step = 1 | 2 | 3;
@@ -144,6 +144,7 @@ function PostFormContent() {
     if (!db || !user) return;
     setIsPosting(true);
     try {
+      // 1. Create the post
       await addDoc(collection(db, "ideas"), {
         title: formData.title,
         problem: isMeme ? "Meme content" : (formData.problem || "N/A"),
@@ -164,6 +165,12 @@ function PostFormContent() {
         ],
         createdAt: serverTimestamp(),
         likes: 0
+      });
+
+      // 2. Increment total posts count in user profile
+      const userProfileRef = doc(db, "userProfiles", user.uid);
+      updateDoc(userProfileRef, {
+        totalIdeasPosted: increment(1)
       });
 
       toast({

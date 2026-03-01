@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { 
@@ -37,10 +37,11 @@ import { Switch } from "@/components/ui/switch";
 import Image from "next/image";
 import { useUser, useAuth, useFirestore, useDoc, useMemoFirebase, useCollection } from "@/firebase";
 import { signOut } from "firebase/auth";
-import { doc, setDoc, collection, query, where } from "firebase/firestore";
+import { doc, setDoc, collection, query, where, orderBy } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { IdeaCard } from "@/components/feed/idea-card";
 
 interface Sticker {
   id: string;
@@ -123,6 +124,24 @@ export default function ProfilePage() {
   const { data: circlingData } = useCollection(followingQuery);
   const { data: circleData } = useCollection(followersQuery);
 
+  // Fetch My Posts
+  const myPostsQuery = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return query(collection(db, "ideas"), where("authorId", "==", user.uid), orderBy("createdAt", "desc"));
+  }, [db, user]);
+
+  const { data: myPosts, isLoading: postsLoading } = useCollection(myPostsQuery);
+
+  const categorizedPosts = useMemo(() => {
+    if (!myPosts) return { photos: [], videos: [], text: [] };
+    
+    return {
+      photos: myPosts.filter(p => p.mediaUrl && !p.mediaUrl.includes('.mp4') && !p.mediaUrl.includes('gtv-videos-bucket')),
+      videos: myPosts.filter(p => p.mediaUrl && (p.mediaUrl.includes('.mp4') || p.mediaUrl.includes('gtv-videos-bucket'))),
+      text: myPosts.filter(p => !p.mediaUrl || p.mediaUrl === "")
+    };
+  }, [myPosts]);
+
   useEffect(() => {
     if (profileData) {
       setFormData({
@@ -143,13 +162,6 @@ export default function ProfilePage() {
     if (isDarkMode) document.documentElement.classList.add('dark');
     else document.documentElement.classList.remove('dark');
   }, [isDarkMode]);
-
-  useEffect(() => {
-    if (!isOptimizeModalOpen && !showBannerDetail && !isColorPickerOpen) {
-      document.body.style.pointerEvents = 'auto';
-      document.body.style.overflow = 'auto';
-    }
-  }, [isOptimizeModalOpen, showBannerDetail, isColorPickerOpen]);
 
   const handleSignOut = async () => { 
     await signOut(auth); 
@@ -197,47 +209,6 @@ export default function ProfilePage() {
         setIsOptimizeModalOpen(false);
         setEditingStickerId(newSticker.id);
       }
-    }
-  };
-
-  const handleStickerPointerDown = (e: React.PointerEvent, id: string) => {
-    if (editingStickerId !== id) return;
-    e.preventDefault();
-    setIsDragging(true);
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-  };
-
-  const handleStickerPointerMove = (e: React.PointerEvent, id: string) => {
-    if (!isDragging || !stickerContainerRef.current || id !== editingStickerId) return;
-    const rect = stickerContainerRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    setFormData(prev => ({
-      ...prev,
-      stickers: prev.stickers.map(s => s.id === id ? { 
-        ...s, 
-        x: Math.max(0, Math.min(100, x)), 
-        y: Math.max(0, Math.min(100, y)) 
-      } : s)
-    }));
-  };
-
-  const updateSticker = (id: string, updates: Partial<Sticker>) => {
-    setFormData(prev => ({
-      ...prev,
-      stickers: prev.stickers.map(s => s.id === id ? { ...s, ...updates } : s)
-    }));
-  };
-
-  const handleDeleteSticker = () => {
-    if (editingStickerId) {
-      const idToRemove = editingStickerId;
-      setEditingStickerId(null);
-      setFormData(prev => ({
-        ...prev,
-        stickers: prev.stickers.filter(s => s.id !== idToRemove)
-      }));
-      toast({ title: "Sticker Deleted" });
     }
   };
 
@@ -299,9 +270,6 @@ export default function ProfilePage() {
                   transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`, 
                   touchAction: 'none'
                 }}
-                onPointerDown={(e) => handleStickerPointerDown(e, sticker.id)}
-                onPointerMove={(e) => handleStickerPointerMove(e, sticker.id)}
-                onPointerUp={() => setIsDragging(false)}
               >
                 <div className="relative w-24 h-24">
                   <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized />
@@ -356,41 +324,41 @@ export default function ProfilePage() {
               <Type size={20} style={{ color: getContrastColor(formData.customColors.tabsList) }} />
             </TabsTrigger>
           </TabsList>
-          <div className="py-24 text-center opacity-20">
-             <Plus size={48} className="mx-auto mb-4" />
-             <p className="text-[9px] font-black uppercase tracking-[0.3em]">No Content Shared Yet</p>
+          
+          <div className="p-4 space-y-6">
+            <TabsContent value="photo" className="space-y-6">
+              {categorizedPosts.photos.length > 0 ? (
+                categorizedPosts.photos.map(p => <IdeaCard key={p.id} idea={p as any} />)
+              ) : (
+                <div className="py-24 text-center opacity-20">
+                  <LucideImage size={48} className="mx-auto mb-4" />
+                  <p className="text-[9px] font-black uppercase tracking-[0.3em]">No Photos Shared Yet</p>
+                </div>
+              )}
+            </TabsContent>
+            <TabsContent value="video" className="space-y-6">
+              {categorizedPosts.videos.length > 0 ? (
+                categorizedPosts.videos.map(p => <IdeaCard key={p.id} idea={p as any} />)
+              ) : (
+                <div className="py-24 text-center opacity-20">
+                  <Video size={48} className="mx-auto mb-4" />
+                  <p className="text-[9px] font-black uppercase tracking-[0.3em]">No Videos Shared Yet</p>
+                </div>
+              )}
+            </TabsContent>
+            <TabsContent value="text" className="space-y-6">
+              {categorizedPosts.text.length > 0 ? (
+                categorizedPosts.text.map(p => <IdeaCard key={p.id} idea={p as any} />)
+              ) : (
+                <div className="py-24 text-center opacity-20">
+                  <Type size={48} className="mx-auto mb-4" />
+                  <p className="text-[9px] font-black uppercase tracking-[0.3em]">No Text Posts Shared Yet</p>
+                </div>
+              )}
+            </TabsContent>
           </div>
         </Tabs>
       </div>
-
-      {editingStickerId && activeSticker && (
-        <div className="fixed bottom-24 left-4 right-4 z-[6000] bg-white dark:bg-zinc-900 rounded-[3rem] border-4 border-primary shadow-2xl p-8 animate-in slide-in-from-bottom-6 pointer-events-auto">
-          <div className="space-y-6">
-            <header className="flex items-center justify-between">
-              <h4 className="text-[12px] font-black uppercase tracking-[0.3em] text-primary">Sticker Studio</h4>
-              <X onClick={() => setEditingStickerId(null)} size={24} className="cursor-pointer text-muted-foreground hover:text-primary transition-colors" />
-            </header>
-            <div className="grid grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label className="text-[9px] font-black uppercase opacity-40">Scale {Math.round(activeSticker.scale * 100)}%</Label>
-                <Slider value={[activeSticker.scale]} min={0.2} max={4} step={0.01} onValueChange={([v]) => updateSticker(activeSticker.id, { scale: v })} className="py-2" />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[9px] font-black uppercase opacity-40">Rotation {activeSticker.rotation}°</Label>
-                <Slider value={[activeSticker.rotation]} min={0} max={360} step={1} onValueChange={([v]) => updateSticker(activeSticker.id, { rotation: v })} className="py-2" />
-              </div>
-            </div>
-            <div className="flex gap-3 pt-2">
-               <Button variant="destructive" className="flex-1 rounded-2xl h-14 font-black uppercase text-[10px] tracking-widest shadow-lg" onClick={handleDeleteSticker}>
-                 <Trash2 size={16} className="mr-2" /> Delete
-               </Button>
-               <Button className="flex-1 rounded-2xl h-14 font-black uppercase text-[10px] tracking-widest bg-primary text-white shadow-xl" onClick={() => { setEditingStickerId(null); handleSaveProfile(); }}>
-                 <CheckCircle size={16} className="mr-2" /> Done
-               </Button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <Dialog open={isOptimizeModalOpen} onOpenChange={setIsOptimizeModalOpen}>
         <DialogContent className="max-w-md w-[95%] rounded-[3.5rem] p-0 overflow-hidden border-none shadow-2xl max-h-[85vh] flex flex-col z-[5000]" onOpenAutoFocus={e => e.preventDefault()}>
@@ -409,7 +377,7 @@ export default function ProfilePage() {
 
             <div className="space-y-4">
               <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2">Sphere Banner</Label>
-              <div onClick={() => setShowBannerDetail(true)} className="relative h-40 bg-muted rounded-[3rem] overflow-hidden border-2 border-dashed border-primary/20 cursor-pointer group shadow-inner">
+              <div onClick={() => bannerInputRef.current?.click()} className="relative h-40 bg-muted rounded-[3rem] overflow-hidden border-2 border-dashed border-primary/20 cursor-pointer group shadow-inner">
                 {formData.banner ? <Image src={formData.banner} alt="banner preview" fill className="object-cover transition-transform group-hover:scale-105" unoptimized /> : <Camera className="absolute inset-0 m-auto opacity-10" size={40} />}
                 <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"><Camera /></div>
               </div>
@@ -430,10 +398,6 @@ export default function ProfilePage() {
                     <Label className="text-[8px] font-black uppercase opacity-40 ml-1">Display Name</Label>
                     <Input value={formData.name} onChange={e => setFormData(p => ({ ...p, name: e.target.value }))} placeholder="Public Name" className="h-12 rounded-2xl font-bold text-sm bg-muted/30 border-none" />
                   </div>
-                  <div className="space-y-1">
-                    <Label className="text-[8px] font-black uppercase opacity-40 ml-1">Unique Username (Locked)</Label>
-                    <Input value={formData.username} disabled className="h-12 rounded-2xl font-bold text-sm bg-muted/50 border-none cursor-not-allowed opacity-60" />
-                  </div>
                 </div>
               </div>
             </div>
@@ -441,55 +405,6 @@ export default function ProfilePage() {
             <div className="space-y-3">
               <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2">Expertise Bio</Label>
               <Textarea value={formData.bio} onChange={e => setFormData(p => ({ ...p, bio: e.target.value }))} placeholder="Tell your innovation story..." className="rounded-[2rem] min-h-[100px] text-sm p-5 font-medium border-muted shadow-inner" />
-            </div>
-
-            <div className="space-y-6">
-              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2">Vibe Personalization</Label>
-              <div className="grid grid-cols-2 gap-4">
-                {['header', 'userInfo', 'bioCard', 'statsSection', 'tabsList', 'background', 'textOutline'].map(key => (
-                  <Button key={key} variant="outline" className="h-16 rounded-[1.5rem] flex-col gap-1 border-muted/50 shadow-sm hover:border-primary/30 transition-all" onClick={() => { setActiveColorSection(key as any); setIsColorPickerOpen(true); }}>
-                    <span className="text-[7px] font-black uppercase opacity-60">{key === 'textOutline' ? 'Text Glow' : key}</span>
-                    <div className="w-10 h-2 rounded-full border border-black/5" style={{ backgroundColor: (formData.customColors as any)[key] || '#eee' }} />
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2">Manage Stickers</Label>
-              <div className="flex flex-wrap gap-4">
-                {formData.stickers.map((s) => (
-                  <div key={s.id} className="relative group">
-                    <div className="w-20 h-20 bg-muted/50 rounded-[1.5rem] overflow-hidden border-2 border-primary/5 p-2 shadow-inner">
-                      <Image src={s.url} alt="sticker item" width={80} height={80} className="object-contain w-full h-full" unoptimized />
-                    </div>
-                    <div className="absolute -top-3 -right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button 
-                        size="icon" 
-                        className="h-8 w-8 rounded-full bg-primary text-white shadow-lg"
-                        onClick={() => {
-                          setEditingStickerId(s.id);
-                          setIsOptimizeModalOpen(false);
-                        }}
-                      >
-                        <Pencil size={12} />
-                      </Button>
-                      <Button 
-                        size="icon" 
-                        variant="destructive"
-                        className="h-8 w-8 rounded-full shadow-lg"
-                        onClick={() => setFormData(p => ({ ...p, stickers: p.stickers.filter(stick => stick.id !== s.id) }))}
-                      >
-                        <Trash2 size={12} />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-                <Button onClick={() => stickerInputRef.current?.click()} className="w-20 h-20 rounded-[1.5rem] bg-primary/5 text-primary border-4 border-dashed border-primary/10 flex flex-col items-center justify-center hover:bg-primary/10 transition-colors">
-                  <Plus size={24} />
-                  <span className="text-[8px] font-black uppercase mt-1">Add</span>
-                </Button>
-              </div>
             </div>
           </div>
           <div className="p-8 bg-white/80 backdrop-blur-md border-t shrink-0">
@@ -502,7 +417,6 @@ export default function ProfilePage() {
       </Dialog>
       <input type="file" ref={profileInputRef} className="hidden" accept="image/*" onChange={e => handleImageChange(e, 'profile')} />
       <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={e => handleImageChange(e, 'banner')} />
-      <input type="file" ref={stickerInputRef} className="hidden" accept="image/*" onChange={e => handleImageChange(e, 'sticker')} />
     </div>
   );
 }
