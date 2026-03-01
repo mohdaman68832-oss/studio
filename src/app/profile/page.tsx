@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
@@ -29,7 +28,7 @@ import { Switch } from "@/components/ui/switch";
 import Image from "next/image";
 import { useUser, useAuth, useFirestore, useDoc, useMemoFirebase, useCollection } from "@/firebase";
 import { signOut } from "firebase/auth";
-import { doc, updateDoc, collection as fsCollection, query, where, orderBy } from "firebase/firestore";
+import { doc, updateDoc, collection as firestoreCollection, query, where, orderBy } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -102,15 +101,15 @@ export default function ProfilePage() {
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [db, user]);
   const { data: profileData, isLoading: isProfileLoading } = useDoc(profileRef);
 
-  const followingQuery = useMemoFirebase(() => (db && user ? query(fsCollection(db, "follows"), where("followerId", "==", user.uid)) : null), [db, user]);
-  const followersQuery = useMemoFirebase(() => (db && user ? query(fsCollection(db, "follows"), where("followedId", "==", user.uid)) : null), [db, user]);
+  const followingQuery = useMemoFirebase(() => (db && user ? query(firestoreCollection(db, "follows"), where("followerId", "==", user.uid)) : null), [db, user]);
+  const followersQuery = useMemoFirebase(() => (db && user ? query(firestoreCollection(db, "follows"), where("followedId", "==", user.uid)) : null), [db, user]);
   
   const { data: circlingData } = useCollection(followingQuery);
   const { data: circleData } = useCollection(followersQuery);
 
   const myPostsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return query(fsCollection(db, "ideas"), where("authorId", "==", user.uid), orderBy("createdAt", "desc"));
+    return query(firestoreCollection(db, "ideas"), where("authorId", "==", user.uid), orderBy("createdAt", "desc"));
   }, [db, user]);
 
   const { data: myPosts } = useCollection(myPostsQuery);
