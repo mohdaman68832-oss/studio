@@ -106,7 +106,7 @@ export default function IdeaDetailPage() {
           <h1 className="font-black text-sm uppercase tracking-tighter truncate">{idea?.title}</h1>
           <div className="flex items-center gap-1.5 mt-0.5">
             <Globe size={10} className="text-muted-foreground" />
-            <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest leading-none">Public Conversation</p>
+            <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest leading-none">Public Hub</p>
           </div>
         </div>
       </header>
@@ -179,7 +179,7 @@ export default function IdeaDetailPage() {
           <div className="space-y-6 pt-4">
             <div className="flex items-center gap-3 sticky top-0 bg-background/95 backdrop-blur-sm py-2 z-10">
                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 flex items-center gap-2">
-                 <Globe size={14} /> Global Chat
+                 <Globe size={14} /> Global Conversation
                </span>
                <Separator className="flex-1 opacity-50" />
             </div>
@@ -203,12 +203,11 @@ export default function IdeaDetailPage() {
                         : "bg-white text-foreground border-border/50 rounded-tl-none"
                     )}>
                       <p className="text-[12px] leading-relaxed">
-                          <span className={cn(
-                            "font-black mr-1.5 uppercase text-[9px]",
-                            isMe ? "text-white/80" : "text-primary"
-                          )}>
-                            {suggestion.userName}
-                          </span>
+                          {!isMe && (
+                            <span className="font-black mr-1.5 uppercase text-[9px] text-primary">
+                              {suggestion.userName}
+                            </span>
+                          )}
                           {suggestion.text}
                       </p>
                     </div>
