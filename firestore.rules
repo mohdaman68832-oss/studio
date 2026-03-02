@@ -8,10 +8,10 @@ service cloud.firestore {
       allow write: if request.auth != null && request.auth.uid == userId;
     }
     
-    // Private Chats: Metadata access for participants
+    // Private Chats: Metadata and Messages
     match /privateChats/{chatId} {
-      // Rule for listing: Must filter by participants array containing the user's UID
-      // This is what needs the composite index!
+      // Rule for listing and reading: user must be in the participants array
+      // This matches query: where("participants", "array-contains", uid)
       allow read: if request.auth != null && request.auth.uid in resource.data.participants;
       
       // Allow creation if the creator is one of the participants
@@ -22,13 +22,13 @@ service cloud.firestore {
       
       // Subcollection: messages
       match /messages/{messageId} {
-        // Efficient way to check parent chat participants
+        // Participants can read and write messages
         allow read, write: if request.auth != null && 
           request.auth.uid in get(/databases/$(database)/documents/privateChats/$(chatId)).data.participants;
       }
     }
     
-    // Posts: Public read, Auth write
+    // Global Posts
     match /posts/{postId} {
       allow read: if true;
       allow write: if request.auth != null && request.auth.uid == request.resource.data.uid;

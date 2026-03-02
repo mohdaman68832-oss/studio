@@ -21,15 +21,6 @@ export interface UseCollectionResult<T> {
   error: FirestoreError | Error | null;
 }
 
-export interface InternalQuery extends Query<DocumentData> {
-  _query: {
-    path: {
-      canonicalString(): string;
-      toString(): string;
-    }
-  }
-}
-
 export function useCollection<T = any>(
     memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean})  | null | undefined,
 ): UseCollectionResult<T> {
@@ -50,7 +41,7 @@ export function useCollection<T = any>(
 
     const auth = getAuth();
     
-    // CRITICAL: Auth Guard to prevent "Missing Permissions" error before user is logged in
+    // Guard to prevent permission errors before auth is fully ready on client
     if (!auth.currentUser) {
       setIsLoading(true);
       return;
@@ -70,16 +61,14 @@ export function useCollection<T = any>(
         setError(null);
         setIsLoading(false);
       },
-      (err: FirestoreError) => {
-        let path = "unknown";
+      async (err: FirestoreError) => {
+        // Path extraction fallback
+        let path = "unknown_collection";
         try {
-          // Attempt to extract path for better debugging
-          path = memoizedTargetRefOrQuery.type === 'collection'
-            ? (memoizedTargetRefOrQuery as CollectionReference).path
-            : (memoizedTargetRefOrQuery as any)._query?.path?.toString() || "query";
-        } catch (e) {
-          console.warn("Path extraction failed", e);
-        }
+          if ('path' in memoizedTargetRefOrQuery) {
+            path = memoizedTargetRefOrQuery.path;
+          }
+        } catch (e) {}
 
         const contextualError = new FirestorePermissionError({
           operation: 'list',
