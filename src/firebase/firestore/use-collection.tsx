@@ -9,7 +9,7 @@ import {
   QuerySnapshot,
   CollectionReference,
 } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth'; // FIXED: Correct import from firebase/auth
+import { getAuth } from 'firebase/auth';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
@@ -26,9 +26,7 @@ export interface UseCollectionResult<T> {
   error: FirestoreError | Error | null; // Error object, or null.
 }
 
-/* Internal implementation of Query:
-  https://github.com/firebase/firebase-js-sdk/blob/c5f08a9bc5da0d2b0207802c972d53724ccef055/packages/firestore/src/lite-api/reference.ts#L143
-*/
+/* Internal implementation of Query */
 export interface InternalQuery extends Query<DocumentData> {
   _query: {
     path: {
@@ -40,7 +38,7 @@ export interface InternalQuery extends Query<DocumentData> {
 
 /**
  * React hook to subscribe to a Firestore collection or query in real-time.
- * Handles nullable references/queries.
+ * Professional Architecture: Delays execution until Auth is ready.
  */
 export function useCollection<T = any>(
     memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean})  | null | undefined,
@@ -53,7 +51,7 @@ export function useCollection<T = any>(
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
-    // PROFESSIONAL CHECK: If reference is null, return.
+    // 1. PROFESSIONAL GUARD: Wait for reference to be provided
     if (!memoizedTargetRefOrQuery) {
       setData(null);
       setIsLoading(false);
@@ -61,7 +59,7 @@ export function useCollection<T = any>(
       return;
     }
 
-    // EXTRA SAFETY: Ensure auth is ready before attempting a potentially protected list
+    // 2. PROFESSIONAL GUARD: Wait for Auth to be ready to prevent permission errors
     const auth = getAuth();
     if (!auth.currentUser) {
       setIsLoading(true);
@@ -82,8 +80,8 @@ export function useCollection<T = any>(
         setError(null);
         setIsLoading(false);
       },
-      (error: FirestoreError) => {
-        // Safe path extraction
+      (err: FirestoreError) => {
+        // Safe path extraction for contextual error
         let path = "unknown";
         try {
           path = memoizedTargetRefOrQuery.type === 'collection'

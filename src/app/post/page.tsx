@@ -22,8 +22,6 @@ import Image from "next/image";
 import { 
   Sheet, 
   SheetContent, 
-  SheetHeader, 
-  SheetTitle, 
   SheetTrigger 
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -110,7 +108,8 @@ function PostFormContent() {
     
     setIsPosting(true);
     try {
-      // SINGLE WRITE: Only add to posts collection. No profile updates.
+      // PROFESSIONAL ARCHITECTURE: SINGLE WRITE
+      // We only write to 'posts'. No profile updates or increments.
       await addDoc(collection(db, "posts"), {
         uid: user.uid,
         username: user.displayName || "Innovator",

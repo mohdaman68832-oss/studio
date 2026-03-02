@@ -25,11 +25,18 @@ service cloud.firestore {
       allow write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Messages and Groups
+    // Follows: Authenticated read/write
+    match /follows/{followId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Messages: Access restricted to sender/receiver
     match /messages/{messageId} {
       allow read, write: if request.auth != null && (request.auth.uid == resource.data.senderId || request.auth.uid == resource.data.receiverId);
       allow create: if request.auth != null;
     }
+
+    // Groups: Global read, Authenticated create
     match /groups/{groupId} {
       allow read: if true;
       allow write: if request.auth != null;

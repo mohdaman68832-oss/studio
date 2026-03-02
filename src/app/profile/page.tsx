@@ -11,7 +11,7 @@ import {
   Moon,
   Palette,
   Sticker as StickerIcon,
-  Trash2,
+  X,
   LayoutGrid
 } from "lucide-react";
 import { 
@@ -21,7 +21,6 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -80,7 +79,6 @@ export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   
-  const profileInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
@@ -162,7 +160,7 @@ export default function ProfilePage() {
   const addSticker = (url: string) => {
     const newSticker: Sticker = {
       id: Math.random().toString(36).substr(2, 9),
-      url, x: 50, y: 50, rotation: Math.random() * 20 - 10, scale: 1
+      url, x: Math.random() * 80 + 10, y: Math.random() * 40 + 10, rotation: Math.random() * 20 - 10, scale: 1
     };
     setFormData(prev => ({ ...prev, stickers: [...prev.stickers, newSticker] }));
   };
@@ -355,7 +353,6 @@ export default function ProfilePage() {
           </div>
         </DialogContent>
       </Dialog>
-      <input type="file" ref={profileInputRef} className="hidden" accept="image/*" onChange={e => handleImageChange(e, 'profile')} />
       <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={e => handleImageChange(e, 'banner')} />
     </div>
   );
