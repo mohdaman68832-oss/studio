@@ -60,7 +60,6 @@ export function useCollection<T = any>(
     }
 
     // 2. PROFESSIONAL GUARD: Prevent premature access before Auth is ready
-    // This prevents 'Missing or insufficient permissions' for 'list' method on mount.
     const auth = getAuth();
     if (!auth.currentUser) {
       setIsLoading(true);

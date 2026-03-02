@@ -94,7 +94,7 @@ export default function ProfilePage() {
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [db, user]);
   const { data: profileData, isLoading: isProfileLoading } = useDoc(profileRef);
 
-  // PROFESSIONAL ARCHITECTURE: Fetch user's own posts dynamically to get real count.
+  // Dynamic post fetching for count
   const userPostsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
@@ -169,7 +169,11 @@ export default function ProfilePage() {
     setFormData(prev => ({ ...prev, stickers: prev.stickers.filter(s => s.id !== id) }));
   };
 
-  if (isUserLoading || isProfileLoading) return null;
+  if (isUserLoading || isProfileLoading) return (
+    <div className="flex h-screen items-center justify-center bg-background">
+      <Loader2 className="animate-spin text-primary h-8 w-8" />
+    </div>
+  );
   if (!user) return null;
 
   const headerColor = formData.customColors.header || "var(--primary)";
