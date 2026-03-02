@@ -3,37 +3,28 @@ service cloud.firestore {
   match /databases/{database}/documents {
     
     // Posts: Universal read for logged-in users, authenticated create.
-    // Owners can update/delete their own posts.
     match /posts/{postId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null;
       allow update, delete: if request.auth != null && request.auth.uid == resource.data.uid;
       
-      // Nested subcollections
       match /likes/{userId} {
         allow read, write: if request.auth != null;
       }
       match /suggestions/{suggestionId} {
-        allow read: if request.auth != null;
-        allow create: if request.auth != null;
+        allow read, write: if request.auth != null;
       }
     }
     
-    // User profiles: Public read, Owner-only write (Strict UID match)
+    // User profiles: Public read, Owner-only write
     match /userProfiles/{userId} {
       allow read: if true;
       allow write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Follows: Authenticated read/write
-    match /follows/{followId} {
-      allow read, write: if request.auth != null;
-    }
-
-    // Global fallback - restrict for production later
+    // Fallback for other collections
     match /{document=**} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
+      allow read, write: if request.auth != null;
     }
   }
 }

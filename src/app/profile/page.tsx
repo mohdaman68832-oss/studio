@@ -94,8 +94,7 @@ export default function ProfilePage() {
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [db, user]);
   const { data: profileData, isLoading: isProfileLoading } = useDoc(profileRef);
 
-  // DYNAMIC POST COUNT: Fetch and count only when user is ready.
-  // This removes the need for a stored postCount field.
+  // DYNAMIC POST FETCH: Professional way - Fetch when user is available
   const userPostsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
@@ -143,7 +142,7 @@ export default function ProfilePage() {
       setIsOptimizeModalOpen(false);
     } catch (error: any) {
       console.error("Profile update error:", error);
-      toast({ variant: "destructive", title: "Save Error", description: "Database error during optimization." });
+      toast({ variant: "destructive", title: "Save Error", description: "Insufficient permissions or database error." });
     } finally {
       setIsSaving(false);
     }
@@ -259,7 +258,9 @@ export default function ProfilePage() {
               <div className="flex justify-center py-10"><Loader2 className="animate-spin text-primary" /></div>
             ) : userPosts && userPosts.length > 0 ? (
               userPosts.map((post) => (
-                <IdeaCard key={post.id} idea={post as any} />
+                <div key={post.id} className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  <IdeaCard idea={post as any} />
+                </div>
               ))
             ) : (
               <div className="py-20 text-center space-y-4 opacity-30">
