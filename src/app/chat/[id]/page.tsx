@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -6,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, Send, Phone, Info, Loader2, Video, Lock, Circle } from "lucide-react";
+import { ChevronLeft, Send, Phone, Info, Video, Lock, Circle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFirestore, useDoc, useMemoFirebase, useUser, useCollection } from "@/firebase";
 import { doc, collection, query, orderBy, addDoc, serverTimestamp, setDoc, limit } from "firebase/firestore";
@@ -20,13 +19,11 @@ export default function ChatDetailPage() {
   const { toast } = useToast();
   const chatId = params.id as string;
 
-  // Extract recipient ID from chatId (assuming chatId = uid1_uid2 sorted)
   const recipientId = chatId.split("_").find(id => id !== currentUser?.uid) || "";
 
   const recipientRef = useMemoFirebase(() => (db && recipientId ? doc(db, "userProfiles", recipientId) : null), [db, recipientId]);
   const { data: recipient, isLoading: isRecipientLoading } = useDoc(recipientRef);
 
-  // Messages Query - Using the requested subcollection structure
   const messagesQuery = useMemoFirebase(() => {
     if (!db || !chatId) return null;
     return query(
@@ -54,7 +51,6 @@ export default function ChatDetailPage() {
     setNewMessage("");
 
     try {
-      // 1. Update/Create Chat metadata
       await setDoc(doc(db, "privateChats", chatId), {
         chatId: chatId,
         participants: chatId.split("_"),
@@ -62,7 +58,6 @@ export default function ChatDetailPage() {
         timestamp: serverTimestamp(),
       }, { merge: true });
 
-      // 2. Add message to subcollection
       await addDoc(collection(db, "privateChats", chatId, "messages"), {
         senderId: currentUser.uid,
         text: text,

@@ -13,14 +13,14 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 
 export default function HubPage() {
-  const { user, loading: isUserLoading } = useUser();
+  const { user, isUserLoading } = useUser();
   const db = useFirestore();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [userSearchResults, setUserSearchResults] = useState<any[]>([]);
   const [isSearchingUsers, setIsSearchingUsers] = useState(false);
 
-  // Private Chats Query - Corrected for the index: participants (array-contains) + timestamp (desc)
+  // Private Chats Query - Matches the composite index: participants (array-contains) + timestamp (desc)
   const privateChatsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(

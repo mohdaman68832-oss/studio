@@ -4,7 +4,7 @@ import React, { DependencyList, createContext, useContext, ReactNode, useMemo, u
 import { FirebaseApp } from 'firebase/app';
 import { Firestore } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
-import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
+import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 interface FirebaseProviderProps {
   children: ReactNode;
@@ -62,7 +62,6 @@ function LogoLoader() {
             />
             <g className="animate-eye-look">
               <g className="animate-eye-blink">
-                {/* Tiny Elegant Balanced Eyes (2x4) */}
                 <rect x="58" y="58" width="2" height="4" rx="1" fill="white" />
                 <rect x="68" y="58" width="2" height="4" rx="1" fill="white" />
               </g>
@@ -93,6 +92,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   const [userAuthState, setUserAuthState] = useState<UserAuthState>({
     user: null,
     isUserLoading: true,
+    userError: null
   });
 
   useEffect(() => {

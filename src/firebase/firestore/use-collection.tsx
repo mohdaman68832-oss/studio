@@ -39,7 +39,7 @@ export function useCollection<T = any>(
       return;
     }
     
-    // Auth Guard: Only start the listener when Auth is initialized and user is present
+    // Auth Guard: Only start the listener when Auth is initialized
     const auth = getAuth();
     if (!auth.currentUser) {
       setIsLoading(true);
