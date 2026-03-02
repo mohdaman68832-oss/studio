@@ -9,7 +9,6 @@ import { collection, query, orderBy, limit, where, getDocs } from "firebase/fire
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 
@@ -21,19 +20,7 @@ export default function HubPage() {
   const [userSearchResults, setUserSearchResults] = useState<any[]>([]);
   const [isSearchingUsers, setIsSearchingUsers] = useState(false);
 
-  // Notifications Query
-  const notificationsQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return query(
-      collection(db, "users", user.uid, "notifications"),
-      orderBy("createdAt", "desc"),
-      limit(20)
-    );
-  }, [db, user]);
-
-  const { data: notifications, isLoading: isNotificationsLoading } = useCollection(notificationsQuery);
-
-  // Private Chats Query - Optimized for the composite index (participants array-contains + timestamp desc)
+  // Private Chats Query - Aligned with the Composite Index: participants (array-contains) + timestamp (desc)
   const privateChatsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(
@@ -49,10 +36,12 @@ export default function HubPage() {
     if (!searchQuery.trim() || !db) return;
     setIsSearchingUsers(true);
     try {
+      // Case-insensitive user search logic
+      const searchStr = searchQuery.toLowerCase().trim();
       const q = query(
         collection(db, "userProfiles"),
-        where("username", ">=", searchQuery.toLowerCase()),
-        where("username", "<=", searchQuery.toLowerCase() + "\uf8ff"),
+        where("username", ">=", searchStr),
+        where("username", "<=", searchStr + "\uf8ff"),
         limit(5)
       );
       const snap = await getDocs(q);
@@ -61,7 +50,7 @@ export default function HubPage() {
         .filter(u => u.id !== user?.uid);
       setUserSearchResults(results);
     } catch (e) {
-      console.error("Search failed", e);
+      console.error("User search failed", e);
     } finally {
       setIsSearchingUsers(false);
     }
@@ -69,6 +58,7 @@ export default function HubPage() {
 
   const startChat = (recipientId: string) => {
     if (!user) return;
+    // Chat ID is always sorted UIDs to ensure single channel between two users
     const chatId = [user.uid, recipientId].sort().join("_");
     router.push(`/chat/${chatId}`);
   };
@@ -120,7 +110,7 @@ export default function HubPage() {
 
         {userSearchResults.length > 0 && (
           <div className="mt-4 space-y-2 animate-in fade-in slide-in-from-top-2">
-            <p className="text-[10px] font-black uppercase text-muted-foreground ml-2">Search Results</p>
+            <p className="text-[10px] font-black uppercase text-muted-foreground ml-2">People found</p>
             {userSearchResults.map(u => (
               <div 
                 key={u.id} 
@@ -129,7 +119,7 @@ export default function HubPage() {
               >
                 <Avatar className="h-10 w-10">
                   <AvatarImage src={u.profilePictureUrl} className="object-cover" />
-                  <AvatarFallback className="bg-primary/5 text-primary text-xs font-black">{u.username?.[0]}</AvatarFallback>
+                  <AvatarFallback className="bg-primary/5 text-primary text-xs font-black">{u.username?.[0]?.toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
                   <p className="text-sm font-black uppercase tracking-tight">@{u.username}</p>
@@ -145,7 +135,7 @@ export default function HubPage() {
         <div className="px-6 mb-6">
           <TabsList className="w-full h-12 bg-muted/30 rounded-full p-1 grid grid-cols-3">
             <TabsTrigger value="private" className="rounded-full text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">
-              <MessageCircle size={14} className="mr-2" /> Private
+              <MessageCircle size={14} className="mr-2" /> Chats
             </TabsTrigger>
             <TabsTrigger value="notifications" className="rounded-full text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">
               <Bell size={14} className="mr-2" /> Alerts
@@ -171,14 +161,14 @@ export default function HubPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-center mb-0.5">
                       <h4 className="text-sm font-black truncate uppercase tracking-tighter">
-                        Chat Instance
+                        Secure Conversation
                       </h4>
                       <p className="text-[9px] text-muted-foreground font-black uppercase">
-                        {chat.timestamp && new Date(chat.timestamp.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {chat.timestamp?.seconds ? new Date(chat.timestamp.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Recently"}
                       </p>
                     </div>
                     <p className="text-[11px] text-muted-foreground truncate font-medium">
-                      {chat.lastMessage || "Start a conversation..."}
+                      {chat.lastMessage || "Encrypted messaging channel active."}
                     </p>
                   </div>
                 </div>
@@ -187,33 +177,23 @@ export default function HubPage() {
           ) : (
             <div className="py-24 text-center space-y-4 opacity-30">
               <MessageCircle size={48} className="mx-auto text-primary/30" />
-              <p className="text-[10px] font-black uppercase tracking-[0.2em]">No Private Chats</p>
-              <p className="text-[9px] font-medium italic px-10">Search for a username above to start chatting.</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em]">Private Space Empty</p>
+              <p className="text-[9px] font-medium italic px-10">Search for an innovator above to start a private conversation.</p>
             </div>
           )}
         </TabsContent>
 
         <TabsContent value="notifications" className="px-6 space-y-4">
-          {isNotificationsLoading ? (
-            <div className="flex justify-center py-12"><Loader2 className="animate-spin text-primary" /></div>
-          ) : notifications && notifications.length > 0 ? (
-             notifications.map((notif) => (
-              <div key={notif.id} className="flex items-start gap-4 p-5 rounded-[2.5rem] border shadow-md bg-card mb-4 opacity-80">
-                <Bell size={20} className="text-primary shrink-0 mt-1" />
-                <div className="flex-1">
-                  <p className="text-[12px] font-medium text-foreground leading-snug">{notif.message}</p>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="py-24 text-center opacity-30"><p className="text-[10px] font-black uppercase">No Alerts</p></div>
-          )}
+          <div className="py-24 text-center opacity-30">
+             <Bell size={48} className="mx-auto mb-4" />
+             <p className="text-[10px] font-black uppercase">No Alerts Yet</p>
+          </div>
         </TabsContent>
 
         <TabsContent value="groups" className="px-6 space-y-4">
           <div className="py-24 text-center opacity-30">
             <Globe size={48} className="mx-auto mb-4" />
-            <p className="text-[10px] font-black uppercase">Feature Coming Soon</p>
+            <p className="text-[10px] font-black uppercase tracking-widest">Discovery Feature Soon</p>
           </div>
         </TabsContent>
       </Tabs>

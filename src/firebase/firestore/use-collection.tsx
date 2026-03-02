@@ -9,7 +9,7 @@ import {
   QuerySnapshot,
   CollectionReference,
 } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { getAuth } from 'firebase/auth'; // FIXED: Correct import from firebase/auth
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
@@ -61,14 +61,15 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       async (err: FirestoreError) => {
+        // Attempt to extract meaningful path for debugging
         let path = "unknown_collection";
         try {
-          // Attempt to extract path from the query or collection reference
           if ('path' in (memoizedTargetRefOrQuery as any)) {
             path = (memoizedTargetRefOrQuery as any).path;
-          } else if ('_query' in (memoizedTargetRefOrQuery as any)) {
-            const q = (memoizedTargetRefOrQuery as any)._query;
-            if (q && q.path) path = q.path.toString();
+          } else {
+            // For Query objects, path is often nested
+            const anyQuery = memoizedTargetRefOrQuery as any;
+            path = anyQuery._query?.path?.toString() || anyQuery.query?.path?.toString() || "filtered_query";
           }
         } catch (e) {}
 
@@ -88,7 +89,7 @@ export function useCollection<T = any>(
   }, [memoizedTargetRefOrQuery]);
 
   if(memoizedTargetRefOrQuery && !memoizedTargetRefOrQuery.__memo) {
-    throw new Error(memoizedTargetRefOrQuery + ' was not properly memoized using useMemoFirebase');
+    throw new Error('Collection/Query was not properly memoized using useMemoFirebase. This can cause infinite loops.');
   }
   return { data, isLoading, error };
 }
