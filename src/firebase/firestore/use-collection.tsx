@@ -39,10 +39,18 @@ export function useCollection<T = any>(
       return;
     }
     
-    // Auth Guard: Only start the listener when Auth is initialized
-    const auth = getAuth();
+    // Auth Guard: Ensure Auth is available and user is present
+    let auth;
+    try {
+      auth = getAuth();
+    } catch (e) {
+      setIsLoading(true);
+      return;
+    }
+
     if (!auth.currentUser) {
       setIsLoading(true);
+      setData(null);
       return;
     }
 
@@ -68,6 +76,8 @@ export function useCollection<T = any>(
           } else {
             const anyQuery = memoizedTargetRefOrQuery as any;
             path = anyQuery._query?.path?.toString() || anyQuery.query?.path?.toString() || "filtered_query";
+            // Clean up internal path representation if needed
+            if (path.includes('(')) path = path.split('/').pop() || "filtered_query";
           }
         } catch (e) {}
 
