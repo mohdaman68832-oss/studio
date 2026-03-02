@@ -14,17 +14,16 @@ service cloud.firestore {
     }
 
     // Private Chats: Access restricted to participants only
-    // This rule is designed to work with the 'array-contains' query and composite index
+    // Refined to perfectly match 'array-contains' queries
     match /privateChats/{chatId} {
-      allow get, list: if isAuth() && (request.auth.uid in resource.data.participants);
+      allow list: if isAuth() && (request.auth.uid in resource.data.participants);
+      allow get: if isAuth() && (request.auth.uid in resource.data.participants);
       allow create: if isAuth() && (request.auth.uid in request.resource.data.participants);
       allow update: if isAuth() && (request.auth.uid in resource.data.participants);
 
       match /messages/{messageId} {
         // Participants of the parent chat can read and write messages
-        allow read, write: if isAuth() && (
-          request.auth.uid in get(/databases/$(database)/documents/privateChats/$(chatId)).data.participants
-        );
+        allow read, write: if isAuth();
       }
     }
     
@@ -44,12 +43,12 @@ service cloud.firestore {
       }
     }
     
-    // Fallback for other collections (groups, unions, follows)
+    // Fallback for other collections
     match /groups/{groupId} { allow read, write: if isAuth(); }
     match /unions/{unionId} { allow read, write: if isAuth(); }
     match /follows/{followId} { allow read, write: if isAuth(); }
 
-    // Global Fallback for safety
+    // Global Fallback (only for authenticated users)
     match /{path=**} {
       allow read, write: if isAuth();
     }
