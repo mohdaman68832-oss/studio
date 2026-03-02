@@ -53,7 +53,7 @@ export function useCollection<T = any>(
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
-    // PROFESSIONAL CHECK: If reference is null or target is not memoized, return.
+    // PROFESSIONAL CHECK: If reference is null, return.
     if (!memoizedTargetRefOrQuery) {
       setData(null);
       setIsLoading(false);
@@ -62,9 +62,9 @@ export function useCollection<T = any>(
     }
 
     // EXTRA SAFETY: Ensure auth is ready before attempting a potentially protected list
+    // This implements the "Professional Way" fetch check.
     const auth = getAuth();
     if (!auth.currentUser) {
-      // If not logged in, we wait to avoid "Missing Permissions" on protected collections
       setIsLoading(true);
       return;
     }

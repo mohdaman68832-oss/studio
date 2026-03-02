@@ -96,7 +96,8 @@ export default function ProfilePage() {
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [db, user]);
   const { data: profileData, isLoading: isProfileLoading } = useDoc(profileRef);
 
-  // DYNAMIC POST COUNT: Live query to get post count based on currentUser.uid
+  // REQUIREMENT PART 2: DYNAMIC POST COUNT
+  // Dynamically calculate post count based on live query snapshot size.
   const userPostsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
