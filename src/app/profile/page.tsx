@@ -94,7 +94,7 @@ export default function ProfilePage() {
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [db, user]);
   const { data: profileData, isLoading: isProfileLoading } = useDoc(profileRef);
 
-  // Dynamic post fetching for count
+  // Dynamic post fetching for count and display
   const userPostsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
@@ -209,7 +209,7 @@ export default function ProfilePage() {
           <div className="px-6 -mt-16 flex flex-col items-center relative z-20">
             <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl">
               <AvatarImage src={formData.profilePic} className="object-cover" />
-              <AvatarFallback className="text-2xl font-black">{formData.name?.[0]}</AvatarFallback>
+              <AvatarFallback className="text-2xl font-black">{formData.name?.[0] || user.email?.[0]?.toUpperCase()}</AvatarFallback>
             </Avatar>
           </div>
 
@@ -226,7 +226,7 @@ export default function ProfilePage() {
       <div className="w-full relative mt-4">
         <div style={{ backgroundColor: formData.customColors.userInfo }} className="px-6 flex flex-col items-center">
           <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(formData.customColors.userInfo) }}>{formData.name || "Innovator"}</h2>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(formData.customColors.userInfo) }}>@{profileData?.username}</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(formData.customColors.userInfo) }}>@{profileData?.username || "user"}</p>
           <div className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-xl" style={{ backgroundColor: formData.customColors.bioCard || "hsl(var(--card))" }}>
             <p className="text-center text-[12px] leading-relaxed font-bold italic" style={{ color: getContrastColor(formData.customColors.bioCard) }}>
               {formData.bio || "Innovating the future, one idea at a time."}

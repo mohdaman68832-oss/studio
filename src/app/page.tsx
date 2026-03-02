@@ -3,8 +3,8 @@
 import { IdeaCard } from "@/components/feed/idea-card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
-import { collection, query, orderBy, where, doc } from "firebase/firestore";
+import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
+import { collection, query, orderBy, where } from "firebase/firestore";
 import { useMemo, useState, Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RefreshCcw, LayoutGrid, Lock, Globe } from "lucide-react";
@@ -19,13 +19,14 @@ function FeedContent() {
 
   const [activeCategory, setActiveCategory] = useState("All");
 
-  // PROFESSIONAL ARCHITECTURE: Use filtered query to avoid list permission conflicts on broad collections.
+  // Filtered query for Home Feed
   const postsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
-    // For now, only show user's own posts to ensure compliance with ownership rules.
+    // Show user's own posts or public posts
+    // For production-level consistency, we query by uid if strict ownership is needed
+    // Otherwise, generic list is fine with updated rules
     return query(
       collection(db, "posts"), 
-      where("uid", "==", user.uid),
       orderBy("createdAt", "desc")
     );
   }, [db, user?.uid]);
@@ -48,11 +49,11 @@ function FeedContent() {
     <div className="max-w-md mx-auto min-h-screen bg-background px-4 pt-8 pb-24 relative">
       <header className="mb-6 px-1 flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-black text-primary uppercase tracking-tighter leading-none">My Sphere</h1>
+          <h1 className="text-3xl font-black text-primary uppercase tracking-tighter leading-none">Sphere Feed</h1>
           <div className="flex items-center gap-1.5 mt-1">
-            <Lock size={10} className="text-muted-foreground" />
+            <Globe size={10} className="text-muted-foreground" />
             <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">
-              Private Feed
+              Global Innovation Hub
             </p>
           </div>
         </div>
@@ -97,8 +98,8 @@ function FeedContent() {
           ))
         ) : (
           <div className="py-24 text-center space-y-4 opacity-30 flex flex-col items-center">
-            <Lock size={48} className="text-primary/20" />
-            <p className="text-[10px] font-black uppercase tracking-widest">No private posts found</p>
+            <Globe size={48} className="text-primary/20" />
+            <p className="text-[10px] font-black uppercase tracking-widest">No innovations found</p>
             <Link href="/post"><Button variant="outline" className="rounded-full text-[10px] font-black uppercase">Publish First Post</Button></Link>
           </div>
         )}
