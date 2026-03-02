@@ -1,13 +1,14 @@
+
 "use client";
 
 import { IdeaCard } from "@/components/feed/idea-card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection, query, orderBy, where } from "firebase/firestore";
+import { collection, query, orderBy } from "firebase/firestore";
 import { useMemo, useState, Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RefreshCcw, LayoutGrid, Lock, Globe } from "lucide-react";
+import { RefreshCcw, LayoutGrid, Globe, ImageIcon, Video, Type, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
@@ -18,13 +19,12 @@ function FeedContent() {
   const urlCategory = searchParams.get("category");
 
   const [activeCategory, setActiveCategory] = useState("All");
+  const [memeType, setMemeType] = useState<"all" | "image" | "video" | "text">("all");
 
   // Filtered query for Home Feed
+  // Professional Architecture: The hook handles the auth guard internally
   const postsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
-    // Show user's own posts or public posts
-    // For production-level consistency, we query by uid if strict ownership is needed
-    // Otherwise, generic list is fine with updated rules
     return query(
       collection(db, "posts"), 
       orderBy("createdAt", "desc")
@@ -38,12 +38,18 @@ function FeedContent() {
     
     const effectiveCategory = activeCategory === "All" && urlCategory ? urlCategory : activeCategory;
 
-    if (effectiveCategory === "All") {
-      return firestorePosts;
+    let filtered = firestorePosts;
+
+    if (effectiveCategory !== "All") {
+      filtered = filtered.filter(i => i.category?.toLowerCase() === effectiveCategory.toLowerCase());
+    }
+
+    if (effectiveCategory === "Meme" && memeType !== "all") {
+      filtered = filtered.filter(i => i.mediaType === memeType);
     }
     
-    return firestorePosts.filter(i => i.category?.toLowerCase() === effectiveCategory.toLowerCase());
-  }, [firestorePosts, activeCategory, urlCategory]);
+    return filtered;
+  }, [firestorePosts, activeCategory, urlCategory, memeType]);
 
   return (
     <div className="max-w-md mx-auto min-h-screen bg-background px-4 pt-8 pb-24 relative">
@@ -64,14 +70,18 @@ function FeedContent() {
         </Link>
       </header>
 
-      <div className="flex w-full gap-2 -mx-4 px-4 pt-2 pb-4 mb-2 border-b">
-        {["All", "Meme"].map((cat) => (
+      {/* Main Category Bar */}
+      <div className="flex w-full gap-2 -mx-4 px-4 pt-2 pb-4 mb-2 border-b overflow-x-auto no-scrollbar">
+        {["All", "Meme", "Technology", "Art"].map((cat) => (
           <Button 
             key={cat} 
             variant={cat === activeCategory ? "default" : "secondary"} 
-            onClick={() => setActiveCategory(cat)}
+            onClick={() => {
+              setActiveCategory(cat);
+              if (cat !== "Meme") setMemeType("all");
+            }}
             className={cn(
-              "flex-1 rounded-full h-9 text-[10px] font-black uppercase tracking-widest",
+              "flex-1 min-w-[80px] rounded-full h-9 text-[10px] font-black uppercase tracking-widest transition-all",
               cat === activeCategory ? "bg-primary text-white shadow-lg" : "bg-white text-muted-foreground"
             )}
           >
@@ -79,6 +89,56 @@ function FeedContent() {
           </Button>
         ))}
       </div>
+
+      {/* Meme Specific Options */}
+      {activeCategory === "Meme" && (
+        <div className="flex w-full gap-2 mb-6 animate-in slide-in-from-top-2 duration-300">
+          <Button 
+            variant={memeType === "image" ? "default" : "outline"} 
+            onClick={() => setMemeType("image")}
+            className={cn(
+              "flex-1 rounded-2xl h-14 flex-col gap-1 border-2",
+              memeType === "image" ? "bg-secondary text-white border-secondary shadow-lg shadow-secondary/20" : "bg-white border-muted text-muted-foreground"
+            )}
+          >
+            <ImageIcon size={18} />
+            <span className="text-[8px] font-black uppercase">Image Meme</span>
+          </Button>
+          <Button 
+            variant={memeType === "video" ? "default" : "outline"} 
+            onClick={() => setMemeType("video")}
+            className={cn(
+              "flex-1 rounded-2xl h-14 flex-col gap-1 border-2",
+              memeType === "video" ? "bg-secondary text-white border-secondary shadow-lg shadow-secondary/20" : "bg-white border-muted text-muted-foreground"
+            )}
+          >
+            <Video size={18} />
+            <span className="text-[8px] font-black uppercase">Video Meme</span>
+          </Button>
+          <Button 
+            variant={memeType === "text" ? "default" : "outline"} 
+            onClick={() => setMemeType("text")}
+            className={cn(
+              "flex-1 rounded-2xl h-14 flex-col gap-1 border-2",
+              memeType === "text" ? "bg-secondary text-white border-secondary shadow-lg shadow-secondary/20" : "bg-white border-muted text-muted-foreground"
+            )}
+          >
+            <Type size={18} />
+            <span className="text-[8px] font-black uppercase">Text Meme</span>
+          </Button>
+          <Button 
+            variant={memeType === "all" ? "default" : "ghost"} 
+            onClick={() => setMemeType("all")}
+            className={cn(
+              "rounded-2xl h-14 w-14 flex-col gap-1",
+              memeType === "all" ? "bg-primary/10 text-primary" : "text-muted-foreground"
+            )}
+          >
+            <Sparkles size={18} />
+            <span className="text-[8px] font-black uppercase">All</span>
+          </Button>
+        </div>
+      )}
 
       <div className="space-y-8 mt-4">
         {loading ? (

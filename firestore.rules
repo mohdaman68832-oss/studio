@@ -3,20 +3,26 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // TEMPORARY TESTING RULES: Allow everything for diagnosis
+    // TEMPORARY TESTING RULES: Allow everything for diagnosis as requested
     match /{document=**} {
       allow read, write: if true;
     }
     
-    // Once verified, revert to secure owner-only rules:
-    /*
+    /* 
+    // PRODUCTION READY RULES (Owner-Only)
     match /userProfiles/{userId} {
       allow read: if true;
       allow write: if request.auth != null && request.auth.uid == userId;
     }
     
     match /posts/{postId} {
-      allow read, write: if request.auth != null;
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.uid == request.auth.uid;
+      
+      match /likes/{userId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
     }
     */
   }
