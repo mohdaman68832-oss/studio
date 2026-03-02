@@ -109,7 +109,7 @@ function PostFormContent() {
     setIsPosting(true);
     try {
       // SINGLE WRITE ARCHITECTURE: Only write to 'posts' collection
-      // No updates to user profile document or increments here.
+      // No updates to user profile document to avoid permission conflicts.
       await addDoc(collection(db, "posts"), {
         uid: user.uid,
         username: user.displayName || "Innovator",
@@ -130,7 +130,7 @@ function PostFormContent() {
       setStep(3);
     } catch (error: any) {
       console.error("Posting Error:", error);
-      toast({ variant: "destructive", title: "Posting Failed", description: "Insufficient permissions or network issue." });
+      toast({ variant: "destructive", title: "Posting Failed", description: "Something went wrong." });
     } finally {
       setIsPosting(false);
     }

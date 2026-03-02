@@ -94,7 +94,7 @@ export default function ProfilePage() {
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [db, user]);
   const { data: profileData, isLoading: isProfileLoading } = useDoc(profileRef);
 
-  // DYNAMIC POST FETCH: Professional way - Fetch when user is available
+  // PROFESSIONAL ARCHITECTURE: Fetch posts only when user.uid is ready
   const userPostsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
@@ -142,7 +142,7 @@ export default function ProfilePage() {
       setIsOptimizeModalOpen(false);
     } catch (error: any) {
       console.error("Profile update error:", error);
-      toast({ variant: "destructive", title: "Save Error", description: "Insufficient permissions or database error." });
+      toast({ variant: "destructive", title: "Save Error", description: "Failed to update profile." });
     } finally {
       setIsSaving(false);
     }
