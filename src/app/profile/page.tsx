@@ -97,6 +97,7 @@ export default function ProfilePage() {
   const { data: profileData, isLoading: isProfileLoading } = useDoc(profileRef);
 
   // PROFESSIONAL WAY: Only query posts when user.uid is confirmed.
+  // This avoids premature queries and permission errors.
   const userPostsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
@@ -107,6 +108,8 @@ export default function ProfilePage() {
   }, [db, user?.uid]);
 
   const { data: userPosts, isLoading: isPostsLoading } = useCollection(userPostsQuery);
+  
+  // DYNAMIC COUNT: Calculated from the live query results.
   const dynamicPostCount = userPosts?.length || 0;
 
   useEffect(() => {
@@ -140,9 +143,10 @@ export default function ProfilePage() {
         updatedAt: new Date().toISOString()
       });
 
-      toast({ title: "Profile Synced", description: "Changes updated successfully." });
+      toast({ title: "Profile Synced", description: "Personalization saved." });
       setIsOptimizeModalOpen(false);
     } catch (error: any) {
+      console.error("Profile update error:", error);
       toast({ variant: "destructive", title: "Save Error", description: "Database error." });
     } finally {
       setIsSaving(false);
@@ -314,18 +318,16 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {formData.stickers.length > 0 && (
-              <div className="space-y-4">
-                <Label className="text-[10px] font-black uppercase">Active Stickers (Tap to remove)</Label>
-                <div className="flex flex-wrap gap-2">
-                  {formData.stickers.map(s => (
-                    <button key={s.id} onClick={() => removeSticker(s.id)} className="h-10 w-10 border rounded-lg p-1 bg-muted/20">
-                      <Image src={s.url} alt="s" width={40} height={40} className="object-contain" />
-                    </button>
-                  ))}
-                </div>
+            <div className="space-y-4">
+              <Label className="text-[10px] font-black uppercase">Active Stickers (Tap to remove)</Label>
+              <div className="flex flex-wrap gap-2">
+                {formData.stickers.map(s => (
+                  <button key={s.id} onClick={() => removeSticker(s.id)} className="h-10 w-10 border rounded-lg p-1 bg-muted/20">
+                    <Image src={s.url} alt="s" width={40} height={40} className="object-contain" />
+                  </button>
+                ))}
               </div>
-            )}
+            </div>
 
             <div className="space-y-4">
               <Label className="text-[10px] font-black uppercase">Banner Image</Label>

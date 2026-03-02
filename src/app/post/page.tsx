@@ -8,8 +8,6 @@ import { Label } from "@/components/ui/label";
 import { 
   ChevronRight, 
   ChevronLeft, 
-  Upload, 
-  CheckCircle2, 
   Loader2, 
   ImageIcon, 
   Type, 
@@ -112,8 +110,8 @@ function PostFormContent() {
     
     setIsPosting(true);
     try {
-      // SINGLE WRITE: Only write to the "posts" collection.
-      // Removed all updateDoc logic for userProfiles to prevent permission errors.
+      // REQUIREMENT: Perform ONLY ONE write operation inside the "posts" collection.
+      // DO NOT update userProfile or increment count here.
       await addDoc(collection(db, "posts"), {
         uid: user.uid,
         username: user.displayName || "Innovator",
@@ -134,7 +132,7 @@ function PostFormContent() {
       setStep(3);
     } catch (error: any) {
       console.error("Posting Error:", error);
-      toast({ variant: "destructive", title: "Posting Failed", description: "Check console for details." });
+      toast({ variant: "destructive", title: "Posting Failed", description: "Check permissions or network." });
     } finally {
       setIsPosting(false);
     }
@@ -241,7 +239,7 @@ function PostFormContent() {
 
       {step === 3 && (
         <div className="space-y-8 animate-in zoom-in-95 duration-500 text-center">
-          <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto"><CheckCircle2 className="w-10 h-10 text-primary" /></div>
+          <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto"><Loader2 className="w-10 h-10 text-primary" /></div>
           <h2 className="text-2xl font-black uppercase text-primary">Live Now</h2>
           <Button className="w-full h-14 rounded-3xl font-black uppercase bg-primary text-white" onClick={() => router.push("/")}>Back to Feed</Button>
         </div>
