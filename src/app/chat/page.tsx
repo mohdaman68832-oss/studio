@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Search, Bell, Globe, Loader2, Plus, MessageCircle, UserPlus, UserCircle } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy, limit, where, getDocs } from "firebase/firestore";
+import { collection, query, orderBy, limit, where, getDocs, Timestamp } from "firebase/firestore";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,9 +20,9 @@ export default function HubPage() {
   const [userSearchResults, setUserSearchResults] = useState<any[]>([]);
   const [isSearchingUsers, setIsSearchingUsers] = useState(false);
 
-  // Private Chats Query - Matches the composite index: participants (array-contains) + timestamp (desc)
+  // Private Chats Query - Optimized for the composite index: participants (array-contains) + timestamp (desc)
   const privateChatsQuery = useMemoFirebase(() => {
-    if (!db || !user?.uid) return null; // Use user.uid for stable dependency
+    if (!db || !user?.uid) return null;
     return query(
       collection(db, "privateChats"),
       where("participants", "array-contains", user.uid),
@@ -163,7 +163,7 @@ export default function HubPage() {
                         Innovator Chat
                       </h4>
                       <p className="text-[9px] text-muted-foreground font-black uppercase">
-                        {chat.timestamp?.seconds ? new Date(chat.timestamp.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "New"}
+                        {chat.timestamp instanceof Timestamp ? chat.timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "New"}
                       </p>
                     </div>
                     <p className="text-[11px] text-muted-foreground truncate font-medium">
