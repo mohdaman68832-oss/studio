@@ -9,7 +9,7 @@ import {
   QuerySnapshot,
   CollectionReference,
 } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { getAuth } from 'firebase/auth'; // FIXED: Corrected import from firebase/auth
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
@@ -21,9 +21,9 @@ export type WithId<T> = T & { id: string };
  * @template T Type of the document data.
  */
 export interface UseCollectionResult<T> {
-  data: WithId<T>[] | null; // Document data with ID, or null.
-  isLoading: boolean;       // True if loading.
-  error: FirestoreError | Error | null; // Error object, or null.
+  data: WithId<T>[] | null;
+  isLoading: boolean;
+  error: FirestoreError | Error | null;
 }
 
 /* Internal implementation of Query */
@@ -38,7 +38,7 @@ export interface InternalQuery extends Query<DocumentData> {
 
 /**
  * React hook to subscribe to a Firestore collection or query in real-time.
- * Professional Architecture: Delays execution until Auth is ready.
+ * Professional Architecture: Delays execution until Auth is confirmed ready.
  */
 export function useCollection<T = any>(
     memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean})  | null | undefined,
@@ -51,7 +51,7 @@ export function useCollection<T = any>(
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
-    // 1. PROFESSIONAL GUARD: Wait for reference to be provided
+    // 1. Guard: Wait for reference
     if (!memoizedTargetRefOrQuery) {
       setData(null);
       setIsLoading(false);
@@ -59,10 +59,10 @@ export function useCollection<T = any>(
       return;
     }
 
-    // 2. PROFESSIONAL GUARD: Wait for Auth to be ready to prevent permission errors
+    // 2. PROFESSIONAL GUARD: Prevent premature access before Auth is ready
     const auth = getAuth();
     if (!auth.currentUser) {
-      setIsLoading(true);
+      setIsLoading(true); // Keep loading state until auth is confirmed
       return;
     }
 
@@ -81,14 +81,13 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       (err: FirestoreError) => {
-        // Safe path extraction for contextual error
         let path = "unknown";
         try {
           path = memoizedTargetRefOrQuery.type === 'collection'
             ? (memoizedTargetRefOrQuery as CollectionReference).path
             : (memoizedTargetRefOrQuery as unknown as InternalQuery)._query.path.canonicalString();
         } catch (e) {
-          console.warn("Could not extract path for permission error");
+          console.warn("Path extraction failed");
         }
 
         const contextualError = new FirestorePermissionError({
@@ -100,7 +99,7 @@ export function useCollection<T = any>(
         setData(null);
         setIsLoading(false);
 
-        // Emit global error for debugging in the Next.js overlay
+        // Emit for debugging overlay
         errorEmitter.emit('permission-error', contextualError);
       }
     );

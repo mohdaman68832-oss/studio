@@ -108,8 +108,8 @@ function PostFormContent() {
     
     setIsPosting(true);
     try {
-      // PROFESSIONAL ARCHITECTURE: SINGLE WRITE
-      // We only write to 'posts'. No profile updates or increments.
+      // SINGLE WRITE ARCHITECTURE: Only write to 'posts' collection
+      // No updates to user profile document or increments here.
       await addDoc(collection(db, "posts"), {
         uid: user.uid,
         username: user.displayName || "Innovator",

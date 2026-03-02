@@ -94,7 +94,8 @@ export default function ProfilePage() {
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [db, user]);
   const { data: profileData, isLoading: isProfileLoading } = useDoc(profileRef);
 
-  // PRODUCTION-LEVEL DYNAMIC POST COUNT: Only fetch when user is confirmed.
+  // DYNAMIC POST COUNT: Fetch and count only when user is ready.
+  // This removes the need for a stored postCount field.
   const userPostsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
@@ -209,7 +210,6 @@ export default function ProfilePage() {
             </Avatar>
           </div>
 
-          {/* Stickers overlay */}
           <div className="absolute inset-0 pointer-events-none z-30">
             {formData.stickers.map((sticker) => (
               <div key={sticker.id} className="absolute pointer-events-none" style={{ left: `${sticker.x}%`, top: `${sticker.y}%`, transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg) scale(${sticker.scale})` }}>
@@ -271,14 +271,12 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Optimization Modal */}
       <Dialog open={isOptimizeModalOpen} onOpenChange={setIsOptimizeModalOpen}>
         <DialogContent className="max-w-md w-[95%] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl max-h-[85vh] flex flex-col">
           <div className="p-6 border-b shrink-0 flex items-center justify-between">
             <DialogTitle className="text-xl font-black uppercase text-primary">Optimize Profile</DialogTitle>
           </div>
           <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar">
-            {/* Theme Toggle */}
             <div className="flex items-center justify-between bg-muted/20 p-4 rounded-2xl">
               <div className="flex items-center gap-3">
                 {isDarkMode ? <Moon className="text-primary w-5 h-5" /> : <Sun className="text-primary w-5 h-5" />}
@@ -287,7 +285,6 @@ export default function ProfilePage() {
               <Switch checked={isDarkMode} onCheckedChange={setIsDarkMode} />
             </div>
 
-            {/* Colors & Customization */}
             <div className="space-y-4">
               <Label className="text-[10px] font-black uppercase flex items-center gap-2"><Palette size={14}/> Background Color</Label>
               <div className="grid grid-cols-6 gap-2">
@@ -306,7 +303,6 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Add Stickers */}
             <div className="space-y-4">
               <Label className="text-[10px] font-black uppercase flex items-center gap-2"><StickerIcon size={14}/> Add Stickers</Label>
               <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
@@ -318,7 +314,6 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Current Stickers */}
             {formData.stickers.length > 0 && (
               <div className="space-y-4">
                 <Label className="text-[10px] font-black uppercase">Active Stickers (Tap to remove)</Label>
@@ -332,7 +327,6 @@ export default function ProfilePage() {
               </div>
             )}
 
-            {/* Banner Change */}
             <div className="space-y-4">
               <Label className="text-[10px] font-black uppercase">Banner Image</Label>
               <div onClick={() => bannerInputRef.current?.click()} className="relative h-24 bg-muted rounded-2xl overflow-hidden border-2 border-dashed cursor-pointer hover:border-primary transition-all">
@@ -340,7 +334,6 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Bio Edit */}
             <div className="space-y-4">
               <Label className="text-[10px] font-black uppercase">Bio</Label>
               <Textarea value={formData.bio} onChange={e => setFormData(p => ({ ...p, bio: e.target.value }))} placeholder="Your innovation story..." className="rounded-2xl min-h-[100px] text-sm font-medium" />
