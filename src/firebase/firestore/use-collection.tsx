@@ -60,7 +60,7 @@ export function useCollection<T = any>(
     }
 
     // 2. PROFESSIONAL GUARD: Prevent premature access before Auth is ready
-    // This is the CRITICAL fix for "Missing Permissions" on mount
+    // This fixes "Missing Permissions" on mount because queries are restricted to logged-in users.
     const auth = getAuth();
     if (!auth.currentUser) {
       setIsLoading(true);

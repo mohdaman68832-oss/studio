@@ -109,7 +109,7 @@ function PostFormContent() {
     setIsPosting(true);
     try {
       // SINGLE WRITE ARCHITECTURE: Only write to 'posts' collection.
-      // Dynamic count on profile will handle the stats.
+      // Dynamic count on profile will handle the stats. Ensuring uid and createdAt are always present.
       await addDoc(collection(db, "posts"), {
         uid: user.uid,
         username: user.displayName || "Innovator",
