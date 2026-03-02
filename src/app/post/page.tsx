@@ -113,7 +113,8 @@ function PostFormContent() {
     
     setIsPosting(true);
     try {
-      // PART 1 — SINGLE WRITE LOGIC (addDoc only)
+      // REQUIREMENT: Single write operation to "posts" collection.
+      // This avoids permission errors on updating user profiles.
       await addDoc(collection(db, "posts"), {
         uid: user.uid,
         username: user.displayName || "Innovator",
@@ -130,11 +131,10 @@ function PostFormContent() {
         likes: 0
       });
 
-      // REQUIREMENT: No profile updates or count increments here.
       toast({ title: "Success!", description: "Innovation published!" });
       setStep(3);
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Posting Failed", description: "Database permission error." });
+      toast({ variant: "destructive", title: "Posting Failed", description: "Database error." });
     } finally {
       setIsPosting(false);
     }

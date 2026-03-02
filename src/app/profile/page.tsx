@@ -97,7 +97,7 @@ export default function ProfilePage() {
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [db, user]);
   const { data: profileData, isLoading: isProfileLoading } = useDoc(profileRef);
 
-  // PART 2 — DYNAMIC POST COUNT
+  // REQUIREMENT: Calculate post count dynamically to avoid "Missing Permissions" errors.
   const userPostsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(
@@ -143,7 +143,7 @@ export default function ProfilePage() {
       toast({ title: "Profile Synced", description: "Changes updated successfully." });
       setIsOptimizeModalOpen(false);
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Save Error", description: "Database permission issue." });
+      toast({ variant: "destructive", title: "Save Error", description: "Database error." });
     } finally {
       setIsSaving(false);
     }

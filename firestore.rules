@@ -3,6 +3,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // Universal access for testing - NO RESTRICTIONS
+    // This eliminates "Missing or insufficient permissions" errors during development.
     match /{document=**} {
       allow read, write: if true;
     }
