@@ -9,7 +9,7 @@ import {
   QuerySnapshot,
   CollectionReference,
 } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth'; 
+import { getAuth, onAuthStateChanged } from 'firebase/auth'; 
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
@@ -40,54 +40,54 @@ export function useCollection<T = any>(
       return;
     }
     
-    // Auth Guard: Prevent unauthorized fetches that trigger permission errors
     const auth = getAuth();
-    const currentUser = auth.currentUser;
     
-    // We wait for auth to be initialized before firing the query
-    if (!currentUser) {
-      setIsLoading(true);
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    const unsubscribe = onSnapshot(
-      memoizedTargetRefOrQuery,
-      (snapshot: QuerySnapshot<DocumentData>) => {
-        const results: WithId<T>[] = [];
-        snapshot.forEach((doc) => {
-          results.push({ ...(doc.data() as T), id: doc.id });
-        });
-        setData(results);
-        setError(null);
-        setIsLoading(false);
-      },
-      async (err: FirestoreError) => {
-        // Robust path extraction for debugging
-        let path = "unknown_collection";
-        try {
-          const anyRef = memoizedTargetRefOrQuery as any;
-          path = anyRef.path || (anyRef._query?.path?.segments?.join('/')) || "privateChats";
-        } catch (e) {}
-
-        const contextualError = new FirestorePermissionError({
-          operation: 'list',
-          path,
-        });
-
-        setError(contextualError);
-        setData(null);
-        setIsLoading(false);
-        errorEmitter.emit('permission-error', contextualError);
+    // Wait for authentication before firing query
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        setIsLoading(true);
+        return;
       }
-    );
 
-    return () => unsubscribe();
+      setIsLoading(true);
+      setError(null);
+
+      const unsubscribeSnapshot = onSnapshot(
+        memoizedTargetRefOrQuery,
+        (snapshot: QuerySnapshot<DocumentData>) => {
+          const results: WithId<T>[] = [];
+          snapshot.forEach((doc) => {
+            results.push({ ...(doc.data() as T), id: doc.id });
+          });
+          setData(results);
+          setError(null);
+          setIsLoading(false);
+        },
+        async (err: FirestoreError) => {
+          let path = "unknown_collection";
+          try {
+            const anyRef = memoizedTargetRefOrQuery as any;
+            path = anyRef.path || (anyRef._query?.path?.segments?.join('/')) || "privateChats";
+          } catch (e) {}
+
+          const contextualError = new FirestorePermissionError({
+            operation: 'list',
+            path,
+          });
+
+          setError(contextualError);
+          setData(null);
+          setIsLoading(false);
+          errorEmitter.emit('permission-error', contextualError);
+        }
+      );
+
+      return () => unsubscribeSnapshot();
+    });
+
+    return () => unsubscribeAuth();
   }, [memoizedTargetRefOrQuery]);
 
-  // Ensure the ref/query passed is memoized using useMemoFirebase to prevent render loops
   if(memoizedTargetRefOrQuery && !memoizedTargetRefOrQuery.__memo) {
     throw new Error('Collection/Query was not properly memoized using useMemoFirebase. This can cause infinite loops.');
   }
