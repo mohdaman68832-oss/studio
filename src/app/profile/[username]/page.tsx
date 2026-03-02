@@ -54,7 +54,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
   const { data: userProfiles, isLoading } = useCollection(userQuery);
   const profileData = userProfiles?.[0];
 
-  // DYNAMIC POST COUNT: Live query calculation
+  // DYNAMIC POST COUNT & SPECIFIC USER POSTS
   const userPostsQuery = useMemoFirebase(() => {
     if (!db || !profileData?.id) return null;
     return query(
@@ -63,6 +63,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       orderBy("createdAt", "desc")
     );
   }, [db, profileData?.id]);
+
   const { data: userPosts, isLoading: isPostsLoading } = useCollection(userPostsQuery);
   const dynamicPostCount = userPosts?.length || 0;
 
@@ -157,7 +158,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
 
           <div className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-xl" style={{ backgroundColor: colors.bioCard || "#FFFFFF" }}>
             <p className="text-center text-[12px] leading-relaxed font-bold italic" style={{ color: getContrastColor(colors.bioCard) }}>
-              {colors.bio || "Innovating the future, one idea at a time."}
+              {profileData.bio || "Innovating the future, one idea at a time."}
             </p>
           </div>
         </div>
