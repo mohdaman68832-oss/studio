@@ -97,7 +97,8 @@ export default function ProfilePage() {
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [db, user]);
   const { data: profileData, isLoading: isProfileLoading } = useDoc(profileRef);
 
-  // REQUIREMENT: Calculate post count dynamically to avoid "Missing Permissions" errors.
+  // PART 2 — DYNAMIC POST COUNT
+  // Professional Way: Fetch only when user is available.
   const userPostsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(
@@ -106,6 +107,7 @@ export default function ProfilePage() {
       orderBy("createdAt", "desc")
     );
   }, [db, user]);
+
   const { data: userPosts, isLoading: isPostsLoading } = useCollection(userPostsQuery);
   const dynamicPostCount = userPosts?.length || 0;
 

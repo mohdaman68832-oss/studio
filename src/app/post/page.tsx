@@ -113,8 +113,9 @@ function PostFormContent() {
     
     setIsPosting(true);
     try {
-      // REQUIREMENT: Single write operation to "posts" collection.
-      // This avoids permission errors on updating user profiles.
+      // PART 1 — SINGLE WRITE LOGIC
+      // Perform ONLY ONE write operation to "posts" collection.
+      // Do NOT update user profile or increment postCount here.
       await addDoc(collection(db, "posts"), {
         uid: user.uid,
         username: user.displayName || "Innovator",

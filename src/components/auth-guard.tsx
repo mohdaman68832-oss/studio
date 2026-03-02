@@ -8,7 +8,7 @@ import { doc } from 'firebase/firestore';
 
 /**
  * Animated Logo Loader Component
- * Refined Elegant Balanced Eyes with smooth horizontal sway.
+ * Refined Elegant Tiny Balanced Eyes with smooth horizontal sway.
  */
 function LogoLoader() {
   return (
@@ -22,9 +22,9 @@ function LogoLoader() {
             />
             <g className="animate-eye-look">
               <g className="animate-eye-blink">
-                {/* Tiny Elegant Balanced Eyes */}
-                <rect x="55" y="58" width="2" height="4" rx="1" fill="white" />
-                <rect x="63" y="58" width="2" height="4" rx="1" fill="white" />
+                {/* Elegant Tiny Balanced Eyes */}
+                <rect x="54" y="58" width="2" height="4" rx="1" fill="white" />
+                <rect x="64" y="58" width="2" height="4" rx="1" fill="white" />
               </g>
             </g>
             <circle cx="105" cy="15" r="8" fill="#FF4500" />
