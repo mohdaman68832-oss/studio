@@ -62,8 +62,7 @@ export function useCollection<T = any>(
     // 2. PROFESSIONAL GUARD: Prevent premature access before Auth is ready
     const auth = getAuth();
     if (!auth.currentUser) {
-      // If no user, we don't fetch. We keep loading state until auth is verified.
-      // This prevents "Missing or insufficient permissions" error on initial mount.
+      // If no user, we don't fetch. This prevents "Missing or insufficient permissions" error on initial mount.
       setIsLoading(true);
       return;
     }

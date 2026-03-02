@@ -8,15 +8,19 @@ service cloud.firestore {
       allow write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Posts: Authenticated users can create and list. 
-    // Only owner can update/delete.
+    // Posts: Strict Private Access (Only owner can read/list their own posts)
     match /posts/{postId} {
-      allow create: if request.auth != null;
-      allow read: if true; // Public feed
+      // Create: Owner must set their own UID correctly
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.uid;
+      
+      // Read/List: Only the owner can see their posts
+      allow read: if request.auth != null && request.auth.uid == resource.data.uid;
+      
+      // Update/Delete: Only owner
       allow update, delete: if request.auth != null && request.auth.uid == resource.data.uid;
     }
     
-    // Messages and other collections
+    // Default fallback
     match /{document=**} {
       allow read, write: if request.auth != null;
     }

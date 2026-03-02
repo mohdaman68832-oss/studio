@@ -4,53 +4,49 @@ import { IdeaCard } from "@/components/feed/idea-card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
-import { collection, query, orderBy, doc } from "firebase/firestore";
-import { useMemo, useState, useEffect, Suspense } from "react";
+import { collection, query, orderBy, where, doc } from "firebase/firestore";
+import { useMemo, useState, Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RefreshCcw, LayoutGrid } from "lucide-react";
+import { RefreshCcw, LayoutGrid, Lock } from "lucide-react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 function FeedContent() {
   const db = useFirestore();
   const { user } = useUser();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const urlCategory = searchParams.get("category");
 
   const [activeCategory, setActiveCategory] = useState("All");
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [showRefresh, setShowRefresh] = useState(false);
 
+  // FETCHING USER PROFILE
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [user, db]);
   const { data: profileData } = useDoc(profileRef);
-  const userInterests = profileData?.interests || [];
 
-  // PRODUCTION-LEVEL QUERY: Fetch and order by createdAt
+  // PROFESSIONAL PRIVATE QUERY: Filter by current user UID for strict rules
   const postsQuery = useMemoFirebase(() => {
-    if (!db || !user) return null; // Safe fetch only when user is ready
-    return query(collection(db, "posts"), orderBy("createdAt", "desc"));
-  }, [db, user]);
+    if (!db || !user?.uid) return null;
+    return query(
+      collection(db, "posts"), 
+      where("uid", "==", user.uid),
+      orderBy("createdAt", "desc")
+    );
+  }, [db, user?.uid]);
 
   const { data: firestorePosts, isLoading: loading } = useCollection(postsQuery);
 
   const postsToDisplay = useMemo(() => {
     if (!firestorePosts) return [];
     
-    // Determine filter
     const effectiveCategory = activeCategory === "All" && urlCategory ? urlCategory : activeCategory;
 
     if (effectiveCategory === "All") {
-      if (userInterests.length > 0) {
-        return firestorePosts.filter(i => 
-          userInterests.some((interest: string) => i.category?.toLowerCase() === interest.toLowerCase())
-        );
-      }
       return firestorePosts;
     }
     
     return firestorePosts.filter(i => i.category?.toLowerCase() === effectiveCategory.toLowerCase());
-  }, [firestorePosts, activeCategory, userInterests, urlCategory]);
+  }, [firestorePosts, activeCategory, urlCategory]);
 
   const handleReload = () => {
     setIsRefreshing(true);
@@ -59,22 +55,15 @@ function FeedContent() {
 
   return (
     <div className="max-w-md mx-auto min-h-screen bg-background px-4 pt-8 pb-24 relative">
-      <div className={cn(
-        "fixed top-4 left-1/2 -translate-x-1/2 z-[100] transition-all duration-500 transform",
-        showRefresh ? "translate-y-0 opacity-100" : "-translate-y-20 opacity-0"
-      )}>
-        <Button onClick={handleReload} className="rounded-full bg-primary text-white shadow-2xl px-6 py-2 flex items-center gap-2 border-2 border-white/20" disabled={isRefreshing}>
-          <RefreshCcw size={16} className={cn(isRefreshing && "animate-spin")} />
-          <span className="text-[10px] font-black uppercase tracking-widest">Release to Refresh</span>
-        </Button>
-      </div>
-
       <header className="mb-6 px-1 flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-black text-primary uppercase tracking-tighter leading-none">Sphere Feed</h1>
-          <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-1">
-            {urlCategory ? `Exploring ${urlCategory}` : "Innovation at your fingertips"}
-          </p>
+          <h1 className="text-3xl font-black text-primary uppercase tracking-tighter leading-none">My Sphere</h1>
+          <div className="flex items-center gap-1.5 mt-1">
+            <Lock size={10} className="text-muted-foreground" />
+            <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">
+              Private Feed
+            </p>
+          </div>
         </div>
         <Link href="/categories">
           <Button variant="ghost" size="icon" className="rounded-full bg-primary/5 text-primary">
@@ -116,9 +105,10 @@ function FeedContent() {
             </div>
           ))
         ) : (
-          <div className="py-20 text-center opacity-30 flex flex-col items-center gap-3">
-            <p className="text-[10px] font-black uppercase tracking-widest">No posts yet</p>
-            <Link href="/categories"><Button variant="outline" className="rounded-full text-[10px] font-black uppercase">Explore Hubs</Button></Link>
+          <div className="py-24 text-center space-y-4 opacity-30 flex flex-col items-center">
+            <Lock size={48} className="text-primary/20" />
+            <p className="text-[10px] font-black uppercase tracking-widest">No private posts found</p>
+            <Link href="/post"><Button variant="outline" className="rounded-full text-[10px] font-black uppercase">Publish First Post</Button></Link>
           </div>
         )}
       </div>
