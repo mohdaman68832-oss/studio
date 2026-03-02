@@ -6,12 +6,11 @@ import { useParams, useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, Send, Phone, Info, Loader2, Video, Lock } from "lucide-react";
+import { ChevronLeft, Send, Phone, Info, Loader2, Video, Lock, Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFirestore, useDoc, useMemoFirebase, useUser, useCollection } from "@/firebase";
-import { doc, collection, query, where, orderBy, addDoc, serverTimestamp, limit } from "firebase/firestore";
+import { doc, collection, query, orderBy, addDoc, serverTimestamp, setDoc, limit } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function ChatDetailPage() {
   const params = useParams();
@@ -19,40 +18,25 @@ export default function ChatDetailPage() {
   const db = useFirestore();
   const { user: currentUser } = useUser();
   const { toast } = useToast();
-  const recipientId = params.id as string;
+  const chatId = params.id as string;
 
-  const recipientRef = useMemoFirebase(() => (db ? doc(db, "userProfiles", recipientId) : null), [db, recipientId]);
+  // Extract recipient ID from chatId (assuming chatId = uid1_uid2 sorted)
+  const recipientId = chatId.split("_").find(id => id !== currentUser?.uid) || "";
+
+  const recipientRef = useMemoFirebase(() => (db && recipientId ? doc(db, "userProfiles", recipientId) : null), [db, recipientId]);
   const { data: recipient, isLoading: isRecipientLoading } = useDoc(recipientRef);
 
-  const iFollowRef = useMemoFirebase(() => 
-    (db && currentUser && recipientId) ? doc(db, "follows", `${currentUser.uid}_${recipientId}`) : null
-  , [db, currentUser, recipientId]);
-  
-  const followsMeRef = useMemoFirebase(() => 
-    (db && currentUser && recipientId) ? doc(db, "follows", `${recipientId}_${currentUser.uid}`) : null
-  , [db, currentUser, recipientId]);
-
-  const { data: iFollow } = useDoc(iFollowRef);
-  const { data: followsMe } = useDoc(followsMeRef);
-
-  const isMutual = !!iFollow && !!followsMe;
-
+  // Messages Query - Using the requested subcollection structure
   const messagesQuery = useMemoFirebase(() => {
-    if (!db || !currentUser || !recipientId) return null;
+    if (!db || !chatId) return null;
     return query(
-      collection(db, "messages"),
-      where("senderId", "in", [currentUser.uid, recipientId]),
+      collection(db, "privateChats", chatId, "messages"),
       orderBy("createdAt", "asc"),
-      limit(50)
+      limit(100)
     );
-  }, [db, currentUser, recipientId]);
+  }, [db, chatId]);
 
-  const { data: firestoreMessages } = useCollection(messagesQuery);
-
-  const filteredMessages = firestoreMessages?.filter(m => 
-    (m.senderId === currentUser?.uid && m.receiverId === recipientId) ||
-    (m.senderId === recipientId && m.receiverId === currentUser?.uid)
-  ) || [];
+  const { data: messages, isLoading: isMessagesLoading } = useCollection(messagesQuery);
 
   const [newMessage, setNewMessage] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -61,34 +45,33 @@ export default function ChatDetailPage() {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [filteredMessages]);
+  }, [messages]);
 
-  const handleSend = () => {
-    if (!newMessage.trim() || !db || !currentUser) return;
+  const handleSend = async () => {
+    if (!newMessage.trim() || !db || !currentUser || !chatId) return;
     
-    addDoc(collection(db, "messages"), {
-      senderId: currentUser.uid,
-      receiverId: recipientId,
-      text: newMessage,
-      createdAt: serverTimestamp(),
-    });
-    
+    const text = newMessage;
     setNewMessage("");
-  };
 
-  const handleCallAttempt = (type: 'voice' | 'video') => {
-    if (!isMutual) {
-      toast({
-        title: "Call Restricted",
-        description: "Mutual follow required for calling features.",
-        variant: "destructive"
+    try {
+      // 1. Update/Create Chat metadata
+      await setDoc(doc(db, "privateChats", chatId), {
+        chatId: chatId,
+        participants: chatId.split("_"),
+        lastMessage: text,
+        timestamp: serverTimestamp(),
+      }, { merge: true });
+
+      // 2. Add message to subcollection
+      await addDoc(collection(db, "privateChats", chatId, "messages"), {
+        senderId: currentUser.uid,
+        text: text,
+        createdAt: serverTimestamp(),
       });
-      return;
+    } catch (e) {
+      console.error("Message send failed", e);
+      toast({ title: "Error", description: "Failed to send message.", variant: "destructive" });
     }
-    toast({
-      title: "Calling...",
-      description: `Starting a ${type} call with @${recipient?.username}...`
-    });
   };
 
   if (isRecipientLoading) {
@@ -105,70 +88,44 @@ export default function ChatDetailPage() {
         <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full">
           <ChevronLeft size={24} />
         </Button>
-        <Avatar className="h-10 w-10">
-          <AvatarImage src={recipient?.profilePictureUrl} className="object-cover" />
-          <AvatarFallback>{recipient?.username?.[0]?.toUpperCase() || "U"}</AvatarFallback>
-        </Avatar>
+        <div className="relative">
+          <Avatar className="h-10 w-10 border-2 border-primary/10">
+            <AvatarImage src={recipient?.profilePictureUrl} className="object-cover" />
+            <AvatarFallback>{recipient?.username?.[0]?.toUpperCase() || "U"}</AvatarFallback>
+          </Avatar>
+          {recipient?.isOnline && (
+            <div className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 rounded-full border-2 border-white" />
+          )}
+        </div>
         <div className="flex-1 min-w-0">
-          <h2 className="font-black text-sm truncate uppercase tracking-tight">{recipient?.username || "Innovator"}</h2>
+          <h2 className="font-black text-sm truncate uppercase tracking-tight">@{recipient?.username || "Innovator"}</h2>
           <div className="flex items-center gap-1">
-            <Lock size={8} className="text-green-500" />
-            <span className="text-[9px] text-green-500 font-bold uppercase">End-to-End Chat</span>
+             {recipient?.isOnline ? (
+               <span className="text-[8px] text-green-500 font-black uppercase flex items-center gap-1">
+                 <Circle size={6} className="fill-current" /> Active Now
+               </span>
+             ) : (
+               <span className="text-[8px] text-muted-foreground font-black uppercase">Offline</span>
+             )}
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="relative">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className={cn("rounded-full", !isMutual && "opacity-40")}
-                    onClick={() => handleCallAttempt('voice')}
-                  >
-                    <Phone size={18} />
-                  </Button>
-                  {!isMutual && <Lock size={10} className="absolute -top-1 -right-1 text-red-500 bg-white rounded-full p-0.5" />}
-                </div>
-              </TooltipTrigger>
-              {!isMutual && <TooltipContent><p className="text-[10px] font-bold">Mutual follow required</p></TooltipContent>}
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="relative">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className={cn("rounded-full", !isMutual && "opacity-40")}
-                    onClick={() => handleCallAttempt('video')}
-                  >
-                    <Video size={18} />
-                  </Button>
-                  {!isMutual && <Lock size={10} className="absolute -top-1 -right-1 text-red-500 bg-white rounded-full p-0.5" />}
-                </div>
-              </TooltipTrigger>
-              {!isMutual && <TooltipContent><p className="text-[10px] font-bold">Mutual follow required</p></TooltipContent>}
-            </Tooltip>
-          </TooltipProvider>
-          <Button variant="ghost" size="icon" className="rounded-full"><Info size={18} /></Button>
+          <Button variant="ghost" size="icon" className="rounded-full"><Phone size={18} /></Button>
+          <Button variant="ghost" size="icon" className="rounded-full"><Video size={18} /></Button>
         </div>
       </header>
 
       <div 
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar"
+        className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar bg-primary/[0.02]"
       >
-        {!isMutual && (
-          <div className="bg-primary/5 border border-primary/10 p-5 rounded-[2rem] text-center mb-6">
-             <Lock size={20} className="mx-auto text-primary mb-2 opacity-30" />
-             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Restricted Mode</p>
-             <p className="text-[9px] text-muted-foreground mt-1 font-medium">Both users must follow each other to enable calling features.</p>
-          </div>
-        )}
+        <div className="bg-white/50 border border-border/30 p-4 rounded-[2rem] text-center mb-6 max-w-[80%] mx-auto">
+           <Lock size={16} className="mx-auto text-primary mb-2 opacity-30" />
+           <p className="text-[9px] font-black uppercase tracking-[0.2em] text-primary/60">Private Encryption Active</p>
+           <p className="text-[8px] text-muted-foreground mt-1 font-medium">Only participants can access this communication channel.</p>
+        </div>
         
-        {filteredMessages.map((msg) => {
+        {messages?.map((msg) => {
           const isMe = msg.senderId === currentUser?.uid;
           return (
             <div 
@@ -182,34 +139,37 @@ export default function ChatDetailPage() {
                 className={cn(
                   "px-4 py-3 rounded-2xl text-[13px] leading-relaxed font-medium shadow-sm",
                   isMe 
-                    ? "bg-primary text-white rounded-tr-none" 
+                    ? "bg-primary text-white rounded-tr-none shadow-primary/20" 
                     : "bg-white text-foreground rounded-tl-none border border-border/50"
                 )}
               >
                 {msg.text}
               </div>
               {msg.createdAt && (
-                <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest opacity-60">
+                <span className="text-[8px] text-muted-foreground font-black uppercase tracking-widest opacity-60">
                   {new Date(msg.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
               )}
             </div>
           );
         })}
+        {isMessagesLoading && (
+          <div className="flex justify-center py-4"><Loader2 className="h-6 w-6 animate-spin text-primary/20" /></div>
+        )}
       </div>
 
       <div className="p-4 bg-white border-t sticky bottom-0 z-50">
-        <div className="flex items-center gap-2 bg-muted/30 rounded-2xl pl-4 pr-1 py-1 border">
+        <div className="flex items-center gap-2 bg-muted/30 rounded-[2rem] pl-4 pr-1 py-1 border border-primary/10">
           <Input 
-            placeholder="Type a private message..." 
-            className="border-none bg-transparent focus-visible:ring-0 shadow-none h-11 p-0 text-sm font-medium"
+            placeholder="Secure private message..." 
+            className="border-none bg-transparent focus-visible:ring-0 shadow-none h-12 p-0 text-sm font-medium"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
           />
           <Button 
             size="icon" 
-            className="rounded-xl h-10 w-10 bg-primary text-white shrink-0 shadow-md active:scale-95 transition-transform"
+            className="rounded-full h-11 w-11 bg-primary text-white shrink-0 shadow-lg active:scale-95 transition-transform"
             onClick={handleSend}
             disabled={!newMessage.trim()}
           >

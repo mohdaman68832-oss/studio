@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -12,26 +13,32 @@
         "bio": { "type": "string" },
         "stickers": { "type": "array" },
         "customColors": { "type": "object" },
-        "createdAt": { "type": "string" }
+        "createdAt": { "type": "string" },
+        "isOnline": { "type": "boolean" },
+        "lastActive": { "type": "string" }
       },
       "required": ["id", "username", "email"]
     },
-    "Post": {
-      "title": "Post",
+    "PrivateChat": {
+      "title": "PrivateChat",
       "type": "object",
       "properties": {
-        "id": { "type": "string" },
-        "uid": { "type": "string" },
-        "username": { "type": "string" },
-        "content": { "type": "string" },
-        "title": { "type": "string" },
-        "category": { "type": "string" },
-        "mediaUrl": { "type": "string" },
-        "innovationScore": { "type": "number" },
-        "likes": { "type": "number" },
+        "chatId": { "type": "string" },
+        "participants": { "type": "array" },
+        "lastMessage": { "type": "string" },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["chatId", "participants"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "type": "object",
+      "properties": {
+        "senderId": { "type": "string" },
+        "text": { "type": "string" },
         "createdAt": { "type": "string" }
       },
-      "required": ["id", "uid", "content", "createdAt"]
+      "required": ["senderId", "text", "createdAt"]
     }
   },
   "auth": {
@@ -42,9 +49,13 @@
       "schema": { "$ref": "#/backend/entities/UserProfile" },
       "description": "Stores user profiles with customization."
     },
-    "/posts/{postId}": {
-      "schema": { "$ref": "#/backend/entities/Post" },
-      "description": "Stores user posts and innovations."
+    "/privateChats/{chatId}": {
+      "schema": { "$ref": "#/backend/entities/PrivateChat" },
+      "description": "Stores metadata for private one-to-one chats."
+    },
+    "/privateChats/{chatId}/messages/{messageId}": {
+      "schema": { "$ref": "#/backend/entities/ChatMessage" },
+      "description": "Stores individual messages within a private chat."
     }
   }
 }
