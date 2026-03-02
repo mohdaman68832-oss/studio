@@ -40,7 +40,7 @@ export function useCollection<T = any>(
       return;
     }
     
-    // Auth Guard: Ensure Authentication is ready before querying
+    // Auth Guard: Ensure Authentication is ready before querying to avoid permission errors
     const auth = getAuth();
     if (!auth.currentUser) {
       setIsLoading(true);
@@ -62,9 +62,9 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       (err: FirestoreError) => {
+        // Robust path extraction for debugging
         let path = "privateChats";
         try {
-          // Attempt to extract the path for rich contextual error reporting
           const anyRef = memoizedTargetRefOrQuery as any;
           path = anyRef.path || (anyRef._query?.path?.segments?.join('/')) || "privateChats";
         } catch (e) {}

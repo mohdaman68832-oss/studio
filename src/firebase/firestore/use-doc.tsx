@@ -27,7 +27,7 @@ export interface UseDocResult<T> {
 
 /**
  * Professional Real-time Document Hook
- * Handles real-time updates for a single document.
+ * Optimized with authentication guards and robust permission error reporting.
  */
 export function useDoc<T = any>(
   memoizedDocRef: DocumentReference<DocumentData> | null | undefined,
@@ -46,6 +46,7 @@ export function useDoc<T = any>(
       return;
     }
 
+    // Auth Guard: Prevent unauthorized fetches that trigger permission errors
     const auth = getAuth();
     if (!auth.currentUser) {
       setIsLoading(true);
