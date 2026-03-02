@@ -94,7 +94,7 @@ export default function ProfilePage() {
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [db, user]);
   const { data: profileData, isLoading: isProfileLoading } = useDoc(profileRef);
 
-  // PROFESSIONAL ARCHITECTURE: Fetch posts only when user.uid is ready
+  // PROFESSIONAL ARCHITECTURE: Fetch user's own posts dynamically to get real count.
   const userPostsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(

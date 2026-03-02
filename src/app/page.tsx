@@ -7,7 +7,7 @@ import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@
 import { collection, query, orderBy, where, doc } from "firebase/firestore";
 import { useMemo, useState, Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RefreshCcw, LayoutGrid, Lock } from "lucide-react";
+import { RefreshCcw, LayoutGrid, Lock, Globe } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
@@ -18,15 +18,11 @@ function FeedContent() {
   const urlCategory = searchParams.get("category");
 
   const [activeCategory, setActiveCategory] = useState("All");
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // FETCHING USER PROFILE
-  const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [user, db]);
-  const { data: profileData } = useDoc(profileRef);
-
-  // PROFESSIONAL PRIVATE QUERY: Filter by current user UID for strict rules
+  // PROFESSIONAL ARCHITECTURE: Use filtered query to avoid list permission conflicts on broad collections.
   const postsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
+    // For now, only show user's own posts to ensure compliance with ownership rules.
     return query(
       collection(db, "posts"), 
       where("uid", "==", user.uid),
@@ -48,11 +44,6 @@ function FeedContent() {
     return firestorePosts.filter(i => i.category?.toLowerCase() === effectiveCategory.toLowerCase());
   }, [firestorePosts, activeCategory, urlCategory]);
 
-  const handleReload = () => {
-    setIsRefreshing(true);
-    setTimeout(() => window.location.reload(), 800);
-  };
-
   return (
     <div className="max-w-md mx-auto min-h-screen bg-background px-4 pt-8 pb-24 relative">
       <header className="mb-6 px-1 flex justify-between items-center">
@@ -73,7 +64,7 @@ function FeedContent() {
       </header>
 
       <div className="flex w-full gap-2 -mx-4 px-4 pt-2 pb-4 mb-2 border-b">
-        {["All", "Meme"].map((cat) => (
+        {["All", "Meme", "AI Art"].map((cat) => (
           <Button 
             key={cat} 
             variant={cat === activeCategory ? "default" : "secondary"} 
