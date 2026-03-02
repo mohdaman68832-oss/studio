@@ -9,7 +9,7 @@ import {
   QuerySnapshot,
   CollectionReference,
 } from 'firebase/firestore';
-import { useAuth } from '../provider';
+import { getAuth } from 'firebase/auth'; // FIXED: Correct import from firebase/auth
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
@@ -30,7 +30,6 @@ export function useCollection<T = any>(
   const [data, setData] = useState<StateDataType>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
-  const auth = useAuth();
 
   useEffect(() => {
     if (!memoizedTargetRefOrQuery) {
@@ -40,7 +39,8 @@ export function useCollection<T = any>(
       return;
     }
     
-    // Auth Guard: Don't start the listener until auth is ready
+    const auth = getAuth();
+    // Auth Guard: Don't start the listener until auth is ready and user is logged in
     if (!auth.currentUser) {
       setIsLoading(true);
       return;
@@ -66,7 +66,6 @@ export function useCollection<T = any>(
           if ('path' in (memoizedTargetRefOrQuery as any)) {
             path = (memoizedTargetRefOrQuery as any).path;
           } else if ('_query' in (memoizedTargetRefOrQuery as any)) {
-            // Extraction for Query objects if path is available internally
             const q = (memoizedTargetRefOrQuery as any)._query;
             if (q && q.path) path = q.path.toString();
           }
@@ -85,7 +84,7 @@ export function useCollection<T = any>(
     );
 
     return () => unsubscribe();
-  }, [memoizedTargetRefOrQuery, auth]);
+  }, [memoizedTargetRefOrQuery]);
 
   if(memoizedTargetRefOrQuery && !memoizedTargetRefOrQuery.__memo) {
     throw new Error(memoizedTargetRefOrQuery + ' was not properly memoized using useMemoFirebase');
