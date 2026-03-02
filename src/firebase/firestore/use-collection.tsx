@@ -21,6 +21,10 @@ export interface UseCollectionResult<T> {
   error: FirestoreError | Error | null;
 }
 
+/**
+ * Professional Real-time Collection Hook
+ * Uses Auth Guard to prevent early permission errors.
+ */
 export function useCollection<T = any>(
     memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean})  | null | undefined,
 ): UseCollectionResult<T> {
@@ -41,7 +45,7 @@ export function useCollection<T = any>(
 
     const auth = getAuth();
     
-    // Guard to prevent permission errors before auth is fully ready on client
+    // Professional Auth Guard: Do not listen until auth is ready
     if (!auth.currentUser) {
       setIsLoading(true);
       return;
@@ -62,7 +66,7 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       async (err: FirestoreError) => {
-        // Path extraction fallback
+        // Path extraction fallback for better error reporting
         let path = "unknown_collection";
         try {
           if ('path' in memoizedTargetRefOrQuery) {
