@@ -28,7 +28,7 @@ export default function HubPage() {
       where("participants", "array-contains", user.uid),
       orderBy("timestamp", "desc")
     );
-  }, [db, user]);
+  }, [db, user?.uid]); // Stable dependency on uid
 
   const { data: privateChats, isLoading: isPrivateLoading } = useCollection(privateChatsQuery);
 
@@ -77,10 +77,10 @@ export default function HubPage() {
 
   return (
     <div className="max-w-md mx-auto min-h-screen bg-background pt-8 pb-24">
-      <div className="px-6 mb-8 flex justify-between items-end">
+      <div className="px-6 mb-8 flex justify-between items-end border-b pb-4 border-primary/5">
         <div>
           <h1 className="text-3xl font-black text-primary uppercase tracking-tighter">The Hub</h1>
-          <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Global Communication</p>
+          <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Secure Messaging</p>
         </div>
         <Link href="/groups/create">
           <Button size="sm" className="rounded-full h-10 px-5 bg-secondary text-white shadow-lg shadow-secondary/20 font-black uppercase text-[10px] tracking-widest flex items-center gap-2">
@@ -94,7 +94,7 @@ export default function HubPage() {
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input 
-              placeholder="Search username to chat..." 
+              placeholder="Search @username..." 
               className="pl-12 h-14 bg-card border-none rounded-3xl shadow-xl focus-visible:ring-primary/20 text-sm font-medium"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -108,7 +108,7 @@ export default function HubPage() {
 
         {userSearchResults.length > 0 && (
           <div className="mt-4 space-y-2 animate-in fade-in slide-in-from-top-2">
-            <p className="text-[10px] font-black uppercase text-muted-foreground ml-2">People found</p>
+            <p className="text-[10px] font-black uppercase text-muted-foreground ml-2">Innovators Found</p>
             {userSearchResults.map(u => (
               <div 
                 key={u.id} 
@@ -132,66 +132,67 @@ export default function HubPage() {
       <Tabs defaultValue="private" className="w-full">
         <div className="px-6 mb-6">
           <TabsList className="w-full h-12 bg-muted/30 rounded-full p-1 grid grid-cols-3">
-            <TabsTrigger value="private" className="rounded-full text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">
+            <TabsTrigger value="private" className="rounded-full text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
               <MessageCircle size={14} className="mr-2" /> Chats
             </TabsTrigger>
-            <TabsTrigger value="notifications" className="rounded-full text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">
+            <TabsTrigger value="notifications" className="rounded-full text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
               <Bell size={14} className="mr-2" /> Alerts
             </TabsTrigger>
-            <TabsTrigger value="groups" className="rounded-full text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">
+            <TabsTrigger value="groups" className="rounded-full text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
               <Globe size={14} className="mr-2" /> Unions
             </TabsTrigger>
           </TabsList>
         </div>
 
-        <TabsContent value="private" className="px-6 space-y-4">
+        <TabsContent value="private" className="px-6 space-y-4 outline-none">
           {isPrivateLoading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="animate-spin text-primary" />
+            <div className="flex flex-col items-center justify-center py-24 gap-4">
+              <Loader2 className="animate-spin text-primary h-8 w-8" />
+              <p className="text-[9px] font-black uppercase tracking-widest opacity-40">Decrypting Chats...</p>
             </div>
           ) : privateChats && privateChats.length > 0 ? (
             privateChats.map((chat) => (
               <Link key={chat.id} href={`/chat/${chat.id}`}>
-                <div className="flex items-center gap-4 bg-card p-5 rounded-[2.5rem] border border-border/50 shadow-md hover:border-primary transition-all">
-                  <div className="h-12 w-12 rounded-full bg-primary/5 flex items-center justify-center shrink-0 border border-primary/10">
+                <div className="flex items-center gap-4 bg-card p-5 rounded-[2.5rem] border border-border/50 shadow-md hover:border-primary transition-all group">
+                  <div className="h-12 w-12 rounded-full bg-primary/5 flex items-center justify-center shrink-0 border border-primary/10 group-hover:bg-primary/10 transition-colors">
                     <UserCircle size={24} className="text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-center mb-0.5">
                       <h4 className="text-sm font-black truncate uppercase tracking-tighter">
-                        Secure Conversation
+                        Innovator Chat
                       </h4>
                       <p className="text-[9px] text-muted-foreground font-black uppercase">
-                        {chat.timestamp?.seconds ? new Date(chat.timestamp.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Recently"}
+                        {chat.timestamp?.seconds ? new Date(chat.timestamp.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "New"}
                       </p>
                     </div>
                     <p className="text-[11px] text-muted-foreground truncate font-medium">
-                      {chat.lastMessage || "Encrypted messaging channel active."}
+                      {chat.lastMessage || "Click to start conversation..."}
                     </p>
                   </div>
                 </div>
               </Link>
             ))
           ) : (
-            <div className="py-24 text-center space-y-4 opacity-30">
-              <MessageCircle size={48} className="mx-auto text-primary/30" />
-              <p className="text-[10px] font-black uppercase tracking-[0.2em]">Private Space Empty</p>
-              <p className="text-[9px] font-medium italic px-10">Search for an innovator above to start a private conversation.</p>
+            <div className="py-24 text-center space-y-4 opacity-30 flex flex-col items-center">
+              <MessageCircle size={48} className="text-primary/20" />
+              <p className="text-[10px] font-black uppercase tracking-[0.2em]">Communication Hub Empty</p>
+              <p className="text-[9px] font-medium italic px-10">Use the search bar above to connect with other innovators.</p>
             </div>
           )}
         </TabsContent>
 
-        <TabsContent value="notifications" className="px-6 space-y-4">
+        <TabsContent value="notifications" className="px-6 space-y-4 outline-none">
           <div className="py-24 text-center opacity-30">
              <Bell size={48} className="mx-auto mb-4" />
-             <p className="text-[10px] font-black uppercase">No Alerts Yet</p>
+             <p className="text-[10px] font-black uppercase tracking-widest">No Alerts Received</p>
           </div>
         </TabsContent>
 
-        <TabsContent value="groups" className="px-6 space-y-4">
+        <TabsContent value="groups" className="px-6 space-y-4 outline-none">
           <div className="py-24 text-center opacity-30">
             <Globe size={48} className="mx-auto mb-4" />
-            <p className="text-[10px] font-black uppercase tracking-widest">Discovery Feature Soon</p>
+            <p className="text-[10px] font-black uppercase tracking-widest">Global Discovery Coming Soon</p>
           </div>
         </TabsContent>
       </Tabs>
