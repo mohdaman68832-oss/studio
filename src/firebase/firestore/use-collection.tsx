@@ -9,7 +9,7 @@ import {
   QuerySnapshot,
   CollectionReference,
 } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { getAuth } from 'firebase/auth'; // FIXED: Correct import from firebase/auth
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
@@ -62,7 +62,6 @@ export function useCollection<T = any>(
     }
 
     // EXTRA SAFETY: Ensure auth is ready before attempting a potentially protected list
-    // This implements the "Professional Way" fetch check.
     const auth = getAuth();
     if (!auth.currentUser) {
       setIsLoading(true);

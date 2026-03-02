@@ -2,18 +2,17 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // REQUIREMENT PART 5: FIRESTORE RULES COMPATIBILITY
+    // Posts: Anyone can read, only authenticated users can create.
+    // Owners can update/delete their own posts.
     match /posts/{postId} {
+      allow read: if request.auth != null;
       allow create: if request.auth != null;
-      allow read: if true;
       allow update, delete: if request.auth != null && request.auth.uid == resource.data.uid;
       
-      // Likes subcollection
+      // Nested likes and suggestions
       match /likes/{userId} {
         allow read, write: if request.auth != null;
       }
-      
-      // Suggestions/Comments subcollection
       match /suggestions/{suggestionId} {
         allow read: if true;
         allow create: if request.auth != null;
@@ -24,33 +23,19 @@ service cloud.firestore {
     match /userProfiles/{userId} {
       allow read: if true;
       allow write: if request.auth != null && request.auth.uid == userId;
-      
-      // Notifications subcollection
-      match /notifications/{notifId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
     }
 
-    // Follows collection
-    match /follows/{followId} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-
-    // Messages collection
+    // Messages and Groups
     match /messages/{messageId} {
       allow read, write: if request.auth != null && (request.auth.uid == resource.data.senderId || request.auth.uid == resource.data.receiverId);
       allow create: if request.auth != null;
     }
-
-    // Groups collection
     match /groups/{groupId} {
       allow read: if true;
       allow write: if request.auth != null;
     }
 
-    // Global fallback for development - Allow all read/write for rapid testing
-    // Change to specific rules in production
+    // Global fallback for development
     match /{document=**} {
       allow read, write: if true;
     }

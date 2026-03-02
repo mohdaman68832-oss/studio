@@ -96,8 +96,7 @@ export default function ProfilePage() {
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [db, user]);
   const { data: profileData, isLoading: isProfileLoading } = useDoc(profileRef);
 
-  // REQUIREMENT PART 2: DYNAMIC POST COUNT
-  // Dynamically calculate post count based on live query snapshot size.
+  // PRODUCTION-LEVEL DYNAMIC POST COUNT: Only fetch when user is confirmed.
   const userPostsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
@@ -172,7 +171,7 @@ export default function ProfilePage() {
     setFormData(prev => ({ ...prev, stickers: prev.stickers.filter(s => s.id !== id) }));
   };
 
-  if (isUserLoading || isProfileLoading) return <div className="flex h-screen items-center justify-center bg-background"><Loader2 className="animate-spin text-primary h-8 w-8" /></div>;
+  if (isUserLoading || isProfileLoading) return null;
   if (!user) return null;
 
   const headerColor = formData.customColors.header || "var(--primary)";
@@ -290,9 +289,9 @@ export default function ProfilePage() {
               <Switch checked={isDarkMode} onCheckedChange={setIsDarkMode} />
             </div>
 
-            {/* Background Color */}
+            {/* Colors & Customization */}
             <div className="space-y-4">
-              <Label className="text-[10px] font-black uppercase flex items-center gap-2"><Palette size={14}/> Background</Label>
+              <Label className="text-[10px] font-black uppercase flex items-center gap-2"><Palette size={14}/> Background Color</Label>
               <div className="grid grid-cols-6 gap-2">
                 {['#FF4500', '#FFD700', '#000000', '#FFFFFF', '#F5F5F5', '#8B4513'].map(color => (
                   <button key={color} className="h-8 w-8 rounded-full border shadow-sm" style={{ backgroundColor: color }} onClick={() => setFormData(p => ({ ...p, customColors: { ...p.customColors, background: color } }))} />
@@ -300,7 +299,6 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Header Color */}
             <div className="space-y-4">
               <Label className="text-[10px] font-black uppercase flex items-center gap-2"><Palette size={14}/> Header Color</Label>
               <div className="grid grid-cols-6 gap-2">

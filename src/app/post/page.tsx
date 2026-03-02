@@ -110,8 +110,7 @@ function PostFormContent() {
     
     setIsPosting(true);
     try {
-      // REQUIREMENT PART 1: Perform ONLY ONE write operation inside the "posts" collection.
-      // DO NOT update the user's profile document or increment any postCount field.
+      // SINGLE WRITE: Only add to posts collection. No profile updates.
       await addDoc(collection(db, "posts"), {
         uid: user.uid,
         username: user.displayName || "Innovator",

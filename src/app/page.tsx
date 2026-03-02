@@ -21,17 +21,16 @@ function FeedContent() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showRefresh, setShowRefresh] = useState(false);
-  const [touchStart, setTouchStart] = useState(0);
 
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [user, db]);
   const { data: profileData } = useDoc(profileRef);
   const userInterests = profileData?.interests || [];
 
-  // PART 3: Firestore client calls run ONLY in Client Components
+  // PRODUCTION-LEVEL QUERY: Fetch and order by createdAt
   const postsQuery = useMemoFirebase(() => {
-    if (!db) return null;
+    if (!db || !user) return null; // Safe fetch only when user is ready
     return query(collection(db, "posts"), orderBy("createdAt", "desc"));
-  }, [db]);
+  }, [db, user]);
 
   const { data: firestorePosts, isLoading: loading } = useCollection(postsQuery);
 
