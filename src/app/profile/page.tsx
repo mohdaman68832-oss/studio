@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -95,6 +96,7 @@ export default function ProfilePage() {
   const { data: profileData, isLoading: isProfileLoading } = useDoc(profileRef);
 
   // Dynamic post fetching for count and display - Crucial for "Single Write" architecture
+  // Requires Composite Index: posts (uid: Asc, createdAt: Desc)
   const userPostsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(

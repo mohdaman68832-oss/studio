@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -49,6 +50,7 @@ export function useCollection<T = any>(
     }
 
     // Professional Guard: Delay execution until Auth is confirmed
+    // This prevents "Missing or insufficient permissions" errors on initial load
     const auth = getAuth();
     if (!auth.currentUser) {
       setIsLoading(true);
