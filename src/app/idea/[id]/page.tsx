@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -8,12 +7,11 @@ import { collection, addDoc, query, orderBy, serverTimestamp, doc } from "fireba
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, Send, Sparkles, MessageCircle, ChevronDown, ChevronUp, Maximize2, Globe, Lock } from "lucide-react";
+import { ChevronLeft, Send, Sparkles, MessageCircle, ChevronDown, ChevronUp, Globe, Lock } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogHeader } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
 export default function IdeaDetailPage() {
@@ -27,13 +25,14 @@ export default function IdeaDetailPage() {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  const ideaRef = useMemoFirebase(() => (db ? doc(db, "ideas", ideaId) : null), [db, ideaId]);
+  // Unified to 'posts' collection
+  const ideaRef = useMemoFirebase(() => (db ? doc(db, "posts", ideaId) : null), [db, ideaId]);
   const { data: idea, isLoading: ideaLoading } = useDoc(ideaRef);
 
   const suggestionsQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(
-      collection(db, "ideas", ideaId, "suggestions"),
+      collection(db, "posts", ideaId, "suggestions"),
       orderBy("createdAt", "asc")
     );
   }, [db, ideaId]);
@@ -57,9 +56,9 @@ export default function IdeaDetailPage() {
       createdAt: serverTimestamp(),
     };
 
-    addDoc(collection(db, "ideas", ideaId, "suggestions"), commentData);
+    addDoc(collection(db, "posts", ideaId, "suggestions"), commentData);
 
-    const postCreatorId = idea.authorId || idea.creatorId;
+    const postCreatorId = idea.uid || idea.authorId;
     if (postCreatorId && postCreatorId !== currentUser.uid) {
       addDoc(collection(db, "users", postCreatorId, "notifications"), {
         userId: postCreatorId,
@@ -91,7 +90,7 @@ export default function IdeaDetailPage() {
   if (!idea) {
     return (
       <div className="max-w-md mx-auto p-12 text-center space-y-4">
-        <p className="text-muted-foreground font-bold uppercase tracking-widest text-xs">Idea not found</p>
+        <p className="text-muted-foreground font-bold uppercase tracking-widest text-xs">Innovation not found</p>
         <Button onClick={() => router.push("/")} className="rounded-full">Go Back Home</Button>
       </div>
     );
@@ -109,7 +108,7 @@ export default function IdeaDetailPage() {
           <h1 className="font-black text-sm uppercase tracking-tighter truncate">{idea?.title}</h1>
           <div className="flex items-center gap-1.5 mt-0.5">
             <Globe size={10} className="text-muted-foreground" />
-            <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest leading-none">Public Hub</p>
+            <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest leading-none">Global Sphere</p>
           </div>
         </div>
       </header>
@@ -137,10 +136,10 @@ export default function IdeaDetailPage() {
               <div className="flex items-center gap-3">
                 <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
                   <AvatarImage src={idea?.userAvatar} />
-                  <AvatarFallback>U</AvatarFallback>
+                  <AvatarFallback>{idea?.username?.[0] || "U"}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="text-sm font-black text-foreground">{idea?.userName}</p>
+                  <p className="text-sm font-black text-foreground">@{idea?.username}</p>
                   <p className="text-[10px] text-primary font-bold uppercase tracking-widest">{idea?.category}</p>
                 </div>
               </div>

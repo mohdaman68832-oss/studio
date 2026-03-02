@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useMemo, useState } from "react";
@@ -53,24 +52,6 @@ const MOCK_GROUPS = [
   }
 ];
 
-const MOCK_GROUP_POSTS = Array.from({ length: 20 }).map((_, i) => ({
-  id: `post-${i}`,
-  title: [
-    "Neural Mesh Network", "Smart Grid AI", "Bio-degradable Tech", "Solar Glass v2", 
-    "Haptic Learning", "Urban Wind Turbine", "Water Filter IoT", "Clean Air Necklace"
-  ][i % 8],
-  description: "Exploring high-impact scalability for urban environments.",
-  problem: "Traditional solutions are too slow and environmentally damaging.",
-  category: i % 2 === 0 ? "Technology" : "Sustainability",
-  userName: ["Alex Rivera", "Sarah Chen", "Marcus Vane", "Elena Gilbert"][i % 4],
-  userAvatar: `https://picsum.photos/seed/user${i % 4}/100/100`,
-  mediaUrl: i % 4 === 0 
-    ? "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" 
-    : `https://picsum.photos/seed/innovation${i}/800/800`,
-  innovationScore: 70 + (i % 30),
-  likes: 50 + (i * 12),
-}));
-
 export default function GroupDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -84,21 +65,17 @@ export default function GroupDetailPage() {
     return MOCK_GROUPS.find(g => g.id === groupId) || MOCK_GROUPS[0];
   }, [groupId]);
 
+  // Unified to 'posts' collection
   const postsQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(
-      collection(db, "ideas"),
+      collection(db, "posts"),
       where("category", "==", group.category),
       orderBy("createdAt", "desc")
     );
   }, [db, group.category]);
 
-  const { data: firestorePosts } = useCollection(postsQuery);
-
-  const posts = useMemo(() => {
-    if (firestorePosts && firestorePosts.length > 0) return firestorePosts;
-    return MOCK_GROUP_POSTS.filter(p => p.category === group.category);
-  }, [firestorePosts, group.category]);
+  const { data: posts, isLoading: postsLoading } = useCollection(postsQuery);
 
   return (
     <div className="max-w-md mx-auto min-h-screen bg-background flex flex-col">
@@ -212,7 +189,7 @@ export default function GroupDetailPage() {
               ) : (
                 <div className="py-24 text-center space-y-4 opacity-30">
                   <LayoutGrid size={48} className="mx-auto" />
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em]">No posts in this group yet</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em]">No innovations in this group yet</p>
                 </div>
               )}
             </div>

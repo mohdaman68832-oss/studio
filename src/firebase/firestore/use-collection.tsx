@@ -9,7 +9,7 @@ import {
   QuerySnapshot,
   CollectionReference,
 } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth'; 
+import { useAuth } from '../provider';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
@@ -21,10 +21,6 @@ export interface UseCollectionResult<T> {
   error: FirestoreError | Error | null;
 }
 
-/**
- * Professional Real-time Collection Hook
- * Uses Auth Guard to prevent early permission errors.
- */
 export function useCollection<T = any>(
     memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean})  | null | undefined,
 ): UseCollectionResult<T> {
@@ -34,6 +30,7 @@ export function useCollection<T = any>(
   const [data, setData] = useState<StateDataType>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
+  const auth = useAuth();
 
   useEffect(() => {
     if (!memoizedTargetRefOrQuery) {
@@ -42,10 +39,8 @@ export function useCollection<T = any>(
       setError(null);
       return;
     }
-
-    const auth = getAuth();
     
-    // Professional Auth Guard: Do not listen until auth is ready
+    // Auth Guard: Don't start the listener until auth is ready
     if (!auth.currentUser) {
       setIsLoading(true);
       return;
@@ -66,11 +61,14 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       async (err: FirestoreError) => {
-        // Path extraction fallback for better error reporting
         let path = "unknown_collection";
         try {
-          if ('path' in memoizedTargetRefOrQuery) {
-            path = memoizedTargetRefOrQuery.path;
+          if ('path' in (memoizedTargetRefOrQuery as any)) {
+            path = (memoizedTargetRefOrQuery as any).path;
+          } else if ('_query' in (memoizedTargetRefOrQuery as any)) {
+            // Extraction for Query objects if path is available internally
+            const q = (memoizedTargetRefOrQuery as any)._query;
+            if (q && q.path) path = q.path.toString();
           }
         } catch (e) {}
 
@@ -87,7 +85,7 @@ export function useCollection<T = any>(
     );
 
     return () => unsubscribe();
-  }, [memoizedTargetRefOrQuery]);
+  }, [memoizedTargetRefOrQuery, auth]);
 
   if(memoizedTargetRefOrQuery && !memoizedTargetRefOrQuery.__memo) {
     throw new Error(memoizedTargetRefOrQuery + ' was not properly memoized using useMemoFirebase');
