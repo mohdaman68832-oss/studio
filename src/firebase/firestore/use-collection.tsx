@@ -40,9 +40,10 @@ export function useCollection<T = any>(
       return;
     }
     
-    // Auth Guard: Ensure Authentication is ready before querying to avoid permission errors
+    // Auth Guard: Prevent unauthorized fetches that trigger permission errors
     const auth = getAuth();
-    if (!auth.currentUser) {
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
       setIsLoading(true);
       return;
     }
@@ -61,7 +62,7 @@ export function useCollection<T = any>(
         setError(null);
         setIsLoading(false);
       },
-      (err: FirestoreError) => {
+      async (err: FirestoreError) => {
         // Robust path extraction for debugging
         let path = "privateChats";
         try {

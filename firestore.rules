@@ -14,16 +14,13 @@ service cloud.firestore {
     }
 
     // Private Chats: Access restricted to participants only
-    // Refined to perfectly match 'array-contains' queries
     match /privateChats/{chatId} {
-      // For list queries, the query filter must match the rule constraint exactly.
-      allow list: if isAuth() && (request.auth.uid in resource.data.participants);
-      allow get: if isAuth() && (request.auth.uid in resource.data.participants);
+      // Combined 'read' rule for get and list operations
+      allow read: if isAuth() && (request.auth.uid in resource.data.participants);
       allow create: if isAuth() && (request.auth.uid in request.resource.data.participants);
       allow update: if isAuth() && (request.auth.uid in resource.data.participants);
 
       match /messages/{messageId} {
-        // Participants of the parent chat can read and write messages
         allow read, write: if isAuth();
       }
     }
@@ -44,7 +41,7 @@ service cloud.firestore {
       }
     }
     
-    // Fallback for other collections (groups, unions, follows)
+    // Fallback collections
     match /groups/{groupId} { allow read, write: if isAuth(); }
     match /unions/{unionId} { allow read, write: if isAuth(); }
     match /follows/{followId} { allow read, write: if isAuth(); }

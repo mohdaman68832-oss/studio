@@ -6,32 +6,25 @@ import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 
 /**
- * Module-level cache to ensure singleton SDK instances across HMR/Fast Refresh.
- * This prevents the "INTERNAL ASSERTION FAILED" error during development.
+ * Robust singleton SDK initialization for Next.js environments.
+ * Prevents "INTERNAL ASSERTION FAILED" by caching instances globally on the client.
  */
-let cachedSdks: {
-  firebaseApp: FirebaseApp;
-  auth: Auth;
-  firestore: Firestore;
-} | null = null;
+function getCachedSdks() {
+  if (typeof window === 'undefined') return null;
+  return (window as any)._firebaseSdks || null;
+}
 
-/**
- * Initializes Firebase App and Services once and returns the cached instances.
- * Uses a global check to survive Hot Module Replacement (HMR) in development.
- */
+function setCachedSdks(sdks: any) {
+  if (typeof window !== 'undefined') {
+    (window as any)._firebaseSdks = sdks;
+  }
+}
+
 export function initializeFirebase() {
-  // Check for existing instances in a global scope to survive HMR
-  if (typeof window !== 'undefined' && (window as any)._firebaseSdks) {
-    return (window as any)._firebaseSdks;
-  }
-
-  if (cachedSdks) {
-    return cachedSdks;
-  }
+  const existing = getCachedSdks();
+  if (existing) return existing;
 
   let firebaseApp: FirebaseApp;
-
-  // Idempotent initialization
   if (!getApps().length) {
     firebaseApp = initializeApp(firebaseConfig);
   } else {
@@ -44,12 +37,7 @@ export function initializeFirebase() {
     firestore: getFirestore(firebaseApp)
   };
 
-  // Cache locally and globally on client
-  if (typeof window !== 'undefined') {
-    (window as any)._firebaseSdks = sdks;
-  }
-  cachedSdks = sdks;
-
+  setCachedSdks(sdks);
   return sdks;
 }
 
