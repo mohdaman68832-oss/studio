@@ -113,6 +113,7 @@ function PostFormContent() {
     setIsPosting(true);
     try {
       // SINGLE WRITE: Only write to the "posts" collection.
+      // Removed all updateDoc logic for userProfiles to prevent permission errors.
       await addDoc(collection(db, "posts"), {
         uid: user.uid,
         username: user.displayName || "Innovator",
@@ -132,7 +133,8 @@ function PostFormContent() {
       toast({ title: "Success!", description: "Innovation published!" });
       setStep(3);
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Posting Failed", description: "Database error." });
+      console.error("Posting Error:", error);
+      toast({ variant: "destructive", title: "Posting Failed", description: "Check console for details." });
     } finally {
       setIsPosting(false);
     }

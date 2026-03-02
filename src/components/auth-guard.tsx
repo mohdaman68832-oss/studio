@@ -21,7 +21,7 @@ function LogoLoader() {
             />
             <g className="animate-eye-look">
               <g className="animate-eye-blink">
-                {/* Elegant Tiny Balanced Eyes */}
+                {/* Tiny Elegant Balanced Eyes */}
                 <rect x="58" y="58" width="2" height="4" rx="1" fill="white" />
                 <rect x="68" y="58" width="2" height="4" rx="1" fill="white" />
               </g>
@@ -56,7 +56,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const isSetupPage = pathname === '/setup';
 
   useEffect(() => {
-    // PROFESSIONAL WAY: Wait for auth loading before deciding routing.
+    // Wait for auth loading before deciding routing.
     if (isUserLoading || isProfileLoading) return;
 
     if (!user) {

@@ -96,7 +96,7 @@ export default function ProfilePage() {
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [db, user]);
   const { data: profileData, isLoading: isProfileLoading } = useDoc(profileRef);
 
-  // PROFESSIONAL WAY: Only query when user.uid is confirmed.
+  // PROFESSIONAL WAY: Only query posts when user.uid is confirmed.
   const userPostsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
