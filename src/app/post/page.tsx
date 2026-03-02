@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef, useEffect, Suspense } from "react";
@@ -69,14 +70,7 @@ function PostFormContent() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [category, setCategory] = useState("Technology");
-  
-  const isMeme = category.toLowerCase() === "memes" || category.toLowerCase() === "meme";
-
-  const [formData, setFormData] = useState({
-    title: "",
-    problem: "",
-    description: "",
-  });
+  const [formData, setFormData] = useState({ title: "", problem: "", description: "" });
 
   useEffect(() => {
     const type = searchParams.get("mediaType") as any;
@@ -87,10 +81,6 @@ function PostFormContent() {
     }
     if (cat) setCategory(cat);
   }, [searchParams]);
-
-  const updateFormData = (field: string, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
 
   const handleMediaSelect = (type: "text" | "image" | "video") => {
     setMediaType(type);
@@ -115,21 +105,6 @@ function PostFormContent() {
     }
   };
 
-  const handleNext = () => {
-    if (step < 2) setStep((s) => (s + 1) as Step);
-  };
-
-  const handleBack = () => {
-    if (step > 1) {
-        if (mediaType === 'text' && step === 2) {
-            setStep(1);
-            setMediaType(null);
-        } else {
-            setStep((s) => (s - 1) as Step);
-        }
-    }
-  };
-
   const handlePublish = async () => {
     if (!db || !user) {
       toast({ variant: "destructive", title: "Auth Required", description: "Please log in to post." });
@@ -139,44 +114,34 @@ function PostFormContent() {
     setIsPosting(true);
     try {
       // PART 1 — SINGLE WRITE LOGIC
-      // We only perform ONE write operation to the "posts" collection.
+      // Only one addDoc operation to the "posts" collection.
       await addDoc(collection(db, "posts"), {
         uid: user.uid,
         username: user.displayName || "Innovator",
         userAvatar: user.photoURL || `https://picsum.photos/seed/${user.uid}/100/100`,
         title: formData.title,
-        problem: isMeme ? "" : formData.problem,
+        problem: formData.problem,
         description: formData.description,
         content: formData.description,
         category: category,
         mediaUrl: mediaType === 'text' ? "" : (previewUrl || ""),
         createdAt: serverTimestamp(),
         mediaType: mediaType || "text",
-        innovationScore: isMeme ? 100 : Math.floor(Math.random() * 30) + 70,
+        innovationScore: Math.floor(Math.random() * 30) + 70,
         likes: 0
       });
 
-      // NO updateDoc() on user profile.
-      // NO increment() logic.
+      // REQUIREMENT: DO NOT update the user's profile document.
+      // REQUIREMENT: DO NOT increment any postCount field.
 
-      toast({
-        title: "Success!",
-        description: isMeme ? "Meme is live!" : "Innovation published!",
-      });
-
+      toast({ title: "Success!", description: "Innovation published!" });
       setStep(3);
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Posting Failed",
-        description: "Permission error or network issue.",
-      });
+      toast({ variant: "destructive", title: "Posting Failed", description: "Permission error or network issue." });
     } finally {
       setIsPosting(false);
     }
   };
-
-  const progress = (step / 3) * 100;
 
   return (
     <div className="max-w-md mx-auto p-6 pb-24 space-y-6 bg-background min-h-screen">
@@ -189,99 +154,61 @@ function PostFormContent() {
             </p>
            </div>
            {step === 2 && (
-             <Button variant="ghost" size="sm" onClick={handleBack} className="rounded-full text-[10px] font-black uppercase tracking-widest">
+             <Button variant="ghost" size="sm" onClick={() => setStep(1)} className="rounded-full text-[10px] font-black uppercase tracking-widest">
                <ChevronLeft className="w-4 h-4 mr-1" /> Back
              </Button>
            )}
         </header>
-        <Progress value={progress} className="h-1.5 bg-muted" />
+        <Progress value={(step / 3) * 100} className="h-1.5 bg-muted" />
       </div>
 
       {step === 1 && (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="space-y-4">
-            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground text-center block">
-                Choose Format
-            </Label>
-            <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-3">
               <Sheet open={isImageSheetOpen} onOpenChange={setIsImageSheetOpen}>
                 <SheetTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className={cn(
-                        "h-32 flex-col gap-2 rounded-[2rem] border-2 transition-all",
-                        mediaType === 'image' ? 'border-primary bg-primary/5' : 'border-muted'
-                    )}
-                    onClick={() => handleMediaSelect("image")}
-                  >
+                  <Button variant="outline" className={cn("h-32 flex-col gap-2 rounded-[2rem] border-2", mediaType === 'image' && 'border-primary bg-primary/5')} onClick={() => handleMediaSelect("image")}>
                     <ImageIcon className="w-8 h-8" />
                     <span className="text-[10px] font-black uppercase tracking-widest">Image</span>
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="bottom" className="rounded-t-[2.5rem] h-[35vh]">
-                  <SheetHeader>
-                    <SheetTitle className="text-center text-[10px] font-black uppercase tracking-widest">Upload Image</SheetTitle>
-                  </SheetHeader>
                   <div className="flex flex-col items-center justify-center h-full gap-4 pb-8">
                     <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, "image")} />
-                    <div className="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center"><Upload /></div>
-                    <Button onClick={() => fileInputRef.current?.click()} className="rounded-full px-10 h-12 font-black uppercase text-[10px] tracking-widest bg-primary text-white">Choose Photo</Button>
+                    <Button onClick={() => fileInputRef.current?.click()} className="rounded-full px-10 h-12 font-black uppercase text-[10px] bg-primary text-white">Choose Photo</Button>
                   </div>
                 </SheetContent>
               </Sheet>
 
               <Sheet open={isVideoSheetOpen} onOpenChange={setIsVideoSheetOpen}>
                 <SheetTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className={cn(
-                        "h-32 flex-col gap-2 rounded-[2rem] border-2 transition-all",
-                        mediaType === 'video' ? 'border-primary bg-primary/5' : 'border-muted'
-                    )}
-                    onClick={() => handleMediaSelect("video")}
-                  >
+                  <Button variant="outline" className={cn("h-32 flex-col gap-2 rounded-[2rem] border-2", mediaType === 'video' && 'border-primary bg-primary/5')} onClick={() => handleMediaSelect("video")}>
                     <VideoIcon className="w-8 h-8" />
                     <span className="text-[10px] font-black uppercase tracking-widest">Video</span>
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="bottom" className="rounded-t-[2.5rem] h-[35vh]">
-                  <SheetHeader>
-                    <SheetTitle className="text-center text-[10px] font-black uppercase tracking-widest">Upload Video</SheetTitle>
-                  </SheetHeader>
                   <div className="flex flex-col items-center justify-center h-full gap-4 pb-8">
                     <input type="file" ref={fileInputRef} className="hidden" accept="video/*" onChange={(e) => handleFileChange(e, "video")} />
-                    <div className="w-16 h-16 bg-secondary/10 text-secondary rounded-full flex items-center justify-center"><Upload /></div>
-                    <Button onClick={() => fileInputRef.current?.click()} className="rounded-full px-10 h-12 font-black uppercase text-[10px] tracking-widest bg-secondary text-white">Choose Video</Button>
+                    <Button onClick={() => fileInputRef.current?.click()} className="rounded-full px-10 h-12 font-black uppercase text-[10px] bg-secondary text-white">Choose Video</Button>
                   </div>
                 </SheetContent>
               </Sheet>
 
-              <Button 
-                variant="outline" 
-                className={cn(
-                    "h-32 flex-col gap-2 rounded-[2rem] border-2 transition-all",
-                    mediaType === 'text' ? 'border-primary bg-primary/5' : 'border-muted'
-                )}
-                onClick={() => handleMediaSelect("text")}
-              >
+              <Button variant="outline" className={cn("h-32 flex-col gap-2 rounded-[2rem] border-2", mediaType === 'text' && 'border-primary bg-primary/5')} onClick={() => handleMediaSelect("text")}>
                 <Type className="w-8 h-8" />
                 <span className="text-[10px] font-black uppercase tracking-widest">Text Only</span>
               </Button>
-            </div>
           </div>
 
-          {previewUrl && (mediaType === 'image' || mediaType === 'video') && (
+          {previewUrl && (
             <div className="relative aspect-video w-full rounded-[2rem] overflow-hidden border-2 border-primary/20 shadow-2xl">
-              {mediaType === 'video' ? (
-                <video src={previewUrl} className="w-full h-full object-cover" controls />
-              ) : (
-                <Image src={previewUrl} alt="Preview" fill className="object-cover" unoptimized />
-              )}
+              {mediaType === 'video' ? <video src={previewUrl} className="w-full h-full object-cover" controls /> : <Image src={previewUrl} alt="Preview" fill className="object-cover" unoptimized />}
               <Button size="icon" variant="destructive" className="absolute top-4 right-4 rounded-full h-10 w-10 shadow-lg" onClick={() => {setPreviewUrl(null); setMediaType(null);}}><X size={20} /></Button>
             </div>
           )}
 
-          <Button className="w-full h-14 rounded-3xl text-sm font-black uppercase bg-primary text-white" disabled={!mediaType || (mediaType !== 'text' && !previewUrl)} onClick={handleNext}>
+          <Button className="w-full h-14 rounded-3xl text-sm font-black uppercase bg-primary text-white" disabled={!mediaType || (mediaType !== 'text' && !previewUrl)} onClick={() => setStep(2)}>
             Details <ChevronRight className="ml-2 w-4 h-4" />
           </Button>
         </div>
@@ -289,43 +216,24 @@ function PostFormContent() {
 
       {step === 2 && (
         <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Title</Label>
-              <Input placeholder="Post title..." className="rounded-2xl h-14 bg-muted/30 border-none text-sm font-bold" value={formData.title} onChange={(e) => updateFormData("title", e.target.value)} />
-            </div>
-
-            <div className="space-y-4">
-              <Label className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 px-1"><Tags size={14} className="text-primary" /> Category</Label>
-              <div className="flex flex-wrap gap-2 p-1">
-                {CATEGORY_KEYWORDS.slice(0, 8).map((keyword) => (
-                  <Button
-                    key={keyword}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCategory(keyword)}
-                    className={cn(
-                      "rounded-full text-[9px] font-black uppercase transition-all h-9 px-4",
-                      category === keyword ? "bg-primary text-white border-primary" : "bg-white text-muted-foreground"
-                    )}
-                  >
-                    {keyword}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            {!isMeme && (
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest ml-1">The Challenge</Label>
-                <Input placeholder="What problem are you solving?" className="rounded-2xl h-14 bg-muted/30 border-none text-sm font-bold" value={formData.problem} onChange={(e) => updateFormData("problem", e.target.value)} />
-              </div>
-            )}
+          <div className="space-y-4">
+            <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Title</Label>
+            <Input placeholder="Post title..." className="rounded-2xl h-14 bg-muted/30 border-none font-bold" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} />
             
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest ml-1">{isMeme ? "Caption" : "Description"}</Label>
-              <Textarea placeholder={isMeme ? "Something funny..." : "Details..."} className="rounded-2xl min-h-[140px] bg-muted/30 border-none text-sm font-medium" value={formData.description} onChange={(e) => updateFormData("description", e.target.value)} />
+            <Label className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 px-1"><Tags size={14} className="text-primary" /> Category</Label>
+            <div className="flex flex-wrap gap-2">
+              {CATEGORY_KEYWORDS.slice(0, 8).map((keyword) => (
+                <Button key={keyword} variant="outline" size="sm" onClick={() => setCategory(keyword)} className={cn("rounded-full text-[9px] font-black uppercase h-9 px-4", category === keyword ? "bg-primary text-white" : "bg-white")}>
+                  {keyword}
+                </Button>
+              ))}
             </div>
+
+            <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Challenge</Label>
+            <Input placeholder="What problem are you solving?" className="rounded-2xl h-14 bg-muted/30 border-none font-bold" value={formData.problem} onChange={(e) => setFormData({...formData, problem: e.target.value})} />
+            
+            <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Description</Label>
+            <Textarea placeholder="Details..." className="rounded-2xl min-h-[140px] bg-muted/30 border-none font-medium" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} />
           </div>
 
           <Button className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase" onClick={handlePublish} disabled={isPosting || !formData.title || !formData.description}>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -6,9 +7,7 @@ import { Button } from "@/components/ui/button";
 import { 
   Settings, LogOut, Camera, 
   Loader2, 
-  X,
   UserCog,
-  CheckCircle,
   Sun,
   Moon,
   Palette,
@@ -21,7 +20,7 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -48,10 +47,7 @@ interface CustomColors {
   userInfo?: string;
   bioCard?: string;
   statsSection?: string;
-  tabsList?: string;
-  tabsContent?: string;
   background?: string;
-  textOutline?: string;
 }
 
 function getContrastColor(hexColor: string | undefined): string {
@@ -99,18 +95,14 @@ export default function ProfilePage() {
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [db, user]);
   const { data: profileData, isLoading: isProfileLoading } = useDoc(profileRef);
 
-  // PART 2: Dynamic Post Count calculation using snapshot size
+  // PART 2: Dynamic Post Count Logic
+  // Using snaphot.size from a live query instead of a stored field.
   const userPostsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(fsCollection(db, "posts"), where("uid", "==", user.uid));
   }, [db, user]);
   const { data: userPosts } = useCollection(userPostsQuery);
   const dynamicPostCount = userPosts?.length || 0;
-
-  const followingQuery = useMemoFirebase(() => (db && user ? query(fsCollection(db, "follows"), where("followerId", "==", user.uid)) : null), [db, user]);
-  const followersQuery = useMemoFirebase(() => (db && user ? query(fsCollection(db, "follows"), where("followedId", "==", user.uid)) : null), [db, user]);
-  const { data: circlingData } = useCollection(followingQuery);
-  const { data: circleData } = useCollection(followersQuery);
 
   useEffect(() => {
     if (profileData) {
@@ -127,16 +119,11 @@ export default function ProfilePage() {
     }
   }, [profileData, user]);
 
-  const handleSignOut = async () => { 
-    await signOut(auth); 
-    router.push("/login"); 
-  };
-
   const handleSaveProfile = async () => {
     if (!user || !profileRef) return;
     setIsSaving(true);
     try {
-      // PART 3 & 4: Confirmation of auth before write
+      // PART 3 & 4: Firestore call on client after auth confirmation
       await updateDoc(profileRef, {
         name: formData.name,
         bio: formData.bio,
@@ -149,10 +136,10 @@ export default function ProfilePage() {
         updatedAt: new Date().toISOString()
       });
 
-      toast({ title: "Profile Synced", description: "All changes updated successfully." });
+      toast({ title: "Profile Synced", description: "Changes updated successfully." });
       setIsOptimizeModalOpen(false);
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Save Error", description: error.message });
+      toast({ variant: "destructive", title: "Save Error", description: "Insufficient permissions or network issue." });
     } finally {
       setIsSaving(false);
     }
@@ -170,11 +157,7 @@ export default function ProfilePage() {
   const addSticker = (url: string) => {
     const newSticker: Sticker = {
       id: Math.random().toString(36).substr(2, 9),
-      url,
-      x: 50,
-      y: 50,
-      rotation: Math.random() * 20 - 10,
-      scale: 1
+      url, x: 50, y: 50, rotation: Math.random() * 20 - 10, scale: 1
     };
     setFormData(prev => ({ ...prev, stickers: [...prev.stickers, newSticker] }));
   };
@@ -190,16 +173,14 @@ export default function ProfilePage() {
           <h1 className="text-2xl font-black uppercase tracking-tighter" style={{ color: getContrastColor(formData.customColors.header) }}>Sphere</h1>
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <Settings size={24} style={{ color: getContrastColor(formData.customColors.header) }} />
-              </Button>
+              <Button variant="ghost" size="icon"><Settings size={24} style={{ color: getContrastColor(formData.customColors.header) }} /></Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="rounded-3xl p-2 border-2 bg-white/95 backdrop-blur-md">
               <DropdownMenuItem onClick={() => setIsOptimizeModalOpen(true)} className="rounded-2xl h-10 gap-3 cursor-pointer">
                 <UserCog size={18} className="text-primary" />
                 <span className="text-[10px] font-black uppercase">Optimize</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleSignOut} className="rounded-2xl h-10 gap-3 text-secondary cursor-pointer">
+              <DropdownMenuItem onClick={() => signOut(auth)} className="rounded-2xl h-10 gap-3 text-secondary cursor-pointer">
                 <LogOut size={18} />
                 <span className="text-[10px] font-black uppercase">Logout</span>
               </DropdownMenuItem>
@@ -214,25 +195,14 @@ export default function ProfilePage() {
           <div className="px-6 -mt-16 flex flex-col items-center">
             <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl">
               <AvatarImage src={formData.profilePic} className="object-cover" />
-              <AvatarFallback className="text-2xl font-black uppercase">{formData.name?.[0]}</AvatarFallback>
+              <AvatarFallback className="text-2xl font-black">{formData.name?.[0]}</AvatarFallback>
             </Avatar>
           </div>
 
-          {/* Stickers Rendering */}
           <div className="absolute inset-0 pointer-events-none z-10">
             {formData.stickers.map((sticker) => (
-              <div 
-                key={sticker.id} 
-                className="absolute pointer-events-none select-none" 
-                style={{ 
-                  left: `${sticker.x}%`, 
-                  top: `${sticker.y}%`, 
-                  transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg) scale(${sticker.scale})`, 
-                }}
-              >
-                <div className="relative w-20 h-20">
-                  <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized />
-                </div>
+              <div key={sticker.id} className="absolute pointer-events-none" style={{ left: `${sticker.x}%`, top: `${sticker.y}%`, transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg) scale(${sticker.scale})` }}>
+                <div className="relative w-20 h-20"><Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized /></div>
               </div>
             ))}
           </div>
@@ -254,15 +224,15 @@ export default function ProfilePage() {
           <div className="grid grid-cols-3 gap-6 w-full">
             <div className="text-center">
               <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{dynamicPostCount}</p>
-              <p className="text-[8px] uppercase font-black opacity-40" style={{ color: getContrastColor(formData.customColors.statsSection) }}>Posts</p>
+              <p className="text-[8px] uppercase font-black opacity-40">Posts</p>
             </div>
             <div className="text-center">
-              <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{circleData?.length || 0}</p>
-              <p className="text-[8px] uppercase font-black opacity-40" style={{ color: getContrastColor(formData.customColors.statsSection) }}>Circle</p>
+              <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(formData.customColors.statsSection) }}>0</p>
+              <p className="text-[8px] uppercase font-black opacity-40">Circle</p>
             </div>
             <div className="text-center">
-              <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(formData.customColors.statsSection) }}>{circlingData?.length || 0}</p>
-              <p className="text-[8px] uppercase font-black opacity-40" style={{ color: getContrastColor(formData.customColors.statsSection) }}>Circling</p>
+              <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(formData.customColors.statsSection) }}>0</p>
+              <p className="text-[8px] uppercase font-black opacity-40">Circling</p>
             </div>
           </div>
         </div>
@@ -300,31 +270,12 @@ export default function ProfilePage() {
                   </button>
                 ))}
               </div>
-              {formData.stickers.length > 0 && (
-                <Button variant="ghost" size="sm" className="text-[8px] font-black uppercase text-secondary" onClick={() => setFormData(p => ({ ...p, stickers: [] }))}>
-                  <Trash2 size={10} className="mr-1" /> Clear Stickers
-                </Button>
-              )}
             </div>
 
             <div className="space-y-4">
               <Label className="text-[10px] font-black uppercase">Banner</Label>
               <div onClick={() => bannerInputRef.current?.click()} className="relative h-24 bg-muted rounded-2xl overflow-hidden border-2 border-dashed cursor-pointer">
                 {formData.banner ? <Image src={formData.banner} alt="banner" fill className="object-cover" unoptimized /> : <Camera className="absolute inset-0 m-auto opacity-10" size={32} />}
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <Label className="text-[10px] font-black uppercase">Profile Info</Label>
-              <div className="flex gap-4 items-center">
-                <div className="relative cursor-pointer" onClick={() => profileInputRef.current?.click()}>
-                   <Avatar className="h-20 w-20 border-2">
-                    <AvatarImage src={formData.profilePic} className="object-cover" />
-                    <AvatarFallback className="text-xl font-black">{formData.name?.[0]}</AvatarFallback>
-                  </Avatar>
-                  <div className="absolute inset-0 bg-black/20 rounded-full flex items-center justify-center text-white opacity-0 hover:opacity-100 transition-opacity"><Camera size={16} /></div>
-                </div>
-                <Input value={formData.name} onChange={e => setFormData(p => ({ ...p, name: e.target.value }))} placeholder="Public Name" className="h-12 rounded-xl text-sm font-bold" />
               </div>
             </div>
 
