@@ -9,7 +9,7 @@ import {
   QuerySnapshot,
   CollectionReference,
 } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth'; // FIXED: Correct import from firebase/auth
+import { getAuth } from 'firebase/auth';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
@@ -39,8 +39,8 @@ export function useCollection<T = any>(
       return;
     }
     
+    // Auth Guard: Only start the listener when Auth is initialized and user is present
     const auth = getAuth();
-    // Auth Guard: Don't start the listener until auth is ready and user is logged in
     if (!auth.currentUser) {
       setIsLoading(true);
       return;
@@ -63,6 +63,7 @@ export function useCollection<T = any>(
       async (err: FirestoreError) => {
         let path = "unknown_collection";
         try {
+          // Attempt to extract path from the query or collection reference
           if ('path' in (memoizedTargetRefOrQuery as any)) {
             path = (memoizedTargetRefOrQuery as any).path;
           } else if ('_query' in (memoizedTargetRefOrQuery as any)) {

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -34,7 +33,7 @@ export default function HubPage() {
 
   const { data: notifications, isLoading: isNotificationsLoading } = useCollection(notificationsQuery);
 
-  // Private Chats Query
+  // Private Chats Query - Optimized for the composite index (participants array-contains + timestamp desc)
   const privateChatsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(
@@ -70,7 +69,6 @@ export default function HubPage() {
 
   const startChat = (recipientId: string) => {
     if (!user) return;
-    // Generate a consistent chatId for two participants
     const chatId = [user.uid, recipientId].sort().join("_");
     router.push(`/chat/${chatId}`);
   };
@@ -116,7 +114,7 @@ export default function HubPage() {
             />
           </div>
           <Button onClick={handleUserSearch} size="icon" className="h-14 w-14 rounded-3xl bg-primary shadow-xl">
-            <UserPlus size={20} />
+            {isSearchingUsers ? <Loader2 size={20} className="animate-spin" /> : <UserPlus size={20} />}
           </Button>
         </div>
 
@@ -196,7 +194,6 @@ export default function HubPage() {
         </TabsContent>
 
         <TabsContent value="notifications" className="px-6 space-y-4">
-          {/* Existing notifications content */}
           {isNotificationsLoading ? (
             <div className="flex justify-center py-12"><Loader2 className="animate-spin text-primary" /></div>
           ) : notifications && notifications.length > 0 ? (
@@ -214,7 +211,6 @@ export default function HubPage() {
         </TabsContent>
 
         <TabsContent value="groups" className="px-6 space-y-4">
-          {/* Existing groups content */}
           <div className="py-24 text-center opacity-30">
             <Globe size={48} className="mx-auto mb-4" />
             <p className="text-[10px] font-black uppercase">Feature Coming Soon</p>
