@@ -49,13 +49,13 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
 
   const userQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(fsCollection(db, "userProfiles"), where("username", "==", username.toLowerCase()), limit(1));
+    return query(fsCollection(db, "userProfiles"), where("username", "==", username.toLowerCase().trim()), limit(1));
   }, [db, username]);
 
   const { data: userProfiles, isLoading } = useCollection(userQuery);
   const profileData = userProfiles?.[0];
 
-  // Dynamic Post Count and Feed
+  // PART 2 — DYNAMIC POST COUNT
   const userPostsQuery = useMemoFirebase(() => {
     if (!db || !profileData) return null;
     return query(
@@ -102,7 +102,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
   return (
     <div className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden flex flex-col" style={{ backgroundColor: colors.background || "var(--background)" }}>
       <div className="relative w-full shrink-0">
-        <div className="h-16 w-full" style={{ backgroundColor: colors.header }} />
+        <div className="h-16 w-full" style={{ backgroundColor: colors.header || "var(--primary)" }} />
         <header className="absolute top-0 left-0 right-0 px-6 py-5 flex justify-between items-center z-50">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full">
             <ChevronLeft size={24} style={{ color: getContrastColor(colors.header) }} />
@@ -122,7 +122,6 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
             </Avatar>
           </div>
 
-          {/* Stickers Rendering */}
           <div className="absolute inset-0 pointer-events-none z-30">
             {stickers.map((sticker) => (
               <div 
@@ -168,20 +167,19 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
           <div className="grid grid-cols-3 gap-6 w-full">
             <div className="text-center">
               <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{dynamicPostCount}</p>
-              <p className="text-[8px] uppercase font-black opacity-40" style={{ color: getContrastColor(colors.statsSection) }}>Posts</p>
+              <p className="text-[8px] uppercase font-black opacity-40">Posts</p>
             </div>
             <div className="text-center">
               <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{followersData?.length || 0}</p>
-              <p className="text-[8px] uppercase font-black opacity-40" style={{ color: getContrastColor(colors.statsSection) }}>Circle</p>
+              <p className="text-[8px] uppercase font-black opacity-40">Circle</p>
             </div>
             <div className="text-center">
               <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{followingData?.length || 0}</p>
-              <p className="text-[8px] uppercase font-black opacity-40" style={{ color: getContrastColor(colors.statsSection) }}>Circling</p>
+              <p className="text-[8px] uppercase font-black opacity-40">Circling</p>
             </div>
           </div>
         </div>
 
-        {/* User Posts Feed */}
         <div className="px-6 py-10 space-y-6">
           <div className="flex items-center gap-3">
              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Innovations</span>

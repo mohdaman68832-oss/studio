@@ -97,7 +97,7 @@ export default function ProfilePage() {
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [db, user]);
   const { data: profileData, isLoading: isProfileLoading } = useDoc(profileRef);
 
-  // Dynamic Post Count and Feed
+  // PART 2 — DYNAMIC POST COUNT
   const userPostsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(
@@ -143,7 +143,7 @@ export default function ProfilePage() {
       toast({ title: "Profile Synced", description: "Changes updated successfully." });
       setIsOptimizeModalOpen(false);
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Save Error", description: "Insufficient permissions or network issue." });
+      toast({ variant: "destructive", title: "Save Error", description: "Database permission issue." });
     } finally {
       setIsSaving(false);
     }
@@ -166,18 +166,25 @@ export default function ProfilePage() {
     setFormData(prev => ({ ...prev, stickers: [...prev.stickers, newSticker] }));
   };
 
+  const removeSticker = (id: string) => {
+    setFormData(prev => ({ ...prev, stickers: prev.stickers.filter(s => s.id !== id) }));
+  };
+
   if (isUserLoading || isProfileLoading) return <div className="flex h-screen items-center justify-center bg-background"><Loader2 className="animate-spin text-primary h-8 w-8" /></div>;
   if (!user) return null;
+
+  const headerColor = formData.customColors.header || "var(--primary)";
+  const contrastHeader = getContrastColor(formData.customColors.header);
 
   return (
     <div className="max-w-md mx-auto min-h-screen pb-24 relative overflow-x-hidden flex flex-col" style={{ backgroundColor: formData.customColors.background || "var(--background)" }}>
       <div className="relative w-full shrink-0">
-        <div className="h-16 w-full" style={{ backgroundColor: formData.customColors.header }} />
+        <div className="h-16 w-full" style={{ backgroundColor: headerColor }} />
         <header className="absolute top-0 left-0 right-0 px-6 py-5 flex justify-between items-center z-50">
-          <h1 className="text-2xl font-black uppercase tracking-tighter" style={{ color: getContrastColor(formData.customColors.header) }}>Sphere</h1>
+          <h1 className="text-2xl font-black uppercase tracking-tighter" style={{ color: contrastHeader }}>Sphere</h1>
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon"><Settings size={24} style={{ color: getContrastColor(formData.customColors.header) }} /></Button>
+              <Button variant="ghost" size="icon"><Settings size={24} style={{ color: contrastHeader }} /></Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="rounded-3xl p-2 border-2 bg-white/95 backdrop-blur-md">
               <DropdownMenuItem onClick={() => setIsOptimizeModalOpen(true)} className="rounded-2xl h-10 gap-3 cursor-pointer">
@@ -241,7 +248,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* User Posts Feed */}
         <div className="px-6 py-10 space-y-6">
           <div className="flex items-center gap-3">
              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Your Innovations</span>
@@ -289,9 +295,18 @@ export default function ProfilePage() {
             </div>
 
             <div className="space-y-4">
-              <Label className="text-[10px] font-black uppercase flex items-center gap-2"><StickerIcon size={14}/> Stickers</Label>
+              <Label className="text-[10px] font-black uppercase flex items-center gap-2"><Palette size={14}/> Header Color</Label>
+              <div className="grid grid-cols-6 gap-2">
+                {['#FF4500', '#FFD700', '#000000', '#FFFFFF', '#F5F5F5', '#8B4513'].map(color => (
+                  <button key={color} className="h-8 w-8 rounded-full border" style={{ backgroundColor: color }} onClick={() => setFormData(p => ({ ...p, customColors: { ...p.customColors, header: color } }))} />
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <Label className="text-[10px] font-black uppercase flex items-center gap-2"><StickerIcon size={14}/> Add Stickers</Label>
               <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
-                {["1", "2", "3", "4"].map(n => (
+                {["1", "2", "3", "4", "5", "6"].map(n => (
                   <button key={n} className="shrink-0 w-16 h-16 rounded-2xl border-2 border-dashed p-1" onClick={() => addSticker(`https://picsum.photos/seed/sticker${n}/100/100`)}>
                     <Image src={`https://picsum.photos/seed/sticker${n}/100/100`} alt="sticker" width={60} height={60} className="object-contain" />
                   </button>
@@ -299,8 +314,21 @@ export default function ProfilePage() {
               </div>
             </div>
 
+            {formData.stickers.length > 0 && (
+              <div className="space-y-4">
+                <Label className="text-[10px] font-black uppercase">Active Stickers (Tap to remove)</Label>
+                <div className="flex flex-wrap gap-2">
+                  {formData.stickers.map(s => (
+                    <button key={s.id} onClick={() => removeSticker(s.id)} className="h-10 w-10 border rounded-lg p-1 bg-muted/20">
+                      <Image src={s.url} alt="s" width={40} height={40} className="object-contain" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="space-y-4">
-              <Label className="text-[10px] font-black uppercase">Banner</Label>
+              <Label className="text-[10px] font-black uppercase">Banner Image</Label>
               <div onClick={() => bannerInputRef.current?.click()} className="relative h-24 bg-muted rounded-2xl overflow-hidden border-2 border-dashed cursor-pointer">
                 {formData.banner ? <Image src={formData.banner} alt="banner" fill className="object-cover" unoptimized /> : <Camera className="absolute inset-0 m-auto opacity-10" size={32} />}
               </div>

@@ -113,8 +113,7 @@ function PostFormContent() {
     
     setIsPosting(true);
     try {
-      // PART 1 — SINGLE WRITE LOGIC
-      // Only one addDoc operation to the "posts" collection.
+      // PART 1 — SINGLE WRITE LOGIC (addDoc only)
       await addDoc(collection(db, "posts"), {
         uid: user.uid,
         username: user.displayName || "Innovator",
@@ -131,13 +130,11 @@ function PostFormContent() {
         likes: 0
       });
 
-      // REQUIREMENT: DO NOT update the user's profile document.
-      // REQUIREMENT: DO NOT increment any postCount field.
-
+      // REQUIREMENT: No profile updates or count increments here.
       toast({ title: "Success!", description: "Innovation published!" });
       setStep(3);
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Posting Failed", description: "Permission error or network issue." });
+      toast({ variant: "destructive", title: "Posting Failed", description: "Database permission error." });
     } finally {
       setIsPosting(false);
     }
