@@ -1,40 +1,55 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Top-level posts collection
+    
+    // Posts collection: Public read, Authenticated create
     match /posts/{postId} {
-      allow read: if request.auth != null;
+      allow read: if true;
       allow create: if request.auth != null;
       allow update, delete: if request.auth != null && request.auth.uid == resource.data.uid;
       
-      // Allow nested likes if needed (though we use top-level collection in some parts)
+      // Likes subcollection
       match /likes/{userId} {
         allow read, write: if request.auth != null;
       }
+      
+      // Suggestions/Comments subcollection
+      match /suggestions/{suggestionId} {
+        allow read: if true;
+        allow create: if request.auth != null;
+      }
     }
     
-    // User profiles collection
+    // User profiles: Public read, Owner-only write
     match /userProfiles/{userId} {
       allow read: if true;
       allow write: if request.auth != null && request.auth.uid == userId;
+      
+      // Notifications subcollection
+      match /notifications/{notifId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
     }
 
     // Follows collection
     match /follows/{followId} {
-      allow read, write: if request.auth != null;
+      allow read: if true;
+      allow write: if request.auth != null;
     }
 
     // Messages collection
     match /messages/{messageId} {
-      allow read, write: if request.auth != null;
+      allow read, write: if request.auth != null && (request.auth.uid == resource.data.senderId || request.auth.uid == resource.data.receiverId);
+      allow create: if request.auth != null;
     }
 
     // Groups collection
     match /groups/{groupId} {
-      allow read, write: if request.auth != null;
+      allow read: if true;
+      allow write: if request.auth != null;
     }
 
-    // Fallback for development
+    // Global fallback for development - Authenticated access only
     match /{document=**} {
       allow read, write: if request.auth != null;
     }

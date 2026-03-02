@@ -96,8 +96,7 @@ export default function ProfilePage() {
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [db, user]);
   const { data: profileData, isLoading: isProfileLoading } = useDoc(profileRef);
 
-  // PROFESSIONAL WAY: Only query posts when user.uid is confirmed.
-  // This avoids premature queries and permission errors.
+  // DYNAMIC POST COUNT: Live query to get post count based on currentUser.uid
   const userPostsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
@@ -108,8 +107,6 @@ export default function ProfilePage() {
   }, [db, user?.uid]);
 
   const { data: userPosts, isLoading: isPostsLoading } = useCollection(userPostsQuery);
-  
-  // DYNAMIC COUNT: Calculated from the live query results.
   const dynamicPostCount = userPosts?.length || 0;
 
   useEffect(() => {
@@ -147,7 +144,7 @@ export default function ProfilePage() {
       setIsOptimizeModalOpen(false);
     } catch (error: any) {
       console.error("Profile update error:", error);
-      toast({ variant: "destructive", title: "Save Error", description: "Database error." });
+      toast({ variant: "destructive", title: "Save Error", description: "Database error during optimization." });
     } finally {
       setIsSaving(false);
     }
@@ -214,6 +211,7 @@ export default function ProfilePage() {
             </Avatar>
           </div>
 
+          {/* Stickers overlay */}
           <div className="absolute inset-0 pointer-events-none z-30">
             {formData.stickers.map((sticker) => (
               <div key={sticker.id} className="absolute pointer-events-none" style={{ left: `${sticker.x}%`, top: `${sticker.y}%`, transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg) scale(${sticker.scale})` }}>
@@ -275,12 +273,14 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {/* Optimization Modal */}
       <Dialog open={isOptimizeModalOpen} onOpenChange={setIsOptimizeModalOpen}>
         <DialogContent className="max-w-md w-[95%] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl max-h-[85vh] flex flex-col">
           <div className="p-6 border-b shrink-0 flex items-center justify-between">
             <DialogTitle className="text-xl font-black uppercase text-primary">Optimize Profile</DialogTitle>
           </div>
           <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar">
+            {/* Theme Toggle */}
             <div className="flex items-center justify-between bg-muted/20 p-4 rounded-2xl">
               <div className="flex items-center gap-3">
                 {isDarkMode ? <Moon className="text-primary w-5 h-5" /> : <Sun className="text-primary w-5 h-5" />}
@@ -289,61 +289,69 @@ export default function ProfilePage() {
               <Switch checked={isDarkMode} onCheckedChange={setIsDarkMode} />
             </div>
 
+            {/* Background Color */}
             <div className="space-y-4">
               <Label className="text-[10px] font-black uppercase flex items-center gap-2"><Palette size={14}/> Background</Label>
               <div className="grid grid-cols-6 gap-2">
                 {['#FF4500', '#FFD700', '#000000', '#FFFFFF', '#F5F5F5', '#8B4513'].map(color => (
-                  <button key={color} className="h-8 w-8 rounded-full border" style={{ backgroundColor: color }} onClick={() => setFormData(p => ({ ...p, customColors: { ...p.customColors, background: color } }))} />
+                  <button key={color} className="h-8 w-8 rounded-full border shadow-sm" style={{ backgroundColor: color }} onClick={() => setFormData(p => ({ ...p, customColors: { ...p.customColors, background: color } }))} />
                 ))}
               </div>
             </div>
 
+            {/* Header Color */}
             <div className="space-y-4">
               <Label className="text-[10px] font-black uppercase flex items-center gap-2"><Palette size={14}/> Header Color</Label>
               <div className="grid grid-cols-6 gap-2">
                 {['#FF4500', '#FFD700', '#000000', '#FFFFFF', '#F5F5F5', '#8B4513'].map(color => (
-                  <button key={color} className="h-8 w-8 rounded-full border" style={{ backgroundColor: color }} onClick={() => setFormData(p => ({ ...p, customColors: { ...p.customColors, header: color } }))} />
+                  <button key={color} className="h-8 w-8 rounded-full border shadow-sm" style={{ backgroundColor: color }} onClick={() => setFormData(p => ({ ...p, customColors: { ...p.customColors, header: color } }))} />
                 ))}
               </div>
             </div>
 
+            {/* Add Stickers */}
             <div className="space-y-4">
               <Label className="text-[10px] font-black uppercase flex items-center gap-2"><StickerIcon size={14}/> Add Stickers</Label>
               <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
                 {["1", "2", "3", "4", "5", "6"].map(n => (
-                  <button key={n} className="shrink-0 w-16 h-16 rounded-2xl border-2 border-dashed p-1" onClick={() => addSticker(`https://picsum.photos/seed/sticker${n}/100/100`)}>
+                  <button key={n} className="shrink-0 w-16 h-16 rounded-2xl border-2 border-dashed p-1 hover:border-primary transition-all" onClick={() => addSticker(`https://picsum.photos/seed/sticker${n}/100/100`)}>
                     <Image src={`https://picsum.photos/seed/sticker${n}/100/100`} alt="sticker" width={60} height={60} className="object-contain" />
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="space-y-4">
-              <Label className="text-[10px] font-black uppercase">Active Stickers (Tap to remove)</Label>
-              <div className="flex flex-wrap gap-2">
-                {formData.stickers.map(s => (
-                  <button key={s.id} onClick={() => removeSticker(s.id)} className="h-10 w-10 border rounded-lg p-1 bg-muted/20">
-                    <Image src={s.url} alt="s" width={40} height={40} className="object-contain" />
-                  </button>
-                ))}
+            {/* Current Stickers */}
+            {formData.stickers.length > 0 && (
+              <div className="space-y-4">
+                <Label className="text-[10px] font-black uppercase">Active Stickers (Tap to remove)</Label>
+                <div className="flex flex-wrap gap-2">
+                  {formData.stickers.map(s => (
+                    <button key={s.id} onClick={() => removeSticker(s.id)} className="h-10 w-10 border rounded-lg p-1 bg-muted/20 hover:bg-destructive/10 transition-colors">
+                      <Image src={s.url} alt="s" width={40} height={40} className="object-contain" />
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
+            {/* Banner Change */}
             <div className="space-y-4">
               <Label className="text-[10px] font-black uppercase">Banner Image</Label>
-              <div onClick={() => bannerInputRef.current?.click()} className="relative h-24 bg-muted rounded-2xl overflow-hidden border-2 border-dashed cursor-pointer">
+              <div onClick={() => bannerInputRef.current?.click()} className="relative h-24 bg-muted rounded-2xl overflow-hidden border-2 border-dashed cursor-pointer hover:border-primary transition-all">
                 {formData.banner ? <Image src={formData.banner} alt="banner" fill className="object-cover" unoptimized /> : <Camera className="absolute inset-0 m-auto opacity-10" size={32} />}
               </div>
             </div>
 
+            {/* Bio Edit */}
             <div className="space-y-4">
               <Label className="text-[10px] font-black uppercase">Bio</Label>
-              <Textarea value={formData.bio} onChange={e => setFormData(p => ({ ...p, bio: e.target.value }))} placeholder="Your story..." className="rounded-2xl min-h-[100px] text-sm" />
+              <Textarea value={formData.bio} onChange={e => setFormData(p => ({ ...p, bio: e.target.value }))} placeholder="Your innovation story..." className="rounded-2xl min-h-[100px] text-sm font-medium" />
             </div>
           </div>
           <div className="p-6 border-t bg-white">
-            <Button className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase" onClick={handleSaveProfile} disabled={isSaving}>
-              {isSaving ? "Syncing..." : "Apply Changes"}
+            <Button className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase shadow-xl" onClick={handleSaveProfile} disabled={isSaving}>
+              {isSaving ? <Loader2 className="animate-spin mr-2" /> : "Apply Changes"}
             </Button>
           </div>
         </DialogContent>

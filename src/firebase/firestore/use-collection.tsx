@@ -9,6 +9,7 @@ import {
   QuerySnapshot,
   CollectionReference,
 } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
@@ -52,11 +53,19 @@ export function useCollection<T = any>(
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
-    // PROFESSIONAL CHECK: If reference is null (usually due to user null), reset and return.
+    // PROFESSIONAL CHECK: If reference is null or target is not memoized, return.
     if (!memoizedTargetRefOrQuery) {
       setData(null);
       setIsLoading(false);
       setError(null);
+      return;
+    }
+
+    // EXTRA SAFETY: Ensure auth is ready before attempting a potentially protected list
+    const auth = getAuth();
+    if (!auth.currentUser) {
+      // If not logged in, we wait to avoid "Missing Permissions" on protected collections
+      setIsLoading(true);
       return;
     }
 
@@ -94,7 +103,7 @@ export function useCollection<T = any>(
         setData(null);
         setIsLoading(false);
 
-        // Emit global error for debugging
+        // Emit global error for debugging in the Next.js overlay
         errorEmitter.emit('permission-error', contextualError);
       }
     );

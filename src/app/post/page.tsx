@@ -110,8 +110,7 @@ function PostFormContent() {
     
     setIsPosting(true);
     try {
-      // REQUIREMENT: Perform ONLY ONE write operation inside the "posts" collection.
-      // DO NOT update userProfile or increment count here.
+      // PART 1 — FIRESTORE WRITE LOGIC: Perform ONLY ONE write operation inside the "posts" collection.
       await addDoc(collection(db, "posts"), {
         uid: user.uid,
         username: user.displayName || "Innovator",
@@ -132,7 +131,7 @@ function PostFormContent() {
       setStep(3);
     } catch (error: any) {
       console.error("Posting Error:", error);
-      toast({ variant: "destructive", title: "Posting Failed", description: "Check permissions or network." });
+      toast({ variant: "destructive", title: "Posting Failed", description: "Insufficient permissions or network issue." });
     } finally {
       setIsPosting(false);
     }
@@ -213,7 +212,7 @@ function PostFormContent() {
         <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
           <div className="space-y-4">
             <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Title</Label>
-            <Input placeholder="Post title..." className="rounded-2xl h-14 bg-muted/30 border-none font-bold" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} />
+            <Input placeholder="Innovation title..." className="rounded-2xl h-14 bg-muted/30 border-none font-bold" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} />
             
             <Label className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 px-1"><Tags size={14} className="text-primary" /> Category</Label>
             <div className="flex flex-wrap gap-2">
@@ -228,11 +227,11 @@ function PostFormContent() {
             <Input placeholder="What problem are you solving?" className="rounded-2xl h-14 bg-muted/30 border-none font-bold" value={formData.problem} onChange={(e) => setFormData({...formData, problem: e.target.value})} />
             
             <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Description</Label>
-            <Textarea placeholder="Details..." className="rounded-2xl min-h-[140px] bg-muted/30 border-none font-medium" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} />
+            <Textarea placeholder="Details about your vision..." className="rounded-2xl min-h-[140px] bg-muted/30 border-none font-medium" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} />
           </div>
 
           <Button className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase" onClick={handlePublish} disabled={isPosting || !formData.title || !formData.description}>
-            {isPosting ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Posting...</> : <><Send className="mr-2 h-5 w-5" /> Publish</>}
+            {isPosting ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Publishing...</> : <><Send className="mr-2 h-5 w-5" /> Launch Sphere</>}
           </Button>
         </div>
       )}
