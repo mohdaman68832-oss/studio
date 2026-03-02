@@ -49,7 +49,8 @@ export function useCollection<T = any>(
     }
 
     const auth = getAuth();
-    // Safety check: Don't initiate if no user is present (prevents rule denial on mount)
+    
+    // CRITICAL: Auth Guard to prevent "Missing Permissions" error before user is logged in
     if (!auth.currentUser) {
       setIsLoading(true);
       return;

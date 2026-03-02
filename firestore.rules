@@ -10,7 +10,8 @@ service cloud.firestore {
     
     // Private Chats: Metadata access for participants
     match /privateChats/{chatId} {
-      // Allow list queries if the user is a participant
+      // Rule for listing: Must filter by participants array containing the user's UID
+      // This is what needs the composite index!
       allow read: if request.auth != null && request.auth.uid in resource.data.participants;
       
       // Allow creation if the creator is one of the participants
@@ -30,7 +31,7 @@ service cloud.firestore {
     // Posts: Public read, Auth write
     match /posts/{postId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == request.resource.data.uid;
     }
     
     // Groups/Unions
