@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -49,10 +48,9 @@ export function useCollection<T = any>(
       return;
     }
 
-    // Professional Architecture: Confirm auth before initiating listener
     const auth = getAuth();
+    // Safety check: Don't initiate if no user is present (prevents rule denial on mount)
     if (!auth.currentUser) {
-      // Return early if not logged in to prevent permission errors
       setIsLoading(true);
       return;
     }
@@ -74,11 +72,12 @@ export function useCollection<T = any>(
       (err: FirestoreError) => {
         let path = "unknown";
         try {
+          // Attempt to extract path for better debugging
           path = memoizedTargetRefOrQuery.type === 'collection'
             ? (memoizedTargetRefOrQuery as CollectionReference).path
-            : (memoizedTargetRefOrQuery as unknown as InternalQuery)._query.path.canonicalString();
+            : (memoizedTargetRefOrQuery as any)._query?.path?.toString() || "query";
         } catch (e) {
-          console.warn("Path extraction failed");
+          console.warn("Path extraction failed", e);
         }
 
         const contextualError = new FirestorePermissionError({

@@ -1,4 +1,3 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -9,23 +8,32 @@ service cloud.firestore {
       allow write: if request.auth != null && request.auth.uid == userId;
     }
     
-    // Private Chats: Only participants can read/write metadata
+    // Private Chats: Metadata access for participants
     match /privateChats/{chatId} {
-      allow read, write: if request.auth != null && request.auth.uid in resource.data.participants;
+      // Allow list queries if the user is a participant
+      allow read: if request.auth != null && request.auth.uid in resource.data.participants;
+      
+      // Allow creation if the creator is one of the participants
       allow create: if request.auth != null && request.auth.uid in request.resource.data.participants;
+      
+      // Allow updates (like lastMessage/timestamp) only for participants
+      allow update: if request.auth != null && request.auth.uid in resource.data.participants;
       
       // Subcollection: messages
       match /messages/{messageId} {
-        allow read, write: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/privateChats/$(chatId)).data.participants;
+        // Efficient way to check parent chat participants
+        allow read, write: if request.auth != null && 
+          request.auth.uid in get(/databases/$(database)/documents/privateChats/$(chatId)).data.participants;
       }
     }
     
-    // Groups/Posts (Existing)
+    // Posts: Public read, Auth write
     match /posts/{postId} {
       allow read: if true;
       allow write: if request.auth != null;
     }
     
+    // Groups/Unions
     match /groups/{groupId} {
       allow read: if true;
       allow write: if request.auth != null;
