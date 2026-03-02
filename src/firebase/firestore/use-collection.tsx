@@ -40,14 +40,7 @@ export function useCollection<T = any>(
     }
     
     // Auth Guard: Ensure Auth is available and user is present
-    let auth;
-    try {
-      auth = getAuth();
-    } catch (e) {
-      setIsLoading(true);
-      return;
-    }
-
+    const auth = getAuth();
     if (!auth.currentUser) {
       setIsLoading(true);
       setData(null);
@@ -71,13 +64,14 @@ export function useCollection<T = any>(
       async (err: FirestoreError) => {
         let path = "unknown_collection";
         try {
-          if ('path' in (memoizedTargetRefOrQuery as any)) {
-            path = (memoizedTargetRefOrQuery as any).path;
-          } else {
-            const anyQuery = memoizedTargetRefOrQuery as any;
-            path = anyQuery._query?.path?.toString() || anyQuery.query?.path?.toString() || "filtered_query";
-            // Clean up internal path representation if needed
-            if (path.includes('(')) path = path.split('/').pop() || "filtered_query";
+          // Robust path extraction for both CollectionReference and Query
+          const anyRef = memoizedTargetRefOrQuery as any;
+          if (anyRef.path) {
+            path = anyRef.path;
+          } else if (anyRef._query?.path) {
+            path = anyRef._query.path.segments.join('/');
+          } else if (anyRef.query?.path) {
+            path = anyRef.query.path.segments.join('/');
           }
         } catch (e) {}
 

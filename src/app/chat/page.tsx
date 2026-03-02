@@ -22,13 +22,13 @@ export default function HubPage() {
 
   // Private Chats Query - Matches the composite index: participants (array-contains) + timestamp (desc)
   const privateChatsQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
+    if (!db || !user?.uid) return null; // Use user.uid for stable dependency
     return query(
       collection(db, "privateChats"),
       where("participants", "array-contains", user.uid),
       orderBy("timestamp", "desc")
     );
-  }, [db, user?.uid]); // Stable dependency on uid
+  }, [db, user?.uid]);
 
   const { data: privateChats, isLoading: isPrivateLoading } = useCollection(privateChatsQuery);
 
