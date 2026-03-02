@@ -9,7 +9,7 @@ import {
   QuerySnapshot,
   CollectionReference,
 } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth'; // FIXED: Correct import from firebase/auth
+import { getAuth } from 'firebase/auth'; 
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
@@ -61,13 +61,11 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       async (err: FirestoreError) => {
-        // Attempt to extract meaningful path for debugging
         let path = "unknown_collection";
         try {
           if ('path' in (memoizedTargetRefOrQuery as any)) {
             path = (memoizedTargetRefOrQuery as any).path;
           } else {
-            // For Query objects, path is often nested
             const anyQuery = memoizedTargetRefOrQuery as any;
             path = anyQuery._query?.path?.toString() || anyQuery.query?.path?.toString() || "filtered_query";
           }

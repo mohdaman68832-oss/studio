@@ -20,7 +20,7 @@ export default function HubPage() {
   const [userSearchResults, setUserSearchResults] = useState<any[]>([]);
   const [isSearchingUsers, setIsSearchingUsers] = useState(false);
 
-  // Private Chats Query - Aligned with the Composite Index: participants (array-contains) + timestamp (desc)
+  // Private Chats Query - Corrected for the index: participants (array-contains) + timestamp (desc)
   const privateChatsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(
@@ -36,7 +36,6 @@ export default function HubPage() {
     if (!searchQuery.trim() || !db) return;
     setIsSearchingUsers(true);
     try {
-      // Case-insensitive user search logic
       const searchStr = searchQuery.toLowerCase().trim();
       const q = query(
         collection(db, "userProfiles"),
@@ -58,7 +57,6 @@ export default function HubPage() {
 
   const startChat = (recipientId: string) => {
     if (!user) return;
-    // Chat ID is always sorted UIDs to ensure single channel between two users
     const chatId = [user.uid, recipientId].sort().join("_");
     router.push(`/chat/${chatId}`);
   };
