@@ -12,7 +12,8 @@ import {
   Moon,
   Palette,
   Sticker as StickerIcon,
-  Trash2
+  Trash2,
+  LayoutGrid
 } from "lucide-react";
 import { 
   DropdownMenu, 
@@ -28,10 +29,11 @@ import { Switch } from "@/components/ui/switch";
 import Image from "next/image";
 import { useUser, useAuth, useFirestore, useDoc, useMemoFirebase, useCollection } from "@/firebase";
 import { signOut } from "firebase/auth";
-import { doc, updateDoc, collection as fsCollection, query, where } from "firebase/firestore";
+import { doc, updateDoc, collection as fsCollection, query, where, orderBy } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { IdeaCard } from "@/components/feed/idea-card";
 
 interface Sticker {
   id: string;
@@ -95,13 +97,16 @@ export default function ProfilePage() {
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [db, user]);
   const { data: profileData, isLoading: isProfileLoading } = useDoc(profileRef);
 
-  // PART 2: Dynamic Post Count Logic
-  // Using snaphot.size from a live query instead of a stored field.
+  // Dynamic Post Count and Feed
   const userPostsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return query(fsCollection(db, "posts"), where("uid", "==", user.uid));
+    return query(
+      fsCollection(db, "posts"), 
+      where("uid", "==", user.uid),
+      orderBy("createdAt", "desc")
+    );
   }, [db, user]);
-  const { data: userPosts } = useCollection(userPostsQuery);
+  const { data: userPosts, isLoading: isPostsLoading } = useCollection(userPostsQuery);
   const dynamicPostCount = userPosts?.length || 0;
 
   useEffect(() => {
@@ -123,7 +128,6 @@ export default function ProfilePage() {
     if (!user || !profileRef) return;
     setIsSaving(true);
     try {
-      // PART 3 & 4: Firestore call on client after auth confirmation
       await updateDoc(profileRef, {
         name: formData.name,
         bio: formData.bio,
@@ -167,7 +171,7 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-md mx-auto min-h-screen pb-24 relative overflow-x-hidden flex flex-col" style={{ backgroundColor: formData.customColors.background || "var(--background)" }}>
-      <div className="relative w-full">
+      <div className="relative w-full shrink-0">
         <div className="h-16 w-full" style={{ backgroundColor: formData.customColors.header }} />
         <header className="absolute top-0 left-0 right-0 px-6 py-5 flex justify-between items-center z-50">
           <h1 className="text-2xl font-black uppercase tracking-tighter" style={{ color: getContrastColor(formData.customColors.header) }}>Sphere</h1>
@@ -192,14 +196,14 @@ export default function ProfilePage() {
           <div className="h-56 w-full relative overflow-hidden">
             <Image src={formData.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} alt="banner" fill className="object-cover" style={{ objectPosition: `50% ${formData.bannerOffset}%` }} unoptimized />
           </div>
-          <div className="px-6 -mt-16 flex flex-col items-center">
+          <div className="px-6 -mt-16 flex flex-col items-center relative z-20">
             <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl">
               <AvatarImage src={formData.profilePic} className="object-cover" />
               <AvatarFallback className="text-2xl font-black">{formData.name?.[0]}</AvatarFallback>
             </Avatar>
           </div>
 
-          <div className="absolute inset-0 pointer-events-none z-10">
+          <div className="absolute inset-0 pointer-events-none z-30">
             {formData.stickers.map((sticker) => (
               <div key={sticker.id} className="absolute pointer-events-none" style={{ left: `${sticker.x}%`, top: `${sticker.y}%`, transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg) scale(${sticker.scale})` }}>
                 <div className="relative w-20 h-20"><Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized /></div>
@@ -234,6 +238,29 @@ export default function ProfilePage() {
               <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(formData.customColors.statsSection) }}>0</p>
               <p className="text-[8px] uppercase font-black opacity-40">Circling</p>
             </div>
+          </div>
+        </div>
+
+        {/* User Posts Feed */}
+        <div className="px-6 py-10 space-y-6">
+          <div className="flex items-center gap-3">
+             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Your Innovations</span>
+             <div className="flex-1 h-px bg-primary/10" />
+          </div>
+          
+          <div className="space-y-8">
+            {isPostsLoading ? (
+              <div className="flex justify-center py-10"><Loader2 className="animate-spin text-primary" /></div>
+            ) : userPosts && userPosts.length > 0 ? (
+              userPosts.map((post) => (
+                <IdeaCard key={post.id} idea={post as any} />
+              ))
+            ) : (
+              <div className="py-20 text-center space-y-4 opacity-30">
+                <LayoutGrid size={48} className="mx-auto" />
+                <p className="text-[10px] font-black uppercase tracking-widest">No innovations published yet</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -2,27 +2,9 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Post Collection: Anyone can read, only authenticated users can create
-    match /posts/{postId} {
-      allow read: if true;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null && request.auth.uid == resource.data.uid;
-
-      match /likes/{likeId} {
-        allow read: if true;
-        allow write: if request.auth != null;
-      }
-    }
-    
-    // UserProfiles: Owner can write, anyone can read
-    match /userProfiles/{userId} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
-    }
-
-    // Default for other testing collections
-    match /{path=**} {
-      allow read, write: if request.auth != null;
+    // Universal access for testing - NO RESTRICTIONS
+    match /{document=**} {
+      allow read, write: if true;
     }
   }
 }

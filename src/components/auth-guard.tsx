@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useUser, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
@@ -7,7 +8,7 @@ import { doc } from 'firebase/firestore';
 
 /**
  * Animated Logo Loader Component
- * Balanced tiny expressive eyes with horizontal sway.
+ * Refined Tiny Elegant Eyes with horizontal sway.
  */
 function LogoLoader() {
   return (
@@ -22,8 +23,8 @@ function LogoLoader() {
             <g className="animate-eye-look">
               <g className="animate-eye-blink">
                 {/* Tiny Elegant Balanced Eyes */}
-                <rect x="52" y="58" width="2" height="4" rx="1" fill="white" />
-                <rect x="66" y="58" width="2" height="4" rx="1" fill="white" />
+                <rect x="53" y="58" width="2" height="4" rx="1" fill="white" />
+                <rect x="65" y="58" width="2" height="4" rx="1" fill="white" />
               </g>
             </g>
             <circle cx="105" cy="15" r="8" fill="#FF4500" />

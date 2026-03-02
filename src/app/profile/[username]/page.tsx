@@ -1,15 +1,17 @@
+
 "use client";
 
 import { use, useState, useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, MessageSquare, Loader2, UserPlus, UserCheck } from "lucide-react";
+import { ChevronLeft, MessageSquare, Loader2, UserPlus, UserCheck, LayoutGrid } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from "@/firebase";
-import { collection as fsCollection, query, where, limit, doc, setDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
+import { collection as fsCollection, query, where, limit, doc, setDoc, deleteDoc, serverTimestamp, orderBy } from "firebase/firestore";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { IdeaCard } from "@/components/feed/idea-card";
 
 interface Sticker {
   id: string;
@@ -53,12 +55,16 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
   const { data: userProfiles, isLoading } = useCollection(userQuery);
   const profileData = userProfiles?.[0];
 
-  // PART 2: Dynamic Post Count for public profiles
+  // Dynamic Post Count and Feed
   const userPostsQuery = useMemoFirebase(() => {
     if (!db || !profileData) return null;
-    return query(fsCollection(db, "posts"), where("uid", "==", profileData.id));
+    return query(
+      fsCollection(db, "posts"), 
+      where("uid", "==", profileData.id),
+      orderBy("createdAt", "desc")
+    );
   }, [db, profileData]);
-  const { data: userPosts } = useCollection(userPostsQuery);
+  const { data: userPosts, isLoading: isPostsLoading } = useCollection(userPostsQuery);
   const dynamicPostCount = userPosts?.length || 0;
 
   const followRef = useMemoFirebase(() => {
@@ -95,7 +101,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
 
   return (
     <div className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden flex flex-col" style={{ backgroundColor: colors.background || "var(--background)" }}>
-      <div className="relative w-full">
+      <div className="relative w-full shrink-0">
         <div className="h-16 w-full" style={{ backgroundColor: colors.header }} />
         <header className="absolute top-0 left-0 right-0 px-6 py-5 flex justify-between items-center z-50">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full">
@@ -172,6 +178,29 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
               <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{followingData?.length || 0}</p>
               <p className="text-[8px] uppercase font-black opacity-40" style={{ color: getContrastColor(colors.statsSection) }}>Circling</p>
             </div>
+          </div>
+        </div>
+
+        {/* User Posts Feed */}
+        <div className="px-6 py-10 space-y-6">
+          <div className="flex items-center gap-3">
+             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Innovations</span>
+             <div className="flex-1 h-px bg-primary/10" />
+          </div>
+          
+          <div className="space-y-8">
+            {isPostsLoading ? (
+              <div className="flex justify-center py-10"><Loader2 className="animate-spin text-primary" /></div>
+            ) : userPosts && userPosts.length > 0 ? (
+              userPosts.map((post) => (
+                <IdeaCard key={post.id} idea={post as any} />
+              ))
+            ) : (
+              <div className="py-20 text-center space-y-4 opacity-30">
+                <LayoutGrid size={48} className="mx-auto" />
+                <p className="text-[10px] font-black uppercase tracking-widest">No innovations yet</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
