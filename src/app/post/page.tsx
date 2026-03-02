@@ -16,8 +16,7 @@ import {
   Video as VideoIcon, 
   X,
   Send,
-  Tags,
-  LayoutGrid
+  Tags
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
@@ -30,8 +29,8 @@ import {
   SheetTrigger 
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
-import { collection, addDoc, serverTimestamp, doc } from "firebase/firestore";
+import { useUser, useFirestore } from "@/firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { useRouter, useSearchParams } from "next/navigation";
 
 type Step = 1 | 2 | 3;
@@ -62,7 +61,6 @@ function PostFormContent() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isImageSheetOpen, setIsImageSheetOpen] = useState(false);
   const [isVideoSheetOpen, setIsVideoSheetOpen] = useState(false);
-  const [isCategorySheetOpen, setIsCategorySheetOpen] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -140,7 +138,8 @@ function PostFormContent() {
     
     setIsPosting(true);
     try {
-      // PART 1: Perform ONLY ONE write operation to the "posts" collection
+      // PART 1 — SINGLE WRITE LOGIC
+      // We only perform ONE write operation to the "posts" collection.
       await addDoc(collection(db, "posts"), {
         uid: user.uid,
         username: user.displayName || "Innovator",
@@ -148,17 +147,17 @@ function PostFormContent() {
         title: formData.title,
         problem: isMeme ? "" : formData.problem,
         description: formData.description,
-        content: formData.description, // Unified content field
+        content: formData.description,
         category: category,
         mediaUrl: mediaType === 'text' ? "" : (previewUrl || ""),
         createdAt: serverTimestamp(),
-        // Metadata
         mediaType: mediaType || "text",
         innovationScore: isMeme ? 100 : Math.floor(Math.random() * 30) + 70,
         likes: 0
       });
 
-      // REQUIREMENT: DO NOT update the user's profile document or increment postCount.
+      // NO updateDoc() on user profile.
+      // NO increment() logic.
 
       toast({
         title: "Success!",
@@ -170,7 +169,7 @@ function PostFormContent() {
       toast({
         variant: "destructive",
         title: "Posting Failed",
-        description: error.message || "Something went wrong.",
+        description: "Permission error or network issue.",
       });
     } finally {
       setIsPosting(false);
