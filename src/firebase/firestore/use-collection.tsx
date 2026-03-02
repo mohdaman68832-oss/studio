@@ -52,6 +52,7 @@ export function useCollection<T = any>(
     // Professional Architecture: Confirm auth before initiating listener
     const auth = getAuth();
     if (!auth.currentUser) {
+      // Return early if not logged in to prevent permission errors
       setIsLoading(true);
       return;
     }

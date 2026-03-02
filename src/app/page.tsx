@@ -8,7 +8,7 @@ import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebas
 import { collection, query, orderBy } from "firebase/firestore";
 import { useMemo, useState, Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RefreshCcw, LayoutGrid, Globe, ImageIcon, Video, Type, Sparkles } from "lucide-react";
+import { RefreshCcw, LayoutGrid, Globe, ImageIcon, Video, Type } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
@@ -22,7 +22,6 @@ function FeedContent() {
   const [memeType, setMemeType] = useState<"all" | "image" | "video" | "text">("all");
 
   // Filtered query for Home Feed
-  // Professional Architecture: The hook handles the auth guard internally
   const postsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
@@ -79,6 +78,7 @@ function FeedContent() {
             onClick={() => {
               setActiveCategory(cat);
               if (cat !== "Meme") setMemeType("all");
+              // If switching back to Meme, default to all but don't show the button
             }}
             className={cn(
               "flex-1 min-w-[80px] rounded-full h-9 text-[10px] font-black uppercase tracking-widest transition-all",
@@ -90,12 +90,12 @@ function FeedContent() {
         ))}
       </div>
 
-      {/* Meme Specific Options */}
+      {/* Meme Specific Options - Removed 'All' Button as requested */}
       {activeCategory === "Meme" && (
         <div className="flex w-full gap-2 mb-6 animate-in slide-in-from-top-2 duration-300">
           <Button 
             variant={memeType === "image" ? "default" : "outline"} 
-            onClick={() => setMemeType("image")}
+            onClick={() => setMemeType(memeType === "image" ? "all" : "image")}
             className={cn(
               "flex-1 rounded-2xl h-14 flex-col gap-1 border-2",
               memeType === "image" ? "bg-secondary text-white border-secondary shadow-lg shadow-secondary/20" : "bg-white border-muted text-muted-foreground"
@@ -106,7 +106,7 @@ function FeedContent() {
           </Button>
           <Button 
             variant={memeType === "video" ? "default" : "outline"} 
-            onClick={() => setMemeType("video")}
+            onClick={() => setMemeType(memeType === "video" ? "all" : "video")}
             className={cn(
               "flex-1 rounded-2xl h-14 flex-col gap-1 border-2",
               memeType === "video" ? "bg-secondary text-white border-secondary shadow-lg shadow-secondary/20" : "bg-white border-muted text-muted-foreground"
@@ -117,7 +117,7 @@ function FeedContent() {
           </Button>
           <Button 
             variant={memeType === "text" ? "default" : "outline"} 
-            onClick={() => setMemeType("text")}
+            onClick={() => setMemeType(memeType === "text" ? "all" : "text")}
             className={cn(
               "flex-1 rounded-2xl h-14 flex-col gap-1 border-2",
               memeType === "text" ? "bg-secondary text-white border-secondary shadow-lg shadow-secondary/20" : "bg-white border-muted text-muted-foreground"
@@ -125,17 +125,6 @@ function FeedContent() {
           >
             <Type size={18} />
             <span className="text-[8px] font-black uppercase">Text Meme</span>
-          </Button>
-          <Button 
-            variant={memeType === "all" ? "default" : "ghost"} 
-            onClick={() => setMemeType("all")}
-            className={cn(
-              "rounded-2xl h-14 w-14 flex-col gap-1",
-              memeType === "all" ? "bg-primary/10 text-primary" : "text-muted-foreground"
-            )}
-          >
-            <Sparkles size={18} />
-            <span className="text-[8px] font-black uppercase">All</span>
           </Button>
         </div>
       )}
