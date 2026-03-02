@@ -21,13 +21,14 @@ export interface UseCollectionResult<T> {
   error: FirestoreError | Error | null;
 }
 
+/**
+ * Professional Real-time Collection Hook
+ * Optimized to handle authentication states and robust error reporting.
+ */
 export function useCollection<T = any>(
     memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean})  | null | undefined,
 ): UseCollectionResult<T> {
-  type ResultItemType = WithId<T>;
-  type StateDataType = ResultItemType[] | null;
-
-  const [data, setData] = useState<StateDataType>(null);
+  const [data, setData] = useState<WithId<T>[] | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
@@ -39,11 +40,10 @@ export function useCollection<T = any>(
       return;
     }
     
-    // Auth Guard: Ensure Auth is available and user is present
+    // Auth Guard: Ensure Authentication is ready before querying
     const auth = getAuth();
     if (!auth.currentUser) {
       setIsLoading(true);
-      setData(null);
       return;
     }
 
@@ -53,26 +53,20 @@ export function useCollection<T = any>(
     const unsubscribe = onSnapshot(
       memoizedTargetRefOrQuery,
       (snapshot: QuerySnapshot<DocumentData>) => {
-        const results: ResultItemType[] = [];
-        for (const doc of snapshot.docs) {
+        const results: WithId<T>[] = [];
+        snapshot.forEach((doc) => {
           results.push({ ...(doc.data() as T), id: doc.id });
-        }
+        });
         setData(results);
         setError(null);
         setIsLoading(false);
       },
-      async (err: FirestoreError) => {
+      (err: FirestoreError) => {
         let path = "unknown_collection";
         try {
-          // Robust path extraction for both CollectionReference and Query
+          // Attempt to extract the path for rich contextual error reporting
           const anyRef = memoizedTargetRefOrQuery as any;
-          if (anyRef.path) {
-            path = anyRef.path;
-          } else if (anyRef._query?.path) {
-            path = anyRef._query.path.segments.join('/');
-          } else if (anyRef.query?.path) {
-            path = anyRef.query.path.segments.join('/');
-          }
+          path = anyRef.path || anyRef._query?.path?.segments?.join('/') || "privateChats";
         } catch (e) {}
 
         const contextualError = new FirestorePermissionError({
@@ -90,6 +84,7 @@ export function useCollection<T = any>(
     return () => unsubscribe();
   }, [memoizedTargetRefOrQuery]);
 
+  // Ensure the ref/query passed is memoized using useMemoFirebase to prevent render loops
   if(memoizedTargetRefOrQuery && !memoizedTargetRefOrQuery.__memo) {
     throw new Error('Collection/Query was not properly memoized using useMemoFirebase. This can cause infinite loops.');
   }

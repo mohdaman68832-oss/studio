@@ -5,7 +5,10 @@ import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 
-// Module-level cache to ensure singleton SDK instances across HMR/Fast Refresh
+/**
+ * Module-level cache to ensure singleton SDK instances across HMR/Fast Refresh.
+ * This prevents the "INTERNAL ASSERTION FAILED" error during development with Turbopack.
+ */
 let cachedSdks: {
   firebaseApp: FirebaseApp;
   auth: Auth;
@@ -14,7 +17,6 @@ let cachedSdks: {
 
 /**
  * Initializes Firebase App and Services once and returns the cached instances.
- * This pattern prevents Firestore "INTERNAL ASSERTION FAILED" errors during development.
  */
 export function initializeFirebase() {
   if (cachedSdks) {
@@ -24,12 +26,7 @@ export function initializeFirebase() {
   let firebaseApp: FirebaseApp;
 
   if (!getApps().length) {
-    try {
-      // Attempt to initialize via Firebase App Hosting environment variables first
-      firebaseApp = initializeApp();
-    } catch (e) {
-      firebaseApp = initializeApp(firebaseConfig);
-    }
+    firebaseApp = initializeApp(firebaseConfig);
   } else {
     firebaseApp = getApp();
   }

@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Search, Bell, Globe, Loader2, Plus, MessageCircle, UserPlus, UserCircle } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy, limit, where, getDocs, Timestamp } from "firebase/firestore";
-import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -20,7 +19,7 @@ export default function HubPage() {
   const [userSearchResults, setUserSearchResults] = useState<any[]>([]);
   const [isSearchingUsers, setIsSearchingUsers] = useState(false);
 
-  // Private Chats Query - Optimized for the composite index: participants (array-contains) + timestamp (desc)
+  // Private Chats Query - Strictly aligned with the composite index: participants (array-contains) + timestamp (desc)
   const privateChatsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
@@ -76,7 +75,7 @@ export default function HubPage() {
   );
 
   return (
-    <div className="max-w-md mx-auto min-h-screen bg-background pt-8 pb-24">
+    <div className="max-w-md mx-auto min-h-screen bg-background pt-8 pb-24 flex flex-col">
       <div className="px-6 mb-8 flex justify-between items-end border-b pb-4 border-primary/5">
         <div>
           <h1 className="text-3xl font-black text-primary uppercase tracking-tighter">The Hub</h1>
@@ -129,7 +128,7 @@ export default function HubPage() {
         )}
       </div>
 
-      <Tabs defaultValue="private" className="w-full">
+      <Tabs defaultValue="private" className="w-full flex-1 flex flex-col overflow-hidden">
         <div className="px-6 mb-6">
           <TabsList className="w-full h-12 bg-muted/30 rounded-full p-1 grid grid-cols-3">
             <TabsTrigger value="private" className="rounded-full text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
@@ -144,7 +143,7 @@ export default function HubPage() {
           </TabsList>
         </div>
 
-        <TabsContent value="private" className="px-6 space-y-4 outline-none">
+        <TabsContent value="private" className="flex-1 overflow-y-auto px-6 space-y-4 outline-none no-scrollbar">
           {isPrivateLoading ? (
             <div className="flex flex-col items-center justify-center py-24 gap-4">
               <Loader2 className="animate-spin text-primary h-8 w-8" />
@@ -182,14 +181,14 @@ export default function HubPage() {
           )}
         </TabsContent>
 
-        <TabsContent value="notifications" className="px-6 space-y-4 outline-none">
+        <TabsContent value="notifications" className="flex-1 overflow-y-auto px-6 space-y-4 outline-none">
           <div className="py-24 text-center opacity-30">
              <Bell size={48} className="mx-auto mb-4" />
              <p className="text-[10px] font-black uppercase tracking-widest">No Alerts Received</p>
           </div>
         </TabsContent>
 
-        <TabsContent value="groups" className="px-6 space-y-4 outline-none">
+        <TabsContent value="groups" className="flex-1 overflow-y-auto px-6 space-y-4 outline-none">
           <div className="py-24 text-center opacity-30">
             <Globe size={48} className="mx-auto mb-4" />
             <p className="text-[10px] font-black uppercase tracking-widest">Global Discovery Coming Soon</p>

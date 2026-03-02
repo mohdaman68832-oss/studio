@@ -7,22 +7,18 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Helper to check if user is a participant in a private chat
-    function isParticipant(participants) {
-      return isAuth() && (request.auth.uid in participants);
+    // User Profiles: Public read, Owner write
+    match /userProfiles/{userId} {
+      allow read: if true;
+      allow write: if isAuth() && request.auth.uid == userId;
     }
 
     // Private Chats: Access restricted to participants only
+    // This rule is designed to work with the 'array-contains' query and composite index
     match /privateChats/{chatId} {
-      // Separated list and get for clearer debugging and query compliance
-      allow get: if isParticipant(resource.data.participants);
-      allow list: if isParticipant(resource.data.participants);
-      
-      // Allow creation if the creating user is one of the participants
-      allow create: if isParticipant(request.resource.data.participants);
-
-      // Allow updates (like lastMessage) if user is a participant
-      allow update: if isParticipant(resource.data.participants);
+      allow get, list: if isAuth() && (request.auth.uid in resource.data.participants);
+      allow create: if isAuth() && (request.auth.uid in request.resource.data.participants);
+      allow update: if isAuth() && (request.auth.uid in resource.data.participants);
 
       match /messages/{messageId} {
         // Participants of the parent chat can read and write messages
@@ -30,12 +26,6 @@ service cloud.firestore {
           request.auth.uid in get(/databases/$(database)/documents/privateChats/$(chatId)).data.participants
         );
       }
-    }
-    
-    // User Profiles: Public read, Owner write
-    match /userProfiles/{userId} {
-      allow read: if true;
-      allow write: if isAuth() && request.auth.uid == userId;
     }
     
     // Posts: Public read, Authenticated write
@@ -54,21 +44,12 @@ service cloud.firestore {
       }
     }
     
-    // Groups and Unions: Standard authenticated access
-    match /groups/{groupId} {
-      allow read, write: if isAuth();
-    }
-    match /unions/{unionId} {
-      allow read, write: if isAuth();
-    }
+    // Fallback for other collections (groups, unions, follows)
+    match /groups/{groupId} { allow read, write: if isAuth(); }
+    match /unions/{unionId} { allow read, write: if isAuth(); }
+    match /follows/{followId} { allow read, write: if isAuth(); }
 
-    // Follows: Public read, Authenticated write
-    match /follows/{followId} {
-      allow read: if true;
-      allow write: if isAuth();
-    }
-    
-    // Fallback for other paths
+    // Global Fallback for safety
     match /{path=**} {
       allow read, write: if isAuth();
     }
