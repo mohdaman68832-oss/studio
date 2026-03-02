@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef, useEffect, Suspense } from "react";
@@ -113,9 +112,7 @@ function PostFormContent() {
     
     setIsPosting(true);
     try {
-      // PART 1 — SINGLE WRITE LOGIC
-      // Perform ONLY ONE write operation to "posts" collection.
-      // Do NOT update user profile or increment postCount here.
+      // SINGLE WRITE: Only write to the "posts" collection.
       await addDoc(collection(db, "posts"), {
         uid: user.uid,
         username: user.displayName || "Innovator",

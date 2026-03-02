@@ -1,4 +1,3 @@
-
 "use client";
 
 import { use, useState, useMemo } from "react";
@@ -55,28 +54,28 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
   const { data: userProfiles, isLoading } = useCollection(userQuery);
   const profileData = userProfiles?.[0];
 
-  // PART 2 — DYNAMIC POST COUNT
+  // DYNAMIC POST COUNT: Fetch only when profileData.id is confirmed.
   const userPostsQuery = useMemoFirebase(() => {
-    if (!db || !profileData) return null;
+    if (!db || !profileData?.id) return null;
     return query(
       fsCollection(db, "posts"), 
       where("uid", "==", profileData.id),
       orderBy("createdAt", "desc")
     );
-  }, [db, profileData]);
+  }, [db, profileData?.id]);
   const { data: userPosts, isLoading: isPostsLoading } = useCollection(userPostsQuery);
   const dynamicPostCount = userPosts?.length || 0;
 
   const followRef = useMemoFirebase(() => {
-    if (!db || !currentUser || !profileData) return null;
+    if (!db || !currentUser?.uid || !profileData?.id) return null;
     return doc(db, "follows", `${currentUser.uid}_${profileData.id}`);
-  }, [db, currentUser, profileData]);
+  }, [db, currentUser?.uid, profileData?.id]);
 
   const { data: followDoc, isLoading: followLoading } = useDoc(followRef);
   const isFollowing = !!followDoc;
 
-  const followingQuery = useMemoFirebase(() => (db && profileData ? query(fsCollection(db, "follows"), where("followerId", "==", profileData.id)) : null), [db, profileData]);
-  const followersQuery = useMemoFirebase(() => (db && profileData ? query(fsCollection(db, "follows"), where("followedId", "==", profileData.id)) : null), [db, profileData]);
+  const followingQuery = useMemoFirebase(() => (db && profileData?.id ? query(fsCollection(db, "follows"), where("followerId", "==", profileData.id)) : null), [db, profileData?.id]);
+  const followersQuery = useMemoFirebase(() => (db && profileData?.id ? query(fsCollection(db, "follows"), where("followedId", "==", profileData.id)) : null), [db, profileData?.id]);
   const { data: followingData } = useCollection(followingQuery);
   const { data: followersData } = useCollection(followersQuery);
 

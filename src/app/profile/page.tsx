@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -97,16 +96,15 @@ export default function ProfilePage() {
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [db, user]);
   const { data: profileData, isLoading: isProfileLoading } = useDoc(profileRef);
 
-  // PART 2 — DYNAMIC POST COUNT
-  // Professional Way: Fetch only when user is available.
+  // PROFESSIONAL WAY: Only query when user.uid is confirmed.
   const userPostsQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
+    if (!db || !user?.uid) return null;
     return query(
       fsCollection(db, "posts"), 
       where("uid", "==", user.uid),
       orderBy("createdAt", "desc")
     );
-  }, [db, user]);
+  }, [db, user?.uid]);
 
   const { data: userPosts, isLoading: isPostsLoading } = useCollection(userPostsQuery);
   const dynamicPostCount = userPosts?.length || 0;

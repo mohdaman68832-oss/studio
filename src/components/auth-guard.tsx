@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useUser, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
@@ -23,8 +22,8 @@ function LogoLoader() {
             <g className="animate-eye-look">
               <g className="animate-eye-blink">
                 {/* Elegant Tiny Balanced Eyes */}
-                <rect x="54" y="58" width="2" height="4" rx="1" fill="white" />
-                <rect x="64" y="58" width="2" height="4" rx="1" fill="white" />
+                <rect x="58" y="58" width="2" height="4" rx="1" fill="white" />
+                <rect x="68" y="58" width="2" height="4" rx="1" fill="white" />
               </g>
             </g>
             <circle cx="105" cy="15" r="8" fill="#FF4500" />
@@ -57,6 +56,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const isSetupPage = pathname === '/setup';
 
   useEffect(() => {
+    // PROFESSIONAL WAY: Wait for auth loading before deciding routing.
     if (isUserLoading || isProfileLoading) return;
 
     if (!user) {
