@@ -13,20 +13,14 @@ import { getAuth } from 'firebase/auth';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
-/** Utility type to add an 'id' field to a given type T. */
 export type WithId<T> = T & { id: string };
 
-/**
- * Interface for the return value of the useCollection hook.
- * @template T Type of the document data.
- */
 export interface UseCollectionResult<T> {
   data: WithId<T>[] | null;
   isLoading: boolean;
   error: FirestoreError | Error | null;
 }
 
-/* Internal implementation of Query */
 export interface InternalQuery extends Query<DocumentData> {
   _query: {
     path: {
@@ -36,10 +30,6 @@ export interface InternalQuery extends Query<DocumentData> {
   }
 }
 
-/**
- * React hook to subscribe to a Firestore collection or query in real-time.
- * Professional Architecture: Delays execution until Auth is confirmed ready.
- */
 export function useCollection<T = any>(
     memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean})  | null | undefined,
 ): UseCollectionResult<T> {
@@ -51,7 +41,6 @@ export function useCollection<T = any>(
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
-    // 1. Guard: Wait for reference
     if (!memoizedTargetRefOrQuery) {
       setData(null);
       setIsLoading(false);
@@ -59,8 +48,7 @@ export function useCollection<T = any>(
       return;
     }
 
-    // 2. PROFESSIONAL GUARD: Prevent premature access before Auth is ready
-    // This fixes "Missing Permissions" on mount because queries are restricted to logged-in users.
+    // Professional Guard: Delay execution until Auth is confirmed
     const auth = getAuth();
     if (!auth.currentUser) {
       setIsLoading(true);
@@ -99,8 +87,6 @@ export function useCollection<T = any>(
         setError(contextualError);
         setData(null);
         setIsLoading(false);
-
-        // Emit for debugging overlay
         errorEmitter.emit('permission-error', contextualError);
       }
     );
