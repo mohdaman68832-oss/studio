@@ -43,6 +43,8 @@ export function useCollection<T = any>(
     // Auth Guard: Prevent unauthorized fetches that trigger permission errors
     const auth = getAuth();
     const currentUser = auth.currentUser;
+    
+    // We wait for auth to be initialized before firing the query
     if (!currentUser) {
       setIsLoading(true);
       return;
@@ -64,7 +66,7 @@ export function useCollection<T = any>(
       },
       async (err: FirestoreError) => {
         // Robust path extraction for debugging
-        let path = "privateChats";
+        let path = "unknown_collection";
         try {
           const anyRef = memoizedTargetRefOrQuery as any;
           path = anyRef.path || (anyRef._query?.path?.segments?.join('/')) || "privateChats";
