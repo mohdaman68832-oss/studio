@@ -181,20 +181,23 @@ export default function ProfilePage() {
     const sticker = localProfile.stickers.find(s => s.id === id);
     if (!sticker) return;
 
+    // Set selection
     setSelectedStickerId(id);
     
-    setDragStart({
-      x: e.clientX,
-      y: e.clientY,
-      stickerX: sticker.x,
-      stickerY: sticker.y
-    });
-
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    // Only allow drag to start if the optimize sheet is ALREADY open for this sticker
+    if (isStickerSheetOpen && selectedStickerId === id) {
+      setDragStart({
+        x: e.clientX,
+        y: e.clientY,
+        stickerX: sticker.x,
+        stickerY: sticker.y
+      });
+      (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    }
   };
 
   const handleStickerPointerMove = (e: React.PointerEvent, id: string) => {
-    if (!dragStart || !isEditMode || selectedStickerId !== id) return;
+    if (!dragStart || !isEditMode || selectedStickerId !== id || !isStickerSheetOpen) return;
     
     const container = document.getElementById('profile-scroll-container');
     if (!container) return;
@@ -212,8 +215,10 @@ export default function ProfilePage() {
   };
 
   const handleStickerPointerUp = (e: React.PointerEvent) => {
-    setDragStart(null);
-    if (selectedStickerId && !isStickerSheetOpen) {
+    if (dragStart) {
+      setDragStart(null);
+    } else if (selectedStickerId && !isStickerSheetOpen) {
+      // If we weren't dragging, and it's selected, open the sheet to allow moving later
       setIsStickerSheetOpen(true);
     }
   };
@@ -243,7 +248,7 @@ export default function ProfilePage() {
             key={sticker.id} 
             className={cn(
               "absolute pointer-events-auto", 
-              isEditMode && "cursor-move active:scale-110 active:opacity-80 transition-transform duration-75"
+              isEditMode && isStickerSheetOpen && selectedStickerId === sticker.id ? "cursor-move active:scale-110 active:opacity-80" : "cursor-pointer"
             )} 
             onPointerDown={(e) => handleStickerPointerDown(e, sticker.id)}
             onPointerMove={(e) => handleStickerPointerMove(e, sticker.id)}
@@ -256,8 +261,8 @@ export default function ProfilePage() {
             }}
           >
             <div className={cn(
-              "relative w-24 h-24",
-              isEditMode && selectedStickerId === sticker.id && "ring-4 ring-primary ring-offset-4 rounded-xl"
+              "relative w-24 h-24 transition-all duration-200",
+              isEditMode && selectedStickerId === sticker.id && "ring-4 ring-primary ring-offset-4 rounded-xl scale-105"
             )}>
               <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized />
             </div>
@@ -265,7 +270,7 @@ export default function ProfilePage() {
         ))}
       </div>
 
-      {/* LAYER 1: Header/Banner/Logo Wrapper (Lowest layer for media) */}
+      {/* LAYER 1: Header/Banner/Logo Wrapper */}
       <div className="relative w-full shrink-0 z-[10]">
         <div className="h-16 w-full" style={{ backgroundColor: headerColor }} />
         <header className="absolute top-0 left-0 right-0 px-6 py-5 flex justify-between items-center z-[50]">
@@ -363,9 +368,9 @@ export default function ProfilePage() {
               <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{localProfile.name}</h2>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>@{profileData?.username || "user"}</p>
               
-              {/* Bio Bar with Enhanced Shadow overlapping following content */}
+              {/* Bio Bar with High Z-index and Shadow that falls over subsequent sections */}
               <div 
-                className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] border-primary/5 relative z-10" 
+                className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] border-primary/5 relative z-50" 
                 style={{ backgroundColor: colors.bioCard || "hsl(var(--card))" }}
               >
                 <p className="text-center text-[12px] leading-relaxed font-bold italic" style={{ color: getContrastColor(colors.bioCard) }}>
@@ -434,13 +439,13 @@ export default function ProfilePage() {
           hideOverlay={true}
           className="rounded-t-[3rem] h-auto max-h-[45vh] bg-white/95 backdrop-blur-xl border-t-2 border-primary/10 shadow-[0_-20px_50px_rgba(0,0,0,0.1)] p-0 overflow-hidden flex flex-col pointer-events-auto z-[100]"
         >
-          <SheetHeader className="p-4 border-b flex flex-row items-center justify-between bg-white/50">
+          <div className="p-4 border-b flex flex-row items-center justify-between bg-white/50">
             <div className="flex items-center gap-2">
               <div className="bg-primary/10 p-1.5 rounded-lg"><StickerIcon size={16} className="text-primary"/></div>
-              <SheetTitle className="text-sm font-black uppercase tracking-tight text-primary">Fine-Tune Sticker</SheetTitle>
+              <h2 className="text-sm font-black uppercase tracking-tight text-primary">Fine-Tune Sticker</h2>
             </div>
             <Button variant="ghost" size="icon" onClick={() => setIsStickerSheetOpen(false)} className="rounded-full h-8 w-8 bg-muted/50 hover:bg-muted"><Check size={18}/></Button>
-          </SheetHeader>
+          </div>
           
           <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar">
             {selectedSticker && (
