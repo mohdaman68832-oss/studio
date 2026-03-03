@@ -9,40 +9,52 @@ import { getFirestore, Firestore } from 'firebase/firestore';
  * Truly Singleton Firebase Initialization for Next.js 15 / Turbopack.
  * Uses a module-level cache and globalThis to survive HMR/Fast Refresh reloads.
  */
-let cachedSdks: FirebaseInstances | null = null;
-
-interface FirebaseInstances {
-  firebaseApp: FirebaseApp;
-  firestore: Firestore;
-  auth: Auth;
-}
+let cachedApp: FirebaseApp | null = null;
+let cachedFirestore: Firestore | null = null;
+let cachedAuth: Auth | null = null;
 
 declare global {
-  var _firebaseInstances: FirebaseInstances | undefined;
+  var _firebaseApp: FirebaseApp | undefined;
+  var _firebaseFirestore: Firestore | undefined;
+  var _firebaseAuth: Auth | undefined;
 }
 
-export function initializeFirebase(): FirebaseInstances {
-  // Return cached instances if available in the current module or global scope
-  if (cachedSdks) return cachedSdks;
-  if (typeof window !== 'undefined' && globalThis._firebaseInstances) {
-    cachedSdks = globalThis._firebaseInstances;
-    return cachedSdks;
+export function initializeFirebase() {
+  // 1. App Singleton
+  if (!cachedApp) {
+    if (typeof window !== 'undefined' && globalThis._firebaseApp) {
+      cachedApp = globalThis._firebaseApp;
+    } else {
+      cachedApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+      if (typeof window !== 'undefined') globalThis._firebaseApp = cachedApp;
+    }
   }
 
-  const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-  const instances = {
-    firebaseApp: app,
-    firestore: getFirestore(app),
-    auth: getAuth(app),
+  // 2. Firestore Singleton
+  if (!cachedFirestore) {
+    if (typeof window !== 'undefined' && globalThis._firebaseFirestore) {
+      cachedFirestore = globalThis._firebaseFirestore;
+    } else {
+      cachedFirestore = getFirestore(cachedApp);
+      if (typeof window !== 'undefined') globalThis._firebaseFirestore = cachedFirestore;
+    }
+  }
+
+  // 3. Auth Singleton
+  if (!cachedAuth) {
+    if (typeof window !== 'undefined' && globalThis._firebaseAuth) {
+      cachedAuth = globalThis._firebaseAuth;
+    } else {
+      cachedAuth = getAuth(cachedApp);
+      if (typeof window !== 'undefined') globalThis._firebaseAuth = cachedAuth;
+    }
+  }
+
+  return {
+    firebaseApp: cachedApp,
+    firestore: cachedFirestore,
+    auth: cachedAuth,
   };
-
-  // Cache in module and global scope for maximum stability during HMR
-  if (typeof window !== 'undefined') {
-    cachedSdks = instances;
-    globalThis._firebaseInstances = instances;
-  }
-
-  return instances;
 }
 
 export * from './provider';

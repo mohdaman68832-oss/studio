@@ -151,9 +151,9 @@ export default function HubPage() {
             </div>
           ) : privateError ? (
              <div className="py-24 text-center space-y-4 flex flex-col items-center">
-              <p className="text-[10px] font-black uppercase text-destructive">Index Required</p>
+              <p className="text-[10px] font-black uppercase text-destructive">Decryption Error</p>
               <p className="text-[9px] font-medium italic px-10 text-muted-foreground text-center">
-                Firestore is building your composite index. Please wait a moment and refresh.
+                Waiting for the innovation sphere to stabilize. Please refresh in a moment.
               </p>
             </div>
           ) : privateChats && privateChats.length > 0 ? (
