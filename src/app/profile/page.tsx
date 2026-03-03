@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -174,7 +173,6 @@ export default function ProfilePage() {
     setIsStickerSheetOpen(false);
   };
 
-  // Sticker Drag Logic
   const handleStickerPointerDown = (e: React.PointerEvent, id: string) => {
     if (!isEditMode) return;
     e.stopPropagation();
@@ -233,7 +231,6 @@ export default function ProfilePage() {
       className="max-w-md mx-auto min-h-screen pb-24 relative overflow-x-hidden flex flex-col" 
       style={{ backgroundColor: colors.background || "var(--background)" }}
     >
-      {/* Interactive Sticker Layer */}
       <div className="absolute inset-0 pointer-events-none z-[60]">
         {localProfile.stickers.map((sticker) => (
           <div 
@@ -420,6 +417,7 @@ export default function ProfilePage() {
       <Sheet open={isStickerSheetOpen} onOpenChange={setIsStickerSheetOpen} modal={false}>
         <SheetContent 
           side="bottom" 
+          hideOverlay={true}
           className="rounded-t-[3rem] h-auto max-h-[45vh] bg-white/95 backdrop-blur-xl border-t-2 border-primary/10 shadow-[0_-20px_50px_rgba(0,0,0,0.1)] p-0 overflow-hidden flex flex-col pointer-events-auto"
         >
           <SheetHeader className="p-4 border-b flex flex-row items-center justify-between bg-white/50">
@@ -434,7 +432,6 @@ export default function ProfilePage() {
             {selectedSticker && (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 gap-5">
-                  {/* Compact Rotation Control */}
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="flex items-center gap-2 text-[10px] font-black uppercase text-muted-foreground"><RotateCw size={14} className="text-primary"/> Rotation Hub</span>
@@ -443,7 +440,6 @@ export default function ProfilePage() {
                     <Slider value={[selectedSticker.rotation]} min={0} max={360} step={1} onValueChange={([v]) => updateSticker(selectedSticker.id, 'rotation', v)} />
                   </div>
 
-                  {/* Compact Size Control */}
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="flex items-center gap-2 text-[10px] font-black uppercase text-muted-foreground"><Maximize2 size={14} className="text-secondary"/> Sphere Size</span>
