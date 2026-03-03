@@ -6,8 +6,8 @@ import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 
 /**
- * Robust singleton SDK initialization for Next.js 15 environments.
- * Prevents "Internal Assertion Failed" by caching instances on globalThis.
+ * Truly Singleton Firebase Initialization for Next.js 15 / Turbopack.
+ * Uses globalThis and window to persist instances across Hot Module Reloads.
  */
 declare global {
   var _firebaseApp: FirebaseApp | undefined;
@@ -15,7 +15,18 @@ declare global {
   var _auth: Auth | undefined;
 }
 
-export function initializeFirebase() {
+interface FirebaseInstances {
+  firebaseApp: FirebaseApp;
+  firestore: Firestore;
+  auth: Auth;
+}
+
+let cachedSdks: FirebaseInstances | null = null;
+
+export function initializeFirebase(): FirebaseInstances {
+  // Use cached instance if available in the current module execution
+  if (cachedSdks) return cachedSdks;
+
   // SSR check
   if (typeof window === 'undefined') {
     const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
@@ -26,12 +37,13 @@ export function initializeFirebase() {
     };
   }
 
-  // Client-side singleton pattern using globalThis to survive HMR/Turbopack refreshes
+  // Client-side: Persist on globalThis/window to survive Turbopack HMR
   if (!globalThis._firebaseApp) {
     try {
-      globalThis._firebaseApp = initializeApp(firebaseConfig);
-      globalThis._firestore = getFirestore(globalThis._firebaseApp);
-      globalThis._auth = getAuth(globalThis._firebaseApp);
+      const app = initializeApp(firebaseConfig);
+      globalThis._firebaseApp = app;
+      globalThis._firestore = getFirestore(app);
+      globalThis._auth = getAuth(app);
     } catch (e) {
       if (getApps().length) {
         globalThis._firebaseApp = getApp();
@@ -43,11 +55,13 @@ export function initializeFirebase() {
     }
   }
 
-  return {
+  cachedSdks = {
     firebaseApp: globalThis._firebaseApp!,
     firestore: globalThis._firestore!,
     auth: globalThis._auth!,
   };
+
+  return cachedSdks;
 }
 
 export * from './provider';
