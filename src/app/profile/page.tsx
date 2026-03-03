@@ -203,7 +203,7 @@ export default function ProfilePage() {
     const dx = ((e.clientX - dragStart.x) / rect.width) * 100;
     const dy = ((e.clientY - dragStart.y) / rect.height) * 100;
 
-    // INVISIBLE LINE CONTROL: Clamping Y to max 60% so it doesn't cover posts
+    // Boundary: Clamping Y to max 60% so it doesn't cover posts
     const newX = Math.max(0, Math.min(100, dragStart.stickerX + dx));
     const newY = Math.max(0, Math.min(60, dragStart.stickerY + dy));
 
@@ -236,8 +236,8 @@ export default function ProfilePage() {
       className="max-w-md mx-auto min-h-screen pb-24 relative overflow-x-hidden flex flex-col" 
       style={{ backgroundColor: colors.background || "var(--background)" }}
     >
-      {/* LAYER 1: Stickers (Behind text) */}
-      <div className="absolute inset-0 pointer-events-none z-10">
+      {/* LAYER 1: Stickers (Above banner/logo but behind text) */}
+      <div className="absolute inset-0 pointer-events-none z-[30]">
         {localProfile.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
@@ -302,7 +302,7 @@ export default function ProfilePage() {
         </header>
 
         <div className="relative z-0">
-          <div className="h-56 w-full relative overflow-hidden group">
+          <div className="h-56 w-full relative overflow-hidden group z-[10]">
             <Image 
               src={localProfile.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} 
               alt="banner" 
@@ -318,8 +318,8 @@ export default function ProfilePage() {
             )}
           </div>
           <div className="px-6 -mt-16 flex flex-col items-center relative z-20">
-            <div className="relative group">
-              <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl">
+            <div className="relative group z-[10]">
+              <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-lg">
                 <AvatarImage src={localProfile.profilePic} className="object-cover" />
                 <AvatarFallback className="text-2xl font-black">{localProfile.name?.[0]?.toUpperCase() || "U"}</AvatarFallback>
               </Avatar>
@@ -335,7 +335,7 @@ export default function ProfilePage() {
       </div>
 
       {/* LAYER 2: Text Layers (On top of stickers) */}
-      <div className="w-full relative mt-4 z-20">
+      <div className="w-full relative mt-4 z-[40]">
         <div style={{ backgroundColor: colors.userInfo }} className="px-6 flex flex-col items-center relative">
           {isEditMode ? (
             <div className="w-full space-y-4 pt-4">
@@ -361,7 +361,7 @@ export default function ProfilePage() {
             <>
               <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{localProfile.name}</h2>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>@{profileData?.username || "user"}</p>
-              <div className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-xl" style={{ backgroundColor: colors.bioCard || "hsl(var(--card))" }}>
+              <div className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-sm border-primary/5" style={{ backgroundColor: colors.bioCard || "hsl(var(--card))" }}>
                 <p className="text-center text-[12px] leading-relaxed font-bold italic" style={{ color: getContrastColor(colors.bioCard) }}>
                   {localProfile.bio}
                 </p>
@@ -387,7 +387,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* POSTS SECTION (Restricted Area) */}
+        {/* POSTS SECTION */}
         <div className="px-6 py-10 space-y-6 relative bg-background z-30">
           <div className="flex items-center gap-3">
              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Your Innovations</span>
