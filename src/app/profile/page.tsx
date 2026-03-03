@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -18,7 +17,8 @@ import {
   Maximize2,
   RotateCw,
   Plus,
-  Pencil
+  Pencil,
+  Image as ImageIcon
 } from "lucide-react";
 import { 
   DropdownMenu, 
@@ -339,18 +339,17 @@ export default function ProfilePage() {
 
             <div className="space-y-6 border-t pt-6">
               <div className="flex items-center justify-between mb-2">
-                <Label className="text-[10px] font-black uppercase flex items-center gap-2"><StickerIcon size={14}/> Stickers</Label>
+                <Label className="text-[10px] font-black uppercase flex items-center gap-2"><StickerIcon size={14}/> Sticker Hub</Label>
               </div>
               
               <div className="grid grid-cols-2 gap-4">
-                {/* Option 1: Add Sticker */}
                 <Button 
                   onClick={() => customStickerInputRef.current?.click()} 
                   variant="outline"
                   className="h-14 rounded-2xl border-2 border-primary/20 bg-primary/5 hover:border-primary flex items-center gap-3 shadow-sm"
                 >
                   <Plus size={18} className="text-primary" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Add Sticker</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest">Add New</span>
                 </Button>
                 <input 
                   type="file" 
@@ -360,7 +359,6 @@ export default function ProfilePage() {
                   onChange={e => handleImageChange(e, 'sticker')} 
                 />
 
-                {/* Optional Status Label or Placeholder */}
                 <div className="h-14 bg-muted/20 rounded-2xl border-2 border-dashed border-muted flex items-center justify-center opacity-40">
                   <ImageIcon size={18} />
                 </div>
@@ -368,7 +366,7 @@ export default function ProfilePage() {
 
               {formData.stickers.length > 0 && (
                 <div className="space-y-4 mt-6">
-                  <Label className="text-[10px] font-black uppercase flex items-center gap-2"><Pencil size={12}/> Edit Placed Stickers</Label>
+                  <Label className="text-[10px] font-black uppercase flex items-center gap-2"><Pencil size={12}/> Active Stickers (Select to Edit)</Label>
                   <div className="flex flex-wrap gap-3">
                     {formData.stickers.map(s => (
                       <button 
