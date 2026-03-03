@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -13,6 +14,7 @@ export function BottomNav() {
   const { user } = useUser();
   const db = useFirestore();
 
+  // Real-time listener for user profile to get the latest profile picture
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [user, db]);
   const { data: profileData } = useDoc(profileRef);
 
@@ -27,6 +29,7 @@ export function BottomNav() {
     { label: "Profile", icon: User, href: "/profile" },
   ];
 
+  // Priority: 1. Firestore Profile URL, 2. Auth Photo URL, 3. Empty string
   const profilePic = profileData?.profilePictureUrl || user?.photoURL || "";
 
   return (
@@ -52,7 +55,11 @@ export function BottomNav() {
                     "h-8 w-8 border-2 transition-all duration-300 shadow-sm",
                     isActive ? "border-primary scale-110 shadow-md ring-2 ring-primary/20" : "border-transparent"
                   )}>
-                    <AvatarImage src={profilePic} className="object-cover" />
+                    <AvatarImage 
+                      src={profilePic} 
+                      className="object-cover" 
+                      alt="Current User Logo"
+                    />
                     <AvatarFallback className="text-[10px] font-black uppercase bg-primary/10 text-primary">
                       {user?.displayName?.[0] || profileData?.username?.[0]?.toUpperCase() || "U"}
                     </AvatarFallback>
