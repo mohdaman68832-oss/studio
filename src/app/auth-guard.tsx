@@ -6,32 +6,39 @@ import { useEffect } from 'react';
 import { doc } from 'firebase/firestore';
 
 /**
- * Animated Logo Loader Component
- * Reverted to the compact 'm' bubble shape with energetic eyes.
+ * Recreated Image-based Logo Loader
+ * Features: M-Chat-Bubble, Rotating Orbital Ring, and Tiny Eyes.
  */
 function LogoLoader() {
   return (
     <div className="flex flex-col items-center gap-10 animate-in fade-in duration-700">
-      <div className="relative w-40 h-40 flex items-center justify-center">
-        {/* Stylized 'M' Bubble Character - Compact Shape */}
+      <div className="relative w-48 h-48 flex items-center justify-center">
+        {/* Orbital Ring - Elliptical rotation around the logo */}
+        <div className="absolute inset-0 z-0 animate-ring-rotate">
+           <svg width="100%" height="100%" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg" className="opacity-80">
+             <ellipse cx="80" cy="80" rx="75" ry="25" stroke="#FF4500" strokeWidth="6" transform="rotate(-25 80 80)" />
+           </svg>
+        </div>
+
+        {/* Character Body - Stylized 'M' Chat Bubble */}
         <div className="relative z-10 animate-bubble-sway">
-          <svg width="100" height="100" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-            {/* Stylized 'M' Bubble Character Path */}
+          <svg width="120" height="120" viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* The main 'M' Chat Bubble Shape */}
             <path 
-              d="M20 70 C20 95 40 100 60 100 C80 100 100 95 100 70 V50 C100 25 85 15 72 15 C65 15 62 20 60 30 C58 20 55 15 48 15 C35 15 20 25 20 50 V70 Z" 
+              d="M30 110 L10 135 V40 C10 20 25 10 45 10 C65 10 70 25 70 45 C70 25 75 10 95 10 C115 10 130 20 130 40 V110 C130 125 115 130 100 130 H30 Z" 
               fill="#FF4500" 
             />
 
-            {/* Moving and Blinking Eyes - Reverted Size */}
+            {/* Moving and Blinking Eyes */}
             <g className="animate-eye-look">
               <g className="animate-eye-blink">
-                <circle cx="42" cy="52" r="2.5" fill="white" />
-                <circle cx="78" cy="52" r="2.5" fill="white" />
+                <circle cx="45" cy="55" r="2.5" fill="white" />
+                <circle cx="95" cy="55" r="2.5" fill="white" />
               </g>
             </g>
             
-            {/* Floating Accent Dot */}
-            <circle cx="108" cy="18" r="6" fill="#FF4500" className="animate-pulse" />
+            {/* Top-right Accent Dot from image */}
+            <circle cx="130" cy="15" r="7" fill="#FF4500" className="animate-pulse" />
           </svg>
         </div>
       </div>
@@ -61,7 +68,6 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const isSetupPage = pathname === '/setup';
 
   useEffect(() => {
-    // Wait for auth loading before deciding routing.
     if (isUserLoading || isProfileLoading) return;
 
     if (!user) {
