@@ -7,7 +7,7 @@ import { getFirestore, Firestore } from 'firebase/firestore';
 
 /**
  * Truly Singleton Firebase Initialization for Next.js 15 / Turbopack.
- * Uses globalThis and window to persist instances across Hot Module Reloads.
+ * Uses globalThis and module-level caching to survive HMR/Fast Refresh.
  */
 declare global {
   var _firebaseApp: FirebaseApp | undefined;
@@ -24,44 +24,44 @@ interface FirebaseInstances {
 let cachedSdks: FirebaseInstances | null = null;
 
 export function initializeFirebase(): FirebaseInstances {
-  // Use cached instance if available in the current module execution
+  // 1. Use module-level cache if already initialized in this execution context
   if (cachedSdks) return cachedSdks;
 
-  // SSR check
-  if (typeof window === 'undefined') {
-    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-    return {
-      firebaseApp: app,
-      auth: getAuth(app),
-      firestore: getFirestore(app)
-    };
-  }
-
-  // Client-side: Persist on globalThis/window to survive Turbopack HMR
-  if (!globalThis._firebaseApp) {
-    try {
-      const app = initializeApp(firebaseConfig);
-      globalThis._firebaseApp = app;
-      globalThis._firestore = getFirestore(app);
-      globalThis._auth = getAuth(app);
-    } catch (e) {
-      if (getApps().length) {
-        globalThis._firebaseApp = getApp();
-        globalThis._firestore = getFirestore(globalThis._firebaseApp);
-        globalThis._auth = getAuth(globalThis._firebaseApp);
-      } else {
-        throw e;
+  // 2. Client-side: Persist on globalThis/window to survive Turbopack HMR reloads
+  if (typeof window !== 'undefined') {
+    if (!globalThis._firebaseApp) {
+      try {
+        const app = initializeApp(firebaseConfig);
+        globalThis._firebaseApp = app;
+        globalThis._firestore = getFirestore(app);
+        globalThis._auth = getAuth(app);
+      } catch (e) {
+        // Fallback if initializeApp was somehow called twice
+        if (getApps().length) {
+          globalThis._firebaseApp = getApp();
+          globalThis._firestore = getFirestore(globalThis._firebaseApp);
+          globalThis._auth = getAuth(globalThis._firebaseApp);
+        } else {
+          throw e;
+        }
       }
     }
+
+    cachedSdks = {
+      firebaseApp: globalThis._firebaseApp!,
+      firestore: globalThis._firestore!,
+      auth: globalThis._auth!,
+    };
+    return cachedSdks;
   }
 
-  cachedSdks = {
-    firebaseApp: globalThis._firebaseApp!,
-    firestore: globalThis._firestore!,
-    auth: globalThis._auth!,
+  // 3. Server-side (SSR) Fallback
+  const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+  return {
+    firebaseApp: app,
+    auth: getAuth(app),
+    firestore: getFirestore(app)
   };
-
-  return cachedSdks;
 }
 
 export * from './provider';
