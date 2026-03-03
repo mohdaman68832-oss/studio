@@ -40,17 +40,20 @@ function FeedContent() {
     if (!firestorePosts) return [];
     
     const userInterests = profileData?.interests || [];
+    
+    // ALGORITHM: If 'All' is active and there's a category in URL, that's our effective category.
+    // Otherwise, it's either 'All' (Personalized) or 'Meme'.
     const effectiveCategory = activeCategory === "All" && urlCategory ? urlCategory : activeCategory;
 
     let filtered = firestorePosts;
 
-    // ALGORITHM: Filter 'All' section by user interests selected during signup/setup
     if (effectiveCategory === "All") {
+      // Personalized Mode: Filter by user interests selected during signup/setup
       filtered = filtered.filter(post => 
         userInterests.some(interest => post.category?.toLowerCase() === interest.toLowerCase())
       );
     } else {
-      // Direct filtering by specific category (e.g. Meme or from URL)
+      // Specific Category Mode: Filter by specific category (URL category or Meme)
       filtered = filtered.filter(i => i.category?.toLowerCase() === effectiveCategory.toLowerCase());
     }
 
@@ -67,13 +70,17 @@ function FeedContent() {
         <div>
           <h1 className="text-3xl font-black text-primary uppercase tracking-tighter leading-none">Sphere Feed</h1>
           <div className="flex items-center gap-1.5 mt-1">
-            {activeCategory === "All" ? (
+            {(activeCategory === "All" && !urlCategory) ? (
               <Sparkles size={10} className="text-secondary animate-pulse" />
             ) : (
               <Globe size={10} className="text-muted-foreground" />
             )}
             <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">
-              {activeCategory === "All" ? "Personalized For You" : "Global Innovation Hub"}
+              {activeCategory === "All" && urlCategory 
+                ? `${urlCategory} Hub`
+                : activeCategory === "All" 
+                  ? "Personalized For You" 
+                  : "Global Innovation Hub"}
             </p>
           </div>
         </div>
@@ -84,7 +91,7 @@ function FeedContent() {
         </Link>
       </header>
 
-      {/* Main Category Bar - Updated for Full Width */}
+      {/* Main Category Bar - Updated for Dynamic Labels */}
       <div className="flex w-full gap-3 py-2 pb-4 mb-2 border-b">
         {["All", "Meme"].map((cat) => (
           <Button 
@@ -101,7 +108,8 @@ function FeedContent() {
                 : "bg-white text-muted-foreground border border-border"
             )}
           >
-            {cat}
+            {/* Dynamic Label for the 'All' tab if a URL category exists */}
+            {cat === "All" && urlCategory ? urlCategory : cat}
           </Button>
         ))}
       </div>
@@ -165,9 +173,11 @@ function FeedContent() {
           <div className="py-24 text-center space-y-4 opacity-30 flex flex-col items-center">
             <Globe size={48} className="text-primary/20" />
             <p className="text-[10px] font-black uppercase tracking-widest">
-              {activeCategory === "All" 
-                ? "No innovations in your selected hubs" 
-                : "No innovations found"}
+              {activeCategory === "All" && urlCategory
+                ? `No innovations in ${urlCategory}`
+                : activeCategory === "All" 
+                  ? "No innovations in your selected hubs" 
+                  : "No innovations found"}
             </p>
             <Link href="/categories">
               <Button variant="outline" className="rounded-full text-[10px] font-black uppercase">
