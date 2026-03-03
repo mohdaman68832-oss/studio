@@ -8,6 +8,7 @@ import { getFirestore, Firestore } from 'firebase/firestore';
 /**
  * Truly Singleton Firebase Initialization for Next.js 15 / Turbopack.
  * Uses globalThis and module-level caching to survive HMR/Fast Refresh.
+ * This prevents the "Internal Assertion Failed" error by ensuring only one instance exists.
  */
 declare global {
   var _firebaseApp: FirebaseApp | undefined;
@@ -27,7 +28,7 @@ export function initializeFirebase(): FirebaseInstances {
   // 1. Use module-level cache if already initialized in this execution context
   if (cachedSdks) return cachedSdks;
 
-  // 2. Client-side: Persist on globalThis/window to survive Turbopack HMR reloads
+  // 2. Client-side: Persist on globalThis to survive Turbopack HMR reloads
   if (typeof window !== 'undefined') {
     if (!globalThis._firebaseApp) {
       try {
@@ -36,7 +37,6 @@ export function initializeFirebase(): FirebaseInstances {
         globalThis._firestore = getFirestore(app);
         globalThis._auth = getAuth(app);
       } catch (e) {
-        // Fallback if initializeApp was somehow called twice
         if (getApps().length) {
           globalThis._firebaseApp = getApp();
           globalThis._firestore = getFirestore(globalThis._firebaseApp);
