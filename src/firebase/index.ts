@@ -26,14 +26,13 @@ export function initializeFirebase() {
     };
   }
 
-  // Client-side singleton pattern
+  // Client-side singleton pattern using globalThis to survive HMR/Turbopack refreshes
   if (!globalThis._firebaseApp) {
     try {
       globalThis._firebaseApp = initializeApp(firebaseConfig);
       globalThis._firestore = getFirestore(globalThis._firebaseApp);
       globalThis._auth = getAuth(globalThis._firebaseApp);
     } catch (e) {
-      // Fallback if initializeApp fails for some reason
       if (getApps().length) {
         globalThis._firebaseApp = getApp();
         globalThis._firestore = getFirestore(globalThis._firebaseApp);

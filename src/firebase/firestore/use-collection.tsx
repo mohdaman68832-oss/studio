@@ -40,10 +40,9 @@ export function useCollection<T = any>(
       return;
     }
     
-    // Obtain auth instance from our singleton initialization
     const auth = getAuth();
     
-    // Wait for auth to be resolved.
+    // Wait for auth to be resolved to prevent early permission errors
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (!user) {
         setIsLoading(true);
@@ -80,7 +79,6 @@ export function useCollection<T = any>(
           setError(contextualError);
           setData(null);
           setIsLoading(false);
-          // Emit for the global listener
           errorEmitter.emit('permission-error', contextualError);
         }
       );

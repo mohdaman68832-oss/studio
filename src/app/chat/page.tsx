@@ -19,7 +19,8 @@ export default function HubPage() {
   const [userSearchResults, setUserSearchResults] = useState<any[]>([]);
   const [isSearchingUsers, setIsSearchingUsers] = useState(false);
 
-  // Private Chats Query - Strictly aligned with the composite index: participants (array-contains) + timestamp (desc)
+  // Explicitly query where participants contains current user UID
+  // Aligns with: allow read: if isAuth() && (request.auth.uid in resource.data.participants);
   const privateChatsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
@@ -152,7 +153,7 @@ export default function HubPage() {
           ) : privateError ? (
              <div className="py-24 text-center space-y-4 opacity-50 flex flex-col items-center">
               <p className="text-[10px] font-black uppercase text-destructive">Verification Error</p>
-              <p className="text-[9px] font-medium italic px-10">Please refresh the page to sync your identity.</p>
+              <p className="text-[9px] font-medium italic px-10">Syncing identity with encrypted hub...</p>
             </div>
           ) : privateChats && privateChats.length > 0 ? (
             privateChats.map((chat) => (

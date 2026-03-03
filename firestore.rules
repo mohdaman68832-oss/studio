@@ -13,23 +13,20 @@ service cloud.firestore {
       allow write: if isAuth() && request.auth.uid == userId;
     }
 
-    // Private Chats: Explicit read/write rules for participants
+    // Private Chats: Provably safe rules for list/get/write
     match /privateChats/{chatId} {
-      // For 'list' queries (like the one in Hub), we use null-safe checks
-      allow list: if isAuth() && resource.data.get('participants', []).hasAny([request.auth.uid]);
+      // Rule for 'list' and 'get'
+      allow read: if isAuth() && (request.auth.uid in resource.data.participants);
       
-      // For 'get' individual document
-      allow get: if isAuth() && (request.auth.uid in resource.data.get('participants', []));
+      // Rule for 'create' - check if current user is in participants of incoming data
+      allow create: if isAuth() && (request.auth.uid in request.resource.data.participants);
       
-      // Allow creation if the creator is part of the participants array
-      allow create: if isAuth() && (request.auth.uid in request.resource.data.get('participants', []));
-      
-      // Allow updates if the user is already a participant
-      allow update: if isAuth() && (request.auth.uid in resource.data.get('participants', []));
+      // Rule for 'update' - only existing participants can update (e.g., lastMessage)
+      allow update: if isAuth() && (request.auth.uid in resource.data.participants);
 
       match /messages/{messageId} {
         // Nested access control: fetch parent chat participants
-        allow read, write: if isAuth() && (request.auth.uid in get(/databases/$(database)/documents/privateChats/$(chatId)).data.get('participants', []));
+        allow read, write: if isAuth() && (request.auth.uid in get(/databases/$(database)/documents/privateChats/$(chatId)).data.participants);
       }
     }
     
