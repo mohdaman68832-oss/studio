@@ -14,7 +14,8 @@ service cloud.firestore {
 
     // Private Chats: Explicit list/get permissions for participants
     match /privateChats/{chatId} {
-      // Allow list operations and direct gets if user is a participant
+      // Allow read (get and list) if user is a participant
+      // This supports the Hub page query: where("participants", "array-contains", uid)
       allow read: if isAuth() && (request.auth.uid in resource.data.participants);
       
       // Allow creation if the current user is one of the participants
@@ -24,7 +25,7 @@ service cloud.firestore {
       allow update: if isAuth() && (request.auth.uid in resource.data.participants);
 
       match /messages/{messageId} {
-        // Simple subcollection rule tied to parent chat state
+        // Tie permissions to parent chat participants
         allow read, write: if isAuth() && 
           (request.auth.uid in get(/databases/$(database)/documents/privateChats/$(chatId)).data.participants);
       }

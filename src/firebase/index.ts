@@ -7,26 +7,14 @@ import { getFirestore, Firestore } from 'firebase/firestore';
 
 /**
  * Truly Singleton Firebase Initialization for Next.js 15 / Turbopack.
- * This prevents the "Internal Assertion Failed" error by ensuring only one
- * instance of each service exists, even across Hot Module Replacements.
+ * This ensures only one instance of each service exists even across HMR.
  */
 let cachedApp: FirebaseApp | null = null;
 let cachedFirestore: Firestore | null = null;
 let cachedAuth: Auth | null = null;
 
-declare global {
-  var _firebaseApp: FirebaseApp | undefined;
-  var _firebaseFirestore: Firestore | undefined;
-  var _firebaseAuth: Auth | undefined;
-}
-
 export function initializeFirebase() {
-  // 1. Try to recover from global scope (Node/Server/HMR context)
-  if (globalThis._firebaseApp) cachedApp = globalThis._firebaseApp;
-  if (globalThis._firebaseFirestore) cachedFirestore = globalThis._firebaseFirestore;
-  if (globalThis._firebaseAuth) cachedAuth = globalThis._firebaseAuth;
-
-  // 2. Try to recover from window (Browser context)
+  // Use globalThis to persist instances across Hot Module Reloads in development
   if (typeof window !== 'undefined') {
     const win = window as any;
     if (win._firebaseApp) cachedApp = win._firebaseApp;
@@ -34,24 +22,18 @@ export function initializeFirebase() {
     if (win._firebaseAuth) cachedAuth = win._firebaseAuth;
   }
 
-  // 3. Initialize App Singleton
   if (!cachedApp) {
     cachedApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-    globalThis._firebaseApp = cachedApp;
     if (typeof window !== 'undefined') (window as any)._firebaseApp = cachedApp;
   }
 
-  // 4. Initialize Firestore Singleton
   if (!cachedFirestore) {
     cachedFirestore = getFirestore(cachedApp);
-    globalThis._firebaseFirestore = cachedFirestore;
     if (typeof window !== 'undefined') (window as any)._firebaseFirestore = cachedFirestore;
   }
 
-  // 5. Initialize Auth Singleton
   if (!cachedAuth) {
     cachedAuth = getAuth(cachedApp);
-    globalThis._firebaseAuth = cachedAuth;
     if (typeof window !== 'undefined') (window as any)._firebaseAuth = cachedAuth;
   }
 
