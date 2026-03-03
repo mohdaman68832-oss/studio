@@ -71,7 +71,7 @@ function FeedContent() {
 
       {/* Main Category Bar */}
       <div className="flex w-full gap-2 -mx-4 px-4 pt-2 pb-4 mb-2 border-b overflow-x-auto no-scrollbar">
-        {["All", "Meme", "Technology"].map((cat) => (
+        {["All", "Meme"].map((cat) => (
           <Button 
             key={cat} 
             variant={cat === activeCategory ? "default" : "secondary"} 
