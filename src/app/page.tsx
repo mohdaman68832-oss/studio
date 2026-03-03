@@ -4,11 +4,11 @@
 import { IdeaCard } from "@/components/feed/idea-card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection, query, orderBy } from "firebase/firestore";
+import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
+import { collection, query, orderBy, doc } from "firebase/firestore";
 import { useMemo, useState, Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RefreshCcw, LayoutGrid, Globe, ImageIcon, Video, Type } from "lucide-react";
+import { RefreshCcw, LayoutGrid, Globe, ImageIcon, Video, Type, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
@@ -20,6 +20,10 @@ function FeedContent() {
 
   const [activeCategory, setActiveCategory] = useState("All");
   const [memeType, setMemeType] = useState<"all" | "image" | "video" | "text">("all");
+
+  // Fetch current user's profile to get their interests
+  const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [user, db]);
+  const { data: profileData } = useDoc(profileRef);
 
   // Filtered query for Home Feed
   const postsQuery = useMemoFirebase(() => {
@@ -35,11 +39,18 @@ function FeedContent() {
   const postsToDisplay = useMemo(() => {
     if (!firestorePosts) return [];
     
+    const userInterests = profileData?.interests || [];
     const effectiveCategory = activeCategory === "All" && urlCategory ? urlCategory : activeCategory;
 
     let filtered = firestorePosts;
 
-    if (effectiveCategory !== "All") {
+    // ALGORITHM: Filter 'All' section by user interests selected during signup/setup
+    if (effectiveCategory === "All") {
+      filtered = filtered.filter(post => 
+        userInterests.some(interest => post.category?.toLowerCase() === interest.toLowerCase())
+      );
+    } else {
+      // Direct filtering by specific category (e.g. Meme or from URL)
       filtered = filtered.filter(i => i.category?.toLowerCase() === effectiveCategory.toLowerCase());
     }
 
@@ -48,7 +59,7 @@ function FeedContent() {
     }
     
     return filtered;
-  }, [firestorePosts, activeCategory, urlCategory, memeType]);
+  }, [firestorePosts, activeCategory, urlCategory, memeType, profileData?.interests]);
 
   return (
     <div className="max-w-md mx-auto min-h-screen bg-background px-4 pt-8 pb-24 relative">
@@ -56,9 +67,13 @@ function FeedContent() {
         <div>
           <h1 className="text-3xl font-black text-primary uppercase tracking-tighter leading-none">Sphere Feed</h1>
           <div className="flex items-center gap-1.5 mt-1">
-            <Globe size={10} className="text-muted-foreground" />
+            {activeCategory === "All" ? (
+              <Sparkles size={10} className="text-secondary animate-pulse" />
+            ) : (
+              <Globe size={10} className="text-muted-foreground" />
+            )}
             <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">
-              Global Innovation Hub
+              {activeCategory === "All" ? "Personalized For You" : "Global Innovation Hub"}
             </p>
           </div>
         </div>
@@ -149,8 +164,16 @@ function FeedContent() {
         ) : (
           <div className="py-24 text-center space-y-4 opacity-30 flex flex-col items-center">
             <Globe size={48} className="text-primary/20" />
-            <p className="text-[10px] font-black uppercase tracking-widest">No innovations found</p>
-            <Link href="/post"><Button variant="outline" className="rounded-full text-[10px] font-black uppercase">Publish First Post</Button></Link>
+            <p className="text-[10px] font-black uppercase tracking-widest">
+              {activeCategory === "All" 
+                ? "No innovations in your selected hubs" 
+                : "No innovations found"}
+            </p>
+            <Link href="/categories">
+              <Button variant="outline" className="rounded-full text-[10px] font-black uppercase">
+                Explore More Hubs
+              </Button>
+            </Link>
           </div>
         )}
       </div>
