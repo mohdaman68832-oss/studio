@@ -151,9 +151,9 @@ export default function HubPage() {
             </div>
           ) : privateError ? (
              <div className="py-24 text-center space-y-4 flex flex-col items-center">
-              <p className="text-[10px] font-black uppercase text-destructive">Index or Permission Error</p>
+              <p className="text-[10px] font-black uppercase text-destructive">Index Required</p>
               <p className="text-[9px] font-medium italic px-10 text-muted-foreground text-center">
-                Please ensure you have created the required index using the link in the error console.
+                Firestore is building your composite index. Please wait a moment and refresh.
               </p>
             </div>
           ) : privateChats && privateChats.length > 0 ? (

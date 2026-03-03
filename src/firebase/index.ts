@@ -7,13 +7,9 @@ import { getFirestore, Firestore } from 'firebase/firestore';
 
 /**
  * Truly Singleton Firebase Initialization for Next.js 15 / Turbopack.
- * Uses globalThis to survive HMR/Fast Refresh reloads.
+ * Uses a module-level cache and globalThis to survive HMR/Fast Refresh reloads.
  */
-declare global {
-  var _firebaseApp: FirebaseApp | undefined;
-  var _firestore: Firestore | undefined;
-  var _auth: Auth | undefined;
-}
+let cachedSdks: FirebaseInstances | null = null;
 
 interface FirebaseInstances {
   firebaseApp: FirebaseApp;
@@ -21,34 +17,32 @@ interface FirebaseInstances {
   auth: Auth;
 }
 
-/**
- * Professional Singleton Initialization
- * Optimized for development environments with frequent hot-reloads.
- */
-export function initializeFirebase(): FirebaseInstances {
-  if (typeof window !== 'undefined') {
-    // Client-side singleton pattern using globalThis
-    if (!globalThis._firebaseApp) {
-      const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-      globalThis._firebaseApp = app;
-      globalThis._firestore = getFirestore(app);
-      globalThis._auth = getAuth(app);
-    }
+declare global {
+  var _firebaseInstances: FirebaseInstances | undefined;
+}
 
-    return {
-      firebaseApp: globalThis._firebaseApp!,
-      firestore: globalThis._firestore!,
-      auth: globalThis._auth!,
-    };
+export function initializeFirebase(): FirebaseInstances {
+  // Return cached instances if available in the current module or global scope
+  if (cachedSdks) return cachedSdks;
+  if (typeof window !== 'undefined' && globalThis._firebaseInstances) {
+    cachedSdks = globalThis._firebaseInstances;
+    return cachedSdks;
   }
 
-  // SSR Fallback (Non-persistent for server renders)
-  const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-  return {
+  const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+  const instances = {
     firebaseApp: app,
+    firestore: getFirestore(app),
     auth: getAuth(app),
-    firestore: getFirestore(app)
   };
+
+  // Cache in module and global scope for maximum stability during HMR
+  if (typeof window !== 'undefined') {
+    cachedSdks = instances;
+    globalThis._firebaseInstances = instances;
+  }
+
+  return instances;
 }
 
 export * from './provider';
