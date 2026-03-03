@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -16,7 +15,8 @@ import {
   LayoutGrid,
   Move,
   Maximize2,
-  RotateCw
+  RotateCw,
+  Plus
 } from "lucide-react";
 import { 
   DropdownMenu, 
@@ -86,6 +86,7 @@ export default function ProfilePage() {
   const [selectedStickerId, setSelectedStickerId] = useState<string | null>(null);
   
   const bannerInputRef = useRef<HTMLInputElement>(null);
+  const customStickerInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -153,12 +154,13 @@ export default function ProfilePage() {
     }
   };
 
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'banner') => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'banner' | 'sticker') => {
     const file = e.target.files?.[0];
     if (file) {
       const base64 = await toBase64(file);
       if (type === 'profile') setFormData(prev => ({ ...prev, profilePic: base64 }));
       else if (type === 'banner') setFormData(prev => ({ ...prev, banner: base64 }));
+      else if (type === 'sticker') addSticker(base64);
     }
   };
 
@@ -336,6 +338,22 @@ export default function ProfilePage() {
             <div className="space-y-6 border-t pt-6">
               <Label className="text-[10px] font-black uppercase flex items-center gap-2"><StickerIcon size={14}/> Sticker Hub</Label>
               <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
+                {/* Add Custom Sticker Button */}
+                <button 
+                  className="shrink-0 w-20 h-20 rounded-[1.5rem] border-2 border-dashed p-2 border-primary/40 hover:border-primary transition-all bg-primary/5 flex flex-col items-center justify-center gap-1"
+                  onClick={() => customStickerInputRef.current?.click()}
+                >
+                  <Plus size={20} className="text-primary" />
+                  <span className="text-[8px] font-black uppercase text-primary">Add New</span>
+                </button>
+                <input 
+                  type="file" 
+                  ref={customStickerInputRef} 
+                  className="hidden" 
+                  accept="image/*" 
+                  onChange={e => handleImageChange(e, 'sticker')} 
+                />
+
                 {["rocket", "sparkles", "brain", "heart", "globe", "zap", "flame", "star"].map(n => (
                   <button key={n} className="shrink-0 w-20 h-20 rounded-[1.5rem] border-2 border-dashed p-2 hover:border-primary transition-all bg-muted/10 flex items-center justify-center" onClick={() => addSticker(`https://picsum.photos/seed/sticker-${n}/200/200`)}>
                     <Image src={`https://picsum.photos/seed/sticker-${n}/200/200`} alt="sticker" width={60} height={60} className="object-contain" unoptimized />
