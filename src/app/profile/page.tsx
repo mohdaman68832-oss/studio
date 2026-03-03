@@ -175,6 +175,7 @@ export default function ProfilePage() {
   };
 
   const handleStickerPointerDown = (e: React.PointerEvent, id: string) => {
+    // REQUIREMENT: No interaction if not in Edit Mode
     if (!isEditMode) return;
     e.stopPropagation();
     
@@ -184,7 +185,7 @@ export default function ProfilePage() {
     // Set selection
     setSelectedStickerId(id);
     
-    // Only allow drag to start if the optimize sheet is ALREADY open for this sticker
+    // REQUIREMENT: Only allow drag if the optimize sheet is ALREADY open for this sticker
     if (isStickerSheetOpen && selectedStickerId === id) {
       setDragStart({
         x: e.clientX,
@@ -193,6 +194,9 @@ export default function ProfilePage() {
         stickerY: sticker.y
       });
       (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    } else {
+      // First click opens the sheet
+      setIsStickerSheetOpen(true);
     }
   };
 
@@ -217,9 +221,6 @@ export default function ProfilePage() {
   const handleStickerPointerUp = (e: React.PointerEvent) => {
     if (dragStart) {
       setDragStart(null);
-    } else if (selectedStickerId && !isStickerSheetOpen) {
-      // If we weren't dragging, and it's selected, open the sheet to allow moving later
-      setIsStickerSheetOpen(true);
     }
   };
 
@@ -241,14 +242,15 @@ export default function ProfilePage() {
       className="max-w-md mx-auto min-h-screen pb-24 relative overflow-x-hidden flex flex-col" 
       style={{ backgroundColor: colors.background || "var(--background)" }}
     >
-      {/* LAYER 2: Stickers (Above Banner and Logo but behind text) */}
+      {/* LAYER 2: Stickers (Above Media but behind Text) */}
       <div className="absolute inset-0 pointer-events-none z-[20]">
         {localProfile.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
             className={cn(
-              "absolute pointer-events-auto", 
-              isEditMode && isStickerSheetOpen && selectedStickerId === sticker.id ? "cursor-move active:scale-110 active:opacity-80" : "cursor-pointer"
+              "absolute", 
+              // REQUIREMENT: Totally non-clickable if not in Edit Mode
+              isEditMode ? "pointer-events-auto cursor-pointer" : "pointer-events-none"
             )} 
             onPointerDown={(e) => handleStickerPointerDown(e, sticker.id)}
             onPointerMove={(e) => handleStickerPointerMove(e, sticker.id)}
@@ -368,9 +370,9 @@ export default function ProfilePage() {
               <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{localProfile.name}</h2>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>@{profileData?.username || "user"}</p>
               
-              {/* Bio Bar with High Z-index and Shadow that falls over subsequent sections */}
+              {/* Bio Bar with High Z-index and Premium Shadow that falls over subsequent sections */}
               <div 
-                className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] border-primary/5 relative z-50" 
+                className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] border-primary/5 relative z-[60]" 
                 style={{ backgroundColor: colors.bioCard || "hsl(var(--card))" }}
               >
                 <p className="text-center text-[12px] leading-relaxed font-bold italic" style={{ color: getContrastColor(colors.bioCard) }}>
@@ -381,44 +383,46 @@ export default function ProfilePage() {
           )}
         </div>
 
-        <div style={{ backgroundColor: colors.statsSection }} className="w-full py-10 px-10 relative">
-          <div className="grid grid-cols-3 gap-6 w-full">
-            <div className="text-center">
-              <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{dynamicPostCount}</p>
-              <p className="text-[8px] uppercase font-black opacity-40">Posts</p>
-            </div>
-            <div className="text-center">
-              <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>0</p>
-              <p className="text-[8px] uppercase font-black opacity-40">Circle</p>
-            </div>
-            <div className="text-center">
-              <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>0</p>
-              <p className="text-[8px] uppercase font-black opacity-40">Circling</p>
-            </div>
-          </div>
-        </div>
-
-        {/* POSTS SECTION (Base Layer for content) */}
-        <div className="px-6 py-10 space-y-6 relative bg-background z-[10]">
-          <div className="flex items-center gap-3">
-             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Your Innovations</span>
-             <div className="flex-1 h-px bg-primary/10" />
-          </div>
-          
-          <div className="space-y-8">
-            {isPostsLoading ? (
-              <div className="flex justify-center py-10"><Loader2 className="animate-spin text-primary" /></div>
-            ) : userPosts && userPosts.length > 0 ? (
-              userPosts.map((post) => (
-                <div key={post.id} className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-                  <IdeaCard idea={post as any} />
-                </div>
-              ))
-            ) : (
-              <div className="py-20 text-center space-y-4 opacity-30">
-                <p className="text-[10px] font-black uppercase tracking-widest">No innovations published yet</p>
+        {/* Stats and Posts Wrapper with Lower Z-index to accept Bio Shadow */}
+        <div className="relative z-[10]">
+          <div style={{ backgroundColor: colors.statsSection }} className="w-full py-10 px-10 relative">
+            <div className="grid grid-cols-3 gap-6 w-full">
+              <div className="text-center">
+                <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{dynamicPostCount}</p>
+                <p className="text-[8px] uppercase font-black opacity-40">Posts</p>
               </div>
-            )}
+              <div className="text-center">
+                <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>0</p>
+                <p className="text-[8px] uppercase font-black opacity-40">Circle</p>
+              </div>
+              <div className="text-center">
+                <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>0</p>
+                <p className="text-[8px] uppercase font-black opacity-40">Circling</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="px-6 py-10 space-y-6 relative bg-background">
+            <div className="flex items-center gap-3">
+               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Your Innovations</span>
+               <div className="flex-1 h-px bg-primary/10" />
+            </div>
+            
+            <div className="space-y-8">
+              {isPostsLoading ? (
+                <div className="flex justify-center py-10"><Loader2 className="animate-spin text-primary" /></div>
+              ) : userPosts && userPosts.length > 0 ? (
+                userPosts.map((post) => (
+                  <div key={post.id} className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <IdeaCard idea={post as any} />
+                  </div>
+                ))
+              ) : (
+                <div className="py-20 text-center space-y-4 opacity-30">
+                  <p className="text-[10px] font-black uppercase tracking-widest">No innovations published yet</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
