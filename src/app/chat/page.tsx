@@ -1,15 +1,64 @@
+
 "use client";
 
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Search, Bell, Globe, Loader2, Plus, MessageCircle, UserPlus, UserCircle } from "lucide-react";
-import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy, limit, where, getDocs, Timestamp } from "firebase/firestore";
+import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from "@/firebase";
+import { collection, query, orderBy, limit, where, getDocs, Timestamp, doc } from "firebase/firestore";
 import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+
+// Small sub-component to resolve the other user's info in a chat list row
+function ChatRecipientInfo({ recipientId, lastMessage, timestamp }: { recipientId: string, lastMessage: string, timestamp: any }) {
+  const db = useFirestore();
+  const recipientRef = useMemoFirebase(() => (db && recipientId ? doc(db, "userProfiles", recipientId) : null), [db, recipientId]);
+  const { data: recipient, isLoading } = useDoc(recipientRef);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-4 animate-pulse">
+        <div className="h-12 w-12 rounded-full bg-muted" />
+        <div className="flex-1 space-y-2">
+          <div className="h-3 w-24 bg-muted rounded" />
+          <div className="h-2 w-32 bg-muted rounded" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-4">
+      <div className="relative shrink-0">
+        <Avatar className="h-12 w-12 border border-primary/10">
+          <AvatarImage src={recipient?.profilePictureUrl} className="object-cover" />
+          <AvatarFallback className="bg-primary/5 text-primary text-xs font-black uppercase">
+            {recipient?.username?.[0] || "?"}
+          </AvatarFallback>
+        </Avatar>
+        {recipient?.isOnline && (
+          <div className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 rounded-full border-2 border-white shadow-sm" />
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex justify-between items-center mb-0.5">
+          <h4 className="text-sm font-black truncate uppercase tracking-tighter text-foreground">
+            @{recipient?.username || "Innovator"}
+          </h4>
+          <p className="text-[8px] text-muted-foreground font-black uppercase shrink-0">
+            {timestamp instanceof Timestamp ? timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "New"}
+          </p>
+        </div>
+        <p className="text-[11px] text-muted-foreground truncate font-medium">
+          {lastMessage || "Start a conversation..."}
+        </p>
+      </div>
+    </div>
+  );
+}
 
 export default function HubPage() {
   const { user, loading: isUserLoading } = useUser();
@@ -19,7 +68,6 @@ export default function HubPage() {
   const [userSearchResults, setUserSearchResults] = useState<any[]>([]);
   const [isSearchingUsers, setIsSearchingUsers] = useState(false);
 
-  // Memoized query with explicit participants filter - requires composite index (participants: array-contains, timestamp: desc)
   const privateChatsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
@@ -157,28 +205,20 @@ export default function HubPage() {
               </p>
             </div>
           ) : privateChats && privateChats.length > 0 ? (
-            privateChats.map((chat) => (
-              <Link key={chat.id} href={`/chat/${chat.id}`}>
-                <div className="flex items-center gap-4 bg-card p-5 rounded-[2.5rem] border border-border/50 shadow-md hover:border-primary transition-all group">
-                  <div className="h-12 w-12 rounded-full bg-primary/5 flex items-center justify-center shrink-0 border border-primary/10 group-hover:bg-primary/10 transition-colors">
-                    <UserCircle size={24} className="text-primary" />
+            privateChats.map((chat) => {
+              const recipientId = chat.participants.find((id: string) => id !== user.uid);
+              return (
+                <Link key={chat.id} href={`/chat/${chat.id}`}>
+                  <div className="bg-card p-5 rounded-[2.5rem] border border-border/50 shadow-md hover:border-primary transition-all group active:scale-[0.98]">
+                    <ChatRecipientInfo 
+                      recipientId={recipientId} 
+                      lastMessage={chat.lastMessage} 
+                      timestamp={chat.timestamp} 
+                    />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-center mb-0.5">
-                      <h4 className="text-sm font-black truncate uppercase tracking-tighter">
-                        Innovator Chat
-                      </h4>
-                      <p className="text-[9px] text-muted-foreground font-black uppercase">
-                        {chat.timestamp instanceof Timestamp ? chat.timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "New"}
-                      </p>
-                    </div>
-                    <p className="text-[11px] text-muted-foreground truncate font-medium">
-                      {chat.lastMessage || "Click to start conversation..."}
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            ))
+                </Link>
+              );
+            })
           ) : (
             <div className="py-24 text-center space-y-4 opacity-30 flex flex-col items-center">
               <MessageCircle size={48} className="text-primary/20" />

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { use, useState, useMemo } from "react";
@@ -54,7 +55,6 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
   const { data: userProfiles, isLoading } = useCollection(userQuery);
   const profileData = userProfiles?.[0];
 
-  // DYNAMIC POST COUNT & SPECIFIC USER POSTS
   const userPostsQuery = useMemoFirebase(() => {
     if (!db || !profileData?.id) return null;
     return query(
@@ -91,6 +91,13 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       await setDoc(ref, { followerId: currentUser.uid, followedId: profileData.id, createdAt: serverTimestamp() });
       toast({ title: "Following", description: `You are now following @${profileData.username}` });
     }
+  };
+
+  const startChat = () => {
+    if (!currentUser || !profileData) return;
+    // CRITICAL: Deterministic sorted ID for 1:1 messaging
+    const chatId = [currentUser.uid, profileData.id].sort().join("_");
+    router.push(`/chat/${chatId}`);
   };
 
   if (isLoading) return <div className="max-w-md mx-auto min-h-screen flex items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -151,7 +158,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
             <Button className={cn("flex-1 rounded-2xl font-black uppercase text-[10px] h-11 shadow-xl", isFollowing ? "bg-muted text-foreground" : "bg-primary text-white")} onClick={handleFollowToggle} disabled={followLoading || profileData.id === currentUser?.uid}>
               {isFollowing ? <><UserCheck size={16} className="mr-2" /> Following</> : <><UserPlus size={16} className="mr-2" /> Follow</>}
             </Button>
-            <Button variant="outline" className="flex-1 rounded-2xl font-black uppercase text-[10px] h-11 bg-white shadow-lg" onClick={() => router.push(`/chat/${profileData.id}`)}>
+            <Button variant="outline" className="flex-1 rounded-2xl font-black uppercase text-[10px] h-11 bg-white shadow-lg" onClick={startChat}>
               <MessageSquare size={16} className="mr-2" /> Message
             </Button>
           </div>

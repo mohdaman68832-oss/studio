@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -19,6 +20,7 @@ export default function ChatDetailPage() {
   const { toast } = useToast();
   const chatId = params.id as string;
 
+  // Extract recipientId from sorted ID (uid1_uid2)
   const recipientId = chatId.split("_").find(id => id !== currentUser?.uid) || "";
 
   const recipientRef = useMemoFirebase(() => (db && recipientId ? doc(db, "userProfiles", recipientId) : null), [db, recipientId]);
@@ -51,6 +53,7 @@ export default function ChatDetailPage() {
     setNewMessage("");
 
     try {
+      // Create/Update Chat Metadata with participants array for list query support
       await setDoc(doc(db, "privateChats", chatId), {
         chatId: chatId,
         participants: chatId.split("_"),
@@ -58,6 +61,7 @@ export default function ChatDetailPage() {
         timestamp: serverTimestamp(),
       }, { merge: true });
 
+      // Add actual message
       await addDoc(collection(db, "privateChats", chatId, "messages"), {
         senderId: currentUser.uid,
         text: text,
