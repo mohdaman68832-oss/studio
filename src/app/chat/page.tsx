@@ -1,9 +1,10 @@
+
 "use client";
 
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { Search, Bell, Globe, Loader2, Plus, MessageCircle, UserPlus } from "lucide-react";
+import { Search, Bell, Globe, Loader2, Plus, MessageCircle, UserPlus, RefreshCcw, ShieldAlert } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from "@/firebase";
 import { collection, query, orderBy, limit, where, getDocs, Timestamp, doc } from "firebase/firestore";
 import Link from "next/link";
@@ -198,12 +199,16 @@ export default function HubPage() {
             </div>
           ) : privateError ? (
              <div className="py-24 text-center space-y-4 flex flex-col items-center">
-              <p className="text-[10px] font-black uppercase text-destructive">Communication Hub Syncing</p>
+              <ShieldAlert size={48} className="text-primary opacity-20" />
+              <p className="text-[10px] font-black uppercase text-primary">Communication Hub Syncing</p>
               <p className="text-[9px] font-medium italic px-10 text-muted-foreground text-center">
                 {privateError.message.toLowerCase().includes('index') 
-                  ? "The innovation sphere is still stabilizing after the new index update. Please refresh in a moment."
+                  ? "The innovation sphere is still stabilizing after the new index update. Please refresh in a moment (1-2 minutes)."
                   : "Syncing your secure communication channels. Please ensure you have a stable connection."}
               </p>
+              <Button variant="ghost" size="sm" onClick={() => window.location.reload()} className="mt-4 text-[9px] font-black uppercase tracking-widest">
+                <RefreshCcw size={12} className="mr-2" /> Refresh Hub
+              </Button>
             </div>
           ) : privateChats && privateChats.length > 0 ? (
             privateChats.map((chat) => {
