@@ -1,4 +1,3 @@
-
 "use client";
 
 import Image from "next/image";
@@ -66,7 +65,9 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
   const { data: liveIdeaData } = useDoc(ideaDocRef);
 
   const likesCount = liveIdeaData?.likes ?? idea.likes ?? 0;
-  const viewCount = liveIdeaData?.views ?? idea.views ?? (Math.floor(Math.random() * 500) + 100);
+  
+  // Real-time View Count from Firestore
+  const viewCount = liveIdeaData?.views ?? idea.views ?? 0;
 
   const handleToggleLike = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -99,11 +100,13 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
   if (isProfileView) {
     return (
       <div className="bg-white rounded-[2.5rem] shadow-sm border border-primary/5 p-6 space-y-4 animate-in fade-in duration-500">
-        <Link href={`/idea/${idea.id}`} className="block group space-y-3">
+        <div className="block group space-y-3">
           <div className="flex justify-between items-start">
-            <h3 className="text-xl font-black text-primary uppercase tracking-tighter leading-tight flex-1 mr-4">
-              {idea.title}
-            </h3>
+            <Link href={`/idea/${idea.id}`} className="flex-1 mr-4">
+              <h3 className="text-xl font-black text-primary uppercase tracking-tighter leading-tight hover:underline transition-all">
+                {idea.title}
+              </h3>
+            </Link>
             <div className="flex items-center gap-1.5 bg-muted/30 px-2 py-1 rounded-full shrink-0">
               <Eye size={12} className="text-muted-foreground" />
               <span className="text-[10px] font-black text-muted-foreground">{viewCount}</span>
@@ -111,15 +114,17 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
           </div>
 
           {!isTextPost && (
-            <div className="relative aspect-video w-full rounded-[2rem] overflow-hidden bg-muted shadow-inner">
-              {isVideo ? (
-                 <div className="w-full h-full flex items-center justify-center bg-black"><Play className="text-white fill-white" size={32} /></div>
-              ) : (
-                <Image src={idea.mediaUrl} alt={idea.title} fill className="object-cover transition-transform group-hover:scale-105" />
-              )}
-            </div>
+            <Link href={`/idea/${idea.id}`} className="block">
+              <div className="relative aspect-video w-full rounded-[2rem] overflow-hidden bg-muted shadow-inner">
+                {isVideo ? (
+                   <div className="w-full h-full flex items-center justify-center bg-black"><Play className="text-white fill-white" size={32} /></div>
+                ) : (
+                  <Image src={idea.mediaUrl} alt={idea.title} fill className="object-cover transition-transform group-hover:scale-105" />
+                )}
+              </div>
+            </Link>
           )}
-        </Link>
+        </div>
 
         <div className="flex items-center justify-between pt-2">
           <div className="flex items-center gap-6">
@@ -183,6 +188,10 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
           <MessageCircle size={26} className="text-muted-foreground" />
           <span className="text-[10px] font-black text-muted-foreground mt-1">{commentCount}</span>
         </Link>
+        <div className="flex items-center gap-1 ml-auto mr-2 bg-muted/20 px-2 py-1 rounded-full">
+           <Eye size={14} className="text-muted-foreground/60" />
+           <span className="text-[9px] font-black text-muted-foreground/60">{viewCount}</span>
+        </div>
         <button type="button" onClick={handleShare} className="p-2"><Share2 size={24} /></button>
       </div>
     </div>

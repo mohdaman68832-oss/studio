@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useDoc, useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection, addDoc, query, orderBy, serverTimestamp, doc } from "firebase/firestore";
+import { collection, addDoc, query, orderBy, serverTimestamp, doc, updateDoc, increment } from "firebase/firestore";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,6 +47,19 @@ export default function IdeaDetailPage() {
   }, [db, ideaId]);
 
   const { data: suggestions } = useCollection(suggestionsQuery);
+
+  // Real-time View Increment logic
+  useEffect(() => {
+    if (db && ideaId && currentUser) {
+      const postRef = doc(db, "posts", ideaId);
+      updateDoc(postRef, {
+        views: increment(1)
+      }).catch(err => {
+        // Silently fail if rules prevent it, but logic is active
+        console.warn("View tracking update failed", err);
+      });
+    }
+  }, [db, ideaId, currentUser]);
 
   useEffect(() => {
     if (scrollContainerRef.current) {

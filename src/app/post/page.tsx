@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef, useEffect, Suspense } from "react";
@@ -112,7 +111,6 @@ function PostFormContent() {
     setIsPosting(true);
     try {
       // Single Write Architecture: Only save to 'posts' collection
-      // Ensure uid and createdAt are always present for rule evaluation
       await addDoc(collection(db, "posts"), {
         uid: user.uid,
         username: user.displayName || "Innovator",
@@ -126,7 +124,8 @@ function PostFormContent() {
         createdAt: serverTimestamp(),
         mediaType: mediaType || "text",
         innovationScore: Math.floor(Math.random() * 30) + 70,
-        likes: 0
+        likes: 0,
+        views: 0 // Initialize real-time views
       });
 
       toast({ title: "Success!", description: "Innovation published!" });
@@ -169,8 +168,8 @@ function PostFormContent() {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="bottom" className="rounded-t-[2.5rem] h-[35vh]">
-                  <SheetHeader className="sr-only">
-                    <SheetTitle>Upload Image</SheetTitle>
+                  <SheetHeader>
+                    <SheetTitle className="text-center text-[10px] font-black uppercase tracking-widest text-primary mb-4">Choose Photo</SheetTitle>
                   </SheetHeader>
                   <div className="flex flex-col items-center justify-center h-full gap-4 pb-8">
                     <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, "image")} />
@@ -187,8 +186,8 @@ function PostFormContent() {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="bottom" className="rounded-t-[2.5rem] h-[35vh]">
-                  <SheetHeader className="sr-only">
-                    <SheetTitle>Upload Video</SheetTitle>
+                  <SheetHeader>
+                    <SheetTitle className="text-center text-[10px] font-black uppercase tracking-widest text-secondary mb-4">Choose Video</SheetTitle>
                   </SheetHeader>
                   <div className="flex flex-col items-center justify-center h-full gap-4 pb-8">
                     <input type="file" ref={fileInputRef} className="hidden" accept="video/*" onChange={(e) => handleFileChange(e, "video")} />
