@@ -69,8 +69,8 @@ function FeedContent() {
         </Link>
       </header>
 
-      {/* Main Category Bar */}
-      <div className="flex w-full gap-2 -mx-4 px-4 pt-2 pb-4 mb-2 border-b overflow-x-auto no-scrollbar">
+      {/* Main Category Bar - Updated for Full Width */}
+      <div className="flex w-full gap-3 py-2 pb-4 mb-2 border-b">
         {["All", "Meme"].map((cat) => (
           <Button 
             key={cat} 
@@ -80,8 +80,10 @@ function FeedContent() {
               if (cat !== "Meme") setMemeType("all");
             }}
             className={cn(
-              "flex-1 min-w-[80px] rounded-full h-9 text-[10px] font-black uppercase tracking-widest transition-all",
-              cat === activeCategory ? "bg-primary text-white shadow-lg" : "bg-white text-muted-foreground"
+              "flex-1 rounded-full h-10 text-[11px] font-black uppercase tracking-widest transition-all",
+              cat === activeCategory 
+                ? "bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]" 
+                : "bg-white text-muted-foreground border border-border"
             )}
           >
             {cat}
