@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { 
-  Settings, LogOut, Loader2, Palette, Plus, Move, Maximize2, RotateCw, Check, X, Camera, Image as ImageIcon, Sticker as StickerIcon, Trash2
+  Settings, LogOut, Loader2, Palette, Plus, Move, Maximize2, RotateCw, Check, X, Camera, Image as ImageIcon, Sticker as StickerIcon, Trash2, Video, Type
 } from "lucide-react";
 import { 
   DropdownMenu, 
@@ -18,6 +18,7 @@ import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Image from "next/image";
 import { useUser, useAuth, useFirestore, useDoc, useMemoFirebase, useCollection } from "@/firebase";
 import { signOut } from "firebase/auth";
@@ -175,17 +176,14 @@ export default function ProfilePage() {
   };
 
   const handleStickerPointerDown = (e: React.PointerEvent, id: string) => {
-    // REQUIREMENT: No interaction if not in Edit Mode
     if (!isEditMode) return;
     e.stopPropagation();
     
     const sticker = localProfile.stickers.find(s => s.id === id);
     if (!sticker) return;
 
-    // Set selection
     setSelectedStickerId(id);
     
-    // REQUIREMENT: Only allow drag if the optimize sheet is ALREADY open for this sticker
     if (isStickerSheetOpen && selectedStickerId === id) {
       setDragStart({
         x: e.clientX,
@@ -195,7 +193,6 @@ export default function ProfilePage() {
       });
       (e.target as HTMLElement).setPointerCapture(e.pointerId);
     } else {
-      // First click opens the sheet
       setIsStickerSheetOpen(true);
     }
   };
@@ -210,7 +207,6 @@ export default function ProfilePage() {
     const dx = ((e.clientX - dragStart.x) / rect.width) * 100;
     const dy = ((e.clientY - dragStart.y) / rect.height) * 100;
 
-    // Boundary: Clamping Y to max 60% so it doesn't cover posts
     const newX = Math.max(0, Math.min(100, dragStart.stickerX + dx));
     const newY = Math.max(0, Math.min(60, dragStart.stickerY + dy));
 
@@ -236,6 +232,11 @@ export default function ProfilePage() {
   const contrastHeader = getContrastColor(headerColor);
   const selectedSticker = localProfile.stickers.find(s => s.id === selectedStickerId);
 
+  const filteredPosts = (type: string) => {
+    if (!userPosts) return [];
+    return userPosts.filter(p => p.mediaType === type);
+  };
+
   return (
     <div 
       id="profile-scroll-container"
@@ -249,7 +250,6 @@ export default function ProfilePage() {
             key={sticker.id} 
             className={cn(
               "absolute", 
-              // REQUIREMENT: Totally non-clickable if not in Edit Mode
               isEditMode ? "pointer-events-auto cursor-pointer" : "pointer-events-none"
             )} 
             onPointerDown={(e) => handleStickerPointerDown(e, sticker.id)}
@@ -349,7 +349,7 @@ export default function ProfilePage() {
             <div className="w-full space-y-4 pt-4">
               <div className="space-y-1">
                 <Label className="text-[10px] font-black uppercase opacity-40 ml-1">Name</Label>
-                <Input value={localProfile.name} onChange={e => setLocalProfile(p => ({ ...p, name: e.target.value }))} className="text-center font-black uppercase text-xl h-14 rounded-2xl border-primary/20 bg-white/50" placeholder="Your Name" />
+                <input value={localProfile.name} onChange={e => setLocalProfile(p => ({ ...p, name: e.target.value }))} className="w-full text-center font-black uppercase text-xl h-14 rounded-2xl border-primary/20 bg-white/50 outline-none" placeholder="Your Name" />
               </div>
               <div className="space-y-1">
                 <Label className="text-[10px] font-black uppercase opacity-40 ml-1">Mission Bio</Label>
@@ -370,7 +370,6 @@ export default function ProfilePage() {
               <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{localProfile.name}</h2>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>@{profileData?.username || "user"}</p>
               
-              {/* Bio Bar with High Z-index and Premium Shadow that falls over subsequent sections */}
               <div 
                 className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] border-primary/5 relative z-[60]" 
                 style={{ backgroundColor: colors.bioCard || "hsl(var(--card))" }}
@@ -402,27 +401,38 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="px-6 py-10 space-y-6 relative bg-background">
-            <div className="flex items-center gap-3">
-               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Your Innovations</span>
-               <div className="flex-1 h-px bg-primary/10" />
-            </div>
-            
-            <div className="space-y-8">
-              {isPostsLoading ? (
-                <div className="flex justify-center py-10"><Loader2 className="animate-spin text-primary" /></div>
-              ) : userPosts && userPosts.length > 0 ? (
-                userPosts.map((post) => (
-                  <div key={post.id} className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-                    <IdeaCard idea={post as any} />
-                  </div>
-                ))
-              ) : (
-                <div className="py-20 text-center space-y-4 opacity-30">
-                  <p className="text-[10px] font-black uppercase tracking-widest">No innovations published yet</p>
-                </div>
-              )}
-            </div>
+          <div className="px-6 py-10 space-y-8 relative bg-background">
+            <Tabs defaultValue="image" className="w-full">
+              <TabsList className="w-full h-14 bg-muted/30 rounded-full p-1 mb-8">
+                <TabsTrigger value="image" className="flex-1 rounded-full text-[10px] font-black uppercase tracking-widest gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
+                  <ImageIcon size={14} /> Images
+                </TabsTrigger>
+                <TabsTrigger value="video" className="flex-1 rounded-full text-[10px] font-black uppercase tracking-widest gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
+                  <Video size={14} /> Videos
+                </TabsTrigger>
+                <TabsTrigger value="text" className="flex-1 rounded-full text-[10px] font-black uppercase tracking-widest gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
+                  <Type size={14} /> Ideas
+                </TabsTrigger>
+              </TabsList>
+
+              {["image", "video", "text"].map((type) => (
+                <TabsContent key={type} value={type} className="outline-none space-y-8">
+                  {isPostsLoading ? (
+                    <div className="flex justify-center py-10"><Loader2 className="animate-spin text-primary" /></div>
+                  ) : filteredPosts(type).length > 0 ? (
+                    filteredPosts(type).map((post) => (
+                      <div key={post.id} className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <IdeaCard idea={post as any} />
+                      </div>
+                    ))
+                  ) : (
+                    <div className="py-20 text-center space-y-4 opacity-30">
+                      <p className="text-[10px] font-black uppercase tracking-widest">No {type} posts found</p>
+                    </div>
+                  )}
+                </TabsContent>
+              ))}
+            </Tabs>
           </div>
         </div>
       </div>
