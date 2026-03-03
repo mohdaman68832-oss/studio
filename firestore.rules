@@ -14,9 +14,9 @@ service cloud.firestore {
 
     // Private Chats: Explicit list/get permissions for participants
     match /privateChats/{chatId} {
-      // Allow read (get and list) if user is a participant
-      // This supports the Hub page query: where("participants", "array-contains", uid)
-      allow read: if isAuth() && (request.auth.uid in resource.data.participants);
+      // Allow read (get and list) if user is a participant. 
+      // Using .get() for null-safety during index building.
+      allow read: if isAuth() && (request.auth.uid in resource.data.get('participants', []));
       
       // Allow creation if the current user is one of the participants
       allow create: if isAuth() && (request.auth.uid in request.resource.data.participants);

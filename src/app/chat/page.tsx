@@ -66,6 +66,7 @@ export default function HubPage() {
   const [userSearchResults, setUserSearchResults] = useState<any[]>([]);
   const [isSearchingUsers, setIsSearchingUsers] = useState(false);
 
+  // Optimized query for Hub Feed - strictly matches composite index: participants (array-contains) + timestamp (desc)
   const privateChatsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
@@ -206,7 +207,8 @@ export default function HubPage() {
             </div>
           ) : privateChats && privateChats.length > 0 ? (
             privateChats.map((chat) => {
-              const recipientId = chat.participants.find((id: string) => id !== user.uid);
+              const recipientId = chat.participants?.find((id: string) => id !== user.uid);
+              if (!recipientId) return null;
               return (
                 <Link key={chat.id} href={`/chat/${chat.id}`}>
                   <div className="bg-card p-5 rounded-[2.5rem] border border-border/50 shadow-md hover:border-primary transition-all group active:scale-[0.98]">
@@ -223,7 +225,7 @@ export default function HubPage() {
             <div className="py-24 text-center space-y-4 opacity-30 flex flex-col items-center">
               <MessageCircle size={48} className="text-primary/20" />
               <p className="text-[10px] font-black uppercase tracking-[0.2em]">Communication Hub Empty</p>
-              <p className="text-[9px] font-medium italic px-10">Use the search bar above to connect with other innovators.</p>
+              <p className="text-[9px] font-medium italic px-10 text-muted-foreground text-center">Use the search bar above to connect with other innovators.</p>
             </div>
           )}
         </TabsContent>

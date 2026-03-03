@@ -8,13 +8,13 @@ import { getFirestore, Firestore } from 'firebase/firestore';
 /**
  * Truly Singleton Firebase Initialization for Next.js 15 / Turbopack.
  * This ensures only one instance of each service exists even across HMR.
+ * We store instances on globalThis/window to prevent "Internal Assertion" errors.
  */
 let cachedApp: FirebaseApp | null = null;
 let cachedFirestore: Firestore | null = null;
 let cachedAuth: Auth | null = null;
 
 export function initializeFirebase() {
-  // Use globalThis to persist instances across Hot Module Reloads in development
   if (typeof window !== 'undefined') {
     const win = window as any;
     if (win._firebaseApp) cachedApp = win._firebaseApp;
