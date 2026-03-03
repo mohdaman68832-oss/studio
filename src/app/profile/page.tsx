@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -152,7 +153,7 @@ export default function ProfilePage() {
       else if (type === 'banner') setLocalProfile(p => ({ ...p, banner: base64 }));
       else if (type === 'sticker') {
         const id = Math.random().toString(36).substr(2, 9);
-        const newSticker: Sticker = { id, url: base64, x: 50, y: 50, rotation: 0, scale: 1 };
+        const newSticker: Sticker = { id, url: base64, x: 50, y: 30, rotation: 0, scale: 1 };
         setLocalProfile(p => ({ ...p, stickers: [...p.stickers, newSticker] }));
         setSelectedStickerId(id);
         setIsStickerSheetOpen(true);
@@ -202,8 +203,12 @@ export default function ProfilePage() {
     const dx = ((e.clientX - dragStart.x) / rect.width) * 100;
     const dy = ((e.clientY - dragStart.y) / rect.height) * 100;
 
-    updateSticker(id, 'x', Math.max(0, Math.min(100, dragStart.stickerX + dx)));
-    updateSticker(id, 'y', Math.max(0, Math.min(100, dragStart.stickerY + dy)));
+    // INVISIBLE LINE CONTROL: Clamping Y to max 60% so it doesn't cover posts
+    const newX = Math.max(0, Math.min(100, dragStart.stickerX + dx));
+    const newY = Math.max(0, Math.min(60, dragStart.stickerY + dy));
+
+    updateSticker(id, 'x', newX);
+    updateSticker(id, 'y', newY);
   };
 
   const handleStickerPointerUp = (e: React.PointerEvent) => {
@@ -231,7 +236,8 @@ export default function ProfilePage() {
       className="max-w-md mx-auto min-h-screen pb-24 relative overflow-x-hidden flex flex-col" 
       style={{ backgroundColor: colors.background || "var(--background)" }}
     >
-      <div className="absolute inset-0 pointer-events-none z-[60]">
+      {/* LAYER 1: Stickers (Behind text) */}
+      <div className="absolute inset-0 pointer-events-none z-10">
         {localProfile.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
@@ -259,9 +265,9 @@ export default function ProfilePage() {
         ))}
       </div>
 
-      <div className="relative w-full shrink-0">
+      <div className="relative w-full shrink-0 z-[70]">
         <div className="h-16 w-full" style={{ backgroundColor: headerColor }} />
-        <header className="absolute top-0 left-0 right-0 px-6 py-5 flex justify-between items-center z-[70]">
+        <header className="absolute top-0 left-0 right-0 px-6 py-5 flex justify-between items-center">
           {isEditMode ? (
              <Button variant="ghost" size="icon" onClick={() => setIsEditMode(false)} className="rounded-full bg-black/20 backdrop-blur-md">
                <X size={24} className="text-white" />
@@ -295,7 +301,7 @@ export default function ProfilePage() {
           </div>
         </header>
 
-        <div className="relative">
+        <div className="relative z-0">
           <div className="h-56 w-full relative overflow-hidden group">
             <Image 
               src={localProfile.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} 
@@ -328,8 +334,9 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <div className="w-full relative mt-4">
-        <div style={{ backgroundColor: colors.userInfo }} className="px-6 flex flex-col items-center">
+      {/* LAYER 2: Text Layers (On top of stickers) */}
+      <div className="w-full relative mt-4 z-20">
+        <div style={{ backgroundColor: colors.userInfo }} className="px-6 flex flex-col items-center relative">
           {isEditMode ? (
             <div className="w-full space-y-4 pt-4">
               <div className="space-y-1">
@@ -363,7 +370,7 @@ export default function ProfilePage() {
           )}
         </div>
 
-        <div style={{ backgroundColor: colors.statsSection }} className="w-full py-10 px-10">
+        <div style={{ backgroundColor: colors.statsSection }} className="w-full py-10 px-10 relative">
           <div className="grid grid-cols-3 gap-6 w-full">
             <div className="text-center">
               <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{dynamicPostCount}</p>
@@ -380,7 +387,8 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <div className="px-6 py-10 space-y-6">
+        {/* POSTS SECTION (Restricted Area) */}
+        <div className="px-6 py-10 space-y-6 relative bg-background z-30">
           <div className="flex items-center gap-3">
              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Your Innovations</span>
              <div className="flex-1 h-px bg-primary/10" />
@@ -413,12 +421,12 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* Fine-Tune Sticker Hub (Popup) */}
+      {/* LAYER 3: Fine-Tune Sticker Hub (Always on top) */}
       <Sheet open={isStickerSheetOpen} onOpenChange={setIsStickerSheetOpen} modal={false}>
         <SheetContent 
           side="bottom" 
           hideOverlay={true}
-          className="rounded-t-[3rem] h-auto max-h-[45vh] bg-white/95 backdrop-blur-xl border-t-2 border-primary/10 shadow-[0_-20px_50px_rgba(0,0,0,0.1)] p-0 overflow-hidden flex flex-col pointer-events-auto"
+          className="rounded-t-[3rem] h-auto max-h-[45vh] bg-white/95 backdrop-blur-xl border-t-2 border-primary/10 shadow-[0_-20px_50px_rgba(0,0,0,0.1)] p-0 overflow-hidden flex flex-col pointer-events-auto z-[100]"
         >
           <SheetHeader className="p-4 border-b flex flex-row items-center justify-between bg-white/50">
             <div className="flex items-center gap-2">
