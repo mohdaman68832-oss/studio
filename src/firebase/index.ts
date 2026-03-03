@@ -21,24 +21,18 @@ interface FirebaseInstances {
   auth: Auth;
 }
 
+/**
+ * Professional Singleton Initialization
+ * Optimized for development environments with frequent hot-reloads.
+ */
 export function initializeFirebase(): FirebaseInstances {
-  // Client-side: Persist on globalThis to survive Turbopack HMR reloads
   if (typeof window !== 'undefined') {
+    // Client-side singleton pattern using globalThis
     if (!globalThis._firebaseApp) {
-      try {
-        const app = initializeApp(firebaseConfig);
-        globalThis._firebaseApp = app;
-        globalThis._firestore = getFirestore(app);
-        globalThis._auth = getAuth(app);
-      } catch (e) {
-        if (getApps().length) {
-          globalThis._firebaseApp = getApp();
-          globalThis._firestore = getFirestore(globalThis._firebaseApp);
-          globalThis._auth = getAuth(globalThis._firebaseApp);
-        } else {
-          throw e;
-        }
-      }
+      const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+      globalThis._firebaseApp = app;
+      globalThis._firestore = getFirestore(app);
+      globalThis._auth = getAuth(app);
     }
 
     return {
@@ -48,7 +42,7 @@ export function initializeFirebase(): FirebaseInstances {
     };
   }
 
-  // SSR Fallback
+  // SSR Fallback (Non-persistent for server renders)
   const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
   return {
     firebaseApp: app,

@@ -42,7 +42,7 @@ export function useCollection<T = any>(
     
     const auth = getAuth();
     
-    // Robust Auth State Management
+    // Robust Auth State Management to prevent early permission errors
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (!user) {
         setIsLoading(false);
@@ -66,24 +66,32 @@ export function useCollection<T = any>(
           setIsLoading(false);
         },
         async (err: FirestoreError) => {
-          console.error("Firestore useCollection Error:", err);
+          // Identify if it's an index or permission error
+          const isIndexError = err.code === 'failed-precondition' || err.message.toLowerCase().includes('index');
           
-          let path = "unknown_collection";
-          try {
-            const anyRef = memoizedTargetRefOrQuery as any;
-            path = anyRef.path || (anyRef._query?.path?.segments?.join('/')) || "collection";
-          } catch (e) {}
+          if (!isIndexError) {
+            console.error("Firestore Permission Error:", err);
+            
+            let path = "unknown_collection";
+            try {
+              const anyRef = memoizedTargetRefOrQuery as any;
+              path = anyRef.path || (anyRef._query?.path?.segments?.join('/')) || "collection";
+            } catch (e) {}
 
-          const contextualError = new FirestorePermissionError({
-            operation: 'list',
-            path,
-          });
+            const contextualError = new FirestorePermissionError({
+              operation: 'list',
+              path,
+            });
 
-          setError(contextualError);
+            setError(contextualError);
+            errorEmitter.emit('permission-error', contextualError);
+          } else {
+            console.error("Firestore Index Required Error:", err.message);
+            setError(err);
+          }
+          
           setData(null);
           setIsLoading(false);
-          
-          errorEmitter.emit('permission-error', contextualError);
         }
       );
 

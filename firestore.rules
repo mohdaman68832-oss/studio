@@ -13,10 +13,10 @@ service cloud.firestore {
     }
 
     // Private Chats: Explicit list permission for array-contains queries
+    // Aligned with the required composite index (participants array + timestamp desc)
     match /privateChats/{chatId} {
-      // Allows list query if participants filter matches authenticated user
-      // and get requests if user is a participant
-      allow read: if isAuth() && (request.auth.uid in resource.data.participants);
+      allow get: if isAuth() && (request.auth.uid in resource.data.participants);
+      allow list: if isAuth() && (request.auth.uid in resource.data.participants);
       
       allow create: if isAuth() && (request.auth.uid in request.resource.data.participants);
       
