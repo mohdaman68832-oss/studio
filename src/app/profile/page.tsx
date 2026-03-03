@@ -416,41 +416,56 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* Touch Optimization Sheet (Popat) */}
-      <Sheet open={isStickerSheetOpen} onOpenChange={setIsStickerSheetOpen}>
-        <SheetContent side="bottom" className="rounded-t-[3rem] h-[50vh] bg-white border-none shadow-[0_-20px_50px_rgba(0,0,0,0.1)] p-0 overflow-hidden flex flex-col">
-          <SheetHeader className="p-6 border-b flex flex-row items-center justify-between">
-            <SheetTitle className="text-xl font-black uppercase text-primary">Fine-Tune Sticker</SheetTitle>
-            <Button variant="ghost" size="icon" onClick={() => setIsStickerSheetOpen(false)} className="rounded-full bg-muted/50"><X size={20}/></Button>
+      {/* Fine-Tune Sticker Hub (Popup) */}
+      <Sheet open={isStickerSheetOpen} onOpenChange={setIsStickerSheetOpen} modal={false}>
+        <SheetContent 
+          side="bottom" 
+          className="rounded-t-[3rem] h-auto max-h-[45vh] bg-white/95 backdrop-blur-xl border-t-2 border-primary/10 shadow-[0_-20px_50px_rgba(0,0,0,0.1)] p-0 overflow-hidden flex flex-col pointer-events-auto"
+        >
+          <SheetHeader className="p-4 border-b flex flex-row items-center justify-between bg-white/50">
+            <div className="flex items-center gap-2">
+              <div className="bg-primary/10 p-1.5 rounded-lg"><StickerIcon size={16} className="text-primary"/></div>
+              <SheetTitle className="text-sm font-black uppercase tracking-tight text-primary">Fine-Tune Sticker</SheetTitle>
+            </div>
+            <Button variant="ghost" size="icon" onClick={() => setIsStickerSheetOpen(false)} className="rounded-full h-8 w-8 bg-muted/50 hover:bg-muted"><Check size={18}/></Button>
           </SheetHeader>
           
-          <div className="flex-1 overflow-y-auto p-8 space-y-10 no-scrollbar">
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar">
             {selectedSticker && (
-              <div className="space-y-8">
-                <div className="grid grid-cols-1 gap-8">
-                  <div className="space-y-4">
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 gap-5">
+                  {/* Compact Rotation Control */}
+                  <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="flex items-center gap-2 text-[11px] font-black uppercase text-muted-foreground"><RotateCw size={16} className="text-primary"/> Rotation Hub</span>
-                      <span className="text-xs font-black text-primary bg-primary/10 px-3 py-1 rounded-lg">{selectedSticker.rotation}°</span>
+                      <span className="flex items-center gap-2 text-[10px] font-black uppercase text-muted-foreground"><RotateCw size={14} className="text-primary"/> Rotation Hub</span>
+                      <span className="text-[10px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-md">{selectedSticker.rotation}°</span>
                     </div>
-                    <Slider value={[selectedSticker.rotation]} min={0} max={360} step={1} onValueChange={([v]) => updateSticker(selectedSticker.id, 'rotation', v)} className="py-4" />
+                    <Slider value={[selectedSticker.rotation]} min={0} max={360} step={1} onValueChange={([v]) => updateSticker(selectedSticker.id, 'rotation', v)} />
                   </div>
 
-                  <div className="space-y-4">
+                  {/* Compact Size Control */}
+                  <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="flex items-center gap-2 text-[11px] font-black uppercase text-muted-foreground"><Maximize2 size={16} className="text-secondary"/> Sphere Size</span>
-                      <span className="text-xs font-black text-secondary bg-secondary/10 px-3 py-1 rounded-lg">{selectedSticker.scale.toFixed(1)}x</span>
+                      <span className="flex items-center gap-2 text-[10px] font-black uppercase text-muted-foreground"><Maximize2 size={14} className="text-secondary"/> Sphere Size</span>
+                      <span className="text-[10px] font-black text-secondary bg-secondary/10 px-2 py-0.5 rounded-md">{selectedSticker.scale.toFixed(1)}x</span>
                     </div>
-                    <Slider value={[selectedSticker.scale]} min={0.5} max={4} step={0.1} onValueChange={([v]) => updateSticker(selectedSticker.id, 'scale', v)} className="py-4" />
+                    <Slider value={[selectedSticker.scale]} min={0.5} max={4} step={0.1} onValueChange={([v]) => updateSticker(selectedSticker.id, 'scale', v)} />
                   </div>
                 </div>
 
-                <div className="flex gap-4 pt-4">
-                  <Button variant="outline" className="flex-1 h-16 rounded-[2rem] border-2 border-destructive/20 text-destructive font-black uppercase text-[11px] hover:bg-destructive hover:text-white transition-all" onClick={() => removeSticker(selectedSticker.id)}>
-                    <Trash2 size={18} className="mr-2" /> Delete
+                <div className="flex gap-3">
+                  <Button 
+                    variant="outline" 
+                    className="flex-1 h-12 rounded-2xl border-2 border-destructive/10 text-destructive font-black uppercase text-[10px] hover:bg-destructive hover:text-white transition-all gap-2" 
+                    onClick={() => removeSticker(selectedSticker.id)}
+                  >
+                    <Trash2 size={14} /> Delete
                   </Button>
-                  <Button className="flex-1 h-16 rounded-[2rem] bg-primary text-white font-black uppercase text-[11px] shadow-xl shadow-primary/20" onClick={() => setIsStickerSheetOpen(false)}>
-                    <Check size={18} className="mr-2" /> Done
+                  <Button 
+                    className="flex-1 h-12 rounded-2xl bg-primary text-white font-black uppercase text-[10px] shadow-lg shadow-primary/20 gap-2" 
+                    onClick={() => setIsStickerSheetOpen(false)}
+                  >
+                    <Check size={14} /> Done
                   </Button>
                 </div>
               </div>
