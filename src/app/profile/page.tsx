@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { 
-  Settings, LogOut, Loader2, UserCog, Palette, Plus, Move, Maximize2, RotateCw, Check, X, Camera, Image as ImageIcon, Sticker as StickerIcon
+  Settings, LogOut, Loader2, Palette, Plus, Move, Maximize2, RotateCw, Check, X, Camera, Image as ImageIcon, Sticker as StickerIcon, Trash2
 } from "lucide-react";
 import { 
   DropdownMenu, 
@@ -85,6 +85,8 @@ export default function ProfilePage() {
     stickers: [] as Sticker[],
     customColors: {} as CustomColors
   });
+
+  const [dragStart, setDragStart] = useState<{ x: number, y: number, stickerX: number, stickerY: number } | null>(null);
 
   const stickerInputRef = useRef<HTMLInputElement>(null);
   const profileInputRef = useRef<HTMLInputElement>(null);
@@ -172,6 +174,47 @@ export default function ProfilePage() {
     setIsStickerSheetOpen(false);
   };
 
+  // Sticker Drag Logic
+  const handleStickerPointerDown = (e: React.PointerEvent, id: string) => {
+    if (!isEditMode) return;
+    e.stopPropagation();
+    
+    const sticker = localProfile.stickers.find(s => s.id === id);
+    if (!sticker) return;
+
+    setSelectedStickerId(id);
+    
+    setDragStart({
+      x: e.clientX,
+      y: e.clientY,
+      stickerX: sticker.x,
+      stickerY: sticker.y
+    });
+
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  };
+
+  const handleStickerPointerMove = (e: React.PointerEvent, id: string) => {
+    if (!dragStart || !isEditMode || selectedStickerId !== id) return;
+    
+    const container = document.getElementById('profile-scroll-container');
+    if (!container) return;
+
+    const rect = container.getBoundingClientRect();
+    const dx = ((e.clientX - dragStart.x) / rect.width) * 100;
+    const dy = ((e.clientY - dragStart.y) / rect.height) * 100;
+
+    updateSticker(id, 'x', Math.max(0, Math.min(100, dragStart.stickerX + dx)));
+    updateSticker(id, 'y', Math.max(0, Math.min(100, dragStart.stickerY + dy)));
+  };
+
+  const handleStickerPointerUp = (e: React.PointerEvent) => {
+    setDragStart(null);
+    if (selectedStickerId && !isStickerSheetOpen) {
+      setIsStickerSheetOpen(true);
+    }
+  };
+
   if (isUserLoading || isProfileLoading) return (
     <div className="flex h-screen items-center justify-center bg-background">
       <Loader2 className="animate-spin text-primary h-8 w-8" />
@@ -185,26 +228,34 @@ export default function ProfilePage() {
   const selectedSticker = localProfile.stickers.find(s => s.id === selectedStickerId);
 
   return (
-    <div className="max-w-md mx-auto min-h-screen pb-24 relative overflow-x-hidden flex flex-col" style={{ backgroundColor: colors.background || "var(--background)" }}>
-      {/* Sticker Layer */}
+    <div 
+      id="profile-scroll-container"
+      className="max-w-md mx-auto min-h-screen pb-24 relative overflow-x-hidden flex flex-col" 
+      style={{ backgroundColor: colors.background || "var(--background)" }}
+    >
+      {/* Interactive Sticker Layer */}
       <div className="absolute inset-0 pointer-events-none z-[60]">
         {localProfile.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
-            className={cn("absolute", isEditMode && "pointer-events-auto cursor-pointer hover:ring-2 hover:ring-primary rounded-lg")} 
-            onClick={() => {
-              if (isEditMode) {
-                setSelectedStickerId(sticker.id);
-                setIsStickerSheetOpen(true);
-              }
-            }}
+            className={cn(
+              "absolute pointer-events-auto", 
+              isEditMode && "cursor-move active:scale-110 active:opacity-80 transition-transform duration-75"
+            )} 
+            onPointerDown={(e) => handleStickerPointerDown(e, sticker.id)}
+            onPointerMove={(e) => handleStickerPointerMove(e, sticker.id)}
+            onPointerUp={handleStickerPointerUp}
             style={{ 
               left: `${sticker.x}%`, 
               top: `${sticker.y}%`, 
-              transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg) scale(${sticker.scale})` 
+              transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg) scale(${sticker.scale})`,
+              touchAction: 'none'
             }}
           >
-            <div className="relative w-24 h-24">
+            <div className={cn(
+              "relative w-24 h-24",
+              isEditMode && selectedStickerId === sticker.id && "ring-4 ring-primary ring-offset-4 rounded-xl"
+            )}>
               <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized />
             </div>
           </div>
@@ -213,7 +264,7 @@ export default function ProfilePage() {
 
       <div className="relative w-full shrink-0">
         <div className="h-16 w-full" style={{ backgroundColor: headerColor }} />
-        <header className="absolute top-0 left-0 right-0 px-6 py-5 flex justify-between items-center z-50">
+        <header className="absolute top-0 left-0 right-0 px-6 py-5 flex justify-between items-center z-[70]">
           {isEditMode ? (
              <Button variant="ghost" size="icon" onClick={() => setIsEditMode(false)} className="rounded-full bg-black/20 backdrop-blur-md">
                <X size={24} className="text-white" />
@@ -225,7 +276,7 @@ export default function ProfilePage() {
           <div className="flex items-center gap-2">
             {isEditMode ? (
               <Button onClick={handleSave} disabled={isSaving} className="rounded-full h-10 px-6 bg-primary text-white font-black uppercase text-[10px] tracking-widest shadow-xl">
-                {isSaving ? <Loader2 size={16} className="animate-spin" /> : <><Check size={16} className="mr-2" /> Done</>}
+                {isSaving ? <Loader2 size={16} className="animate-spin" /> : <><Check size={16} className="mr-2" /> Save All</>}
               </Button>
             ) : (
               <DropdownMenu modal={false}>
@@ -257,7 +308,7 @@ export default function ProfilePage() {
               unoptimized 
             />
             {isEditMode && (
-              <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer" onClick={() => bannerInputRef.current?.click()}>
+              <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer z-10" onClick={() => bannerInputRef.current?.click()}>
                 <Camera size={32} className="text-white" />
                 <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, 'banner')} />
               </div>
@@ -284,12 +335,21 @@ export default function ProfilePage() {
         <div style={{ backgroundColor: colors.userInfo }} className="px-6 flex flex-col items-center">
           {isEditMode ? (
             <div className="w-full space-y-4 pt-4">
-              <Input value={localProfile.name} onChange={e => setLocalProfile(p => ({ ...p, name: e.target.value }))} className="text-center font-black uppercase text-xl h-12 rounded-2xl border-primary/20" placeholder="Name" />
-              <Textarea value={localProfile.bio} onChange={e => setLocalProfile(p => ({ ...p, bio: e.target.value }))} className="text-center font-medium text-xs rounded-2xl border-primary/20 min-h-[80px]" placeholder="Bio" />
+              <div className="space-y-1">
+                <Label className="text-[10px] font-black uppercase opacity-40 ml-1">Name</Label>
+                <Input value={localProfile.name} onChange={e => setLocalProfile(p => ({ ...p, name: e.target.value }))} className="text-center font-black uppercase text-xl h-14 rounded-2xl border-primary/20 bg-white/50" placeholder="Your Name" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] font-black uppercase opacity-40 ml-1">Mission Bio</Label>
+                <Textarea value={localProfile.bio} onChange={e => setLocalProfile(p => ({ ...p, bio: e.target.value }))} className="text-center font-medium text-xs rounded-2xl border-primary/20 min-h-[100px] bg-white/50" placeholder="What are you building?" />
+              </div>
               
-              <div className="grid grid-cols-5 gap-2">
+              <div className="grid grid-cols-5 gap-3 pt-2">
                 {(Object.keys(localProfile.customColors) as Array<keyof CustomColors>).map(key => (
-                   <input key={key} type="color" value={localProfile.customColors[key]} onChange={e => setLocalProfile(p => ({ ...p, customColors: { ...p.customColors, [key]: e.target.value } }))} className="w-full h-10 rounded-xl cursor-pointer bg-white p-1 border shadow-sm" />
+                   <div key={key} className="flex flex-col items-center gap-1">
+                     <input type="color" value={localProfile.customColors[key]} onChange={e => setLocalProfile(p => ({ ...p, customColors: { ...p.customColors, [key]: e.target.value } }))} className="w-full h-10 rounded-xl cursor-pointer bg-white p-1 border shadow-sm ring-primary/20 focus:ring-2" />
+                     <span className="text-[7px] font-black uppercase opacity-40 truncate w-full text-center">{key}</span>
+                   </div>
                 ))}
               </div>
             </div>
@@ -349,45 +409,49 @@ export default function ProfilePage() {
 
       {isEditMode && (
         <div className="fixed bottom-24 right-6 z-[100] flex flex-col gap-3">
-          <Button onClick={() => stickerInputRef.current?.click()} className="h-14 w-14 rounded-full bg-secondary text-white shadow-2xl animate-in zoom-in duration-300">
-            <Plus size={24} />
+          <Button onClick={() => stickerInputRef.current?.click()} className="h-16 w-16 rounded-full bg-secondary text-white shadow-2xl animate-in zoom-in duration-300 border-4 border-white">
+            <Plus size={32} />
           </Button>
           <input type="file" ref={stickerInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, 'sticker')} />
         </div>
       )}
 
-      {/* Sticker Optimization Sheet */}
+      {/* Touch Optimization Sheet (Popat) */}
       <Sheet open={isStickerSheetOpen} onOpenChange={setIsStickerSheetOpen}>
-        <SheetContent side="bottom" className="rounded-t-[3rem] h-[55vh] bg-white border-none shadow-2xl p-0 overflow-hidden flex flex-col">
+        <SheetContent side="bottom" className="rounded-t-[3rem] h-[50vh] bg-white border-none shadow-[0_-20px_50px_rgba(0,0,0,0.1)] p-0 overflow-hidden flex flex-col">
           <SheetHeader className="p-6 border-b flex flex-row items-center justify-between">
-            <SheetTitle className="text-xl font-black uppercase text-primary">Optimize Sticker</SheetTitle>
+            <SheetTitle className="text-xl font-black uppercase text-primary">Fine-Tune Sticker</SheetTitle>
+            <Button variant="ghost" size="icon" onClick={() => setIsStickerSheetOpen(false)} className="rounded-full bg-muted/50"><X size={20}/></Button>
           </SheetHeader>
           
-          <div className="flex-1 overflow-y-auto p-8 space-y-8 no-scrollbar">
+          <div className="flex-1 overflow-y-auto p-8 space-y-10 no-scrollbar">
             {selectedSticker && (
-              <div className="space-y-6">
-                <div className="space-y-5">
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center text-[10px] font-black uppercase"><span className="flex items-center gap-2"><Move size={14}/> Horizontal (X)</span><span>{selectedSticker.x}%</span></div>
-                    <Slider value={[selectedSticker.x]} max={100} step={1} onValueChange={([v]) => updateSticker(selectedSticker.id, 'x', v)} />
+              <div className="space-y-8">
+                <div className="grid grid-cols-1 gap-8">
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="flex items-center gap-2 text-[11px] font-black uppercase text-muted-foreground"><RotateCw size={16} className="text-primary"/> Rotation Hub</span>
+                      <span className="text-xs font-black text-primary bg-primary/10 px-3 py-1 rounded-lg">{selectedSticker.rotation}°</span>
+                    </div>
+                    <Slider value={[selectedSticker.rotation]} min={0} max={360} step={1} onValueChange={([v]) => updateSticker(selectedSticker.id, 'rotation', v)} className="py-4" />
                   </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center text-[10px] font-black uppercase"><span className="flex items-center gap-2"><Move size={14}/> Vertical (Y)</span><span>{selectedSticker.y}%</span></div>
-                    <Slider value={[selectedSticker.y]} max={100} step={1} onValueChange={([v]) => updateSticker(selectedSticker.id, 'y', v)} />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center text-[10px] font-black uppercase"><span className="flex items-center gap-2"><Maximize2 size={14}/> Size (Scale)</span><span>{selectedSticker.scale.toFixed(1)}x</span></div>
-                    <Slider value={[selectedSticker.scale]} min={0.5} max={3} step={0.1} onValueChange={([v]) => updateSticker(selectedSticker.id, 'scale', v)} />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center text-[10px] font-black uppercase"><span className="flex items-center gap-2"><RotateCw size={14}/> Rotation</span><span>{selectedSticker.rotation}°</span></div>
-                    <Slider value={[selectedSticker.rotation]} min={0} max={360} step={1} onValueChange={([v]) => updateSticker(selectedSticker.id, 'rotation', v)} />
+
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="flex items-center gap-2 text-[11px] font-black uppercase text-muted-foreground"><Maximize2 size={16} className="text-secondary"/> Sphere Size</span>
+                      <span className="text-xs font-black text-secondary bg-secondary/10 px-3 py-1 rounded-lg">{selectedSticker.scale.toFixed(1)}x</span>
+                    </div>
+                    <Slider value={[selectedSticker.scale]} min={0.5} max={4} step={0.1} onValueChange={([v]) => updateSticker(selectedSticker.id, 'scale', v)} className="py-4" />
                   </div>
                 </div>
 
                 <div className="flex gap-4 pt-4">
-                  <Button variant="outline" className="flex-1 h-14 rounded-2xl border-2 border-destructive/20 text-destructive font-black uppercase text-[10px] hover:bg-destructive hover:text-white" onClick={() => removeSticker(selectedSticker.id)}>Remove</Button>
-                  <Button className="flex-1 h-14 rounded-2xl bg-primary text-white font-black uppercase text-[10px]" onClick={() => setIsStickerSheetOpen(false)}>Done</Button>
+                  <Button variant="outline" className="flex-1 h-16 rounded-[2rem] border-2 border-destructive/20 text-destructive font-black uppercase text-[11px] hover:bg-destructive hover:text-white transition-all" onClick={() => removeSticker(selectedSticker.id)}>
+                    <Trash2 size={18} className="mr-2" /> Delete
+                  </Button>
+                  <Button className="flex-1 h-16 rounded-[2rem] bg-primary text-white font-black uppercase text-[11px] shadow-xl shadow-primary/20" onClick={() => setIsStickerSheetOpen(false)}>
+                    <Check size={18} className="mr-2" /> Done
+                  </Button>
                 </div>
               </div>
             )}
