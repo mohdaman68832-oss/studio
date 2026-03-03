@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef, useEffect, Suspense } from "react";
@@ -22,6 +23,8 @@ import Image from "next/image";
 import { 
   Sheet, 
   SheetContent, 
+  SheetHeader,
+  SheetTitle,
   SheetTrigger 
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -166,6 +169,9 @@ function PostFormContent() {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="bottom" className="rounded-t-[2.5rem] h-[35vh]">
+                  <SheetHeader className="sr-only">
+                    <SheetTitle>Upload Image</SheetTitle>
+                  </SheetHeader>
                   <div className="flex flex-col items-center justify-center h-full gap-4 pb-8">
                     <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, "image")} />
                     <Button onClick={() => fileInputRef.current?.click()} className="rounded-full px-10 h-12 font-black uppercase text-[10px] bg-primary text-white">Choose Photo</Button>
@@ -181,6 +187,9 @@ function PostFormContent() {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="bottom" className="rounded-t-[2.5rem] h-[35vh]">
+                  <SheetHeader className="sr-only">
+                    <SheetTitle>Upload Video</SheetTitle>
+                  </SheetHeader>
                   <div className="flex flex-col items-center justify-center h-full gap-4 pb-8">
                     <input type="file" ref={fileInputRef} className="hidden" accept="video/*" onChange={(e) => handleFileChange(e, "video")} />
                     <Button onClick={() => fileInputRef.current?.click()} className="rounded-full px-10 h-12 font-black uppercase text-[10px] bg-secondary text-white">Choose Video</Button>

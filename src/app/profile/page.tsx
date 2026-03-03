@@ -439,13 +439,13 @@ export default function ProfilePage() {
           hideOverlay={true}
           className="rounded-t-[3rem] h-auto max-h-[45vh] bg-white/95 backdrop-blur-xl border-t-2 border-primary/10 shadow-[0_-20px_50px_rgba(0,0,0,0.1)] p-0 overflow-hidden flex flex-col pointer-events-auto z-[100]"
         >
-          <div className="p-4 border-b flex flex-row items-center justify-between bg-white/50">
+          <SheetHeader className="p-4 border-b flex flex-row items-center justify-between bg-white/50 space-y-0">
             <div className="flex items-center gap-2">
               <div className="bg-primary/10 p-1.5 rounded-lg"><StickerIcon size={16} className="text-primary"/></div>
-              <h2 className="text-sm font-black uppercase tracking-tight text-primary">Fine-Tune Sticker</h2>
+              <SheetTitle className="text-sm font-black uppercase tracking-tight text-primary">Fine-Tune Sticker</SheetTitle>
             </div>
             <Button variant="ghost" size="icon" onClick={() => setIsStickerSheetOpen(false)} className="rounded-full h-8 w-8 bg-muted/50 hover:bg-muted"><Check size={18}/></Button>
-          </div>
+          </SheetHeader>
           
           <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar">
             {selectedSticker && (
