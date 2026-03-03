@@ -6,14 +6,15 @@ import { useEffect } from 'react';
 import { doc } from 'firebase/firestore';
 
 /**
- * Recreated Image-based Logo Loader
- * Features: Stylized M-Chat-Bubble, Moving Tiny Eyes, and Chat Tail.
+ * Recreated Image-based Logo Loader (Minimal Edition)
+ * Features: Stylized M-Chat-Bubble and Moving Tiny Eyes.
+ * Clutter removed as per request.
  */
 function LogoLoader() {
   return (
-    <div className="flex flex-col items-center gap-10 animate-in fade-in duration-700">
+    <div className="flex flex-col items-center justify-center animate-in fade-in duration-700">
       <div className="relative w-48 h-48 flex items-center justify-center">
-        {/* Character Body - Refined 'M' Chat Bubble Shape based on Image */}
+        {/* Character Body - Refined 'M' Chat Bubble Shape */}
         <div className="relative z-10 animate-bubble-sway">
           <svg width="140" height="140" viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
             {/* The main 'M' Chat Bubble Character Shape */}
@@ -25,23 +26,14 @@ function LogoLoader() {
             {/* Moving and Blinking Tiny Eyes */}
             <g className="animate-eye-look">
               <g className="animate-eye-blink">
-                <circle cx="40" cy="65" r="2" fill="white" />
-                <circle cx="100" cy="65" r="2" fill="white" />
+                <circle cx="45" cy="70" r="1.5" fill="white" />
+                <circle cx="95" cy="70" r="1.5" fill="white" />
               </g>
             </g>
             
             {/* Top-right Floating Accent Dot */}
-            <circle cx="130" cy="15" r="7" fill="#FF4500" className="animate-pulse" />
+            <circle cx="125" cy="20" r="6" fill="#FF4500" className="animate-pulse" />
           </svg>
-        </div>
-      </div>
-
-      <div className="flex flex-col items-center gap-2">
-        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary animate-pulse">
-          Launching Sphere
-        </p>
-        <div className="h-0.5 w-12 bg-primary/20 rounded-full overflow-hidden">
-          <div className="h-full bg-primary animate-progress-fast" />
         </div>
       </div>
     </div>
