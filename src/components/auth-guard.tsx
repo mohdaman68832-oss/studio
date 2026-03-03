@@ -7,26 +7,27 @@ import { doc } from 'firebase/firestore';
 
 /**
  * Animated Logo Loader Component
- * Refined Elegant Tiny Balanced Eyes with smooth horizontal sway.
+ * Clean version with the 'm' bubble and moving eyes.
+ * No orbital ring as requested.
  */
 function LogoLoader() {
   return (
-    <div className="flex flex-col items-center gap-8 animate-in fade-in duration-700">
-      <div className="relative w-20 h-20 flex items-center justify-center">
-        <div className="relative z-10 animate-bubble-sway scale-75">
+    <div className="flex flex-col items-center gap-10 animate-in fade-in duration-700">
+      <div className="relative w-40 h-40 flex items-center justify-center">
+        {/* M-Bubble Logo */}
+        <div className="relative z-10 animate-bubble-sway">
           <svg width="100" height="100" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path 
-              d="M20 40C20 28.9543 28.9543 20 40 20H80C91.0457 20 100 28.9543 100 40V70C100 81.0457 91.0457 90 80 90H45L20 105V40Z" 
+              d="M25 85 L12 105 V70 C12 45 30 30 45 30 C53 30 58 35 60 45 C62 35 67 30 75 30 C90 30 108 45 108 70 V85 H90 V70 C90 60 85 50 78 50 C72 50 68 60 68 70 V85 H48 V70 C48 60 42 50 35 50 C30 50 25 60 25 70 V85 Z" 
               fill="#FF4500" 
             />
             <g className="animate-eye-look">
               <g className="animate-eye-blink">
-                {/* Tiny Elegant Balanced Eyes */}
-                <rect x="58" y="58" width="2" height="4" rx="1" fill="white" />
-                <rect x="68" y="58" width="2" height="4" rx="1" fill="white" />
+                <circle cx="40" cy="62" r="2.5" fill="white" />
+                <circle cx="72" cy="62" r="2.5" fill="white" />
               </g>
             </g>
-            <circle cx="105" cy="15" r="8" fill="#FF4500" />
+            <circle cx="108" cy="18" r="6" fill="#FF4500" className="animate-pulse" />
           </svg>
         </div>
       </div>
