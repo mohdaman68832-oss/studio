@@ -13,7 +13,10 @@ import {
   Palette,
   Sticker as StickerIcon,
   X,
-  LayoutGrid
+  LayoutGrid,
+  Move,
+  Maximize2,
+  RotateCw
 } from "lucide-react";
 import { 
   DropdownMenu, 
@@ -25,6 +28,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import Image from "next/image";
 import { useUser, useAuth, useFirestore, useDoc, useMemoFirebase, useCollection } from "@/firebase";
 import { signOut } from "firebase/auth";
@@ -37,10 +41,10 @@ import { IdeaCard } from "@/components/feed/idea-card";
 interface Sticker {
   id: string;
   url: string;
-  x: number;
-  y: number;
-  rotation: number;
-  scale: number;
+  x: number; // percentage 0-100
+  y: number; // percentage 0-100
+  rotation: number; // degrees
+  scale: number; // multiplier
 }
 
 interface CustomColors {
@@ -79,6 +83,7 @@ export default function ProfilePage() {
   const [isOptimizeModalOpen, setIsOptimizeModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [selectedStickerId, setSelectedStickerId] = useState<string | null>(null);
   
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
@@ -95,8 +100,6 @@ export default function ProfilePage() {
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [db, user]);
   const { data: profileData, isLoading: isProfileLoading } = useDoc(profileRef);
 
-  // Dynamic post fetching for count and display - Crucial for "Single Write" architecture
-  // Requires Composite Index: posts (uid: Asc, createdAt: Desc)
   const userPostsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
@@ -162,13 +165,26 @@ export default function ProfilePage() {
   const addSticker = (url: string) => {
     const newSticker: Sticker = {
       id: Math.random().toString(36).substr(2, 9),
-      url, x: Math.random() * 80 + 10, y: Math.random() * 40 + 10, rotation: Math.random() * 20 - 10, scale: 1
+      url, 
+      x: 50, 
+      y: 30, 
+      rotation: 0, 
+      scale: 1
     };
     setFormData(prev => ({ ...prev, stickers: [...prev.stickers, newSticker] }));
+    setSelectedStickerId(newSticker.id);
+  };
+
+  const updateStickerProperty = (id: string, property: keyof Sticker, value: number) => {
+    setFormData(prev => ({
+      ...prev,
+      stickers: prev.stickers.map(s => s.id === id ? { ...s, [property]: value } : s)
+    }));
   };
 
   const removeSticker = (id: string) => {
     setFormData(prev => ({ ...prev, stickers: prev.stickers.filter(s => s.id !== id) }));
+    if (selectedStickerId === id) setSelectedStickerId(null);
   };
 
   if (isUserLoading || isProfileLoading) return (
@@ -181,8 +197,32 @@ export default function ProfilePage() {
   const headerColor = formData.customColors.header || "var(--primary)";
   const contrastHeader = getContrastColor(formData.customColors.header);
 
+  const selectedSticker = formData.stickers.find(s => s.id === selectedStickerId);
+
   return (
     <div className="max-w-md mx-auto min-h-screen pb-24 relative overflow-x-hidden flex flex-col" style={{ backgroundColor: formData.customColors.background || "var(--background)" }}>
+      {/* Visual Sticker Layer (Static for Preview) */}
+      <div className="absolute inset-0 pointer-events-none z-[60]">
+        {formData.stickers.map((sticker) => (
+          <div 
+            key={sticker.id} 
+            className="absolute" 
+            style={{ 
+              left: `${sticker.x}%`, 
+              top: `${sticker.y}%`, 
+              transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg) scale(${sticker.scale})` 
+            }}
+          >
+            <div className={cn(
+              "relative w-24 h-24",
+              selectedStickerId === sticker.id && "ring-4 ring-primary ring-offset-2 rounded-xl"
+            )}>
+              <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized />
+            </div>
+          </div>
+        ))}
+      </div>
+
       <div className="relative w-full shrink-0">
         <div className="h-16 w-full" style={{ backgroundColor: headerColor }} />
         <header className="absolute top-0 left-0 right-0 px-6 py-5 flex justify-between items-center z-50">
@@ -213,14 +253,6 @@ export default function ProfilePage() {
               <AvatarImage src={formData.profilePic} className="object-cover" />
               <AvatarFallback className="text-2xl font-black">{formData.name?.[0] || user.email?.[0]?.toUpperCase()}</AvatarFallback>
             </Avatar>
-          </div>
-
-          <div className="absolute inset-0 pointer-events-none z-30">
-            {formData.stickers.map((sticker) => (
-              <div key={sticker.id} className="absolute pointer-events-none" style={{ left: `${sticker.x}%`, top: `${sticker.y}%`, transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg) scale(${sticker.scale})` }}>
-                <div className="relative w-20 h-20"><Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized /></div>
-              </div>
-            ))}
           </div>
         </div>
       </div>
@@ -279,7 +311,7 @@ export default function ProfilePage() {
       </div>
 
       <Dialog open={isOptimizeModalOpen} onOpenChange={setIsOptimizeModalOpen}>
-        <DialogContent className="max-w-md w-[95%] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl max-h-[85vh] flex flex-col">
+        <DialogContent className="max-w-md w-[95%] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col">
           <div className="p-6 border-b shrink-0 flex items-center justify-between">
             <DialogTitle className="text-xl font-black uppercase text-primary">Optimize Profile</DialogTitle>
           </div>
@@ -295,46 +327,75 @@ export default function ProfilePage() {
             <div className="space-y-4">
               <Label className="text-[10px] font-black uppercase flex items-center gap-2"><Palette size={14}/> Background Color</Label>
               <div className="grid grid-cols-6 gap-2">
-                {['#FF4500', '#FFD700', '#000000', '#FFFFFF', '#F5F5F5', '#8B4513'].map(color => (
+                {['#FF4500', '#FFD700', '#000000', '#FFFFFF', '#F5F5F5', '#8B4513', '#E0F2F1', '#F3E5F5'].map(color => (
                   <button key={color} className="h-8 w-8 rounded-full border shadow-sm" style={{ backgroundColor: color }} onClick={() => setFormData(p => ({ ...p, customColors: { ...p.customColors, background: color } }))} />
                 ))}
               </div>
             </div>
 
-            <div className="space-y-4">
-              <Label className="text-[10px] font-black uppercase flex items-center gap-2"><Palette size={14}/> Header Color</Label>
-              <div className="grid grid-cols-6 gap-2">
-                {['#FF4500', '#FFD700', '#000000', '#FFFFFF', '#F5F5F5', '#8B4513'].map(color => (
-                  <button key={color} className="h-8 w-8 rounded-full border shadow-sm" style={{ backgroundColor: color }} onClick={() => setFormData(p => ({ ...p, customColors: { ...p.customColors, header: color } }))} />
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <Label className="text-[10px] font-black uppercase flex items-center gap-2"><StickerIcon size={14}/> Add Stickers</Label>
+            <div className="space-y-6 border-t pt-6">
+              <Label className="text-[10px] font-black uppercase flex items-center gap-2"><StickerIcon size={14}/> Sticker Hub</Label>
               <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
-                {["1", "2", "3", "4", "5", "6"].map(n => (
-                  <button key={n} className="shrink-0 w-16 h-16 rounded-2xl border-2 border-dashed p-1 hover:border-primary transition-all" onClick={() => addSticker(`https://picsum.photos/seed/sticker${n}/100/100`)}>
-                    <Image src={`https://picsum.photos/seed/sticker${n}/100/100`} alt="sticker" width={60} height={60} className="object-contain" />
+                {["rocket", "sparkles", "brain", "heart", "globe", "zap", "flame", "star"].map(n => (
+                  <button key={n} className="shrink-0 w-20 h-20 rounded-[1.5rem] border-2 border-dashed p-2 hover:border-primary transition-all bg-muted/10 flex items-center justify-center" onClick={() => addSticker(`https://picsum.photos/seed/sticker-${n}/200/200`)}>
+                    <Image src={`https://picsum.photos/seed/sticker-${n}/200/200`} alt="sticker" width={60} height={60} className="object-contain" unoptimized />
                   </button>
                 ))}
               </div>
+
+              {formData.stickers.length > 0 && (
+                <div className="space-y-4">
+                  <Label className="text-[10px] font-black uppercase">Active Stickers (Select to Edit)</Label>
+                  <div className="flex flex-wrap gap-3">
+                    {formData.stickers.map(s => (
+                      <button 
+                        key={s.id} 
+                        onClick={() => setSelectedStickerId(s.id)} 
+                        className={cn(
+                          "relative h-14 w-14 border rounded-[1rem] p-1 bg-muted/10 transition-all",
+                          selectedStickerId === s.id ? "border-primary ring-2 ring-primary/20 scale-110" : "border-border hover:border-primary/50"
+                        )}
+                      >
+                        <Image src={s.url} alt="s" width={50} height={50} className="object-contain" unoptimized />
+                        {selectedStickerId === s.id && (
+                          <div className="absolute -top-2 -right-2 bg-primary text-white rounded-full p-0.5"><X size={10} onClick={(e) => { e.stopPropagation(); removeSticker(s.id); }} /></div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedSticker && (
+                <div className="p-5 bg-primary/5 rounded-[2rem] border border-primary/10 space-y-6 animate-in slide-in-from-top-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[9px] font-black uppercase text-primary tracking-widest">Adjust Sticker</p>
+                    <Button variant="ghost" size="sm" onClick={() => setSelectedStickerId(null)} className="h-6 px-2 text-[8px] uppercase">Deselect</Button>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center"><Label className="text-[8px] font-black uppercase flex items-center gap-1"><Move size={10}/> Horizontal (X)</Label><span className="text-[8px] font-bold">{selectedSticker.x}%</span></div>
+                      <Slider value={[selectedSticker.x]} max={100} step={1} onValueChange={([v]) => updateStickerProperty(selectedSticker.id, 'x', v)} />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center"><Label className="text-[8px] font-black uppercase flex items-center gap-1"><Move size={10}/> Vertical (Y)</Label><span className="text-[8px] font-bold">{selectedSticker.y}%</span></div>
+                      <Slider value={[selectedSticker.y]} max={100} step={1} onValueChange={([v]) => updateStickerProperty(selectedSticker.id, 'y', v)} />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center"><Label className="text-[8px] font-black uppercase flex items-center gap-1"><Maximize2 size={10}/> Size (Scale)</Label><span className="text-[8px] font-bold">{selectedSticker.scale.toFixed(1)}x</span></div>
+                      <Slider value={[selectedSticker.scale]} min={0.5} max={3} step={0.1} onValueChange={([v]) => updateStickerProperty(selectedSticker.id, 'scale', v)} />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center"><Label className="text-[8px] font-black uppercase flex items-center gap-1"><RotateCw size={10}/> Rotation</Label><span className="text-[8px] font-bold">{selectedSticker.rotation}°</span></div>
+                      <Slider value={[selectedSticker.rotation]} min={0} max={360} step={1} onValueChange={([v]) => updateStickerProperty(selectedSticker.id, 'rotation', v)} />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
-            {formData.stickers.length > 0 && (
-              <div className="space-y-4">
-                <Label className="text-[10px] font-black uppercase">Active Stickers (Tap to remove)</Label>
-                <div className="flex flex-wrap gap-2">
-                  {formData.stickers.map(s => (
-                    <button key={s.id} onClick={() => removeSticker(s.id)} className="h-10 w-10 border rounded-lg p-1 bg-muted/20 hover:bg-destructive/10 transition-colors">
-                      <Image src={s.url} alt="s" width={40} height={40} className="object-contain" />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-4">
+            <div className="space-y-4 border-t pt-6">
               <Label className="text-[10px] font-black uppercase">Banner Image</Label>
               <div onClick={() => bannerInputRef.current?.click()} className="relative h-24 bg-muted rounded-2xl overflow-hidden border-2 border-dashed cursor-pointer hover:border-primary transition-all">
                 {formData.banner ? <Image src={formData.banner} alt="banner" fill className="object-cover" unoptimized /> : <Camera className="absolute inset-0 m-auto opacity-10" size={32} />}
@@ -348,7 +409,7 @@ export default function ProfilePage() {
           </div>
           <div className="p-6 border-t bg-white">
             <Button className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase shadow-xl" onClick={handleSaveProfile} disabled={isSaving}>
-              {isSaving ? <Loader2 className="animate-spin mr-2" /> : "Apply Changes"}
+              {isSaving ? <Loader2 className="animate-spin mr-2" /> : "Apply Transformations"}
             </Button>
           </div>
         </DialogContent>

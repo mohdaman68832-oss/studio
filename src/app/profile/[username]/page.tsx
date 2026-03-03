@@ -95,7 +95,6 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
 
   const startChat = () => {
     if (!currentUser || !profileData) return;
-    // CRITICAL: Deterministic sorted ID for 1:1 messaging
     const chatId = [currentUser.uid, profileData.id].sort().join("_");
     router.push(`/chat/${chatId}`);
   };
@@ -108,6 +107,25 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
 
   return (
     <div className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden flex flex-col" style={{ backgroundColor: colors.background || "var(--background)" }}>
+      {/* Visual Sticker Layer */}
+      <div className="absolute inset-0 pointer-events-none z-[60]">
+        {stickers.map((sticker) => (
+          <div 
+            key={sticker.id} 
+            className="absolute pointer-events-none select-none" 
+            style={{ 
+              left: `${sticker.x}%`, 
+              top: `${sticker.y}%`, 
+              transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`, 
+            }}
+          >
+            <div className="relative w-24 h-24">
+              <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized />
+            </div>
+          </div>
+        ))}
+      </div>
+
       <div className="relative w-full shrink-0">
         <div className="h-16 w-full" style={{ backgroundColor: colors.header || "var(--primary)" }} />
         <header className="absolute top-0 left-0 right-0 px-6 py-5 flex justify-between items-center z-50">
@@ -127,24 +145,6 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
               <AvatarImage src={profileData.profilePictureUrl} className="object-cover" />
               <AvatarFallback className="text-2xl font-black uppercase">{profileData.username?.[0]}</AvatarFallback>
             </Avatar>
-          </div>
-
-          <div className="absolute inset-0 pointer-events-none z-30">
-            {stickers.map((sticker) => (
-              <div 
-                key={sticker.id} 
-                className="absolute pointer-events-none select-none" 
-                style={{ 
-                  left: `${sticker.x}%`, 
-                  top: `${sticker.y}%`, 
-                  transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`, 
-                }}
-              >
-                <div className="relative w-24 h-24">
-                  <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized />
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </div>
