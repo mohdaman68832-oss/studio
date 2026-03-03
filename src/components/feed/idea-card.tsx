@@ -33,7 +33,16 @@ export function IdeaCard({ idea, priority = false }: IdeaCardProps) {
   const { user } = useUser();
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // PART 4: Confirm auth before Firestore calls
+  // Fetch author's live profile to get the latest logo
+  const authorProfileRef = useMemoFirebase(() => 
+    (db && idea.uid) ? doc(db, "userProfiles", idea.uid) : null
+  , [db, idea.uid]);
+  const { data: authorProfile } = useDoc(authorProfileRef);
+
+  // Fallback chain: Live Profile > Cached Post Avatar > Initial Placeholder
+  const liveAvatar = authorProfile?.profilePictureUrl || idea.userAvatar || "";
+  const liveUsername = authorProfile?.username || idea.username;
+
   const userLikeRef = useMemoFirebase(() => 
     (db && user && idea.id) ? doc(db, "posts", idea.id, "likes", user.uid) : null
   , [db, user, idea.id]);
@@ -79,12 +88,14 @@ export function IdeaCard({ idea, priority = false }: IdeaCardProps) {
   return (
     <div className="bg-card rounded-[2.5rem] idea-card-shadow overflow-hidden border border-border/50 p-5">
       <div className="flex items-center justify-between mb-1">
-        <Link href={`/profile/${idea.username}`} className="flex items-center gap-3 z-10">
-          <Avatar className="h-10 w-10 border-2">
-            <AvatarImage src={idea.userAvatar} />
-            <AvatarFallback>{idea.username?.[0]}</AvatarFallback>
+        <Link href={`/profile/${liveUsername}`} className="flex items-center gap-3 z-10">
+          <Avatar className="h-10 w-10 border-2 border-primary/5">
+            <AvatarImage src={liveAvatar} className="object-cover" />
+            <AvatarFallback className="text-[10px] font-black uppercase bg-primary/5 text-primary">
+              {liveUsername?.[0] || "U"}
+            </AvatarFallback>
           </Avatar>
-          <span className="text-sm font-black text-foreground">@{idea.username}</span>
+          <span className="text-sm font-black text-foreground">@{liveUsername}</span>
         </Link>
         <MoreHorizontal size={20} className="text-muted-foreground" />
       </div>

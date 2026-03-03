@@ -25,9 +25,18 @@ export default function IdeaDetailPage() {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Unified to 'posts' collection
+  // Main post data
   const ideaRef = useMemoFirebase(() => (db ? doc(db, "posts", ideaId) : null), [db, ideaId]);
   const { data: idea, isLoading: ideaLoading } = useDoc(ideaRef);
+
+  // Author live data for latest logo
+  const authorProfileRef = useMemoFirebase(() => 
+    (db && idea?.uid) ? doc(db, "userProfiles", idea.uid) : null
+  , [db, idea?.uid]);
+  const { data: authorProfile } = useDoc(authorProfileRef);
+
+  const liveAvatar = authorProfile?.profilePictureUrl || idea?.userAvatar || "";
+  const liveUsername = authorProfile?.username || idea?.username;
 
   const suggestionsQuery = useMemoFirebase(() => {
     if (!db) return null;
@@ -135,11 +144,13 @@ export default function IdeaDetailPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
-                  <AvatarImage src={idea?.userAvatar} />
-                  <AvatarFallback>{idea?.username?.[0] || "U"}</AvatarFallback>
+                  <AvatarImage src={liveAvatar} className="object-cover" />
+                  <AvatarFallback className="text-xs font-black uppercase bg-primary/5 text-primary">
+                    {liveUsername?.[0] || "U"}
+                  </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="text-sm font-black text-foreground">@{idea?.username}</p>
+                  <p className="text-sm font-black text-foreground">@{liveUsername}</p>
                   <p className="text-[10px] text-primary font-bold uppercase tracking-widest">{idea?.category}</p>
                 </div>
               </div>
