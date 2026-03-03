@@ -236,8 +236,8 @@ export default function ProfilePage() {
       className="max-w-md mx-auto min-h-screen pb-24 relative overflow-x-hidden flex flex-col" 
       style={{ backgroundColor: colors.background || "var(--background)" }}
     >
-      {/* LAYER 1: Stickers (Above banner/logo but behind text) */}
-      <div className="absolute inset-0 pointer-events-none z-[30]">
+      {/* LAYER 2: Stickers (Above Banner and Logo but behind text) */}
+      <div className="absolute inset-0 pointer-events-none z-[20]">
         {localProfile.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
@@ -265,9 +265,10 @@ export default function ProfilePage() {
         ))}
       </div>
 
-      <div className="relative w-full shrink-0 z-[70]">
+      {/* LAYER 1: Header/Banner/Logo Wrapper (Lowest layer for media) */}
+      <div className="relative w-full shrink-0 z-[10]">
         <div className="h-16 w-full" style={{ backgroundColor: headerColor }} />
-        <header className="absolute top-0 left-0 right-0 px-6 py-5 flex justify-between items-center">
+        <header className="absolute top-0 left-0 right-0 px-6 py-5 flex justify-between items-center z-[50]">
           {isEditMode ? (
              <Button variant="ghost" size="icon" onClick={() => setIsEditMode(false)} className="rounded-full bg-black/20 backdrop-blur-md">
                <X size={24} className="text-white" />
@@ -301,8 +302,8 @@ export default function ProfilePage() {
           </div>
         </header>
 
-        <div className="relative z-0">
-          <div className="h-56 w-full relative overflow-hidden group z-[10]">
+        <div className="relative">
+          <div className="h-56 w-full relative overflow-hidden group">
             <Image 
               src={localProfile.banner || `https://picsum.photos/seed/banner${user.uid}/800/400`} 
               alt="banner" 
@@ -318,7 +319,7 @@ export default function ProfilePage() {
             )}
           </div>
           <div className="px-6 -mt-16 flex flex-col items-center relative z-20">
-            <div className="relative group z-[10]">
+            <div className="relative group">
               <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-lg">
                 <AvatarImage src={localProfile.profilePic} className="object-cover" />
                 <AvatarFallback className="text-2xl font-black">{localProfile.name?.[0]?.toUpperCase() || "U"}</AvatarFallback>
@@ -334,8 +335,8 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* LAYER 2: Text Layers (On top of stickers) */}
-      <div className="w-full relative mt-4 z-[40]">
+      {/* LAYER 3: Text Layers (On top of stickers and Banner) */}
+      <div className="w-full relative mt-4 z-[30]">
         <div style={{ backgroundColor: colors.userInfo }} className="px-6 flex flex-col items-center relative">
           {isEditMode ? (
             <div className="w-full space-y-4 pt-4">
@@ -361,7 +362,12 @@ export default function ProfilePage() {
             <>
               <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{localProfile.name}</h2>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>@{profileData?.username || "user"}</p>
-              <div className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-sm border-primary/5" style={{ backgroundColor: colors.bioCard || "hsl(var(--card))" }}>
+              
+              {/* Bio Bar with Enhanced Shadow overlapping following content */}
+              <div 
+                className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] border-primary/5 relative z-10" 
+                style={{ backgroundColor: colors.bioCard || "hsl(var(--card))" }}
+              >
                 <p className="text-center text-[12px] leading-relaxed font-bold italic" style={{ color: getContrastColor(colors.bioCard) }}>
                   {localProfile.bio}
                 </p>
@@ -387,8 +393,8 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* POSTS SECTION */}
-        <div className="px-6 py-10 space-y-6 relative bg-background z-30">
+        {/* POSTS SECTION (Base Layer for content) */}
+        <div className="px-6 py-10 space-y-6 relative bg-background z-[10]">
           <div className="flex items-center gap-3">
              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Your Innovations</span>
              <div className="flex-1 h-px bg-primary/10" />
@@ -421,7 +427,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* LAYER 3: Fine-Tune Sticker Hub (Always on top) */}
+      {/* LAYER 4: Fine-Tune Sticker Hub (Always on top) */}
       <Sheet open={isStickerSheetOpen} onOpenChange={setIsStickerSheetOpen} modal={false}>
         <SheetContent 
           side="bottom" 
