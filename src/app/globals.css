@@ -98,6 +98,11 @@
   55%, 70% { transform: translateX(8px); }
 }
 
+@keyframes ring-rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 .animate-bubble-sway {
   animation: bubble-sway 3s ease-in-out infinite;
 }
@@ -109,6 +114,11 @@
 
 .animate-eye-look {
   animation: eye-look 4s ease-in-out infinite;
+}
+
+.animate-ring-rotate {
+  animation: ring-rotate 6s linear infinite;
+  transform-origin: center;
 }
 
 .animate-bubble-sway-fast {
