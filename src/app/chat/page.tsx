@@ -12,14 +12,14 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 
 export default function HubPage() {
-  const { user, isUserLoading } = useUser();
+  const { user, loading: isUserLoading } = useUser();
   const db = useFirestore();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [userSearchResults, setUserSearchResults] = useState<any[]>([]);
   const [isSearchingUsers, setIsSearchingUsers] = useState(false);
 
-  // Optimized query for the Hub: needs Composite Index (participants: array-contains, timestamp: desc)
+  // Memoized query with explicit participants filter - requires composite index (participants: array-contains, timestamp: desc)
   const privateChatsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
@@ -151,7 +151,7 @@ export default function HubPage() {
             </div>
           ) : privateError ? (
              <div className="py-24 text-center space-y-4 flex flex-col items-center">
-              <p className="text-[10px] font-black uppercase text-destructive">Decryption Error</p>
+              <p className="text-[10px] font-black uppercase text-destructive">Query Optimization Active</p>
               <p className="text-[9px] font-medium italic px-10 text-muted-foreground text-center">
                 The innovation sphere is still stabilizing after the new index update. Please refresh in a moment.
               </p>

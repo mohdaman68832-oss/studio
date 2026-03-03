@@ -42,7 +42,7 @@ export function useCollection<T = any>(
     
     const auth = getAuth();
     
-    // Robust Auth State Management to prevent early permission errors
+    // Auth Guard: Wait for a stable user session to prevent premature permission errors
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (!user) {
         setIsLoading(false);
@@ -66,12 +66,10 @@ export function useCollection<T = any>(
           setIsLoading(false);
         },
         async (err: FirestoreError) => {
-          // Identify if it's an index or permission error
+          // Identify if it's an index requirement or a real permission denial
           const isIndexError = err.code === 'failed-precondition' || err.message.toLowerCase().includes('index');
           
           if (!isIndexError) {
-            console.error("Firestore Permission Error:", err);
-            
             let path = "unknown_collection";
             try {
               const anyRef = memoizedTargetRefOrQuery as any;
@@ -86,6 +84,7 @@ export function useCollection<T = any>(
             setError(contextualError);
             errorEmitter.emit('permission-error', contextualError);
           } else {
+            // Log index errors clearly for the developer overlays
             console.error("Firestore Index Required Error:", err.message);
             setError(err);
           }

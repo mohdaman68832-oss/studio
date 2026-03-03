@@ -8,6 +8,7 @@ import { getFirestore, Firestore } from 'firebase/firestore';
 /**
  * Truly Singleton Firebase Initialization for Next.js 15 / Turbopack.
  * Survives HMR/Hot Reloads by caching instances on globalThis and window.
+ * This prevents the "Internal Assertion Failed" error.
  */
 let cachedApp: FirebaseApp | null = null;
 let cachedFirestore: Firestore | null = null;

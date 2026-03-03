@@ -12,9 +12,9 @@ service cloud.firestore {
       allow write: if isAuth() && request.auth.uid == userId;
     }
 
-    // Private Chats: Explicitly match the array-contains query for participants
+    // Private Chats: Optimized for array-contains queries and index verification
     match /privateChats/{chatId} {
-      // Optimized for index-based list queries
+      // Explicitly allow list operations for participants
       allow read: if isAuth() && (request.auth.uid in resource.data.participants);
       
       // Allow creation if the current user is one of the participants
