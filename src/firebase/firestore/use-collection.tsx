@@ -42,10 +42,13 @@ export function useCollection<T = any>(
     
     const auth = getAuth();
     
-    // Wait for authentication before firing query
+    // We strictly wait for the auth state to be resolved before attaching the listener.
+    // This prevents "Missing Permissions" errors that occur during the split-second
+    // when Firebase knows the user is logged in but hasn't propagated it to the query engine.
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (!user) {
         setIsLoading(true);
+        setData(null);
         return;
       }
 
@@ -67,7 +70,7 @@ export function useCollection<T = any>(
           let path = "unknown_collection";
           try {
             const anyRef = memoizedTargetRefOrQuery as any;
-            path = anyRef.path || (anyRef._query?.path?.segments?.join('/')) || "privateChats";
+            path = anyRef.path || (anyRef._query?.path?.segments?.join('/')) || "collection";
           } catch (e) {}
 
           const contextualError = new FirestorePermissionError({
@@ -78,6 +81,7 @@ export function useCollection<T = any>(
           setError(contextualError);
           setData(null);
           setIsLoading(false);
+          // Emit for the global listener
           errorEmitter.emit('permission-error', contextualError);
         }
       );

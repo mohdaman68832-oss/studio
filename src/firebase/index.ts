@@ -7,38 +7,35 @@ import { getFirestore, Firestore } from 'firebase/firestore';
 
 /**
  * Robust singleton SDK initialization for Next.js environments.
- * Prevents "INTERNAL ASSERTION FAILED" by caching instances globally on the client.
+ * Uses globalThis to ensure instances are preserved across HMR and Turbopack refreshes.
  */
-function getCachedSdks() {
-  if (typeof window === 'undefined') return null;
-  return (window as any)._firebaseSdks || null;
-}
-
-function setCachedSdks(sdks: any) {
-  if (typeof window !== 'undefined') {
-    (window as any)._firebaseSdks = sdks;
-  }
+declare global {
+  var _firebaseApp: FirebaseApp | undefined;
+  var _firestore: Firestore | undefined;
+  var _auth: Auth | undefined;
 }
 
 export function initializeFirebase() {
-  const existing = getCachedSdks();
-  if (existing) return existing;
-
-  let firebaseApp: FirebaseApp;
-  if (!getApps().length) {
-    firebaseApp = initializeApp(firebaseConfig);
-  } else {
-    firebaseApp = getApp();
+  if (typeof window === 'undefined') {
+    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+    return {
+      firebaseApp: app,
+      auth: getAuth(app),
+      firestore: getFirestore(app)
+    };
   }
 
-  const sdks = {
-    firebaseApp,
-    auth: getAuth(firebaseApp),
-    firestore: getFirestore(firebaseApp)
-  };
+  if (!globalThis._firebaseApp) {
+    globalThis._firebaseApp = initializeApp(firebaseConfig);
+    globalThis._firestore = getFirestore(globalThis._firebaseApp);
+    globalThis._auth = getAuth(globalThis._firebaseApp);
+  }
 
-  setCachedSdks(sdks);
-  return sdks;
+  return {
+    firebaseApp: globalThis._firebaseApp!,
+    firestore: globalThis._firestore!,
+    auth: globalThis._auth!,
+  };
 }
 
 export * from './provider';
