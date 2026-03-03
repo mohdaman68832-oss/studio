@@ -1,11 +1,10 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { 
-  ChevronLeft, Loader2, Camera, Palette, Sticker as StickerIcon, X, Plus, Move, Maximize2, RotateCw, Check, Image as ImageIcon
+  ChevronLeft, Loader2, Camera, Palette, Sticker as StickerIcon, Plus, Move, Maximize2, RotateCw, Image as ImageIcon
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,16 +42,6 @@ const toBase64 = (file: File): Promise<string> =>
     reader.onload = () => resolve(reader.result as string);
     reader.onerror = (error) => reject(error);
   });
-
-function getContrastColor(hexColor: string | undefined): string {
-  if (!hexColor || !hexColor.startsWith('#')) return '#FFFFFF';
-  const hex = hexColor.replace('#', '');
-  const r = parseInt(hex.substring(0, 2), 16);
-  const g = parseInt(hex.substring(2, 4), 16);
-  const b = parseInt(hex.substring(4, 6), 16);
-  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-  return brightness >= 128 ? 'hsl(var(--primary))' : '#FFFFFF';
-}
 
 export default function ProfileEditPage() {
   const { user, loading: isUserLoading } = useUser();
@@ -307,7 +296,6 @@ export default function ProfileEditPage() {
         <SheetContent side="bottom" className="rounded-t-[3rem] h-[60vh] bg-white border-none shadow-2xl p-0 overflow-hidden flex flex-col">
           <SheetHeader className="p-6 border-b flex flex-row items-center justify-between">
             <SheetTitle className="text-xl font-black uppercase text-primary">Optimize Sticker</SheetTitle>
-            <Button variant="ghost" size="icon" onClick={() => setIsStickerSheetOpen(false)} className="rounded-full"><X size={20} /></Button>
           </SheetHeader>
           
           <div className="flex-1 overflow-y-auto p-8 space-y-8 no-scrollbar">
@@ -320,7 +308,7 @@ export default function ProfileEditPage() {
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between items-center text-[10px] font-black uppercase"><span className="flex items-center gap-2"><Move size={14}/> Vertical (Y)</span><span>{selectedSticker.y}%</span></div>
-                    <Slider value={[selectedSticker.x]} max={100} step={1} onValueChange={([v]) => updateSticker(selectedSticker.id, 'y', v)} />
+                    <Slider value={[selectedSticker.y]} max={100} step={1} onValueChange={([v]) => updateSticker(selectedSticker.id, 'y', v)} />
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between items-center text-[10px] font-black uppercase"><span className="flex items-center gap-2"><Maximize2 size={14}/> Size (Scale)</span><span>{selectedSticker.scale.toFixed(1)}x</span></div>
