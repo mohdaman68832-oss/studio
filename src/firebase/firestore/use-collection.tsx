@@ -40,11 +40,10 @@ export function useCollection<T = any>(
       return;
     }
     
+    // Obtain auth instance from our singleton initialization
     const auth = getAuth();
     
-    // We strictly wait for the auth state to be resolved before attaching the listener.
-    // This prevents "Missing Permissions" errors that occur during the split-second
-    // when Firebase knows the user is logged in but hasn't propagated it to the query engine.
+    // Wait for auth to be resolved.
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (!user) {
         setIsLoading(true);

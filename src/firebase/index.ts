@@ -6,8 +6,8 @@ import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 
 /**
- * Robust singleton SDK initialization for Next.js environments.
- * Uses globalThis to ensure instances are preserved across HMR and Turbopack refreshes.
+ * Robust singleton SDK initialization for Next.js 15 environments.
+ * Prevents "Internal Assertion Failed" by caching instances on globalThis.
  */
 declare global {
   var _firebaseApp: FirebaseApp | undefined;
@@ -16,6 +16,7 @@ declare global {
 }
 
 export function initializeFirebase() {
+  // SSR check
   if (typeof window === 'undefined') {
     const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     return {
@@ -25,10 +26,22 @@ export function initializeFirebase() {
     };
   }
 
+  // Client-side singleton pattern
   if (!globalThis._firebaseApp) {
-    globalThis._firebaseApp = initializeApp(firebaseConfig);
-    globalThis._firestore = getFirestore(globalThis._firebaseApp);
-    globalThis._auth = getAuth(globalThis._firebaseApp);
+    try {
+      globalThis._firebaseApp = initializeApp(firebaseConfig);
+      globalThis._firestore = getFirestore(globalThis._firebaseApp);
+      globalThis._auth = getAuth(globalThis._firebaseApp);
+    } catch (e) {
+      // Fallback if initializeApp fails for some reason
+      if (getApps().length) {
+        globalThis._firebaseApp = getApp();
+        globalThis._firestore = getFirestore(globalThis._firebaseApp);
+        globalThis._auth = getAuth(globalThis._firebaseApp);
+      } else {
+        throw e;
+      }
+    }
   }
 
   return {

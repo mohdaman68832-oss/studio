@@ -29,7 +29,7 @@ export default function HubPage() {
     );
   }, [db, user?.uid]);
 
-  const { data: privateChats, isLoading: isPrivateLoading } = useCollection(privateChatsQuery);
+  const { data: privateChats, isLoading: isPrivateLoading, error: privateError } = useCollection(privateChatsQuery);
 
   const handleUserSearch = async () => {
     if (!searchQuery.trim() || !db) return;
@@ -148,6 +148,11 @@ export default function HubPage() {
             <div className="flex flex-col items-center justify-center py-24 gap-4">
               <Loader2 className="animate-spin text-primary h-8 w-8" />
               <p className="text-[9px] font-black uppercase tracking-widest opacity-40">Decrypting Chats...</p>
+            </div>
+          ) : privateError ? (
+             <div className="py-24 text-center space-y-4 opacity-50 flex flex-col items-center">
+              <p className="text-[10px] font-black uppercase text-destructive">Verification Error</p>
+              <p className="text-[9px] font-medium italic px-10">Please refresh the page to sync your identity.</p>
             </div>
           ) : privateChats && privateChats.length > 0 ? (
             privateChats.map((chat) => (
