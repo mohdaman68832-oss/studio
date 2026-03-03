@@ -7,27 +7,26 @@ import { doc } from 'firebase/firestore';
 
 /**
  * Animated Logo Loader Component
- * Full-body 'm' bubble character with moving tiny eyes.
- * Orbital ring removed for a clean focus.
+ * Reverted to the compact 'm' bubble shape with energetic eyes.
  */
 function LogoLoader() {
   return (
     <div className="flex flex-col items-center gap-10 animate-in fade-in duration-700">
       <div className="relative w-40 h-40 flex items-center justify-center">
-        {/* M-Bubble Character - Full Body */}
+        {/* Stylized 'M' Bubble Character - Compact Shape */}
         <div className="relative z-10 animate-bubble-sway">
           <svg width="100" height="100" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-            {/* Stylized Full Body 'M' Character Path */}
+            {/* Stylized 'M' Bubble Character Path */}
             <path 
-              d="M20 85 C20 100 40 105 60 105 C80 105 100 100 100 85 V65 C100 40 85 30 72 30 C65 30 62 35 60 45 C62 35 67 30 75 30 C58 35 55 30 48 30 C35 30 20 40 20 65 V85 Z" 
+              d="M20 70 C20 95 40 100 60 100 C80 100 100 95 100 70 V50 C100 25 85 15 72 15 C65 15 62 20 60 30 C58 20 55 15 48 15 C35 15 20 25 20 50 V70 Z" 
               fill="#FF4500" 
             />
 
-            {/* Tiny Sharp Eyes - Moving and Blinking */}
+            {/* Moving and Blinking Eyes - Reverted Size */}
             <g className="animate-eye-look">
               <g className="animate-eye-blink">
-                <circle cx="42" cy="62" r="1.5" fill="white" />
-                <circle cx="78" cy="62" r="1.5" fill="white" />
+                <circle cx="42" cy="52" r="2.5" fill="white" />
+                <circle cx="78" cy="52" r="2.5" fill="white" />
               </g>
             </g>
             
