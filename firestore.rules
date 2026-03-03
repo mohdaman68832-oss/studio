@@ -12,10 +12,9 @@ service cloud.firestore {
       allow write: if isAuth() && request.auth.uid == userId;
     }
 
-    // Private Chats: Required for Hub page query (array-contains)
+    // Private Chats: Explicit list/get for index support
     match /privateChats/{chatId} {
-      // Allow read (get + list) if the user is a participant. 
-      // Provably safe for array-contains queries on 'participants'.
+      // Required for array-contains queries on 'participants'
       allow read: if isAuth() && (request.auth.uid in resource.data.participants);
       
       // Creation requires the creator to be a participant
@@ -53,7 +52,7 @@ service cloud.firestore {
       allow write: if isAuth() && (request.auth.uid == request.resource.data.followerId || (resource != null && request.auth.uid == resource.data.followerId));
     }
     
-    // Global Fallback (Requires auth for safety)
+    // Global Fallback
     match /{path=**} {
       allow read, write: if isAuth();
     }
