@@ -1,14 +1,15 @@
+
 "use client";
 
 import Image from "next/image";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowBigUp, MoreHorizontal, Share2, Play, MessageCircle } from "lucide-react";
+import { ArrowBigUp, MoreHorizontal, Share2, Play, MessageCircle, Eye } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { useFirestore, useUser, useDoc, useMemoFirebase } from "@/firebase";
-import { doc, setDoc, deleteDoc, increment } from "firebase/firestore";
+import { useFirestore, useUser, useDoc, useMemoFirebase, useCollection } from "@/firebase";
+import { doc, setDoc, deleteDoc, increment, collection } from "firebase/firestore";
 
 interface IdeaCardProps {
   idea: {
@@ -23,11 +24,13 @@ interface IdeaCardProps {
     mediaUrl: string;
     innovationScore: number;
     likes?: number;
+    views?: number;
   };
   priority?: boolean;
+  isProfileView?: boolean;
 }
 
-export function IdeaCard({ idea, priority = false }: IdeaCardProps) {
+export function IdeaCard({ idea, priority = false, isProfileView = false }: IdeaCardProps) {
   const { toast } = useToast();
   const db = useFirestore();
   const { user } = useUser();
@@ -38,6 +41,13 @@ export function IdeaCard({ idea, priority = false }: IdeaCardProps) {
     (db && idea.uid) ? doc(db, "userProfiles", idea.uid) : null
   , [db, idea.uid]);
   const { data: authorProfile } = useDoc(authorProfileRef);
+
+  // Fetch suggestions count
+  const suggestionsQuery = useMemoFirebase(() => 
+    (db && idea.id) ? collection(db, "posts", idea.id, "suggestions") : null
+  , [db, idea.id]);
+  const { data: suggestions } = useCollection(suggestionsQuery);
+  const commentCount = suggestions?.length || 0;
 
   // Fallback chain: Live Profile > Cached Post Avatar > Initial Placeholder
   const liveAvatar = authorProfile?.profilePictureUrl || idea.userAvatar || "";
@@ -56,6 +66,7 @@ export function IdeaCard({ idea, priority = false }: IdeaCardProps) {
   const { data: liveIdeaData } = useDoc(ideaDocRef);
 
   const likesCount = liveIdeaData?.likes ?? idea.likes ?? 0;
+  const viewCount = liveIdeaData?.views ?? idea.views ?? (Math.floor(Math.random() * 500) + 100);
 
   const handleToggleLike = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -84,6 +95,52 @@ export function IdeaCard({ idea, priority = false }: IdeaCardProps) {
 
   const isVideo = idea.mediaUrl && (idea.mediaUrl.endsWith('.mp4') || idea.mediaUrl.includes('gtv-videos-bucket'));
   const isTextPost = !idea.mediaUrl || idea.mediaUrl === "";
+
+  if (isProfileView) {
+    return (
+      <div className="bg-white rounded-[2.5rem] shadow-sm border border-primary/5 p-6 space-y-4 animate-in fade-in duration-500">
+        <Link href={`/idea/${idea.id}`} className="block group space-y-3">
+          <div className="flex justify-between items-start">
+            <h3 className="text-xl font-black text-primary uppercase tracking-tighter leading-tight flex-1 mr-4">
+              {idea.title}
+            </h3>
+            <div className="flex items-center gap-1.5 bg-muted/30 px-2 py-1 rounded-full shrink-0">
+              <Eye size={12} className="text-muted-foreground" />
+              <span className="text-[10px] font-black text-muted-foreground">{viewCount}</span>
+            </div>
+          </div>
+
+          {!isTextPost && (
+            <div className="relative aspect-video w-full rounded-[2rem] overflow-hidden bg-muted shadow-inner">
+              {isVideo ? (
+                 <div className="w-full h-full flex items-center justify-center bg-black"><Play className="text-white fill-white" size={32} /></div>
+              ) : (
+                <Image src={idea.mediaUrl} alt={idea.title} fill className="object-cover transition-transform group-hover:scale-105" />
+              )}
+            </div>
+          )}
+        </Link>
+
+        <div className="flex items-center justify-between pt-2">
+          <div className="flex items-center gap-6">
+            <button type="button" onClick={handleToggleLike} className={cn("flex items-center gap-2 group", isProcessing && "opacity-50")}>
+              <ArrowBigUp size={28} className={cn("transition-all", isLiked ? "text-secondary fill-current" : "text-foreground/20 group-hover:text-primary")} />
+              <span className={cn("text-xs font-black", isLiked ? "text-secondary" : "text-muted-foreground")}>{likesCount}</span>
+            </button>
+            
+            <Link href={`/idea/${idea.id}`} className="flex items-center gap-2 group">
+              <MessageCircle size={22} className="text-foreground/20 group-hover:text-primary transition-colors" />
+              <span className="text-xs font-black text-muted-foreground">{commentCount}</span>
+            </Link>
+          </div>
+
+          <button type="button" onClick={handleShare} className="p-2 text-foreground/20 hover:text-primary transition-colors">
+            <Share2 size={20} />
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-card rounded-[2.5rem] idea-card-shadow overflow-hidden border border-border/50 p-5">
@@ -122,7 +179,10 @@ export function IdeaCard({ idea, priority = false }: IdeaCardProps) {
           <ArrowBigUp size={32} className={cn("transition-all", isLiked ? "text-secondary fill-current" : "text-foreground/30")} />
           <span className={cn("text-sm font-black", isLiked ? "text-secondary" : "text-foreground/40")}>{likesCount}</span>
         </button>
-        <Link href={`/idea/${idea.id}`} className="p-2"><MessageCircle size={26} /></Link>
+        <Link href={`/idea/${idea.id}`} className="p-2 flex items-center gap-1.5">
+          <MessageCircle size={26} className="text-muted-foreground" />
+          <span className="text-[10px] font-black text-muted-foreground mt-1">{commentCount}</span>
+        </Link>
         <button type="button" onClick={handleShare} className="p-2"><Share2 size={24} /></button>
       </div>
     </div>

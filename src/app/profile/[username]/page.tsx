@@ -215,7 +215,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
                   ) : filteredPosts(type).length > 0 ? (
                     filteredPosts(type).map((post) => (
                       <div key={post.id} className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        <IdeaCard idea={post as any} />
+                        <IdeaCard idea={post as any} isProfileView={true} />
                       </div>
                     ))
                   ) : (

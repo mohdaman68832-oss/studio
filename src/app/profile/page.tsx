@@ -184,7 +184,6 @@ export default function ProfilePage() {
 
     setSelectedStickerId(id);
     
-    // REQUIREMENT: Only move if optimization sheet is open
     if (isStickerSheetOpen && selectedStickerId === id) {
       setDragStart({
         x: e.clientX,
@@ -209,7 +208,6 @@ export default function ProfilePage() {
     const dy = ((e.clientY - dragStart.y) / rect.height) * 100;
 
     const newX = Math.max(0, Math.min(100, dragStart.stickerX + dx));
-    // REQUIREMENT: Invisible boundary - stop stickers before posts section (~60% height)
     const newY = Math.max(0, Math.min(60, dragStart.stickerY + dy));
 
     updateSticker(id, 'x', newX);
@@ -372,7 +370,6 @@ export default function ProfilePage() {
               <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{localProfile.name}</h2>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>@{profileData?.username || "user"}</p>
               
-              {/* REQUIREMENT: Bio bar shadow overlaps posts section */}
               <div 
                 className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-[0_40px_80px_-10px_rgba(0,0,0,0.4)] border-primary/5 relative z-[60]" 
                 style={{ backgroundColor: colors.bioCard || "hsl(var(--card))" }}
@@ -405,7 +402,6 @@ export default function ProfilePage() {
           </div>
 
           <div className="px-6 py-10 space-y-8 relative bg-background">
-            {/* REQUIREMENT: Screen option tabs for Image, Video, Text posts */}
             <Tabs defaultValue="image" className="w-full">
               <TabsList className="w-full h-14 bg-muted/30 rounded-full p-1 mb-8">
                 <TabsTrigger value="image" className="flex-1 rounded-full text-[10px] font-black uppercase tracking-widest gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
@@ -426,7 +422,7 @@ export default function ProfilePage() {
                   ) : filteredPosts(type).length > 0 ? (
                     filteredPosts(type).map((post) => (
                       <div key={post.id} className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        <IdeaCard idea={post as any} />
+                        <IdeaCard idea={post as any} isProfileView={true} />
                       </div>
                     ))
                   ) : (
