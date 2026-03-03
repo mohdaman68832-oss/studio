@@ -184,6 +184,7 @@ export default function ProfilePage() {
 
     setSelectedStickerId(id);
     
+    // REQUIREMENT: Only move if optimization sheet is open
     if (isStickerSheetOpen && selectedStickerId === id) {
       setDragStart({
         x: e.clientX,
@@ -208,6 +209,7 @@ export default function ProfilePage() {
     const dy = ((e.clientY - dragStart.y) / rect.height) * 100;
 
     const newX = Math.max(0, Math.min(100, dragStart.stickerX + dx));
+    // REQUIREMENT: Invisible boundary - stop stickers before posts section (~60% height)
     const newY = Math.max(0, Math.min(60, dragStart.stickerY + dy));
 
     updateSticker(id, 'x', newX);
@@ -243,37 +245,8 @@ export default function ProfilePage() {
       className="max-w-md mx-auto min-h-screen pb-24 relative overflow-x-hidden flex flex-col" 
       style={{ backgroundColor: colors.background || "var(--background)" }}
     >
-      {/* LAYER 2: Stickers (Above Media but behind Text) */}
-      <div className="absolute inset-0 pointer-events-none z-[20]">
-        {localProfile.stickers.map((sticker) => (
-          <div 
-            key={sticker.id} 
-            className={cn(
-              "absolute", 
-              isEditMode ? "pointer-events-auto cursor-pointer" : "pointer-events-none"
-            )} 
-            onPointerDown={(e) => handleStickerPointerDown(e, sticker.id)}
-            onPointerMove={(e) => handleStickerPointerMove(e, sticker.id)}
-            onPointerUp={handleStickerPointerUp}
-            style={{ 
-              left: `${sticker.x}%`, 
-              top: `${sticker.y}%`, 
-              transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg) scale(${sticker.scale})`,
-              touchAction: 'none'
-            }}
-          >
-            <div className={cn(
-              "relative w-24 h-24 transition-all duration-200",
-              isEditMode && selectedStickerId === sticker.id && "ring-4 ring-primary ring-offset-4 rounded-xl scale-105"
-            )}>
-              <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized />
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* LAYER 1: Header/Banner/Logo Wrapper */}
-      <div className="relative w-full shrink-0 z-[10]">
+      {/* LAYER 1: Media (Banner/Logo) - Z-10 */}
+      <div className="relative w-full shrink-0 z-10">
         <div className="h-16 w-full" style={{ backgroundColor: headerColor }} />
         <header className="absolute top-0 left-0 right-0 px-6 py-5 flex justify-between items-center z-[50]">
           {isEditMode ? (
@@ -342,8 +315,37 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* LAYER 3: Text Layers (On top of stickers and Banner) */}
-      <div className="w-full relative mt-4 z-[30]">
+      {/* LAYER 2: Stickers - Z-20 (Above Logo/Banner, Below Text) */}
+      <div className="absolute inset-0 pointer-events-none z-20">
+        {localProfile.stickers.map((sticker) => (
+          <div 
+            key={sticker.id} 
+            className={cn(
+              "absolute", 
+              isEditMode ? "pointer-events-auto cursor-pointer" : "pointer-events-none"
+            )} 
+            onPointerDown={(e) => handleStickerPointerDown(e, sticker.id)}
+            onPointerMove={(e) => handleStickerPointerMove(e, sticker.id)}
+            onPointerUp={handleStickerPointerUp}
+            style={{ 
+              left: `${sticker.x}%`, 
+              top: `${sticker.y}%`, 
+              transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg) scale(${sticker.scale})`,
+              touchAction: 'none'
+            }}
+          >
+            <div className={cn(
+              "relative w-24 h-24 transition-all duration-200",
+              isEditMode && selectedStickerId === sticker.id && "ring-4 ring-primary ring-offset-4 rounded-xl scale-105"
+            )}>
+              <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* LAYER 3: Text & Bio Card - Z-30 (Always on top of stickers) */}
+      <div className="w-full relative mt-4 z-30">
         <div style={{ backgroundColor: colors.userInfo }} className="px-6 flex flex-col items-center relative">
           {isEditMode ? (
             <div className="w-full space-y-4 pt-4">
@@ -370,8 +372,9 @@ export default function ProfilePage() {
               <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{localProfile.name}</h2>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>@{profileData?.username || "user"}</p>
               
+              {/* REQUIREMENT: Bio bar shadow overlaps posts section */}
               <div 
-                className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] border-primary/5 relative z-[60]" 
+                className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-[0_40px_80px_-10px_rgba(0,0,0,0.4)] border-primary/5 relative z-[60]" 
                 style={{ backgroundColor: colors.bioCard || "hsl(var(--card))" }}
               >
                 <p className="text-center text-[12px] leading-relaxed font-bold italic" style={{ color: getContrastColor(colors.bioCard) }}>
@@ -382,8 +385,8 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Stats and Posts Wrapper with Lower Z-index to accept Bio Shadow */}
-        <div className="relative z-[10]">
+        {/* Stats & Content Section - Overlapped by Bio Shadow */}
+        <div className="relative z-10">
           <div style={{ backgroundColor: colors.statsSection }} className="w-full py-10 px-10 relative">
             <div className="grid grid-cols-3 gap-6 w-full">
               <div className="text-center">
@@ -402,6 +405,7 @@ export default function ProfilePage() {
           </div>
 
           <div className="px-6 py-10 space-y-8 relative bg-background">
+            {/* REQUIREMENT: Screen option tabs for Image, Video, Text posts */}
             <Tabs defaultValue="image" className="w-full">
               <TabsList className="w-full h-14 bg-muted/30 rounded-full p-1 mb-8">
                 <TabsTrigger value="image" className="flex-1 rounded-full text-[10px] font-black uppercase tracking-widest gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
@@ -446,12 +450,12 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* LAYER 4: Fine-Tune Sticker Hub (Always on top) */}
+      {/* LAYER 4: Fine-Tune Sticker Hub - Z-2000 (Always on top of BottomNav) */}
       <Sheet open={isStickerSheetOpen} onOpenChange={setIsStickerSheetOpen} modal={false}>
         <SheetContent 
           side="bottom" 
           hideOverlay={true}
-          className="rounded-t-[3rem] h-auto max-h-[45vh] bg-white/95 backdrop-blur-xl border-t-2 border-primary/10 shadow-[0_-20px_50px_rgba(0,0,0,0.1)] p-0 overflow-hidden flex flex-col pointer-events-auto z-[100]"
+          className="rounded-t-[3rem] h-auto max-h-[60vh] bg-white/95 backdrop-blur-xl border-t-2 border-primary/10 shadow-[0_-20px_50px_rgba(0,0,0,0.1)] p-0 overflow-hidden flex flex-col pointer-events-auto z-[2000]"
         >
           <SheetHeader className="p-4 border-b flex flex-row items-center justify-between bg-white/50 space-y-0">
             <div className="flex items-center gap-2">
@@ -461,7 +465,7 @@ export default function ProfilePage() {
             <Button variant="ghost" size="icon" onClick={() => setIsStickerSheetOpen(false)} className="rounded-full h-8 w-8 bg-muted/50 hover:bg-muted"><Check size={18}/></Button>
           </SheetHeader>
           
-          <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar">
+          <div className="flex-1 overflow-y-auto p-6 pb-10 space-y-5 no-scrollbar">
             {selectedSticker && (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 gap-5">
