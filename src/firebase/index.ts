@@ -7,7 +7,7 @@ import { getFirestore, Firestore } from 'firebase/firestore';
 
 /**
  * Truly Singleton Firebase Initialization for Next.js 15 / Turbopack.
- * Survives HMR/Fast Refresh reloads by caching instances on globalThis/window.
+ * Survives HMR/Hot Reloads by caching instances on globalThis and window.
  */
 let cachedApp: FirebaseApp | null = null;
 let cachedFirestore: Firestore | null = null;
@@ -20,29 +20,38 @@ declare global {
 }
 
 export function initializeFirebase() {
-  // Check globalThis first (Browser & Node-compatible)
+  // 1. Check for existing instances in Global State (Node/Server)
+  if (globalThis._firebaseApp) cachedApp = globalThis._firebaseApp;
+  if (globalThis._firebaseFirestore) cachedFirestore = globalThis._firebaseFirestore;
+  if (globalThis._firebaseAuth) cachedAuth = globalThis._firebaseAuth;
+
+  // 2. Check for existing instances in Window (Browser)
   if (typeof window !== 'undefined') {
-    if (globalThis._firebaseApp) cachedApp = globalThis._firebaseApp;
-    if (globalThis._firebaseFirestore) cachedFirestore = globalThis._firebaseFirestore;
-    if (globalThis._firebaseAuth) cachedAuth = globalThis._firebaseAuth;
+    const win = window as any;
+    if (win._firebaseApp) cachedApp = win._firebaseApp;
+    if (win._firebaseFirestore) cachedFirestore = win._firebaseFirestore;
+    if (win._firebaseAuth) cachedAuth = win._firebaseAuth;
   }
 
-  // 1. App Singleton
+  // 3. Initialize App Singleton
   if (!cachedApp) {
     cachedApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-    if (typeof window !== 'undefined') globalThis._firebaseApp = cachedApp;
+    globalThis._firebaseApp = cachedApp;
+    if (typeof window !== 'undefined') (window as any)._firebaseApp = cachedApp;
   }
 
-  // 2. Firestore Singleton
+  // 4. Initialize Firestore Singleton
   if (!cachedFirestore) {
     cachedFirestore = getFirestore(cachedApp);
-    if (typeof window !== 'undefined') globalThis._firebaseFirestore = cachedFirestore;
+    globalThis._firebaseFirestore = cachedFirestore;
+    if (typeof window !== 'undefined') (window as any)._firebaseFirestore = cachedFirestore;
   }
 
-  // 3. Auth Singleton
+  // 5. Initialize Auth Singleton
   if (!cachedAuth) {
     cachedAuth = getAuth(cachedApp);
-    if (typeof window !== 'undefined') globalThis._firebaseAuth = cachedAuth;
+    globalThis._firebaseAuth = cachedAuth;
+    if (typeof window !== 'undefined') (window as any)._firebaseAuth = cachedAuth;
   }
 
   return {

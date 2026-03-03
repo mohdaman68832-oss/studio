@@ -19,7 +19,7 @@ export default function HubPage() {
   const [userSearchResults, setUserSearchResults] = useState<any[]>([]);
   const [isSearchingUsers, setIsSearchingUsers] = useState(false);
 
-  // Stable query matching the composite index: participants (array-contains) + timestamp (desc)
+  // Optimized query for the Hub: needs Composite Index (participants: array-contains, timestamp: desc)
   const privateChatsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
@@ -153,7 +153,7 @@ export default function HubPage() {
              <div className="py-24 text-center space-y-4 flex flex-col items-center">
               <p className="text-[10px] font-black uppercase text-destructive">Decryption Error</p>
               <p className="text-[9px] font-medium italic px-10 text-muted-foreground text-center">
-                Waiting for the innovation sphere to stabilize. Please refresh in a moment.
+                The innovation sphere is still stabilizing after the new index update. Please refresh in a moment.
               </p>
             </div>
           ) : privateChats && privateChats.length > 0 ? (
