@@ -7,40 +7,35 @@ import { getFirestore, Firestore } from 'firebase/firestore';
 
 /**
  * Truly Singleton Firebase Initialization for Next.js 15 / Turbopack.
- * This ensures only one instance of each service exists even across HMR.
- * We store instances on globalThis/window to prevent "Internal Assertion" errors.
+ * We store instances on globalThis/window to prevent "Internal Assertion" errors 
+ * caused by multiple initializations during HMR.
  */
-let cachedApp: FirebaseApp | null = null;
-let cachedFirestore: Firestore | null = null;
-let cachedAuth: Auth | null = null;
+
+const getGlobal = () => {
+  if (typeof window !== 'undefined') return window as any;
+  if (typeof globalThis !== 'undefined') return globalThis as any;
+  return {} as any;
+};
 
 export function initializeFirebase() {
-  if (typeof window !== 'undefined') {
-    const win = window as any;
-    if (win._firebaseApp) cachedApp = win._firebaseApp;
-    if (win._firebaseFirestore) cachedFirestore = win._firebaseFirestore;
-    if (win._firebaseAuth) cachedAuth = win._firebaseAuth;
+  const g = getGlobal();
+
+  if (!g._firebaseApp) {
+    g._firebaseApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
   }
 
-  if (!cachedApp) {
-    cachedApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-    if (typeof window !== 'undefined') (window as any)._firebaseApp = cachedApp;
+  if (!g._firebaseFirestore) {
+    g._firebaseFirestore = getFirestore(g._firebaseApp);
   }
 
-  if (!cachedFirestore) {
-    cachedFirestore = getFirestore(cachedApp);
-    if (typeof window !== 'undefined') (window as any)._firebaseFirestore = cachedFirestore;
-  }
-
-  if (!cachedAuth) {
-    cachedAuth = getAuth(cachedApp);
-    if (typeof window !== 'undefined') (window as any)._firebaseAuth = cachedAuth;
+  if (!g._firebaseAuth) {
+    g._firebaseAuth = getAuth(g._firebaseApp);
   }
 
   return {
-    firebaseApp: cachedApp,
-    firestore: cachedFirestore,
-    auth: cachedAuth,
+    firebaseApp: g._firebaseApp as FirebaseApp,
+    firestore: g._firebaseFirestore as Firestore,
+    auth: g._firebaseAuth as Auth,
   };
 }
 

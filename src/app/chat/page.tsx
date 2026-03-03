@@ -200,7 +200,7 @@ export default function HubPage() {
              <div className="py-24 text-center space-y-4 flex flex-col items-center">
               <p className="text-[10px] font-black uppercase text-destructive">Communication Hub Syncing</p>
               <p className="text-[9px] font-medium italic px-10 text-muted-foreground text-center">
-                {privateError.message.includes('index') 
+                {privateError.message.toLowerCase().includes('index') 
                   ? "The innovation sphere is still stabilizing after the new index update. Please refresh in a moment."
                   : "Syncing your secure communication channels. Please ensure you have a stable connection."}
               </p>
