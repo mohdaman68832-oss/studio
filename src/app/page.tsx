@@ -71,14 +71,13 @@ function FeedContent() {
 
       {/* Main Category Bar */}
       <div className="flex w-full gap-2 -mx-4 px-4 pt-2 pb-4 mb-2 border-b overflow-x-auto no-scrollbar">
-        {["All", "Meme", "Technology", "Art"].map((cat) => (
+        {["All", "Meme", "Technology"].map((cat) => (
           <Button 
             key={cat} 
             variant={cat === activeCategory ? "default" : "secondary"} 
             onClick={() => {
               setActiveCategory(cat);
               if (cat !== "Meme") setMemeType("all");
-              // If switching back to Meme, default to all but don't show the button
             }}
             className={cn(
               "flex-1 min-w-[80px] rounded-full h-9 text-[10px] font-black uppercase tracking-widest transition-all",
@@ -90,7 +89,7 @@ function FeedContent() {
         ))}
       </div>
 
-      {/* Meme Specific Options - Removed 'All' Button as requested */}
+      {/* Meme Specific Options */}
       {activeCategory === "Meme" && (
         <div className="flex w-full gap-2 mb-6 animate-in slide-in-from-top-2 duration-300">
           <Button 
