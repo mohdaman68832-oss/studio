@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -16,7 +17,8 @@ import {
   Move,
   Maximize2,
   RotateCw,
-  Plus
+  Plus,
+  Pencil
 } from "lucide-react";
 import { 
   DropdownMenu, 
@@ -203,7 +205,7 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-md mx-auto min-h-screen pb-24 relative overflow-x-hidden flex flex-col" style={{ backgroundColor: formData.customColors.background || "var(--background)" }}>
-      {/* Visual Sticker Layer (Static for Preview) */}
+      {/* Visual Sticker Layer */}
       <div className="absolute inset-0 pointer-events-none z-[60]">
         {formData.stickers.map((sticker) => (
           <div 
@@ -336,16 +338,20 @@ export default function ProfilePage() {
             </div>
 
             <div className="space-y-6 border-t pt-6">
-              <Label className="text-[10px] font-black uppercase flex items-center gap-2"><StickerIcon size={14}/> Sticker Hub</Label>
-              <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
-                {/* Add Custom Sticker Button */}
-                <button 
-                  className="shrink-0 w-20 h-20 rounded-[1.5rem] border-2 border-dashed p-2 border-primary/40 hover:border-primary transition-all bg-primary/5 flex flex-col items-center justify-center gap-1"
-                  onClick={() => customStickerInputRef.current?.click()}
+              <div className="flex items-center justify-between mb-2">
+                <Label className="text-[10px] font-black uppercase flex items-center gap-2"><StickerIcon size={14}/> Stickers</Label>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                {/* Option 1: Add Sticker */}
+                <Button 
+                  onClick={() => customStickerInputRef.current?.click()} 
+                  variant="outline"
+                  className="h-14 rounded-2xl border-2 border-primary/20 bg-primary/5 hover:border-primary flex items-center gap-3 shadow-sm"
                 >
-                  <Plus size={20} className="text-primary" />
-                  <span className="text-[8px] font-black uppercase text-primary">Add New</span>
-                </button>
+                  <Plus size={18} className="text-primary" />
+                  <span className="text-[10px] font-black uppercase tracking-widest">Add Sticker</span>
+                </Button>
                 <input 
                   type="file" 
                   ref={customStickerInputRef} 
@@ -354,16 +360,15 @@ export default function ProfilePage() {
                   onChange={e => handleImageChange(e, 'sticker')} 
                 />
 
-                {["rocket", "sparkles", "brain", "heart", "globe", "zap", "flame", "star"].map(n => (
-                  <button key={n} className="shrink-0 w-20 h-20 rounded-[1.5rem] border-2 border-dashed p-2 hover:border-primary transition-all bg-muted/10 flex items-center justify-center" onClick={() => addSticker(`https://picsum.photos/seed/sticker-${n}/200/200`)}>
-                    <Image src={`https://picsum.photos/seed/sticker-${n}/200/200`} alt="sticker" width={60} height={60} className="object-contain" unoptimized />
-                  </button>
-                ))}
+                {/* Optional Status Label or Placeholder */}
+                <div className="h-14 bg-muted/20 rounded-2xl border-2 border-dashed border-muted flex items-center justify-center opacity-40">
+                  <ImageIcon size={18} />
+                </div>
               </div>
 
               {formData.stickers.length > 0 && (
-                <div className="space-y-4">
-                  <Label className="text-[10px] font-black uppercase">Active Stickers (Select to Edit)</Label>
+                <div className="space-y-4 mt-6">
+                  <Label className="text-[10px] font-black uppercase flex items-center gap-2"><Pencil size={12}/> Edit Placed Stickers</Label>
                   <div className="flex flex-wrap gap-3">
                     {formData.stickers.map(s => (
                       <button 
