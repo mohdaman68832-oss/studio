@@ -83,8 +83,8 @@
 
 /* Horizontal Sway Animation */
 @keyframes bubble-sway {
-  0%, 100% { transform: translateX(-15px); }
-  50% { transform: translateX(15px); }
+  0%, 100% { transform: translate(-8px, 0); }
+  50% { transform: translate(8px, 0); }
 }
 
 @keyframes eye-blink {
@@ -94,8 +94,8 @@
 
 @keyframes eye-look {
   0%, 20%, 80%, 100% { transform: translateX(0); }
-  30%, 45% { transform: translateX(-8px); }
-  55%, 70% { transform: translateX(8px); }
+  30%, 45% { transform: translateX(-4px); }
+  55%, 70% { transform: translateX(4px); }
 }
 
 @keyframes ring-rotate {
@@ -104,7 +104,7 @@
 }
 
 .animate-bubble-sway {
-  animation: bubble-sway 3s ease-in-out infinite;
+  animation: bubble-sway 4s ease-in-out infinite;
 }
 
 .animate-eye-blink {
@@ -113,14 +113,10 @@
 }
 
 .animate-eye-look {
-  animation: eye-look 4s ease-in-out infinite;
+  animation: eye-look 5s ease-in-out infinite;
 }
 
 .animate-ring-rotate {
-  animation: ring-rotate 6s linear infinite;
+  animation: ring-rotate 4s linear infinite;
   transform-origin: center;
-}
-
-.animate-bubble-sway-fast {
-  animation: bubble-sway 2.5s ease-in-out infinite;
 }
