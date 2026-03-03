@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -7,8 +8,6 @@ import {
   Settings, LogOut, Camera, 
   Loader2, 
   UserCog,
-  Sun,
-  Moon,
   Palette,
   Sticker as StickerIcon,
   X,
@@ -18,7 +17,9 @@ import {
   RotateCw,
   Plus,
   Pencil,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Check,
+  ChevronLeft
 } from "lucide-react";
 import { 
   DropdownMenu, 
@@ -26,10 +27,8 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import Image from "next/image";
 import { useUser, useAuth, useFirestore, useDoc, useMemoFirebase, useCollection } from "@/firebase";
@@ -82,10 +81,10 @@ export default function ProfilePage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  const [isOptimizeModalOpen, setIsOptimizeModalOpen] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isEditingMode, setIsEditingMode] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [selectedStickerId, setSelectedStickerId] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   
   const bannerInputRef = useRef<HTMLInputElement>(null);
   const customStickerInputRef = useRef<HTMLInputElement>(null);
@@ -126,7 +125,6 @@ export default function ProfilePage() {
         stickers: profileData.stickers || [],
         customColors: profileData.customColors || {}
       });
-      setIsDarkMode(profileData.theme === 'dark');
     }
   }, [profileData, user]);
 
@@ -135,22 +133,16 @@ export default function ProfilePage() {
     setIsSaving(true);
     try {
       await updateDoc(profileRef, {
-        name: formData.name,
-        bio: formData.bio,
-        profilePictureUrl: formData.profilePic,
-        bannerUrl: formData.banner,
-        bannerOffset: formData.bannerOffset,
         stickers: formData.stickers,
-        customColors: formData.customColors,
-        theme: isDarkMode ? 'dark' : 'light',
         updatedAt: new Date().toISOString()
       });
-
-      toast({ title: "Profile Synced", description: "Personalization saved." });
-      setIsOptimizeModalOpen(false);
+      toast({ title: "Profile Locked", description: "All stickers saved in place." });
+      setIsEditingMode(false);
+      setSelectedStickerId(null);
+      setIsSheetOpen(false);
     } catch (error: any) {
       console.error("Profile update error:", error);
-      toast({ variant: "destructive", title: "Save Error", description: "Failed to update profile." });
+      toast({ variant: "destructive", title: "Save Error", description: "Failed to lock profile." });
     } finally {
       setIsSaving(false);
     }
@@ -162,13 +154,18 @@ export default function ProfilePage() {
       const base64 = await toBase64(file);
       if (type === 'profile') setFormData(prev => ({ ...prev, profilePic: base64 }));
       else if (type === 'banner') setFormData(prev => ({ ...prev, banner: base64 }));
-      else if (type === 'sticker') addSticker(base64);
+      else if (type === 'sticker') {
+        const newStickerId = addSticker(base64);
+        setSelectedStickerId(newStickerId);
+        setIsSheetOpen(true);
+      }
     }
   };
 
   const addSticker = (url: string) => {
+    const id = Math.random().toString(36).substr(2, 9);
     const newSticker: Sticker = {
-      id: Math.random().toString(36).substr(2, 9),
+      id,
       url, 
       x: 50, 
       y: 30, 
@@ -176,7 +173,7 @@ export default function ProfilePage() {
       scale: 1
     };
     setFormData(prev => ({ ...prev, stickers: [...prev.stickers, newSticker] }));
-    setSelectedStickerId(newSticker.id);
+    return id;
   };
 
   const updateStickerProperty = (id: string, property: keyof Sticker, value: number) => {
@@ -188,7 +185,14 @@ export default function ProfilePage() {
 
   const removeSticker = (id: string) => {
     setFormData(prev => ({ ...prev, stickers: prev.stickers.filter(s => s.id !== id) }));
-    if (selectedStickerId === id) setSelectedStickerId(null);
+    setSelectedStickerId(null);
+    setIsSheetOpen(false);
+  };
+
+  const handleStickerClick = (id: string) => {
+    if (!isEditingMode) return;
+    setSelectedStickerId(id);
+    setIsSheetOpen(true);
   };
 
   if (isUserLoading || isProfileLoading) return (
@@ -200,17 +204,17 @@ export default function ProfilePage() {
 
   const headerColor = formData.customColors.header || "var(--primary)";
   const contrastHeader = getContrastColor(formData.customColors.header);
-
   const selectedSticker = formData.stickers.find(s => s.id === selectedStickerId);
 
   return (
     <div className="max-w-md mx-auto min-h-screen pb-24 relative overflow-x-hidden flex flex-col" style={{ backgroundColor: formData.customColors.background || "var(--background)" }}>
       {/* Visual Sticker Layer */}
-      <div className="absolute inset-0 pointer-events-none z-[60]">
+      <div className={cn("absolute inset-0 z-[60]", isEditingMode ? "pointer-events-auto" : "pointer-events-none")}>
         {formData.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
-            className="absolute" 
+            className={cn("absolute transition-all cursor-pointer", isEditingMode && "hover:ring-2 hover:ring-primary/40 rounded-lg")} 
+            onClick={() => handleStickerClick(sticker.id)}
             style={{ 
               left: `${sticker.x}%`, 
               top: `${sticker.y}%`, 
@@ -219,7 +223,7 @@ export default function ProfilePage() {
           >
             <div className={cn(
               "relative w-24 h-24",
-              selectedStickerId === sticker.id && "ring-4 ring-primary ring-offset-2 rounded-xl"
+              selectedStickerId === sticker.id && isEditingMode && "ring-4 ring-primary ring-offset-2 rounded-xl"
             )}>
               <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized />
             </div>
@@ -236,9 +240,9 @@ export default function ProfilePage() {
               <Button variant="ghost" size="icon"><Settings size={24} style={{ color: contrastHeader }} /></Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="rounded-3xl p-2 border-2 bg-white/95 backdrop-blur-md">
-              <DropdownMenuItem onClick={() => setIsOptimizeModalOpen(true)} className="rounded-2xl h-10 gap-3 cursor-pointer">
-                <UserCog size={18} className="text-primary" />
-                <span className="text-[10px] font-black uppercase">Optimize</span>
+              <DropdownMenuItem onClick={() => setIsEditingMode(true)} className="rounded-2xl h-10 gap-3 cursor-pointer">
+                <StickerIcon size={18} className="text-primary" />
+                <span className="text-[10px] font-black uppercase">Personalize</span>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => signOut(auth)} className="rounded-2xl h-10 gap-3 text-secondary cursor-pointer">
                 <LogOut size={18} />
@@ -262,6 +266,25 @@ export default function ProfilePage() {
       </div>
 
       <div className="w-full relative mt-4">
+        {isEditingMode && (
+          <div className="px-6 mb-4 flex gap-2 animate-in slide-in-from-top-4">
+            <Button 
+              onClick={() => customStickerInputRef.current?.click()} 
+              className="flex-1 h-12 rounded-2xl bg-secondary text-white font-black uppercase text-[10px] tracking-widest shadow-lg"
+            >
+              <Plus size={16} className="mr-2" /> Add Sticker
+            </Button>
+            <Button 
+              onClick={handleSaveProfile} 
+              disabled={isSaving}
+              className="flex-1 h-12 rounded-2xl bg-primary text-white font-black uppercase text-[10px] tracking-widest shadow-lg"
+            >
+              {isSaving ? <Loader2 size={16} className="animate-spin" /> : <><Check size={16} className="mr-2" /> Done</>}
+            </Button>
+            <input type="file" ref={customStickerInputRef} className="hidden" accept="image/*" onChange={e => handleImageChange(e, 'sticker')} />
+          </div>
+        )}
+
         <div style={{ backgroundColor: formData.customColors.userInfo }} className="px-6 flex flex-col items-center">
           <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(formData.customColors.userInfo) }}>{formData.name || "Innovator"}</h2>
           <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(formData.customColors.userInfo) }}>@{profileData?.username || "user"}</p>
@@ -314,128 +337,55 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <Dialog open={isOptimizeModalOpen} onOpenChange={setIsOptimizeModalOpen}>
-        <DialogContent className="max-w-md w-[95%] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col">
-          <div className="p-6 border-b shrink-0 flex items-center justify-between">
-            <DialogTitle className="text-xl font-black uppercase text-primary">Optimize Profile</DialogTitle>
-          </div>
+      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+        <SheetContent side="bottom" className="rounded-t-[2.5rem] p-0 overflow-hidden border-none shadow-2xl bg-white h-[60vh] flex flex-col">
+          <SheetHeader className="p-6 border-b shrink-0 flex flex-row items-center justify-between">
+            <SheetTitle className="text-xl font-black uppercase text-primary">Adjust Sticker</SheetTitle>
+            <Button variant="ghost" size="icon" onClick={() => setIsSheetOpen(false)} className="rounded-full"><X size={20} /></Button>
+          </SheetHeader>
+          
           <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar">
-            <div className="flex items-center justify-between bg-muted/20 p-4 rounded-2xl">
-              <div className="flex items-center gap-3">
-                {isDarkMode ? <Moon className="text-primary w-5 h-5" /> : <Sun className="text-primary w-5 h-5" />}
-                <p className="text-[10px] font-black uppercase">Dark Mode</p>
-              </div>
-              <Switch checked={isDarkMode} onCheckedChange={setIsDarkMode} />
-            </div>
-
-            <div className="space-y-4">
-              <Label className="text-[10px] font-black uppercase flex items-center gap-2"><Palette size={14}/> Background Color</Label>
-              <div className="grid grid-cols-6 gap-2">
-                {['#FF4500', '#FFD700', '#000000', '#FFFFFF', '#F5F5F5', '#8B4513', '#E0F2F1', '#F3E5F5'].map(color => (
-                  <button key={color} className="h-8 w-8 rounded-full border shadow-sm" style={{ backgroundColor: color }} onClick={() => setFormData(p => ({ ...p, customColors: { ...p.customColors, background: color } }))} />
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-6 border-t pt-6">
-              <div className="flex items-center justify-between mb-2">
-                <Label className="text-[10px] font-black uppercase flex items-center gap-2"><StickerIcon size={14}/> Sticker Hub</Label>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <Button 
-                  onClick={() => customStickerInputRef.current?.click()} 
-                  variant="outline"
-                  className="h-14 rounded-2xl border-2 border-primary/20 bg-primary/5 hover:border-primary flex items-center gap-3 shadow-sm"
-                >
-                  <Plus size={18} className="text-primary" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Add New</span>
-                </Button>
-                <input 
-                  type="file" 
-                  ref={customStickerInputRef} 
-                  className="hidden" 
-                  accept="image/*" 
-                  onChange={e => handleImageChange(e, 'sticker')} 
-                />
-
-                <div className="h-14 bg-muted/20 rounded-2xl border-2 border-dashed border-muted flex items-center justify-center opacity-40">
-                  <ImageIcon size={18} />
-                </div>
-              </div>
-
-              {formData.stickers.length > 0 && (
-                <div className="space-y-4 mt-6">
-                  <Label className="text-[10px] font-black uppercase flex items-center gap-2"><Pencil size={12}/> Active Stickers (Select to Edit)</Label>
-                  <div className="flex flex-wrap gap-3">
-                    {formData.stickers.map(s => (
-                      <button 
-                        key={s.id} 
-                        onClick={() => setSelectedStickerId(s.id)} 
-                        className={cn(
-                          "relative h-14 w-14 border rounded-[1rem] p-1 bg-muted/10 transition-all",
-                          selectedStickerId === s.id ? "border-primary ring-2 ring-primary/20 scale-110" : "border-border hover:border-primary/50"
-                        )}
-                      >
-                        <Image src={s.url} alt="s" width={50} height={50} className="object-contain" unoptimized />
-                        {selectedStickerId === s.id && (
-                          <div className="absolute -top-2 -right-2 bg-primary text-white rounded-full p-0.5"><X size={10} onClick={(e) => { e.stopPropagation(); removeSticker(s.id); }} /></div>
-                        )}
-                      </button>
-                    ))}
+            {selectedSticker && (
+              <div className="space-y-6 animate-in slide-in-from-bottom-4">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center"><Label className="text-[10px] font-black uppercase flex items-center gap-2"><Move size={14}/> Horizontal (X)</Label><span className="text-[10px] font-bold">{selectedSticker.x}%</span></div>
+                    <Slider value={[selectedSticker.x]} max={100} step={1} onValueChange={([v]) => updateStickerProperty(selectedSticker.id, 'x', v)} />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center"><Label className="text-[10px] font-black uppercase flex items-center gap-2"><Move size={14}/> Vertical (Y)</Label><span className="text-[10px] font-bold">{selectedSticker.y}%</span></div>
+                    <Slider value={[selectedSticker.y]} max={100} step={1} onValueChange={([v]) => updateStickerProperty(selectedSticker.id, 'y', v)} />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center"><Label className="text-[10px] font-black uppercase flex items-center gap-2"><Maximize2 size={14}/> Size (Scale)</Label><span className="text-[10px] font-bold">{selectedSticker.scale.toFixed(1)}x</span></div>
+                    <Slider value={[selectedSticker.scale]} min={0.5} max={3} step={0.1} onValueChange={([v]) => updateStickerProperty(selectedSticker.id, 'scale', v)} />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center"><Label className="text-[10px] font-black uppercase flex items-center gap-2"><RotateCw size={14}/> Rotation</Label><span className="text-[10px] font-bold">{selectedSticker.rotation}°</span></div>
+                    <Slider value={[selectedSticker.rotation]} min={0} max={360} step={1} onValueChange={([v]) => updateStickerProperty(selectedSticker.id, 'rotation', v)} />
                   </div>
                 </div>
-              )}
 
-              {selectedSticker && (
-                <div className="p-5 bg-primary/5 rounded-[2rem] border border-primary/10 space-y-6 animate-in slide-in-from-top-2">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-[9px] font-black uppercase text-primary tracking-widest">Adjust Sticker</p>
-                    <Button variant="ghost" size="sm" onClick={() => setSelectedStickerId(null)} className="h-6 px-2 text-[8px] uppercase">Deselect</Button>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center"><Label className="text-[8px] font-black uppercase flex items-center gap-1"><Move size={10}/> Horizontal (X)</Label><span className="text-[8px] font-bold">{selectedSticker.x}%</span></div>
-                      <Slider value={[selectedSticker.x]} max={100} step={1} onValueChange={([v]) => updateStickerProperty(selectedSticker.id, 'x', v)} />
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center"><Label className="text-[8px] font-black uppercase flex items-center gap-1"><Move size={10}/> Vertical (Y)</Label><span className="text-[8px] font-bold">{selectedSticker.y}%</span></div>
-                      <Slider value={[selectedSticker.y]} max={100} step={1} onValueChange={([v]) => updateStickerProperty(selectedSticker.id, 'y', v)} />
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center"><Label className="text-[8px] font-black uppercase flex items-center gap-1"><Maximize2 size={10}/> Size (Scale)</Label><span className="text-[8px] font-bold">{selectedSticker.scale.toFixed(1)}x</span></div>
-                      <Slider value={[selectedSticker.scale]} min={0.5} max={3} step={0.1} onValueChange={([v]) => updateStickerProperty(selectedSticker.id, 'scale', v)} />
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center"><Label className="text-[8px] font-black uppercase flex items-center gap-1"><RotateCw size={10}/> Rotation</Label><span className="text-[8px] font-bold">{selectedSticker.rotation}°</span></div>
-                      <Slider value={[selectedSticker.rotation]} min={0} max={360} step={1} onValueChange={([v]) => updateStickerProperty(selectedSticker.id, 'rotation', v)} />
-                    </div>
-                  </div>
+                <div className="pt-4 border-t flex gap-4">
+                  <Button 
+                    variant="outline" 
+                    className="flex-1 h-14 rounded-2xl border-2 border-destructive/20 text-destructive font-black uppercase text-[10px] tracking-widest hover:bg-destructive hover:text-white transition-all"
+                    onClick={() => removeSticker(selectedSticker.id)}
+                  >
+                    Remove
+                  </Button>
+                  <Button 
+                    className="flex-1 h-14 rounded-2xl bg-primary text-white font-black uppercase text-[10px] tracking-widest shadow-xl"
+                    onClick={() => setIsSheetOpen(false)}
+                  >
+                    Done
+                  </Button>
                 </div>
-              )}
-            </div>
-
-            <div className="space-y-4 border-t pt-6">
-              <Label className="text-[10px] font-black uppercase">Banner Image</Label>
-              <div onClick={() => bannerInputRef.current?.click()} className="relative h-24 bg-muted rounded-2xl overflow-hidden border-2 border-dashed cursor-pointer hover:border-primary transition-all">
-                {formData.banner ? <Image src={formData.banner} alt="banner" fill className="object-cover" unoptimized /> : <Camera className="absolute inset-0 m-auto opacity-10" size={32} />}
               </div>
-            </div>
-
-            <div className="space-y-4">
-              <Label className="text-[10px] font-black uppercase">Bio</Label>
-              <Textarea value={formData.bio} onChange={e => setFormData(p => ({ ...p, bio: e.target.value }))} placeholder="Your innovation story..." className="rounded-2xl min-h-[100px] text-sm font-medium" />
-            </div>
+            )}
           </div>
-          <div className="p-6 border-t bg-white">
-            <Button className="w-full h-14 rounded-3xl bg-primary text-white font-black uppercase shadow-xl" onClick={handleSaveProfile} disabled={isSaving}>
-              {isSaving ? <Loader2 className="animate-spin mr-2" /> : "Apply Transformations"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-      <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={e => handleImageChange(e, 'banner')} />
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
