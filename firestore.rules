@@ -48,7 +48,7 @@ service cloud.firestore {
     // Follows: Authenticated write
     match /follows/{followId} {
       allow read: if true;
-      allow write: if isAuth() && (request.auth.uid == request.resource.data.followerId || request.auth.uid == resource.data.followerId);
+      allow write: if isAuth() && (request.auth.uid == request.resource.data.followerId || (resource != null && request.auth.uid == resource.data.followerId));
     }
     
     // Global Fallback

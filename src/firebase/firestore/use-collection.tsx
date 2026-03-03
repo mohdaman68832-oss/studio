@@ -42,11 +42,10 @@ export function useCollection<T = any>(
     
     const auth = getAuth();
     
-    // Wait for auth to be resolved to prevent early permission errors
+    // Robust Auth State Management
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-      // Reset if not authenticated
       if (!user) {
-        setIsLoading(true);
+        setIsLoading(false);
         setData(null);
         setError(null);
         return;
@@ -71,7 +70,6 @@ export function useCollection<T = any>(
           
           let path = "unknown_collection";
           try {
-            // Robust path extraction for both Query and CollectionReference
             const anyRef = memoizedTargetRefOrQuery as any;
             path = anyRef.path || (anyRef._query?.path?.segments?.join('/')) || "collection";
           } catch (e) {}
@@ -85,7 +83,6 @@ export function useCollection<T = any>(
           setData(null);
           setIsLoading(false);
           
-          // Emit contextual error for global listener
           errorEmitter.emit('permission-error', contextualError);
         }
       );
