@@ -48,37 +48,30 @@ export const FirebaseContext = createContext<FirebaseContextState | undefined>(u
 
 /**
  * Recreated Image-based Logo Loader
- * Features: M-Chat-Bubble, Rotating Orbital Ring, and Tiny Eyes.
+ * Features: Stylized M-Chat-Bubble, Moving Tiny Eyes, and Chat Tail.
  */
 function LogoLoader() {
   return (
     <div className="flex flex-col items-center gap-10 animate-in fade-in duration-700">
       <div className="relative w-48 h-48 flex items-center justify-center">
-        {/* Orbital Ring - Elliptical rotation around the logo */}
-        <div className="absolute inset-0 z-0 animate-ring-rotate">
-           <svg width="100%" height="100%" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg" className="opacity-80">
-             <ellipse cx="80" cy="80" rx="75" ry="25" stroke="#FF4500" strokeWidth="6" transform="rotate(-25 80 80)" />
-           </svg>
-        </div>
-
-        {/* Character Body - Stylized 'M' Chat Bubble */}
+        {/* Character Body - Refined 'M' Chat Bubble Shape based on Image */}
         <div className="relative z-10 animate-bubble-sway">
-          <svg width="120" height="120" viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-            {/* The main 'M' Chat Bubble Shape */}
+          <svg width="140" height="140" viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* The main 'M' Chat Bubble Character Shape */}
             <path 
-              d="M30 110 L10 135 V40 C10 20 25 10 45 10 C65 10 70 25 70 45 C70 25 75 10 95 10 C115 10 130 20 130 40 V110 C130 125 115 130 100 130 H30 Z" 
+              d="M25 115 L5 135 V110 C5 30 20 15 40 15 C55 15 65 25 70 45 C75 25 85 15 100 15 C120 15 135 30 135 110 C135 125 120 130 100 130 H25 Z" 
               fill="#FF4500" 
             />
 
-            {/* Moving and Blinking Eyes */}
+            {/* Moving and Blinking Tiny Eyes */}
             <g className="animate-eye-look">
               <g className="animate-eye-blink">
-                <circle cx="45" cy="55" r="2.5" fill="white" />
-                <circle cx="95" cy="55" r="2.5" fill="white" />
+                <circle cx="40" cy="65" r="2" fill="white" />
+                <circle cx="100" cy="65" r="2" fill="white" />
               </g>
             </g>
             
-            {/* Top-right Accent Dot from image */}
+            {/* Top-right Floating Accent Dot */}
             <circle cx="130" cy="15" r="7" fill="#FF4500" className="animate-pulse" />
           </svg>
         </div>
