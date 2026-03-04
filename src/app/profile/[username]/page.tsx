@@ -76,6 +76,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
   const { data: followDoc, isLoading: followLoading } = useDoc(followRef);
   const isFollowing = !!followDoc;
 
+  // Real-time followers/following listeners
   const circlingQuery = useMemoFirebase(() => (db && profileData?.id ? query(fsCollection(db, "follows"), where("followerId", "==", profileData.id)) : null), [db, profileData?.id]);
   const circleQuery = useMemoFirebase(() => (db && profileData?.id ? query(fsCollection(db, "follows"), where("followedId", "==", profileData.id)) : null), [db, profileData?.id]);
   
@@ -114,7 +115,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
 
   return (
     <div className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden flex flex-col" style={{ backgroundColor: colors.background || "var(--background)" }}>
-      {/* LAYER 1: Media (Banner/Logo) - Plane Z-10 */}
+      {/* LAYER 1: Media (Banner/Logo) - Base Plane Z-10 */}
       <div className="relative w-full shrink-0 z-10">
         <div className="h-16 w-full" style={{ backgroundColor: colors.header || "var(--primary)" }} />
         <header className="absolute top-0 left-0 right-0 px-6 py-5 flex justify-between items-center z-[100]">
@@ -138,8 +139,8 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         </div>
       </div>
 
-      {/* LAYER 2: Stickers - Plane Z-50 */}
-      <div className="absolute inset-0 pointer-events-none z-50">
+      {/* LAYER 2: Stickers - Middle Plane Z-20 */}
+      <div className="absolute inset-0 pointer-events-none z-20">
         {stickers.map((sticker) => (
           <div 
             key={sticker.id} 
@@ -157,17 +158,18 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         ))}
       </div>
 
-      {/* LAYER 3: IDENTITY PLANE - Z-20 Base Container */}
-      <div className="w-full relative mt-4 z-20">
+      {/* LAYER 3: IDENTITY PLANE - Top-most plane Z-30 */}
+      <div className="w-full relative mt-4 z-30">
+        {/* Invisible Protection Box: The background color blocks stickers behind it */}
         <div style={{ backgroundColor: colors.userInfo }} className="px-6 flex flex-col items-center relative">
           
-          {/* SUPREMACY LAYER: Top-most plane for Name and Username, strictly above stickers */}
-          <div className="relative z-[60] flex flex-col items-center pointer-events-none">
+          {/* Identity Shield: Ensures handle and name are strictly above stickers */}
+          <div className="relative z-40 flex flex-col items-center">
             <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{profileData.name || profileData.username}</h2>
             <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>@{profileData.username}</p>
           </div>
           
-          <div className="flex gap-3 w-full mt-6 px-4 relative z-[60]">
+          <div className="flex gap-3 w-full mt-6 px-4 relative z-40">
             <Button className={cn("flex-1 rounded-2xl font-black uppercase text-[10px] h-11 shadow-xl", isFollowing ? "bg-muted text-foreground" : "bg-primary text-white")} onClick={handleFollowToggle} disabled={followLoading || profileData.id === currentUser?.uid}>
               {isFollowing ? <><UserCheck size={16} className="mr-2" /> Following</> : <><UserPlus size={16} className="mr-2" /> Follow</>}
             </Button>

@@ -213,6 +213,7 @@ export default function ProfilePage() {
     const dy = ((e.clientY - dragStart.y) / rect.height) * 100;
 
     const newX = Math.max(0, Math.min(100, dragStart.stickerX + dx));
+    // Invisible Boundary Lock: Stickers cannot go below 48% of the container height
     const newY = Math.max(0, Math.min(48, dragStart.stickerY + dy));
 
     updateSticker(id, 'x', newX);
@@ -318,8 +319,8 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* LAYER 2: Stickers - Plane Z-50 */}
-      <div className="absolute inset-0 pointer-events-none z-50">
+      {/* LAYER 2: Stickers - Middle Layer Z-20 */}
+      <div className="absolute inset-0 pointer-events-none z-20">
         {localProfile.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
@@ -347,14 +348,15 @@ export default function ProfilePage() {
         ))}
       </div>
 
-      {/* LAYER 3: IDENTITY PLANE - Stacking Context for Text layers */}
-      <div className="w-full relative mt-4 z-20">
+      {/* LAYER 3: IDENTITY PLANE - Top-most plane Z-30 */}
+      <div className="w-full relative mt-4 z-30">
+        {/* Invisible Protection Box: The background color blocks stickers behind it */}
         <div style={{ backgroundColor: colors.userInfo }} className="px-6 flex flex-col items-center relative">
           
-          {/* SUPREMACY LAYER: Top-most plane for Name and Username, strictly above stickers */}
-          <div className="relative z-[60] flex flex-col items-center pointer-events-none">
+          {/* Identity Shield: Ensures handle and name are strictly above stickers */}
+          <div className="relative z-40 flex flex-col items-center">
             {isEditMode ? (
-              <div className="w-full space-y-4 pt-4 pointer-events-auto">
+              <div className="w-full space-y-4 pt-4">
                 <div className="space-y-1">
                   <Label className="text-[10px] font-black uppercase opacity-40 ml-1">Name</Label>
                   <input value={localProfile.name} onChange={e => setLocalProfile(p => ({ ...p, name: e.target.value }))} className="w-full text-center font-black uppercase text-xl h-14 rounded-2xl border-primary/20 bg-white/50 outline-none" placeholder="Your Name" />
@@ -372,7 +374,7 @@ export default function ProfilePage() {
             )}
           </div>
           
-          {/* Bio Card Overlap Shadow Mastery - Lower layer than Name but still functional */}
+          {/* Bio Card Overlap Shadow Mastery */}
           {!isEditMode && (
             <div 
               className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-[0_40px_80px_-10px_rgba(0,0,0,0.4)] border-primary/5 relative z-20" 
