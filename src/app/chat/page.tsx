@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { Search, Bell, Globe, Loader2, Plus, MessageCircle, UserPlus, RefreshCcw, ShieldAlert, AlertCircle, Info } from "lucide-react";
+import { Search, Bell, Globe, Loader2, Plus, MessageCircle, UserPlus, RefreshCcw, ShieldAlert, AlertCircle, Info, CheckCircle2 } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from "@/firebase";
 import { collection, query, orderBy, limit, where, getDocs, Timestamp, doc } from "firebase/firestore";
 import Link from "next/link";
@@ -68,19 +68,20 @@ export default function HubPage() {
   const [isSearchingUsers, setIsSearchingUsers] = useState(false);
   const [useSimpleQuery, setUseSimpleQuery] = useState(false);
 
-  // Debugging: If useSimpleQuery is true, we remove 'orderBy' to see if data exists
-  // but the composite index is failing.
+  // Debugging: If useSimpleQuery is true, we remove 'orderBy' to bypass the index requirement
   const privateChatsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     const colRef = collection(db, "privateChats");
     
     if (useSimpleQuery) {
+      // Bypasses index requirement by removing ordering
       return query(
         colRef,
         where("participants", "array-contains", user.uid)
       );
     }
 
+    // Standard query requiring a COMPOSITE INDEX
     return query(
       colRef,
       where("participants", "array-contains", user.uid),
@@ -212,19 +213,37 @@ export default function HubPage() {
              <div className="py-8 text-center space-y-6 flex flex-col items-center bg-primary/5 rounded-[3rem] mx-2 border border-primary/10 animate-in fade-in">
               <ShieldAlert size={40} className="text-primary animate-pulse" />
               <div className="space-y-2">
-                <p className="text-sm font-black uppercase text-primary tracking-tighter px-4">Composite Index Required</p>
+                <p className="text-sm font-black uppercase text-primary tracking-tighter px-4">Index Check Required</p>
                 <p className="text-[10px] font-medium text-muted-foreground px-8 leading-relaxed uppercase">
-                  A <b>single</b> index covering both `participants` and `timestamp` is needed. 
-                  Two separate single-field indexes will not work.
+                  A <b>Composite Index</b> is missing or misconfigured. Even if you created one, it must exactly match the query settings.
                 </p>
               </div>
               
-              <div className="w-full px-6">
+              <div className="w-full px-6 space-y-3">
                 <div className="bg-white/80 p-4 rounded-2xl border border-primary/20 text-left">
                    <p className="text-[9px] font-black uppercase text-primary mb-2 flex items-center gap-2">
-                     <AlertCircle size={12} /> System Log:
+                     <AlertCircle size={12} /> Your Index ID: CICAgJiUpoMJ
                    </p>
-                   <p className="text-[9px] font-mono text-foreground/70 break-all leading-tight">
+                   <div className="space-y-1.5 border-t pt-2 border-primary/5 mt-2">
+                      <p className="text-[8px] font-black uppercase text-muted-foreground">Verify these settings in Console:</p>
+                      <div className="flex justify-between items-center bg-muted/20 p-1.5 rounded-lg">
+                        <span className="text-[8px] font-bold">Collection</span>
+                        <span className="text-[8px] font-black text-primary">privateChats</span>
+                      </div>
+                      <div className="flex justify-between items-center bg-muted/20 p-1.5 rounded-lg">
+                        <span className="text-[8px] font-bold">Field 1</span>
+                        <span className="text-[8px] font-black text-primary">participants (Arrays)</span>
+                      </div>
+                      <div className="flex justify-between items-center bg-muted/20 p-1.5 rounded-lg">
+                        <span className="text-[8px] font-bold">Field 2</span>
+                        <span className="text-[8px] font-black text-primary">timestamp (Descending)</span>
+                      </div>
+                   </div>
+                </div>
+
+                <div className="bg-white/80 p-4 rounded-2xl border border-primary/20 text-left">
+                   <p className="text-[9px] font-black uppercase text-primary mb-2">Raw Error Message:</p>
+                   <p className="text-[8px] font-mono text-foreground/70 break-all leading-tight">
                      {privateError.message}
                    </p>
                 </div>
@@ -234,21 +253,15 @@ export default function HubPage() {
                 <Button 
                   onClick={() => setUseSimpleQuery(true)} 
                   variant="outline"
-                  className="w-full rounded-full h-12 border-primary text-primary font-black uppercase text-[10px] tracking-widest"
+                  className="w-full rounded-full h-12 border-primary text-primary font-black uppercase text-[10px] tracking-widest shadow-sm"
                 >
                   <RefreshCcw size={14} className="mr-2" /> Fetch without Sorting (Debug)
                 </Button>
-                <Button 
-                  onClick={() => window.location.reload()} 
-                  className="w-full rounded-full h-12 bg-primary text-white font-black uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20"
-                >
-                  Refresh Hub
-                </Button>
+                
                 <div className="bg-blue-50 p-3 rounded-xl border border-blue-100 flex items-start gap-2">
                   <Info size={14} className="text-blue-500 shrink-0 mt-0.5" />
                   <p className="text-[8px] font-bold text-blue-600 uppercase text-left leading-normal">
-                    Note: If data appears when using 'Debug Fetch', then your existing indexes are likely 'Single' instead of 'Composite'. 
-                    Create one index in the 'Composite' tab with fields: participants (Arrays) + timestamp (Descending).
+                    Tip: If "Debug Fetch" works, your data is safe but the index configuration has a small mismatch (likely Descending vs Ascending).
                   </p>
                 </div>
               </div>
@@ -257,8 +270,11 @@ export default function HubPage() {
             <>
               {useSimpleQuery && (
                 <div className="bg-secondary/10 p-3 rounded-2xl border border-secondary/20 flex items-center justify-between mb-2">
-                  <p className="text-[9px] font-black uppercase text-secondary">Simple Fetch Active (Debug)</p>
-                  <Button size="sm" variant="ghost" onClick={() => setUseSimpleQuery(false)} className="h-6 text-[8px] uppercase font-black">Turn Off</Button>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 size={14} className="text-secondary" />
+                    <p className="text-[9px] font-black uppercase text-secondary">Simple Fetch Active (Index Bypass)</p>
+                  </div>
+                  <Button size="sm" variant="ghost" onClick={() => setUseSimpleQuery(false)} className="h-6 text-[8px] uppercase font-black">Enable Sorting</Button>
                 </div>
               )}
               {privateChats.map((chat) => {
