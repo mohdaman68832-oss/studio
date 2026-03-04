@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, Send, Phone, Video, Lock, Circle, Loader2 } from "lucide-react";
+import { Send, Lock, Circle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFirestore, useDoc, useMemoFirebase, useUser, useCollection } from "@/firebase";
 import { doc, collection, query, orderBy, addDoc, serverTimestamp, setDoc, limit, updateDoc, increment } from "firebase/firestore";
@@ -132,11 +132,6 @@ export default function ChatDetailPage() {
             </div>
           </div>
         </Link>
-
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="rounded-full"><Phone size={18} /></Button>
-          <Button variant="ghost" size="icon" className="rounded-full"><Video size={18} /></Button>
-        </div>
       </header>
 
       <div 
