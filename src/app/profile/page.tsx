@@ -213,6 +213,7 @@ export default function ProfilePage() {
     const dy = ((e.clientY - dragStart.y) / rect.height) * 100;
 
     const newX = Math.max(0, Math.min(100, dragStart.stickerX + dx));
+    // INVISIBLE BOUNDARY: Limit Y to 48% height to keep stickers in the banner/bio area
     const newY = Math.max(0, Math.min(48, dragStart.stickerY + dy));
 
     updateSticker(id, 'x', newX);
@@ -251,7 +252,7 @@ export default function ProfilePage() {
       {/* LAYER 1: Media (Banner/Logo) - Z-10 */}
       <div className="relative w-full shrink-0 z-10">
         <div className="h-16 w-full" style={{ backgroundColor: headerColor }} />
-        <header className="absolute top-0 left-0 right-0 px-6 py-5 flex justify-between items-center z-[50]">
+        <header className="absolute top-0 left-0 right-0 px-6 py-5 flex justify-between items-center z-[70]">
           {isEditMode ? (
              <Button variant="ghost" size="icon" onClick={() => setIsEditMode(false)} className="rounded-full bg-black/20 backdrop-blur-md">
                <X size={24} className="text-white" />
@@ -318,8 +319,37 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* LAYER 2: User Info & Bio - Z-20 (Now below stickers) */}
-      <div className="w-full relative mt-4 z-20">
+      {/* LAYER 3: Stickers - Z-50 (Now below text but above media) */}
+      <div className="absolute inset-0 pointer-events-none z-50">
+        {localProfile.stickers.map((sticker) => (
+          <div 
+            key={sticker.id} 
+            className={cn(
+              "absolute", 
+              isEditMode ? "pointer-events-auto cursor-pointer" : "pointer-events-none"
+            )} 
+            onPointerDown={(e) => handleStickerPointerDown(e, sticker.id)}
+            onPointerMove={(e) => handleStickerPointerMove(e, sticker.id)}
+            onPointerUp={handleStickerPointerUp}
+            style={{ 
+              left: `${sticker.x}%`, 
+              top: `${sticker.y}%`, 
+              transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg) scale(${sticker.scale})`,
+              touchAction: 'none'
+            }}
+          >
+            <div className={cn(
+              "relative w-24 h-24 transition-all duration-200",
+              isEditMode && selectedStickerId === sticker.id && "ring-4 ring-primary ring-offset-4 rounded-xl scale-105"
+            )}>
+              <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* LAYER 2: User Info & Bio - Z-60 (Now ABOVE stickers) */}
+      <div className="w-full relative mt-4 z-60">
         <div style={{ backgroundColor: colors.userInfo }} className="px-6 flex flex-col items-center relative">
           {isEditMode ? (
             <div className="w-full space-y-4 pt-4">
@@ -402,35 +432,6 @@ export default function ProfilePage() {
             </Tabs>
           </div>
         </div>
-      </div>
-
-      {/* LAYER 3: Stickers - Z-50 (Now ON TOP of everything) */}
-      <div className="absolute inset-0 pointer-events-none z-50">
-        {localProfile.stickers.map((sticker) => (
-          <div 
-            key={sticker.id} 
-            className={cn(
-              "absolute", 
-              isEditMode ? "pointer-events-auto cursor-pointer" : "pointer-events-none"
-            )} 
-            onPointerDown={(e) => handleStickerPointerDown(e, sticker.id)}
-            onPointerMove={(e) => handleStickerPointerMove(e, sticker.id)}
-            onPointerUp={handleStickerPointerUp}
-            style={{ 
-              left: `${sticker.x}%`, 
-              top: `${sticker.y}%`, 
-              transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg) scale(${sticker.scale})`,
-              touchAction: 'none'
-            }}
-          >
-            <div className={cn(
-              "relative w-24 h-24 transition-all duration-200",
-              isEditMode && selectedStickerId === sticker.id && "ring-4 ring-primary ring-offset-4 rounded-xl scale-105"
-            )}>
-              <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized />
-            </div>
-          </div>
-        ))}
       </div>
 
       {isEditMode && (

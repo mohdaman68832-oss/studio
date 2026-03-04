@@ -114,28 +114,10 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
 
   return (
     <div className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden flex flex-col" style={{ backgroundColor: colors.background || "var(--background)" }}>
-      {/* Visual Sticker Layer - Z-50 (Top of Media/Text) */}
-      <div className="absolute inset-0 pointer-events-none z-50">
-        {stickers.map((sticker) => (
-          <div 
-            key={sticker.id} 
-            className="absolute pointer-events-none select-none" 
-            style={{ 
-              left: `${sticker.x}%`, 
-              top: `${sticker.y}%`, 
-              transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`, 
-            }}
-          >
-            <div className="relative w-24 h-24">
-              <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized />
-            </div>
-          </div>
-        ))}
-      </div>
-
+      {/* LAYER 1: Media (Banner/Logo) - Z-10 */}
       <div className="relative w-full shrink-0 z-10">
         <div className="h-16 w-full" style={{ backgroundColor: colors.header || "var(--primary)" }} />
-        <header className="absolute top-0 left-0 right-0 px-6 py-5 flex justify-between items-center z-[50]">
+        <header className="absolute top-0 left-0 right-0 px-6 py-5 flex justify-between items-center z-[70]">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full">
             <ChevronLeft size={24} style={{ color: getContrastColor(colors.header) }} />
           </Button>
@@ -156,10 +138,30 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         </div>
       </div>
 
-      <div className="w-full relative mt-4 z-20">
+      {/* LAYER 3: Stickers - Z-50 (Below text but above media) */}
+      <div className="absolute inset-0 pointer-events-none z-50">
+        {stickers.map((sticker) => (
+          <div 
+            key={sticker.id} 
+            className="absolute pointer-events-none select-none" 
+            style={{ 
+              left: `${sticker.x}%`, 
+              top: `${sticker.y}%`, 
+              transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`, 
+            }}
+          >
+            <div className="relative w-24 h-24">
+              <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* LAYER 2: User Info & Bio - Z-60 (Now ABOVE stickers) */}
+      <div className="w-full relative mt-4 z-60">
         <div style={{ backgroundColor: colors.userInfo }} className="px-6 flex flex-col items-center relative">
           <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{profileData.name || profileData.username}</h2>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>Innovator Hub</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>@{profileData.username}</p>
           
           <div className="flex gap-3 w-full mt-6 px-4">
             <Button className={cn("flex-1 rounded-2xl font-black uppercase text-[10px] h-11 shadow-xl", isFollowing ? "bg-muted text-foreground" : "bg-primary text-white")} onClick={handleFollowToggle} disabled={followLoading || profileData.id === currentUser?.uid}>
@@ -170,7 +172,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
             </Button>
           </div>
 
-          <div className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] border-primary/5 relative z-20" style={{ backgroundColor: colors.bioCard || "#FFFFFF" }}>
+          <div className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-[0_40px_80px_-10px_rgba(0,0,0,0.4)] border-primary/5 relative z-20" style={{ backgroundColor: colors.bioCard || "#FFFFFF" }}>
             <p className="text-center text-[12px] leading-relaxed font-bold italic" style={{ color: getContrastColor(colors.bioCard) }}>
               {profileData.bio || "Innovating the future, one idea at a time."}
             </p>
