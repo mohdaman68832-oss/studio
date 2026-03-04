@@ -60,7 +60,7 @@ function ChatRecipientInfo({ recipientId, lastMessage, timestamp }: { recipientI
 }
 
 export default function HubPage() {
-  const { user, loading: isUserLoading } = useUser();
+  const { user, isUserLoading } = useUser();
   const db = useFirestore();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
@@ -215,20 +215,23 @@ export default function HubPage() {
               <div className="space-y-2">
                 <p className="text-sm font-black uppercase text-primary tracking-tighter px-4">Index Check Required</p>
                 <p className="text-[10px] font-medium text-muted-foreground px-8 leading-relaxed uppercase">
-                  A <b>Composite Index</b> is missing or misconfigured. Even if you created one, it must exactly match the query settings.
+                  A <b>Composite Index</b> is missing. Follow these exact settings in the Firebase Console.
                 </p>
               </div>
               
               <div className="w-full px-6 space-y-3">
-                <div className="bg-white/80 p-4 rounded-2xl border border-primary/20 text-left">
+                <div className="bg-white/80 p-4 rounded-2xl border border-primary/20 text-left shadow-sm">
                    <p className="text-[9px] font-black uppercase text-primary mb-2 flex items-center gap-2">
-                     <AlertCircle size={12} /> Your Index ID: CICAgJiUpoMJ
+                     <AlertCircle size={12} /> Index Settings Guide
                    </p>
                    <div className="space-y-1.5 border-t pt-2 border-primary/5 mt-2">
-                      <p className="text-[8px] font-black uppercase text-muted-foreground">Verify these settings in Console:</p>
                       <div className="flex justify-between items-center bg-muted/20 p-1.5 rounded-lg">
-                        <span className="text-[8px] font-bold">Collection</span>
+                        <span className="text-[8px] font-bold">Collection ID</span>
                         <span className="text-[8px] font-black text-primary">privateChats</span>
+                      </div>
+                      <div className="flex justify-between items-center bg-primary/10 p-1.5 rounded-lg border border-primary/20">
+                        <span className="text-[8px] font-bold">Query Scope</span>
+                        <span className="text-[8px] font-black text-primary underline">Collection</span>
                       </div>
                       <div className="flex justify-between items-center bg-muted/20 p-1.5 rounded-lg">
                         <span className="text-[8px] font-bold">Field 1</span>
@@ -261,7 +264,7 @@ export default function HubPage() {
                 <div className="bg-blue-50 p-3 rounded-xl border border-blue-100 flex items-start gap-2">
                   <Info size={14} className="text-blue-500 shrink-0 mt-0.5" />
                   <p className="text-[8px] font-bold text-blue-600 uppercase text-left leading-normal">
-                    Tip: If "Debug Fetch" works, your data is safe but the index configuration has a small mismatch (likely Descending vs Ascending).
+                    Tip: Select "Collection" in Query Scope. Do NOT select "Collection Group".
                   </p>
                 </div>
               </div>
