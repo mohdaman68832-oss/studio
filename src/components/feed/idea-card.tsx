@@ -1,4 +1,3 @@
-
 "use client";
 
 import Image from "next/image";
@@ -193,7 +192,7 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
           <span className="text-[10px] font-black text-muted-foreground mt-1">{commentCount}</span>
         </Link>
         <div className="flex items-center gap-1 ml-auto mr-2 bg-muted/20 px-2 py-1 rounded-full">
-           < Eye size={14} className="text-muted-foreground/60" />
+           <Eye size={14} className="text-muted-foreground/60" />
            <span className="text-[9px] font-black text-muted-foreground/60">{viewCount}</span>
         </div>
         <button type="button" onClick={handleShare} className="p-2"><Share2 size={24} /></button>
