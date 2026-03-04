@@ -123,8 +123,8 @@ export default function ProfilePage() {
   const { data: userPosts, isLoading: isPostsLoading } = useCollection(userPostsQuery);
   const dynamicPostCount = userPosts?.length || 0;
 
-  const circlingQuery = useMemoFirebase(() => (db && user?.uid ? query(fsCollection(db, "follows"), where("followerId", "==", user.uid)) : null), [db, user?.uid]);
-  const circleQuery = useMemoFirebase(() => (db && user?.uid ? query(fsCollection(db, "follows"), where("followedId", "==", user.uid)) : null), [db, user?.uid]);
+  const circlingQuery = useMemoFirebase(() => (db && user?.uid ? query(fsCollection(db, "follows"), where("followerId", "==", user.uid)) : null), [db, user.uid]);
+  const circleQuery = useMemoFirebase(() => (db && user?.uid ? query(fsCollection(db, "follows"), where("followedId", "==", user.uid)) : null), [db, user.uid]);
   
   const { data: circlingData } = useCollection(circlingQuery);
   const { data: circleData } = useCollection(circleQuery);
@@ -318,7 +318,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* LAYER 2: Stickers - Plane Z-50 (ABOVE media AND Identity text as requested) */}
+      {/* LAYER 2: Stickers - Plane Z-50 */}
       <div className="absolute inset-0 pointer-events-none z-50">
         {localProfile.stickers.map((sticker) => (
           <div 
@@ -347,11 +347,11 @@ export default function ProfilePage() {
         ))}
       </div>
 
-      {/* LAYER 3: IDENTITY PLANE - Z-20 (Now below stickers as requested) */}
+      {/* LAYER 3: IDENTITY PLANE - Z-20 Base Container */}
       <div className="w-full relative mt-4 z-20">
         <div style={{ backgroundColor: colors.userInfo }} className="px-6 flex flex-col items-center relative">
           {isEditMode ? (
-            <div className="w-full space-y-4 pt-4">
+            <div className="w-full space-y-4 pt-4 relative z-[60]">
               <div className="space-y-1">
                 <Label className="text-[10px] font-black uppercase opacity-40 ml-1">Name</Label>
                 <input value={localProfile.name} onChange={e => setLocalProfile(p => ({ ...p, name: e.target.value }))} className="w-full text-center font-black uppercase text-xl h-14 rounded-2xl border-primary/20 bg-white/50 outline-none" placeholder="Your Name" />
@@ -363,8 +363,11 @@ export default function ProfilePage() {
             </div>
           ) : (
             <>
-              <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{localProfile.name}</h2>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>@{profileData?.username || "user"}</p>
+              {/* NEW IDENTITY LAYER: Top-most plane for Name and Username */}
+              <div className="relative z-[60] flex flex-col items-center">
+                <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{localProfile.name}</h2>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>@{profileData?.username || "user"}</p>
+              </div>
               
               {/* Bio Card Overlap Shadow Mastery */}
               <div 

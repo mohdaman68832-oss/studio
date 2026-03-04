@@ -138,7 +138,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         </div>
       </div>
 
-      {/* LAYER 2: Stickers - Plane Z-50 (Now above text as requested) */}
+      {/* LAYER 2: Stickers - Plane Z-50 */}
       <div className="absolute inset-0 pointer-events-none z-50">
         {stickers.map((sticker) => (
           <div 
@@ -157,13 +157,17 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         ))}
       </div>
 
-      {/* LAYER 3: IDENTITY PLANE - Z-20 (Now below stickers as requested) */}
+      {/* LAYER 3: IDENTITY PLANE - Z-20 Base Container */}
       <div className="w-full relative mt-4 z-20">
         <div style={{ backgroundColor: colors.userInfo }} className="px-6 flex flex-col items-center relative">
-          <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{profileData.name || profileData.username}</h2>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>@{profileData.username}</p>
           
-          <div className="flex gap-3 w-full mt-6 px-4">
+          {/* NEW IDENTITY LAYER: Top-most plane for Name and Username */}
+          <div className="relative z-[60] flex flex-col items-center">
+            <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{profileData.name || profileData.username}</h2>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>@{profileData.username}</p>
+          </div>
+          
+          <div className="flex gap-3 w-full mt-6 px-4 relative z-[60]">
             <Button className={cn("flex-1 rounded-2xl font-black uppercase text-[10px] h-11 shadow-xl", isFollowing ? "bg-muted text-foreground" : "bg-primary text-white")} onClick={handleFollowToggle} disabled={followLoading || profileData.id === currentUser?.uid}>
               {isFollowing ? <><UserCheck size={16} className="mr-2" /> Following</> : <><UserPlus size={16} className="mr-2" /> Follow</>}
             </Button>
