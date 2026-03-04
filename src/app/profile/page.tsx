@@ -248,7 +248,7 @@ export default function ProfilePage() {
       className="max-w-md mx-auto min-h-screen pb-24 relative overflow-x-hidden flex flex-col" 
       style={{ backgroundColor: colors.background || "var(--background)" }}
     >
-      {/* LAYER 1: Media (Banner/Logo) - Z-10 */}
+      {/* LAYER 1: Media (Banner/Logo) - Plane Z-10 */}
       <div className="relative w-full shrink-0 z-10">
         <div className="h-16 w-full" style={{ backgroundColor: headerColor }} />
         <header className="absolute top-0 left-0 right-0 px-6 py-5 flex justify-between items-center z-[100]">
@@ -318,8 +318,8 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* LAYER 2: Stickers - Z-20 (ABOVE media, but BELOW identity) */}
-      <div className="absolute inset-0 pointer-events-none z-20">
+      {/* LAYER 2: Stickers - Plane Z-30 (ABOVE media, but BELOW identity) */}
+      <div className="absolute inset-0 pointer-events-none z-30">
         {localProfile.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
@@ -347,8 +347,8 @@ export default function ProfilePage() {
         ))}
       </div>
 
-      {/* LAYER 3: IDENTITY SUPREMACY - Z-70 (Ensures Name, Bio & Stats are TOP MOST) */}
-      <div className="w-full relative mt-4 z-70">
+      {/* LAYER 3: IDENTITY PLANE - Z-50 (Ensures Text is TOP MOST) */}
+      <div className="w-full relative mt-4 z-50">
         <div style={{ backgroundColor: colors.userInfo }} className="px-6 flex flex-col items-center relative">
           {isEditMode ? (
             <div className="w-full space-y-4 pt-4">
@@ -366,7 +366,7 @@ export default function ProfilePage() {
               <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{localProfile.name}</h2>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>@{profileData?.username || "user"}</p>
               
-              {/* Bio Card Overlap Shadow Mastery - Internal z-index for depth relative to parent supremacy */}
+              {/* Bio Card Overlap Shadow Mastery - Internal stacking within the Text Plane */}
               <div 
                 className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-[0_40px_80px_-10px_rgba(0,0,0,0.4)] border-primary/5 relative z-20" 
                 style={{ backgroundColor: colors.bioCard || "hsl(var(--card))" }}
@@ -379,7 +379,7 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Stats & Content Section - Z-10 internal to Supremacy parent to stay below Bio Card shadow but above stickers */}
+        {/* Content Section - Still within Plane Z-50 */}
         <div className="relative z-10">
           <div style={{ backgroundColor: colors.statsSection }} className="w-full py-10 px-10 relative">
             <div className="grid grid-cols-3 gap-6 w-full">
@@ -443,7 +443,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* Fine-Tune Sticker Hub - Z-2000 */}
+      {/* Fine-Tune Sticker Hub - Top Most Plane Z-2000 */}
       <Sheet open={isStickerSheetOpen} onOpenChange={setIsStickerSheetOpen} modal={false}>
         <SheetContent 
           side="bottom" 
