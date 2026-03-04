@@ -19,7 +19,11 @@ export function BottomNav() {
   const { data: profileData } = useDoc(profileRef);
 
   const isAuthPage = pathname === '/login' || pathname === '/signup';
-  if (!user || isAuthPage) return null;
+  
+  // Requirement: Hide bottom nav on specific chat detail pages
+  const isChatDetailPage = pathname?.startsWith('/chat/') && pathname !== '/chat';
+
+  if (!user || isAuthPage || isChatDetailPage) return null;
 
   const navItems = [
     { label: "Feed", icon: Home, href: "/" },

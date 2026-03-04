@@ -186,7 +186,8 @@ export default function ChatDetailPage() {
         )}
       </div>
 
-      <div className="p-4 pb-24 bg-white border-t sticky bottom-0 z-50">
+      {/* Requirement: Nav is hidden, so we use minimal safe area padding */}
+      <div className="p-4 pb-6 bg-white border-t sticky bottom-0 z-50">
         <div className="flex items-center gap-2 bg-muted/30 rounded-[2rem] pl-4 pr-1 py-1 border border-primary/10">
           <Input 
             placeholder="Secure private message..." 
