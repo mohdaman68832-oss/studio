@@ -124,6 +124,13 @@ export default function ProfilePage() {
   const { data: userPosts, isLoading: isPostsLoading } = useCollection(userPostsQuery);
   const dynamicPostCount = userPosts?.length || 0;
 
+  // Real-time Follow Metrics
+  const circlingQuery = useMemoFirebase(() => (db && user?.uid ? query(fsCollection(db, "follows"), where("followerId", "==", user.uid)) : null), [db, user?.uid]);
+  const circleQuery = useMemoFirebase(() => (db && user?.uid ? query(fsCollection(db, "follows"), where("followedId", "==", user.uid)) : null), [db, user?.uid]);
+  
+  const { data: circlingData } = useCollection(circlingQuery);
+  const { data: circleData } = useCollection(circleQuery);
+
   const handleSave = async () => {
     if (!profileRef) return;
     setIsSaving(true);
@@ -208,6 +215,7 @@ export default function ProfilePage() {
     const dy = ((e.clientY - dragStart.y) / rect.height) * 100;
 
     const newX = Math.max(0, Math.min(100, dragStart.stickerX + dx));
+    // Limit vertical dragging to not overlap with posts (invisible line)
     const newY = Math.max(0, Math.min(60, dragStart.stickerY + dy));
 
     updateSticker(id, 'x', newX);
@@ -391,11 +399,11 @@ export default function ProfilePage() {
                 <p className="text-[8px] uppercase font-black opacity-40">Posts</p>
               </div>
               <div className="text-center">
-                <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>0</p>
+                <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{circleData?.length || 0}</p>
                 <p className="text-[8px] uppercase font-black opacity-40">Circle</p>
               </div>
               <div className="text-center">
-                <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>0</p>
+                <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{circlingData?.length || 0}</p>
                 <p className="text-[8px] uppercase font-black opacity-40">Circling</p>
               </div>
             </div>
