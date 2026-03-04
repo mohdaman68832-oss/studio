@@ -347,38 +347,41 @@ export default function ProfilePage() {
         ))}
       </div>
 
-      {/* LAYER 3: IDENTITY PLANE - Z-20 Base Container */}
+      {/* LAYER 3: IDENTITY PLANE - Stacking Context for Text layers */}
       <div className="w-full relative mt-4 z-20">
         <div style={{ backgroundColor: colors.userInfo }} className="px-6 flex flex-col items-center relative">
-          {isEditMode ? (
-            <div className="w-full space-y-4 pt-4 relative z-[60]">
-              <div className="space-y-1">
-                <Label className="text-[10px] font-black uppercase opacity-40 ml-1">Name</Label>
-                <input value={localProfile.name} onChange={e => setLocalProfile(p => ({ ...p, name: e.target.value }))} className="w-full text-center font-black uppercase text-xl h-14 rounded-2xl border-primary/20 bg-white/50 outline-none" placeholder="Your Name" />
+          
+          {/* SUPREMACY LAYER: Top-most plane for Name and Username, strictly above stickers */}
+          <div className="relative z-[60] flex flex-col items-center pointer-events-none">
+            {isEditMode ? (
+              <div className="w-full space-y-4 pt-4 pointer-events-auto">
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-black uppercase opacity-40 ml-1">Name</Label>
+                  <input value={localProfile.name} onChange={e => setLocalProfile(p => ({ ...p, name: e.target.value }))} className="w-full text-center font-black uppercase text-xl h-14 rounded-2xl border-primary/20 bg-white/50 outline-none" placeholder="Your Name" />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-black uppercase opacity-40 ml-1">Mission Bio</Label>
+                  <Textarea value={localProfile.bio} onChange={e => setLocalProfile(p => ({ ...p, bio: e.target.value }))} className="text-center font-medium text-xs rounded-2xl border-primary/20 min-h-[100px] bg-white/50" placeholder="What are you building?" />
+                </div>
               </div>
-              <div className="space-y-1">
-                <Label className="text-[10px] font-black uppercase opacity-40 ml-1">Mission Bio</Label>
-                <Textarea value={localProfile.bio} onChange={e => setLocalProfile(p => ({ ...p, bio: e.target.value }))} className="text-center font-medium text-xs rounded-2xl border-primary/20 min-h-[100px] bg-white/50" placeholder="What are you building?" />
-              </div>
-            </div>
-          ) : (
-            <>
-              {/* NEW IDENTITY LAYER: Top-most plane for Name and Username */}
-              <div className="relative z-[60] flex flex-col items-center">
+            ) : (
+              <div className="flex flex-col items-center">
                 <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{localProfile.name}</h2>
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>@{profileData?.username || "user"}</p>
               </div>
-              
-              {/* Bio Card Overlap Shadow Mastery */}
-              <div 
-                className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-[0_40px_80px_-10px_rgba(0,0,0,0.4)] border-primary/5 relative z-20" 
-                style={{ backgroundColor: colors.bioCard || "hsl(var(--card))" }}
-              >
-                <p className="text-center text-[12px] leading-relaxed font-bold italic" style={{ color: getContrastColor(colors.bioCard) }}>
-                  {localProfile.bio}
-                </p>
-              </div>
-            </>
+            )}
+          </div>
+          
+          {/* Bio Card Overlap Shadow Mastery - Lower layer than Name but still functional */}
+          {!isEditMode && (
+            <div 
+              className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-[0_40px_80px_-10px_rgba(0,0,0,0.4)] border-primary/5 relative z-20" 
+              style={{ backgroundColor: colors.bioCard || "hsl(var(--card))" }}
+            >
+              <p className="text-center text-[12px] leading-relaxed font-bold italic" style={{ color: getContrastColor(colors.bioCard) }}>
+                {localProfile.bio}
+              </p>
+            </div>
           )}
         </div>
 

@@ -161,8 +161,8 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       <div className="w-full relative mt-4 z-20">
         <div style={{ backgroundColor: colors.userInfo }} className="px-6 flex flex-col items-center relative">
           
-          {/* NEW IDENTITY LAYER: Top-most plane for Name and Username */}
-          <div className="relative z-[60] flex flex-col items-center">
+          {/* SUPREMACY LAYER: Top-most plane for Name and Username, strictly above stickers */}
+          <div className="relative z-[60] flex flex-col items-center pointer-events-none">
             <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{profileData.name || profileData.username}</h2>
             <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>@{profileData.username}</p>
           </div>
