@@ -213,7 +213,6 @@ export default function ProfilePage() {
     const dy = ((e.clientY - dragStart.y) / rect.height) * 100;
 
     const newX = Math.max(0, Math.min(100, dragStart.stickerX + dx));
-    // INVISIBLE BOUNDARY: Limit Y to 48% height to keep stickers in the banner/bio area
     const newY = Math.max(0, Math.min(48, dragStart.stickerY + dy));
 
     updateSticker(id, 'x', newX);
@@ -319,8 +318,8 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* LAYER 3: Stickers - Z-50 (Below Text Layer Z-60) */}
-      <div className="absolute inset-0 pointer-events-none z-50">
+      {/* LAYER 3: Stickers - Z-20 (Now explicitly BELOW text layer z-70) */}
+      <div className="absolute inset-0 pointer-events-none z-20">
         {localProfile.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
@@ -348,8 +347,8 @@ export default function ProfilePage() {
         ))}
       </div>
 
-      {/* LAYER 2: Text Supremacy Section - Z-60 (ABOVE stickers Z-50) */}
-      <div className="w-full relative mt-4 z-60">
+      {/* LAYER 2: Text Supremacy Section - Z-70 (Guaranteed TOP for Identity) */}
+      <div className="w-full relative mt-4 z-70">
         <div style={{ backgroundColor: colors.userInfo }} className="px-6 flex flex-col items-center relative">
           {isEditMode ? (
             <div className="w-full space-y-4 pt-4">
@@ -367,6 +366,7 @@ export default function ProfilePage() {
               <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{localProfile.name}</h2>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>@{profileData?.username || "user"}</p>
               
+              {/* Bio Card Overlap Shadow Mastery */}
               <div 
                 className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-[0_40px_80px_-10px_rgba(0,0,0,0.4)] border-primary/5 relative z-20" 
                 style={{ backgroundColor: colors.bioCard || "hsl(var(--card))" }}
@@ -379,7 +379,7 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Stats & Content Section - Z-10 inside Z-60 parent to stay below Bio Card shadow */}
+        {/* Stats & Content Section - Z-10 inside Z-70 parent to stay below Bio Card shadow */}
         <div className="relative z-10">
           <div style={{ backgroundColor: colors.statsSection }} className="w-full py-10 px-10 relative">
             <div className="grid grid-cols-3 gap-6 w-full">

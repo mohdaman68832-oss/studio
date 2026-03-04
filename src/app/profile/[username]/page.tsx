@@ -138,8 +138,8 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         </div>
       </div>
 
-      {/* LAYER 3: Stickers - Z-50 (Below Text Layer Z-60) */}
-      <div className="absolute inset-0 pointer-events-none z-50">
+      {/* LAYER 3: Stickers - Z-20 (Now explicitly BELOW text layer z-70) */}
+      <div className="absolute inset-0 pointer-events-none z-20">
         {stickers.map((sticker) => (
           <div 
             key={sticker.id} 
@@ -157,8 +157,8 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         ))}
       </div>
 
-      {/* LAYER 2: Text Supremacy Section - Z-60 (ABOVE stickers Z-50) */}
-      <div className="w-full relative mt-4 z-60">
+      {/* LAYER 2: Text Supremacy Section - Z-70 (Ensures identity is always visible) */}
+      <div className="w-full relative mt-4 z-70">
         <div style={{ backgroundColor: colors.userInfo }} className="px-6 flex flex-col items-center relative">
           <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{profileData.name || profileData.username}</h2>
           <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>@{profileData.username}</p>
