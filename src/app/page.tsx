@@ -10,18 +10,17 @@ import { useMemo, useState, Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RefreshCcw, LayoutGrid, Globe, ImageIcon, Video, Type, Sparkles, Users } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 function GroupSuggestionRow({ userInterests }: { userInterests: string[] }) {
   const db = useFirestore();
   
-  // Fetch groups matching user interests
   const groupsQuery = useMemoFirebase(() => {
     if (!db || !userInterests?.length) return null;
     return query(
       collection(db, "groups"),
-      where("category", "in", userInterests.slice(0, 10)), // Firestore 'in' limit is 10
+      where("category", "in", userInterests.slice(0, 10)),
       limit(6)
     );
   }, [db, userInterests]);
@@ -64,20 +63,19 @@ function GroupSuggestionRow({ userInterests }: { userInterests: string[] }) {
 
 function FeedContent() {
   const db = useFirestore();
+  const router = useRouter();
   const { user } = useUser();
   const searchParams = useSearchParams();
   const urlCategory = searchParams.get("category");
 
   const [activeCategory, setActiveCategory] = useState("All");
-  const [memeType, setMemeType] = useState<"all" | "image" | "video" | "text">("all");
+  const [memeType, setMemeType] = useState<"all" | "image" | "video" | "text" | "group">("all");
 
-  // Fetch current user's profile to get their interests
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [user, db]);
   const { data: profileData } = useDoc(profileRef);
 
   const userInterests = profileData?.interests || [];
 
-  // Filtered query for Home Feed
   const postsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
@@ -88,6 +86,18 @@ function FeedContent() {
 
   const { data: firestorePosts, isLoading: loading } = useCollection(postsQuery);
 
+  // Separate query for groups if user filters Meme Hubs
+  const memeGroupsQuery = useMemoFirebase(() => {
+    if (!db || activeCategory !== "Meme" || memeType !== "group") return null;
+    return query(
+      collection(db, "groups"),
+      where("category", "==", "Memes"),
+      limit(20)
+    );
+  }, [db, activeCategory, memeType]);
+
+  const { data: memeGroups } = useCollection(memeGroupsQuery);
+
   const postsToDisplay = useMemo(() => {
     if (!firestorePosts) return [];
     
@@ -96,7 +106,6 @@ function FeedContent() {
     let filtered = firestorePosts;
 
     if (effectiveCategory === "All") {
-      // If personalized interests exist, prioritize them
       if (userInterests.length > 0 && !urlCategory) {
         filtered = filtered.filter(post => 
           userInterests.some(interest => post.category?.toLowerCase() === interest.toLowerCase())
@@ -106,7 +115,7 @@ function FeedContent() {
       filtered = filtered.filter(i => i.category?.toLowerCase() === effectiveCategory.toLowerCase());
     }
 
-    if (effectiveCategory === "Meme" && memeType !== "all") {
+    if (effectiveCategory === "Meme" && memeType !== "all" && memeType !== "group") {
       filtered = filtered.filter(i => i.mediaType === memeType);
     }
     
@@ -140,7 +149,6 @@ function FeedContent() {
         </Link>
       </header>
 
-      {/* Main Category Bar */}
       <div className="flex w-full gap-3 py-2 pb-4 mb-2 border-b">
         {["All", "Meme"].map((cat) => (
           <Button 
@@ -162,41 +170,51 @@ function FeedContent() {
         ))}
       </div>
 
-      {/* Meme Specific Options */}
       {activeCategory === "Meme" && (
-        <div className="flex w-full gap-2 mb-6 animate-in slide-in-from-top-2 duration-300">
+        <div className="flex w-full gap-2 mb-6 animate-in slide-in-from-top-2 duration-300 overflow-x-auto no-scrollbar pb-2 px-1">
           <Button 
             variant={memeType === "image" ? "default" : "outline"} 
             onClick={() => setMemeType(memeType === "image" ? "all" : "image")}
             className={cn(
-              "flex-1 rounded-2xl h-14 flex-col gap-1 border-2",
+              "flex-1 min-w-[85px] rounded-2xl h-14 flex-col gap-1 border-2",
               memeType === "image" ? "bg-secondary text-white border-secondary shadow-lg shadow-secondary/20" : "bg-white border-muted text-muted-foreground"
             )}
           >
             <ImageIcon size={18} />
-            <span className="text-[8px] font-black uppercase">Image Meme</span>
+            <span className="text-[8px] font-black uppercase">Image</span>
           </Button>
           <Button 
             variant={memeType === "video" ? "default" : "outline"} 
             onClick={() => setMemeType(memeType === "video" ? "all" : "video")}
             className={cn(
-              "flex-1 rounded-2xl h-14 flex-col gap-1 border-2",
+              "flex-1 min-w-[85px] rounded-2xl h-14 flex-col gap-1 border-2",
               memeType === "video" ? "bg-secondary text-white border-secondary shadow-lg shadow-secondary/20" : "bg-white border-muted text-muted-foreground"
             )}
           >
             <Video size={18} />
-            <span className="text-[8px] font-black uppercase">Video Meme</span>
+            <span className="text-[8px] font-black uppercase">Video</span>
           </Button>
           <Button 
             variant={memeType === "text" ? "default" : "outline"} 
             onClick={() => setMemeType(memeType === "text" ? "all" : "text")}
             className={cn(
-              "flex-1 rounded-2xl h-14 flex-col gap-1 border-2",
+              "flex-1 min-w-[85px] rounded-2xl h-14 flex-col gap-1 border-2",
               memeType === "text" ? "bg-secondary text-white border-secondary shadow-lg shadow-secondary/20" : "bg-white border-muted text-muted-foreground"
             )}
           >
             <Type size={18} />
-            <span className="text-[8px] font-black uppercase">Text Meme</span>
+            <span className="text-[8px] font-black uppercase">Text</span>
+          </Button>
+          <Button 
+            variant={memeType === "group" ? "default" : "outline"} 
+            onClick={() => setMemeType(memeType === "group" ? "all" : "group")}
+            className={cn(
+              "flex-1 min-w-[85px] rounded-2xl h-14 flex-col gap-1 border-2",
+              memeType === "group" ? "bg-primary text-white border-primary shadow-lg shadow-primary/20" : "bg-white border-muted text-muted-foreground"
+            )}
+          >
+            <Users size={18} />
+            <span className="text-[8px] font-black uppercase">Hubs</span>
           </Button>
         </div>
       )}
@@ -211,12 +229,38 @@ function FeedContent() {
               </div>
             ))}
           </div>
+        ) : memeType === "group" ? (
+          <div className="grid grid-cols-1 gap-4">
+            {memeGroups && memeGroups.length > 0 ? (
+              memeGroups.map((group) => (
+                <div 
+                  key={group.id} 
+                  onClick={() => router.push(`/groups/${group.id}`)}
+                  className="bg-white p-5 rounded-[2.5rem] border-2 border-primary/10 flex items-center gap-4 cursor-pointer hover:border-primary transition-all shadow-sm group"
+                >
+                  <Avatar className="h-14 w-14 rounded-2xl border-2 border-transparent group-hover:border-primary transition-all">
+                    <AvatarImage src={group.avatarUrl} className="object-cover" />
+                    <AvatarFallback className="bg-primary/5 text-primary text-xs font-black">{group.name[0]}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-black uppercase tracking-tight">{group.name}</h4>
+                    <p className="text-[10px] text-muted-foreground line-clamp-1">{group.description}</p>
+                  </div>
+                  <Users size={18} className="text-primary opacity-20" />
+                </div>
+              ))
+            ) : (
+              <div className="py-24 text-center space-y-4 opacity-30">
+                <Users size={48} className="mx-auto" />
+                <p className="text-[10px] font-black uppercase tracking-widest">No Meme Hubs found</p>
+              </div>
+            )}
+          </div>
         ) : postsToDisplay.length > 0 ? (
           postsToDisplay.map((post, index) => (
             <div key={post.id} className="animate-in fade-in slide-in-from-bottom-4 duration-300">
               <IdeaCard idea={post as any} priority={index < 2} />
               
-              {/* Insert Group Suggestions at 20, 30, 50 post intervals */}
               {(index === 19 || index === 29 || index === 49) && (
                 <div className="mt-8 mb-4">
                   <GroupSuggestionRow userInterests={userInterests} />
