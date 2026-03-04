@@ -84,8 +84,9 @@ export function useCollection<T = any>(
             setError(contextualError);
             errorEmitter.emit('permission-error', contextualError);
           } else {
-            // Log index errors clearly for the developer overlays
-            console.error("Firestore Index Required Error:", err.message);
+            // Use console.warn instead of console.error to avoid the disruptive Next.js dev overlay
+            // during index construction or configuration.
+            console.warn("Firestore Index Status:", err.message);
             setError(err);
           }
           

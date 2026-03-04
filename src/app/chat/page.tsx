@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -90,6 +89,8 @@ export default function HubPage() {
   }, [db, user?.uid, useSimpleQuery]);
 
   const { data: privateChats, isLoading: isPrivateLoading, error: privateError } = useCollection(privateChatsQuery);
+
+  const isIndexBuilding = privateError?.message.toLowerCase().includes('building');
 
   const handleUserSearch = async () => {
     if (!searchQuery.trim() || !db) return;
@@ -208,6 +209,23 @@ export default function HubPage() {
             <div className="flex flex-col items-center justify-center py-24 gap-4">
               <Loader2 className="animate-spin text-primary h-8 w-8" />
               <p className="text-[9px] font-black uppercase tracking-widest opacity-40">Decrypting Chats...</p>
+            </div>
+          ) : isIndexBuilding ? (
+            <div className="py-12 text-center space-y-6 flex flex-col items-center bg-blue-50/50 rounded-[3rem] border border-blue-100 mx-2 animate-in fade-in">
+              <RefreshCcw size={48} className="text-blue-500 animate-spin" />
+              <div className="space-y-2">
+                <p className="text-sm font-black uppercase text-blue-600 tracking-tighter">Index Building...</p>
+                <p className="text-[10px] font-medium text-blue-500 px-10 leading-relaxed uppercase">
+                  Firebase is currently constructing your composite index. This usually takes 2-5 minutes.
+                </p>
+              </div>
+              <Button 
+                onClick={() => setUseSimpleQuery(true)} 
+                variant="outline"
+                className="rounded-full h-10 border-blue-200 text-blue-600 font-black uppercase text-[9px] tracking-widest"
+              >
+                Use Simple Fetch (No Sorting)
+              </Button>
             </div>
           ) : privateError ? (
              <div className="py-8 text-center space-y-6 flex flex-col items-center bg-primary/5 rounded-[3rem] mx-2 border border-primary/10 animate-in fade-in">
