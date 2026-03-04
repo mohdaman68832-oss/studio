@@ -100,10 +100,6 @@ export default function ChatDetailPage() {
   return (
     <div className="flex flex-col h-[100dvh] max-w-md mx-auto bg-background relative overflow-hidden">
       <header className="flex items-center gap-3 px-4 py-3 border-b bg-white/80 backdrop-blur-md sticky top-0 z-[60]">
-        <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full">
-          <ChevronLeft size={24} />
-        </Button>
-        
         {/* Profile Link Header Section */}
         <Link 
           href={`/profile/${recipient?.username}`} 
@@ -112,7 +108,7 @@ export default function ChatDetailPage() {
           <div className="relative shrink-0">
             <Avatar className={cn(
               "h-10 w-10 border-2 border-primary/10 group-hover:border-primary transition-all",
-              recipient?.isOnline && "shadow-[0_0_15px_rgba(255,69,0,0.4)] shadow-primary/40 border-primary"
+              recipient?.isOnline && "shadow-[0_15px_30px_rgba(255,69,0,0.5)] shadow-primary/50 border-primary"
             )}>
               <AvatarImage src={recipient?.profilePictureUrl} className="object-cover" />
               <AvatarFallback>{recipient?.username?.[0]?.toUpperCase() || "U"}</AvatarFallback>
