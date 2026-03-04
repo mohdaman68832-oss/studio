@@ -76,7 +76,6 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
   const { data: followDoc, isLoading: followLoading } = useDoc(followRef);
   const isFollowing = !!followDoc;
 
-  // Real-time Follow Metrics for Public Profile
   const circlingQuery = useMemoFirebase(() => (db && profileData?.id ? query(fsCollection(db, "follows"), where("followerId", "==", profileData.id)) : null), [db, profileData?.id]);
   const circleQuery = useMemoFirebase(() => (db && profileData?.id ? query(fsCollection(db, "follows"), where("followedId", "==", profileData.id)) : null), [db, profileData?.id]);
   
@@ -115,8 +114,8 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
 
   return (
     <div className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden flex flex-col" style={{ backgroundColor: colors.background || "var(--background)" }}>
-      {/* Visual Sticker Layer */}
-      <div className="absolute inset-0 pointer-events-none z-[20]">
+      {/* Visual Sticker Layer - Z-50 (Top of Media/Text) */}
+      <div className="absolute inset-0 pointer-events-none z-50">
         {stickers.map((sticker) => (
           <div 
             key={sticker.id} 
@@ -134,7 +133,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         ))}
       </div>
 
-      <div className="relative w-full shrink-0 z-[10]">
+      <div className="relative w-full shrink-0 z-10">
         <div className="h-16 w-full" style={{ backgroundColor: colors.header || "var(--primary)" }} />
         <header className="absolute top-0 left-0 right-0 px-6 py-5 flex justify-between items-center z-[50]">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full">
@@ -157,7 +156,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         </div>
       </div>
 
-      <div className="w-full relative mt-4 z-[30]">
+      <div className="w-full relative mt-4 z-20">
         <div style={{ backgroundColor: colors.userInfo }} className="px-6 flex flex-col items-center relative">
           <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{profileData.name || profileData.username}</h2>
           <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>Innovator Hub</p>
@@ -171,14 +170,14 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
             </Button>
           </div>
 
-          <div className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] border-primary/5 relative z-[60]" style={{ backgroundColor: colors.bioCard || "#FFFFFF" }}>
+          <div className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] border-primary/5 relative z-20" style={{ backgroundColor: colors.bioCard || "#FFFFFF" }}>
             <p className="text-center text-[12px] leading-relaxed font-bold italic" style={{ color: getContrastColor(colors.bioCard) }}>
               {profileData.bio || "Innovating the future, one idea at a time."}
             </p>
           </div>
         </div>
 
-        <div className="relative z-[10]">
+        <div className="relative z-10">
           <div style={{ backgroundColor: colors.statsSection }} className="w-full py-10 px-10 relative">
             <div className="grid grid-cols-3 gap-6 w-full">
               <div className="text-center">

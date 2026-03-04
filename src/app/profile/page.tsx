@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -122,7 +123,6 @@ export default function ProfilePage() {
   const { data: userPosts, isLoading: isPostsLoading } = useCollection(userPostsQuery);
   const dynamicPostCount = userPosts?.length || 0;
 
-  // Real-time Follow Metrics - Strictly Live
   const circlingQuery = useMemoFirebase(() => (db && user?.uid ? query(fsCollection(db, "follows"), where("followerId", "==", user.uid)) : null), [db, user?.uid]);
   const circleQuery = useMemoFirebase(() => (db && user?.uid ? query(fsCollection(db, "follows"), where("followedId", "==", user.uid)) : null), [db, user?.uid]);
   
@@ -213,7 +213,6 @@ export default function ProfilePage() {
     const dy = ((e.clientY - dragStart.y) / rect.height) * 100;
 
     const newX = Math.max(0, Math.min(100, dragStart.stickerX + dx));
-    // CRITICAL: Strict boundary enforced at 48% to ensure stickers stay above the tabs/posts area
     const newY = Math.max(0, Math.min(48, dragStart.stickerY + dy));
 
     updateSticker(id, 'x', newX);
@@ -319,37 +318,8 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* LAYER 2: Stickers - Z-20 (Above Logo/Banner, Below Text) */}
-      <div className="absolute inset-0 pointer-events-none z-20">
-        {localProfile.stickers.map((sticker) => (
-          <div 
-            key={sticker.id} 
-            className={cn(
-              "absolute", 
-              isEditMode ? "pointer-events-auto cursor-pointer" : "pointer-events-none"
-            )} 
-            onPointerDown={(e) => handleStickerPointerDown(e, sticker.id)}
-            onPointerMove={(e) => handleStickerPointerMove(e, sticker.id)}
-            onPointerUp={handleStickerPointerUp}
-            style={{ 
-              left: `${sticker.x}%`, 
-              top: `${sticker.y}%`, 
-              transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg) scale(${sticker.scale})`,
-              touchAction: 'none'
-            }}
-          >
-            <div className={cn(
-              "relative w-24 h-24 transition-all duration-200",
-              isEditMode && selectedStickerId === sticker.id && "ring-4 ring-primary ring-offset-4 rounded-xl scale-105"
-            )}>
-              <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized />
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* LAYER 3: Text & Bio Card - Z-30 (Always on top of stickers) */}
-      <div className="w-full relative mt-4 z-30">
+      {/* LAYER 2: User Info & Bio - Z-20 (Now below stickers) */}
+      <div className="w-full relative mt-4 z-20">
         <div style={{ backgroundColor: colors.userInfo }} className="px-6 flex flex-col items-center relative">
           {isEditMode ? (
             <div className="w-full space-y-4 pt-4">
@@ -368,7 +338,7 @@ export default function ProfilePage() {
               <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>@{profileData?.username || "user"}</p>
               
               <div 
-                className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-[0_40px_80px_-10px_rgba(0,0,0,0.4)] border-primary/5 relative z-[60]" 
+                className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-[0_40px_80px_-10px_rgba(0,0,0,0.4)] border-primary/5 relative z-20" 
                 style={{ backgroundColor: colors.bioCard || "hsl(var(--card))" }}
               >
                 <p className="text-center text-[12px] leading-relaxed font-bold italic" style={{ color: getContrastColor(colors.bioCard) }}>
@@ -379,7 +349,7 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Stats & Content Section - Overlapped by Bio Shadow */}
+        {/* Stats & Content Section */}
         <div className="relative z-10">
           <div style={{ backgroundColor: colors.statsSection }} className="w-full py-10 px-10 relative">
             <div className="grid grid-cols-3 gap-6 w-full">
@@ -434,6 +404,35 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {/* LAYER 3: Stickers - Z-50 (Now ON TOP of everything) */}
+      <div className="absolute inset-0 pointer-events-none z-50">
+        {localProfile.stickers.map((sticker) => (
+          <div 
+            key={sticker.id} 
+            className={cn(
+              "absolute", 
+              isEditMode ? "pointer-events-auto cursor-pointer" : "pointer-events-none"
+            )} 
+            onPointerDown={(e) => handleStickerPointerDown(e, sticker.id)}
+            onPointerMove={(e) => handleStickerPointerMove(e, sticker.id)}
+            onPointerUp={handleStickerPointerUp}
+            style={{ 
+              left: `${sticker.x}%`, 
+              top: `${sticker.y}%`, 
+              transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg) scale(${sticker.scale})`,
+              touchAction: 'none'
+            }}
+          >
+            <div className={cn(
+              "relative w-24 h-24 transition-all duration-200",
+              isEditMode && selectedStickerId === sticker.id && "ring-4 ring-primary ring-offset-4 rounded-xl scale-105"
+            )}>
+              <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized />
+            </div>
+          </div>
+        ))}
+      </div>
+
       {isEditMode && (
         <div className="fixed bottom-24 right-6 z-[100] flex flex-col gap-3">
           <Button onClick={() => stickerInputRef.current?.click()} className="h-16 w-16 rounded-full bg-secondary text-white shadow-2xl animate-in zoom-in duration-300 border-4 border-white">
@@ -443,7 +442,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* LAYER 4: Fine-Tune Sticker Hub - Z-2000 (Always on top of BottomNav) */}
+      {/* LAYER 4: Fine-Tune Sticker Hub - Z-2000 */}
       <Sheet open={isStickerSheetOpen} onOpenChange={setIsStickerSheetOpen} modal={false}>
         <SheetContent 
           side="bottom" 
