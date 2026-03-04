@@ -98,8 +98,8 @@ export default function ChatDetailPage() {
   if (!currentUser) return null;
 
   return (
-    <div className="flex flex-col h-screen max-w-md mx-auto bg-background">
-      <header className="flex items-center gap-3 px-4 py-3 border-b bg-white/80 backdrop-blur-md sticky top-0 z-50">
+    <div className="flex flex-col h-[100dvh] max-w-md mx-auto bg-background relative overflow-hidden">
+      <header className="flex items-center gap-3 px-4 py-3 border-b bg-white/80 backdrop-blur-md sticky top-0 z-[60]">
         <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full">
           <ChevronLeft size={24} />
         </Button>
@@ -145,7 +145,7 @@ export default function ChatDetailPage() {
 
       <div 
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar bg-primary/[0.02]"
+        className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar bg-primary/[0.02] pb-32"
       >
         <div className="bg-white/50 border border-border/30 p-4 rounded-[2rem] text-center mb-6 max-w-[80%] mx-auto">
            <Lock size={16} className="mx-auto text-primary mb-2 opacity-30" />
@@ -186,8 +186,8 @@ export default function ChatDetailPage() {
         )}
       </div>
 
-      {/* Requirement: Nav is hidden, so we use minimal safe area padding */}
-      <div className="p-4 pb-6 bg-white border-t sticky bottom-0 z-50">
+      {/* Locked Input Area */}
+      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto p-4 pb-8 bg-white border-t z-50">
         <div className="flex items-center gap-2 bg-muted/30 rounded-[2rem] pl-4 pr-1 py-1 border border-primary/10">
           <Input 
             placeholder="Secure private message..." 
