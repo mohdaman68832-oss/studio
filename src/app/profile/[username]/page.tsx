@@ -76,10 +76,12 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
   const { data: followDoc, isLoading: followLoading } = useDoc(followRef);
   const isFollowing = !!followDoc;
 
-  const followingQuery = useMemoFirebase(() => (db && profileData?.id ? query(fsCollection(db, "follows"), where("followerId", "==", profileData.id)) : null), [db, profileData?.id]);
-  const followersQuery = useMemoFirebase(() => (db && profileData?.id ? query(fsCollection(db, "follows"), where("followedId", "==", profileData.id)) : null), [db, profileData?.id]);
-  const { data: followingData } = useCollection(followingQuery);
-  const { data: followersData } = useCollection(followersQuery);
+  // Real-time Follow Metrics for Public Profile
+  const circlingQuery = useMemoFirebase(() => (db && profileData?.id ? query(fsCollection(db, "follows"), where("followerId", "==", profileData.id)) : null), [db, profileData?.id]);
+  const circleQuery = useMemoFirebase(() => (db && profileData?.id ? query(fsCollection(db, "follows"), where("followedId", "==", profileData.id)) : null), [db, profileData?.id]);
+  
+  const { data: circlingData } = useCollection(circlingQuery);
+  const { data: circleData } = useCollection(circleQuery);
 
   const handleFollowToggle = async () => {
     if (!db || !currentUser || !profileData) return;
@@ -184,11 +186,11 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
                 <p className="text-[8px] uppercase font-black opacity-40">Posts</p>
               </div>
               <div className="text-center">
-                <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{followersData?.length || 0}</p>
+                <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{circleData?.length || 0}</p>
                 <p className="text-[8px] uppercase font-black opacity-40">Circle</p>
               </div>
               <div className="text-center">
-                <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{followingData?.length || 0}</p>
+                <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{circlingData?.length || 0}</p>
                 <p className="text-[8px] uppercase font-black opacity-40">Circling</p>
               </div>
             </div>

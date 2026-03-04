@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Slider } from "@/components/ui/slider";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -64,7 +63,7 @@ function getContrastColor(hexColor: string | undefined): string {
 }
 
 export default function ProfilePage() {
-  const { user, loading: isUserLoading } = useUser();
+  const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const db = useFirestore();
   const router = useRouter();
@@ -124,7 +123,7 @@ export default function ProfilePage() {
   const { data: userPosts, isLoading: isPostsLoading } = useCollection(userPostsQuery);
   const dynamicPostCount = userPosts?.length || 0;
 
-  // Real-time Follow Metrics
+  // Real-time Follow Metrics - Strictly Live
   const circlingQuery = useMemoFirebase(() => (db && user?.uid ? query(fsCollection(db, "follows"), where("followerId", "==", user.uid)) : null), [db, user?.uid]);
   const circleQuery = useMemoFirebase(() => (db && user?.uid ? query(fsCollection(db, "follows"), where("followedId", "==", user.uid)) : null), [db, user?.uid]);
   
@@ -215,7 +214,7 @@ export default function ProfilePage() {
     const dy = ((e.clientY - dragStart.y) / rect.height) * 100;
 
     const newX = Math.max(0, Math.min(100, dragStart.stickerX + dx));
-    // Limit vertical dragging to not overlap with posts (invisible line)
+    // Limit vertical dragging to top 60% of profile area
     const newY = Math.max(0, Math.min(60, dragStart.stickerY + dy));
 
     updateSticker(id, 'x', newX);
@@ -362,15 +361,6 @@ export default function ProfilePage() {
               <div className="space-y-1">
                 <Label className="text-[10px] font-black uppercase opacity-40 ml-1">Mission Bio</Label>
                 <Textarea value={localProfile.bio} onChange={e => setLocalProfile(p => ({ ...p, bio: e.target.value }))} className="text-center font-medium text-xs rounded-2xl border-primary/20 min-h-[100px] bg-white/50" placeholder="What are you building?" />
-              </div>
-              
-              <div className="grid grid-cols-5 gap-3 pt-2">
-                {(Object.keys(localProfile.customColors) as Array<keyof CustomColors>).map(key => (
-                   <div key={key} className="flex flex-col items-center gap-1">
-                     <input type="color" value={localProfile.customColors[key]} onChange={e => setLocalProfile(p => ({ ...p, customColors: { ...p.customColors, [key]: e.target.value } }))} className="w-full h-10 rounded-xl cursor-pointer bg-white p-1 border shadow-sm ring-primary/20 focus:ring-2" />
-                     <span className="text-[7px] font-black uppercase opacity-40 truncate w-full text-center">{key}</span>
-                   </div>
-                ))}
               </div>
             </div>
           ) : (
