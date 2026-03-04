@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -214,8 +213,8 @@ export default function ProfilePage() {
     const dy = ((e.clientY - dragStart.y) / rect.height) * 100;
 
     const newX = Math.max(0, Math.min(100, dragStart.stickerX + dx));
-    // Limit vertical dragging to top 60% of profile area
-    const newY = Math.max(0, Math.min(60, dragStart.stickerY + dy));
+    // CRITICAL: Strict boundary enforced at 48% to ensure stickers stay above the tabs/posts area
+    const newY = Math.max(0, Math.min(48, dragStart.stickerY + dy));
 
     updateSticker(id, 'x', newX);
     updateSticker(id, 'y', newY);
