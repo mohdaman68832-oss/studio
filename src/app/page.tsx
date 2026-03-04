@@ -128,11 +128,7 @@ function FeedContent() {
         <div>
           <h1 className="text-3xl font-black text-primary uppercase tracking-tighter leading-none">Sphere Feed</h1>
           <div className="flex items-center gap-1.5 mt-1">
-            {(activeCategory === "All" && !urlCategory) ? (
-              <Sparkles size={10} className="text-secondary animate-pulse" />
-            ) : (
-              <Globe size={10} className="text-muted-foreground" />
-            )}
+            <Globe size={10} className="text-muted-foreground" />
             <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">
               {activeCategory === "All" && urlCategory 
                 ? `${urlCategory} Hub`
