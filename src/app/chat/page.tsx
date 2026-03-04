@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { Search, Bell, Globe, Loader2, Plus, MessageCircle, UserPlus, RefreshCcw, ShieldAlert, ExternalLink } from "lucide-react";
+import { Search, Bell, Globe, Loader2, Plus, MessageCircle, UserPlus, RefreshCcw, ShieldAlert, AlertCircle, Info } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from "@/firebase";
 import { collection, query, orderBy, limit, where, getDocs, Timestamp, doc } from "firebase/firestore";
 import Link from "next/link";
@@ -66,16 +66,27 @@ export default function HubPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [userSearchResults, setUserSearchResults] = useState<any[]>([]);
   const [isSearchingUsers, setIsSearchingUsers] = useState(false);
+  const [useSimpleQuery, setUseSimpleQuery] = useState(false);
 
-  // Index requirement: participants (array-contains) + timestamp (desc)
+  // Debugging: If useSimpleQuery is true, we remove 'orderBy' to see if data exists
+  // but the composite index is failing.
   const privateChatsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
+    const colRef = collection(db, "privateChats");
+    
+    if (useSimpleQuery) {
+      return query(
+        colRef,
+        where("participants", "array-contains", user.uid)
+      );
+    }
+
     return query(
-      collection(db, "privateChats"),
+      colRef,
       where("participants", "array-contains", user.uid),
       orderBy("timestamp", "desc")
     );
-  }, [db, user?.uid]);
+  }, [db, user?.uid, useSimpleQuery]);
 
   const { data: privateChats, isLoading: isPrivateLoading, error: privateError } = useCollection(privateChatsQuery);
 
@@ -198,53 +209,74 @@ export default function HubPage() {
               <p className="text-[9px] font-black uppercase tracking-widest opacity-40">Decrypting Chats...</p>
             </div>
           ) : privateError ? (
-             <div className="py-12 text-center space-y-6 flex flex-col items-center bg-primary/5 rounded-[3rem] mx-2 border border-primary/10 animate-in fade-in">
-              <ShieldAlert size={48} className="text-primary animate-pulse" />
+             <div className="py-8 text-center space-y-6 flex flex-col items-center bg-primary/5 rounded-[3rem] mx-2 border border-primary/10 animate-in fade-in">
+              <ShieldAlert size={40} className="text-primary animate-pulse" />
               <div className="space-y-2">
-                <p className="text-sm font-black uppercase text-primary tracking-tighter">Index Sync Required</p>
-                <p className="text-[10px] font-medium text-muted-foreground px-10 leading-relaxed uppercase">
-                  A specific Firestore composite index is needed to sort your chats. 
-                  Even if you created one, it might have the wrong sort order or missing fields.
+                <p className="text-sm font-black uppercase text-primary tracking-tighter px-4">Composite Index Required</p>
+                <p className="text-[10px] font-medium text-muted-foreground px-8 leading-relaxed uppercase">
+                  A <b>single</b> index covering both `participants` and `timestamp` is needed. 
+                  Two separate single-field indexes will not work.
                 </p>
               </div>
               
               <div className="w-full px-6">
                 <div className="bg-white/80 p-4 rounded-2xl border border-primary/20 text-left">
-                   <p className="text-[9px] font-black uppercase text-primary mb-2">Detailed Error:</p>
+                   <p className="text-[9px] font-black uppercase text-primary mb-2 flex items-center gap-2">
+                     <AlertCircle size={12} /> System Log:
+                   </p>
                    <p className="text-[9px] font-mono text-foreground/70 break-all leading-tight">
                      {privateError.message}
                    </p>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3 w-full px-10">
+              <div className="flex flex-col gap-3 w-full px-8">
+                <Button 
+                  onClick={() => setUseSimpleQuery(true)} 
+                  variant="outline"
+                  className="w-full rounded-full h-12 border-primary text-primary font-black uppercase text-[10px] tracking-widest"
+                >
+                  <RefreshCcw size={14} className="mr-2" /> Fetch without Sorting (Debug)
+                </Button>
                 <Button 
                   onClick={() => window.location.reload()} 
                   className="w-full rounded-full h-12 bg-primary text-white font-black uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20"
                 >
-                  <RefreshCcw size={14} className="mr-2" /> Refresh Hub
+                  Refresh Hub
                 </Button>
-                <p className="text-[8px] font-bold text-muted-foreground uppercase">
-                  Tip: Copy the link from the error above and open it in your browser to create the index instantly.
-                </p>
+                <div className="bg-blue-50 p-3 rounded-xl border border-blue-100 flex items-start gap-2">
+                  <Info size={14} className="text-blue-500 shrink-0 mt-0.5" />
+                  <p className="text-[8px] font-bold text-blue-600 uppercase text-left leading-normal">
+                    Note: If data appears when using 'Debug Fetch', then your existing indexes are likely 'Single' instead of 'Composite'. 
+                    Create one index in the 'Composite' tab with fields: participants (Arrays) + timestamp (Descending).
+                  </p>
+                </div>
               </div>
             </div>
           ) : privateChats && privateChats.length > 0 ? (
-            privateChats.map((chat) => {
-              const recipientId = chat.participants?.find((id: string) => id !== user.uid);
-              if (!recipientId) return null;
-              return (
-                <Link key={chat.id} href={`/chat/${chat.id}`}>
-                  <div className="bg-card p-5 rounded-[2.5rem] border border-border/50 shadow-md hover:border-primary transition-all group active:scale-[0.98]">
-                    <ChatRecipientInfo 
-                      recipientId={recipientId} 
-                      lastMessage={chat.lastMessage} 
-                      timestamp={chat.timestamp} 
-                    />
-                  </div>
-                </Link>
-              );
-            })
+            <>
+              {useSimpleQuery && (
+                <div className="bg-secondary/10 p-3 rounded-2xl border border-secondary/20 flex items-center justify-between mb-2">
+                  <p className="text-[9px] font-black uppercase text-secondary">Simple Fetch Active (Debug)</p>
+                  <Button size="sm" variant="ghost" onClick={() => setUseSimpleQuery(false)} className="h-6 text-[8px] uppercase font-black">Turn Off</Button>
+                </div>
+              )}
+              {privateChats.map((chat) => {
+                const recipientId = chat.participants?.find((id: string) => id !== user.uid);
+                if (!recipientId) return null;
+                return (
+                  <Link key={chat.id} href={`/chat/${chat.id}`}>
+                    <div className="bg-card p-5 rounded-[2.5rem] border border-border/50 shadow-md hover:border-primary transition-all group active:scale-[0.98]">
+                      <ChatRecipientInfo 
+                        recipientId={recipientId} 
+                        lastMessage={chat.lastMessage} 
+                        timestamp={chat.timestamp} 
+                      />
+                    </div>
+                  </Link>
+                );
+              })}
+            </>
           ) : (
             <div className="py-24 text-center space-y-4 opacity-30 flex flex-col items-center">
               <MessageCircle size={48} className="text-primary/20" />
