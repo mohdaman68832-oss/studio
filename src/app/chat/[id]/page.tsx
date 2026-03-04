@@ -157,7 +157,7 @@ export default function ChatDetailPage() {
         )}
       </div>
 
-      <div className="p-4 bg-white border-t sticky bottom-0 z-50">
+      <div className="p-4 pb-20 bg-white border-t sticky bottom-0 z-50">
         <div className="flex items-center gap-2 bg-muted/30 rounded-[2rem] pl-4 pr-1 py-1 border border-primary/10">
           <Input 
             placeholder="Secure private message..." 
