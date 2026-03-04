@@ -379,7 +379,7 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Stats & Content Section */}
+        {/* Stats & Content Section - Z-10 to stay below Bio Card shadow */}
         <div className="relative z-10">
           <div style={{ backgroundColor: colors.statsSection }} className="w-full py-10 px-10 relative">
             <div className="grid grid-cols-3 gap-6 w-full">
