@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { Search, Bell, Globe, Loader2, Plus, MessageCircle, UserPlus, RefreshCcw, ShieldAlert } from "lucide-react";
+import { Search, Bell, Globe, Loader2, Plus, MessageCircle, UserPlus, RefreshCcw, ShieldAlert, ExternalLink } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from "@/firebase";
 import { collection, query, orderBy, limit, where, getDocs, Timestamp, doc } from "firebase/firestore";
 import Link from "next/link";
@@ -67,7 +67,7 @@ export default function HubPage() {
   const [userSearchResults, setUserSearchResults] = useState<any[]>([]);
   const [isSearchingUsers, setIsSearchingUsers] = useState(false);
 
-  // Optimized query for Hub Feed - strictly matches composite index: participants (array-contains) + timestamp (desc)
+  // Index requirement: participants (array-contains) + timestamp (desc)
   const privateChatsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
@@ -198,17 +198,36 @@ export default function HubPage() {
               <p className="text-[9px] font-black uppercase tracking-widest opacity-40">Decrypting Chats...</p>
             </div>
           ) : privateError ? (
-             <div className="py-24 text-center space-y-4 flex flex-col items-center">
-              <ShieldAlert size={48} className="text-primary opacity-20" />
-              <p className="text-[10px] font-black uppercase text-primary">Communication Hub Syncing</p>
-              <p className="text-[9px] font-medium italic px-10 text-muted-foreground text-center">
-                {privateError.message.toLowerCase().includes('index') 
-                  ? "The innovation sphere is still stabilizing after the new index update. Please refresh in a moment (1-2 minutes)."
-                  : "Syncing your secure communication channels. Please ensure you have a stable connection."}
-              </p>
-              <Button variant="ghost" size="sm" onClick={() => window.location.reload()} className="mt-4 text-[9px] font-black uppercase tracking-widest">
-                <RefreshCcw size={12} className="mr-2" /> Refresh Hub
-              </Button>
+             <div className="py-12 text-center space-y-6 flex flex-col items-center bg-primary/5 rounded-[3rem] mx-2 border border-primary/10 animate-in fade-in">
+              <ShieldAlert size={48} className="text-primary animate-pulse" />
+              <div className="space-y-2">
+                <p className="text-sm font-black uppercase text-primary tracking-tighter">Index Sync Required</p>
+                <p className="text-[10px] font-medium text-muted-foreground px-10 leading-relaxed uppercase">
+                  A specific Firestore composite index is needed to sort your chats. 
+                  Even if you created one, it might have the wrong sort order or missing fields.
+                </p>
+              </div>
+              
+              <div className="w-full px-6">
+                <div className="bg-white/80 p-4 rounded-2xl border border-primary/20 text-left">
+                   <p className="text-[9px] font-black uppercase text-primary mb-2">Detailed Error:</p>
+                   <p className="text-[9px] font-mono text-foreground/70 break-all leading-tight">
+                     {privateError.message}
+                   </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 w-full px-10">
+                <Button 
+                  onClick={() => window.location.reload()} 
+                  className="w-full rounded-full h-12 bg-primary text-white font-black uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20"
+                >
+                  <RefreshCcw size={14} className="mr-2" /> Refresh Hub
+                </Button>
+                <p className="text-[8px] font-bold text-muted-foreground uppercase">
+                  Tip: Copy the link from the error above and open it in your browser to create the index instantly.
+                </p>
+              </div>
             </div>
           ) : privateChats && privateChats.length > 0 ? (
             privateChats.map((chat) => {
