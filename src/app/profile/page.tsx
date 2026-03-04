@@ -318,7 +318,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* LAYER 3: Stickers - Z-20 (Now explicitly BELOW text layer z-70) */}
+      {/* LAYER 3: Stickers - Z-20 (Explicitly ABOVE media, but BELOW supremacy content) */}
       <div className="absolute inset-0 pointer-events-none z-20">
         {localProfile.stickers.map((sticker) => (
           <div 
@@ -347,7 +347,7 @@ export default function ProfilePage() {
         ))}
       </div>
 
-      {/* LAYER 2: Text Supremacy Section - Z-70 (Guaranteed TOP for Identity) */}
+      {/* LAYER 4: CONTENT SUPREMACY - Z-70 (Ensures Name, Bio & Stats are TOP MOST) */}
       <div className="w-full relative mt-4 z-70">
         <div style={{ backgroundColor: colors.userInfo }} className="px-6 flex flex-col items-center relative">
           {isEditMode ? (
@@ -366,7 +366,7 @@ export default function ProfilePage() {
               <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{localProfile.name}</h2>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>@{profileData?.username || "user"}</p>
               
-              {/* Bio Card Overlap Shadow Mastery */}
+              {/* Bio Card Overlap Shadow Mastery - Internal z-index for depth */}
               <div 
                 className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-[0_40px_80px_-10px_rgba(0,0,0,0.4)] border-primary/5 relative z-20" 
                 style={{ backgroundColor: colors.bioCard || "hsl(var(--card))" }}
@@ -379,7 +379,7 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Stats & Content Section - Z-10 inside Z-70 parent to stay below Bio Card shadow */}
+        {/* Stats & Content Section - Z-10 internal to Supremacy parent to stay below Bio Card shadow */}
         <div className="relative z-10">
           <div style={{ backgroundColor: colors.statsSection }} className="w-full py-10 px-10 relative">
             <div className="grid grid-cols-3 gap-6 w-full">
