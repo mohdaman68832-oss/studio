@@ -152,16 +152,9 @@ export default function HubPage() {
 
   return (
     <div className="max-w-md mx-auto min-h-screen bg-background pt-8 pb-24 flex flex-col">
-      <div className="px-6 mb-8 flex justify-between items-end">
-        <div>
-          <h1 className="text-3xl font-black text-primary uppercase tracking-tighter">The Hub</h1>
-          <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Encrypted Sphere</p>
-        </div>
-        <Link href="/groups/create">
-          <Button size="sm" className="rounded-full h-10 px-5 bg-secondary text-white shadow-lg shadow-secondary/20 font-black uppercase text-[10px] tracking-widest flex items-center gap-2">
-            <Plus size={14} /> Union
-          </Button>
-        </Link>
+      <div className="px-6 mb-8">
+        <h1 className="text-3xl font-black text-primary uppercase tracking-tighter">The Hub</h1>
+        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Encrypted Sphere</p>
       </div>
 
       <div className="px-6 mb-6">
@@ -331,7 +324,16 @@ export default function HubPage() {
           </div>
         </TabsContent>
 
-        <TabsContent value="groups" className="flex-1 overflow-y-auto px-6 space-y-4 outline-none">
+        <TabsContent value="groups" className="flex-1 overflow-y-auto px-6 space-y-6 outline-none">
+          <div className="flex justify-between items-center pt-4">
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Global Communities</p>
+            <Link href="/groups/create">
+              <Button size="sm" className="rounded-full h-9 px-5 bg-secondary text-white shadow-lg shadow-secondary/20 font-black uppercase text-[9px] tracking-widest flex items-center gap-2">
+                <Plus size={14} /> New Union
+              </Button>
+            </Link>
+          </div>
+          
           <div className="py-24 text-center opacity-30">
             <Globe size={48} className="mx-auto mb-4" />
             <p className="text-[10px] font-black uppercase tracking-widest">Discovering Unions...</p>
