@@ -319,7 +319,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* LAYER 3: Stickers - Z-50 (Above media but below text supremacy) */}
+      {/* LAYER 3: Stickers - Z-50 (Above EVERYTHING except optimization sheet) */}
       <div className="absolute inset-0 pointer-events-none z-50">
         {localProfile.stickers.map((sticker) => (
           <div 
@@ -348,8 +348,8 @@ export default function ProfilePage() {
         ))}
       </div>
 
-      {/* LAYER 2: Text Supremacy Section - Z-70 (Always on top of stickers) */}
-      <div className="w-full relative mt-4 z-[70]">
+      {/* LAYER 2: Text Supremacy Section - Z-30 (BELOW stickers) */}
+      <div className="w-full relative mt-4 z-30">
         <div style={{ backgroundColor: colors.userInfo }} className="px-6 flex flex-col items-center relative">
           {isEditMode ? (
             <div className="w-full space-y-4 pt-4">
@@ -379,7 +379,7 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Stats & Content Section - Z-10 inside Z-70 parent to stay below Bio Card shadow but above stickers if needed */}
+        {/* Stats & Content Section - Z-10 inside Z-30 parent to stay below Bio Card shadow */}
         <div className="relative z-10">
           <div style={{ backgroundColor: colors.statsSection }} className="w-full py-10 px-10 relative">
             <div className="grid grid-cols-3 gap-6 w-full">
