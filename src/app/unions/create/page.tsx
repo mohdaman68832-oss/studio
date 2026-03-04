@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -12,9 +13,9 @@ import { collection, addDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
-const UNION_PRICE = 500; // Simulated price in Rupees
+const GROUP_PRICE = 500; // Simulated price in Rupees
 
-export default function CreateUnionPage() {
+export default function CreateGroupPage() {
   const router = useRouter();
   const db = useFirestore();
   const { toast } = useToast();
@@ -44,20 +45,20 @@ export default function CreateUnionPage() {
       await addDoc(collection(db, "unions"), {
         ...formData,
         memberCount: 1,
-        createdBy: "John Innovator",
+        createdBy: "User",
         avatarUrl: `https://picsum.photos/seed/${formData.name}/200/200`,
         createdAt: new Date().toISOString(),
       });
 
       toast({
-        title: "Union Formed!",
+        title: "Group Formed!",
         description: `${formData.name} is now live in the Sphere.`,
       });
       router.push("/chat");
     } catch (error) {
       toast({
         title: "Error",
-        description: "Could not create union.",
+        description: "Could not create group.",
         variant: "destructive",
       });
     } finally {
@@ -72,14 +73,14 @@ export default function CreateUnionPage() {
           <ChevronLeft size={24} />
         </Button>
         <div>
-          <h1 className="text-2xl font-black text-primary uppercase tracking-tighter">Form Union</h1>
+          <h1 className="text-2xl font-black text-primary uppercase tracking-tighter">Form Group</h1>
           <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Establish a new community</p>
         </div>
       </header>
 
       <div className="space-y-6 bg-white p-6 rounded-[2.5rem] shadow-sm border border-border/50">
         <div className="space-y-2">
-          <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Union Name</Label>
+          <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Group Name</Label>
           <Input 
             placeholder="e.g., Space Explorers" 
             className="rounded-2xl h-12 bg-muted/30 border-none"
@@ -91,7 +92,7 @@ export default function CreateUnionPage() {
         <div className="space-y-2">
           <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Purpose/Mission</Label>
           <Textarea 
-            placeholder="What will your union achieve?" 
+            placeholder="What will your group achieve?" 
             className="rounded-2xl min-h-[100px] bg-muted/30 border-none"
             value={formData.description}
             onChange={(e) => setFormData({...formData, description: e.target.value})}
@@ -126,7 +127,7 @@ export default function CreateUnionPage() {
           </div>
           <div>
             <p className="text-[10px] font-black uppercase text-secondary">Formation Fee</p>
-            <p className="text-lg font-black text-foreground">₹{UNION_PRICE}</p>
+            <p className="text-lg font-black text-foreground">₹{GROUP_PRICE}</p>
           </div>
         </div>
         <ShieldCheck className="text-secondary opacity-20" size={32} />
@@ -140,12 +141,12 @@ export default function CreateUnionPage() {
         {loading ? (
           <Loader2 className="animate-spin mr-2" />
         ) : (
-          `Pay & Create Union`
+          `Pay & Create Group`
         )}
       </Button>
 
       <p className="text-[10px] text-center text-muted-foreground font-medium px-8">
-        By creating a union, you agree to lead it responsibly and follow the innovation sphere guidelines.
+        By creating a group, you agree to lead it responsibly and follow the innovation sphere guidelines.
       </p>
     </div>
   );

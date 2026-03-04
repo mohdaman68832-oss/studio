@@ -23,7 +23,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-const MOCK_UNIONS = [
+const MOCK_GROUPS = [
   {
     id: "u1",
     name: "AI Frontiers",
@@ -39,7 +39,7 @@ const MOCK_UNIONS = [
   },
   {
     id: "u2",
-    name: "Green Future Union",
+    name: "Green Future Group",
     description: "Collaborative hub for sustainable energy solutions. Solar, Wind, and Hydro experts unite to create a greener tomorrow.",
     category: "Sustainability",
     memberCount: 856,
@@ -52,55 +52,28 @@ const MOCK_UNIONS = [
   }
 ];
 
-const MOCK_UNION_POSTS = Array.from({ length: 20 }).map((_, i) => ({
-  id: `post-${i}`,
-  title: [
-    "Neural Mesh Network", "Smart Grid AI", "Bio-degradable Tech", "Solar Glass v2", 
-    "Haptic Learning", "Urban Wind Turbine", "Water Filter IoT", "Clean Air Necklace",
-    "Self-Healing Materials", "Vertical Farm Controller", "Robot Companion", "Exo-Suit for Logistics",
-    "Mind-Link VR", "Ocean Plastic Recycler", "Carbon Capture Fan", "Green Blockchain",
-    "AI Medical Assistant", "Smart Soil Sensor", "Portable Hydro Generator", "Solar Car Paint"
-  ][i],
-  description: "Exploring the limits of what is possible with modern engineering and design. This project focuses on high-impact scalability for urban environments.",
-  problem: "Traditional solutions are too slow, expensive, and environmentally damaging for our current needs.",
-  category: i % 2 === 0 ? "Technology" : "Sustainability",
-  userName: ["Alex Rivera", "Sarah Chen", "Marcus Vane", "Elena Gilbert", "Tony Stark"][i % 5],
-  userAvatar: `https://picsum.photos/seed/user${i % 5}/100/100`,
-  mediaUrl: i % 4 === 0 
-    ? "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" 
-    : `https://picsum.photos/seed/innovation${i}/800/800`,
-  innovationScore: 70 + (i % 30),
-  tags: ["Future", "OpenSource", "Scalable"],
-  likes: 50 + (i * 12),
-}));
-
-export default function UnionDetailPage() {
+export default function GroupDetailPage() {
   const params = useParams();
   const router = useRouter();
   const db = useFirestore();
-  const unionId = params.id as string;
+  const groupId = params.id as string;
   const [showFullDesc, setShowFullDesc] = useState(false);
   const [isJoined, setIsJoined] = useState(false);
 
-  const union = useMemo(() => {
-    return MOCK_UNIONS.find(u => u.id === unionId) || MOCK_UNIONS[0];
-  }, [unionId]);
+  const group = useMemo(() => {
+    return MOCK_GROUPS.find(u => u.id === groupId) || MOCK_GROUPS[0];
+  }, [groupId]);
 
   const postsQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(
       collection(db, "ideas"),
-      where("category", "==", union.category),
+      where("category", "==", group.category),
       orderBy("createdAt", "desc")
     );
-  }, [db, union.category]);
+  }, [db, group.category]);
 
-  const { data: firestorePosts, isLoading: postsLoading } = useCollection(postsQuery);
-
-  const posts = useMemo(() => {
-    if (firestorePosts && firestorePosts.length > 0) return firestorePosts;
-    return MOCK_UNION_POSTS.filter(p => p.category === union.category);
-  }, [firestorePosts, union.category]);
+  const { data: posts, isLoading: postsLoading } = useCollection(postsQuery);
 
   return (
     <div className="max-w-md mx-auto min-h-screen bg-background flex flex-col">
@@ -109,8 +82,8 @@ export default function UnionDetailPage() {
           <ChevronLeft size={24} />
         </Button>
         <div className="flex-1 min-w-0">
-          <h1 className="font-black text-sm uppercase tracking-tighter truncate">{union.name}</h1>
-          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Community Hub</p>
+          <h1 className="font-black text-sm uppercase tracking-tighter truncate">{group.name}</h1>
+          <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Community Hub</p>
         </div>
       </header>
 
@@ -118,17 +91,17 @@ export default function UnionDetailPage() {
         <div className="p-6 space-y-6">
           <div className="flex gap-4 items-start">
             <Avatar className="h-20 w-20 rounded-3xl border-2 border-primary/10 shadow-lg shrink-0">
-              <AvatarImage src={union.avatar} className="object-cover" />
-              <AvatarFallback className="text-2xl font-black bg-primary/10 text-primary">{union.name[0]}</AvatarFallback>
+              <AvatarImage src={group.avatar} className="object-cover" />
+              <AvatarFallback className="text-2xl font-black bg-primary/10 text-primary">{group.name[0]}</AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0 pt-1">
-              <h2 className="text-xl font-black text-foreground uppercase tracking-tighter leading-none mb-2">{union.name}</h2>
+              <h2 className="text-xl font-black text-foreground uppercase tracking-tighter leading-none mb-2">{group.name}</h2>
               <div className="space-y-1">
                 <p className={cn(
                   "text-[11px] text-muted-foreground leading-relaxed",
                   !showFullDesc && "line-clamp-2"
                 )}>
-                  {union.description}
+                  {group.description}
                 </p>
                 <button 
                   onClick={() => setShowFullDesc(!showFullDesc)}
@@ -147,15 +120,15 @@ export default function UnionDetailPage() {
           <div className="flex items-center justify-between bg-white p-4 rounded-3xl border border-border/50 shadow-sm">
             <div className="flex gap-4">
               <div className="flex flex-col">
-                <span className="text-sm font-black text-foreground">{(union.memberCount + (isJoined ? 1 : 0)).toLocaleString()}</span>
+                <span className="text-sm font-black text-foreground">{(group.memberCount + (isJoined ? 1 : 0)).toLocaleString()}</span>
                 <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">Joined</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-sm font-black text-green-500">{union.stats.activeToday}</span>
+                <span className="text-sm font-black text-green-500">{group.stats.activeToday}</span>
                 <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">Active</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-sm font-black text-primary">{union.stats.weeklyPosts}</span>
+                <span className="text-sm font-black text-primary">{group.stats.weeklyPosts}</span>
                 <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">7d Posts</span>
               </div>
             </div>
@@ -166,7 +139,7 @@ export default function UnionDetailPage() {
                 size="sm" 
                 className="rounded-full h-10 px-6 flex items-center gap-2 bg-secondary shadow-lg shadow-secondary/20"
               >
-                <span className="text-[10px] font-black uppercase tracking-widest">Join Union</span>
+                <span className="text-[10px] font-black uppercase tracking-widest">Join Group</span>
               </Button>
             ) : (
               <Sheet>
@@ -203,7 +176,7 @@ export default function UnionDetailPage() {
 
           <div className="space-y-6">
             <div className="flex items-center gap-3 px-1">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Union Feed</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Group Feed</span>
               <div className="flex-1 h-px bg-border/50" />
             </div>
             
@@ -215,7 +188,7 @@ export default function UnionDetailPage() {
               ) : (
                 <div className="py-20 text-center space-y-4 opacity-30">
                   <LayoutGrid size={48} className="mx-auto" />
-                  <p className="text-xs font-black uppercase tracking-widest">No posts in this union yet</p>
+                  <p className="text-xs font-black uppercase tracking-widest">No posts in this group yet</p>
                 </div>
               )}
             </div>

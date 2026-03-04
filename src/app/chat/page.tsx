@@ -209,7 +209,7 @@ export default function HubPage() {
               <Bell size={14} className="mr-2" /> Alerts
             </TabsTrigger>
             <TabsTrigger value="groups" className="rounded-full text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
-              <Globe size={14} className="mr-2" /> Unions
+              <Globe size={14} className="mr-2" /> Groups
             </TabsTrigger>
           </TabsList>
         </div>
@@ -329,14 +329,14 @@ export default function HubPage() {
             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Global Communities</p>
             <Link href="/groups/create">
               <Button size="sm" className="rounded-full h-9 px-5 bg-secondary text-white shadow-lg shadow-secondary/20 font-black uppercase text-[9px] tracking-widest flex items-center gap-2">
-                <Plus size={14} /> New Union
+                <Plus size={14} /> New Group
               </Button>
             </Link>
           </div>
           
           <div className="py-24 text-center opacity-30">
             <Globe size={48} className="mx-auto mb-4" />
-            <p className="text-[10px] font-black uppercase tracking-widest">Discovering Unions...</p>
+            <p className="text-[10px] font-black uppercase tracking-widest">Discovering Groups...</p>
           </div>
         </TabsContent>
       </Tabs>

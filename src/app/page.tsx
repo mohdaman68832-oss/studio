@@ -8,9 +8,50 @@ import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@
 import { collection, query, orderBy, doc } from "firebase/firestore";
 import { useMemo, useState, Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RefreshCcw, LayoutGrid, Globe, ImageIcon, Video, Type, Sparkles } from "lucide-react";
+import { RefreshCcw, LayoutGrid, Globe, ImageIcon, Video, Type, Sparkles, Users } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+const SUGGESTED_GROUPS = [
+  { id: "g1", name: "AI Frontiers", avatar: "https://picsum.photos/seed/ai/100/100", category: "Technology" },
+  { id: "g2", name: "Green Future", avatar: "https://picsum.photos/seed/green/100/100", category: "Sustainability" },
+  { id: "g3", name: "Art Hub", avatar: "https://picsum.photos/seed/art/100/100", category: "Art" },
+  { id: "g4", name: "Innovators", avatar: "https://picsum.photos/seed/innov/100/100", category: "Business" },
+];
+
+function GroupSuggestionRow() {
+  return (
+    <div className="bg-primary/5 -mx-4 px-4 py-8 space-y-4 border-y border-primary/10">
+      <div className="flex items-center justify-between px-1">
+        <div>
+          <h3 className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-2">
+            <Users size={14} /> Join the Community
+          </h3>
+          <p className="text-[9px] text-muted-foreground font-bold uppercase">Trending Groups for You</p>
+        </div>
+        <Link href="/chat">
+          <Button variant="ghost" className="text-[9px] font-black uppercase text-secondary h-6 p-0">View Hub</Button>
+        </Link>
+      </div>
+      
+      <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
+        {SUGGESTED_GROUPS.map((group) => (
+          <Link key={group.id} href={`/groups/${group.id}`} className="shrink-0 w-32 bg-white p-4 rounded-[2rem] border border-primary/5 shadow-sm flex flex-col items-center gap-2 hover:border-primary/20 transition-all">
+            <Avatar className="h-12 w-12 rounded-2xl">
+              <AvatarImage src={group.avatar} className="object-cover" />
+              <AvatarFallback className="bg-primary/5 text-primary text-xs font-black">{group.name[0]}</AvatarFallback>
+            </Avatar>
+            <div className="text-center">
+              <p className="text-[10px] font-black truncate w-24 uppercase tracking-tighter">{group.name}</p>
+              <p className="text-[8px] font-bold text-muted-foreground uppercase">{group.category}</p>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function FeedContent() {
   const db = useFirestore();
@@ -41,19 +82,15 @@ function FeedContent() {
     
     const userInterests = profileData?.interests || [];
     
-    // ALGORITHM: If 'All' is active and there's a category in URL, that's our effective category.
-    // Otherwise, it's either 'All' (Personalized) or 'Meme'.
     const effectiveCategory = activeCategory === "All" && urlCategory ? urlCategory : activeCategory;
 
     let filtered = firestorePosts;
 
     if (effectiveCategory === "All") {
-      // Personalized Mode: Filter by user interests selected during signup/setup
       filtered = filtered.filter(post => 
         userInterests.some(interest => post.category?.toLowerCase() === interest.toLowerCase())
       );
     } else {
-      // Specific Category Mode: Filter by specific category (URL category or Meme)
       filtered = filtered.filter(i => i.category?.toLowerCase() === effectiveCategory.toLowerCase());
     }
 
@@ -91,7 +128,7 @@ function FeedContent() {
         </Link>
       </header>
 
-      {/* Main Category Bar - Updated for Dynamic Labels */}
+      {/* Main Category Bar */}
       <div className="flex w-full gap-3 py-2 pb-4 mb-2 border-b">
         {["All", "Meme"].map((cat) => (
           <Button 
@@ -108,7 +145,6 @@ function FeedContent() {
                 : "bg-white text-muted-foreground border border-border"
             )}
           >
-            {/* Dynamic Label for the 'All' tab if a URL category exists */}
             {cat === "All" && urlCategory ? urlCategory : cat}
           </Button>
         ))}
@@ -167,6 +203,13 @@ function FeedContent() {
           postsToDisplay.map((post, index) => (
             <div key={post.id} className="animate-in fade-in slide-in-from-bottom-4 duration-300">
               <IdeaCard idea={post as any} priority={index < 2} />
+              
+              {/* Insert Group Suggestions at 20, 30, 50 post intervals */}
+              {(index === 19 || index === 29 || index === 49) && (
+                <div className="mt-8 mb-4">
+                  <GroupSuggestionRow />
+                </div>
+              )}
             </div>
           ))
         ) : (
