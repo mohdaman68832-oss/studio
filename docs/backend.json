@@ -26,7 +26,8 @@
         "chatId": { "type": "string" },
         "participants": { "type": "array" },
         "lastMessage": { "type": "string" },
-        "timestamp": { "type": "string" }
+        "timestamp": { "type": "string" },
+        "unreadCounts": { "type": "object", "description": "Map of userId to unread message count" }
       },
       "required": ["chatId", "participants"]
     },

@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { ChevronLeft, Send, Phone, Video, Lock, Circle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFirestore, useDoc, useMemoFirebase, useUser, useCollection } from "@/firebase";
-import { doc, collection, query, orderBy, addDoc, serverTimestamp, setDoc, limit } from "firebase/firestore";
+import { doc, collection, query, orderBy, addDoc, serverTimestamp, setDoc, limit, updateDoc, increment } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 
@@ -42,6 +42,16 @@ export default function ChatDetailPage() {
   const [newMessage, setNewMessage] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Mark messages as seen when chat is opened
+  useEffect(() => {
+    if (db && currentUser && chatId) {
+      const chatRef = doc(db, "privateChats", chatId);
+      updateDoc(chatRef, {
+        [`unreadCounts.${currentUser.uid}`]: 0
+      }).catch(err => console.warn("Failed to clear unread counts", err));
+    }
+  }, [db, currentUser, chatId, messages?.length]);
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -49,18 +59,19 @@ export default function ChatDetailPage() {
   }, [messages]);
 
   const handleSend = async () => {
-    if (!newMessage.trim() || !db || !currentUser || !chatId) return;
+    if (!newMessage.trim() || !db || !currentUser || !chatId || !recipientId) return;
     
     const text = newMessage;
     setNewMessage("");
 
     try {
-      // Create/Update Chat Metadata with participants array for list query support
+      // Create/Update Chat Metadata with participants array and increment recipient unread count
       await setDoc(doc(db, "privateChats", chatId), {
         chatId: chatId,
         participants: chatId.split("_"),
         lastMessage: text,
         timestamp: serverTimestamp(),
+        [`unreadCounts.${recipientId}`]: increment(1)
       }, { merge: true });
 
       // Add actual message

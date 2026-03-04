@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 
-function ChatRecipientInfo({ recipientId, lastMessage, timestamp }: { recipientId: string, lastMessage: string, timestamp: any }) {
+function ChatRecipientInfo({ recipientId, lastMessage, timestamp, unreadCount }: { recipientId: string, lastMessage: string, timestamp: any, unreadCount: number }) {
   const db = useFirestore();
   const recipientRef = useMemoFirebase(() => (db && recipientId ? doc(db, "userProfiles", recipientId) : null), [db, recipientId]);
   const { data: recipient, isLoading } = useDoc(recipientRef);
@@ -64,10 +64,12 @@ function ChatRecipientInfo({ recipientId, lastMessage, timestamp }: { recipientI
             {lastMessage || "Start a conversation..."}
           </p>
           
-          {/* Unread Count Badge - Updated to Primary Orange */}
-          <div className="h-5 min-w-[20px] px-1.5 flex items-center justify-center bg-primary text-white text-[10px] font-black rounded-full shadow-lg shadow-primary/20">
-            1
-          </div>
+          {/* Unread Count Badge - Only show if > 0 */}
+          {unreadCount > 0 && (
+            <div className="h-5 min-w-[20px] px-1.5 flex items-center justify-center bg-primary text-white text-[10px] font-black rounded-full shadow-lg shadow-primary/20 animate-in zoom-in duration-300">
+              {unreadCount}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -300,12 +302,14 @@ export default function HubPage() {
               {privateChats.map((chat) => {
                 const recipientId = chat.participants?.find((id: string) => id !== user.uid);
                 if (!recipientId) return null;
+                const unreadCount = chat.unreadCounts?.[user.uid] || 0;
                 return (
                   <Link key={chat.id} href={`/chat/${chat.id}`} className="block px-6 hover:bg-muted/30 transition-colors active:bg-muted/50">
                     <ChatRecipientInfo 
                       recipientId={recipientId} 
                       lastMessage={chat.lastMessage} 
-                      timestamp={chat.timestamp} 
+                      timestamp={chat.timestamp}
+                      unreadCount={unreadCount}
                     />
                   </Link>
                 );
