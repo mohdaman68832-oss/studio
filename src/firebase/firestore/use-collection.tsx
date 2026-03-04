@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -76,16 +77,19 @@ export function useCollection<T = any>(
               path = anyRef.path || (anyRef._query?.path?.segments?.join('/')) || "collection";
             } catch (e) {}
 
-            const contextualError = new FirestorePermissionError({
-              operation: 'list',
-              path,
-            });
-
-            setError(contextualError);
-            errorEmitter.emit('permission-error', contextualError);
+            // Check if the error is actually permission related
+            if (err.code === 'permission-denied') {
+              const contextualError = new FirestorePermissionError({
+                operation: 'list',
+                path,
+              });
+              setError(contextualError);
+              errorEmitter.emit('permission-error', contextualError);
+            } else {
+              setError(err);
+            }
           } else {
             // Use console.warn instead of console.error to avoid the disruptive Next.js dev overlay
-            // during index construction or configuration.
             console.warn("Firestore Index Status:", err.message);
             setError(err);
           }

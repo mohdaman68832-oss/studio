@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, Send, Phone, Info, Video, Lock, Circle, Loader2 } from "lucide-react";
+import { ChevronLeft, Send, Phone, Video, Lock, Circle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFirestore, useDoc, useMemoFirebase, useUser, useCollection } from "@/firebase";
 import { doc, collection, query, orderBy, addDoc, serverTimestamp, setDoc, limit } from "firebase/firestore";
@@ -17,24 +17,25 @@ export default function ChatDetailPage() {
   const params = useParams();
   const router = useRouter();
   const db = useFirestore();
-  const { user: currentUser } = useUser();
+  const { user: currentUser, isUserLoading } = useUser();
   const { toast } = useToast();
   const chatId = params.id as string;
 
-  // Extract recipientId from sorted ID (uid1_uid2)
+  // Extract recipientId safely
   const recipientId = chatId.split("_").find(id => id !== currentUser?.uid) || "";
 
-  const recipientRef = useMemoFirebase(() => (db && recipientId ? doc(db, "userProfiles", recipientId) : null), [db, recipientId]);
+  // Wait for currentUser to be stable before creating references
+  const recipientRef = useMemoFirebase(() => (db && recipientId && currentUser ? doc(db, "userProfiles", recipientId) : null), [db, recipientId, currentUser]);
   const { data: recipient, isLoading: isRecipientLoading } = useDoc(recipientRef);
 
   const messagesQuery = useMemoFirebase(() => {
-    if (!db || !chatId) return null;
+    if (!db || !chatId || !currentUser) return null;
     return query(
       collection(db, "privateChats", chatId, "messages"),
       orderBy("createdAt", "asc"),
       limit(100)
     );
-  }, [db, chatId]);
+  }, [db, chatId, currentUser]);
 
   const { data: messages, isLoading: isMessagesLoading } = useCollection(messagesQuery);
 
@@ -74,13 +75,16 @@ export default function ChatDetailPage() {
     }
   };
 
-  if (isRecipientLoading) {
+  if (isUserLoading || isRecipientLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
+
+  // Final safety check to prevent rendering without auth
+  if (!currentUser) return null;
 
   return (
     <div className="flex flex-col h-screen max-w-md mx-auto bg-background">
