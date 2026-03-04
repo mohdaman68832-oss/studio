@@ -151,6 +151,10 @@ export default function ProfilePage() {
     }
   };
 
+  const updateColor = (key: keyof CustomColors, value: string) => {
+    setLocalProfile(prev => ({ ...prev, customColors: { ...prev.customColors, [key]: value } }));
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'banner' | 'sticker') => {
     const file = e.target.files?.[0];
     if (file) {
@@ -213,7 +217,6 @@ export default function ProfilePage() {
     const dy = ((e.clientY - dragStart.y) / rect.height) * 100;
 
     const newX = Math.max(0, Math.min(100, dragStart.stickerX + dx));
-    // Invisible Boundary Lock: Stickers cannot go below 48% of the container height
     const newY = Math.max(0, Math.min(48, dragStart.stickerY + dy));
 
     updateSticker(id, 'x', newX);
@@ -322,20 +325,44 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* LAYER 2: IDENTITY PLANE - Middle Plane Z-20 (Below Stickers) */}
-      <div className="w-full relative mt-4 z-20">
+      {/* LAYER 2: IDENTITY PLANE - Middle Plane Z-40 (Raised from Z-20) */}
+      <div className="w-full relative mt-4 z-40">
         <div style={{ backgroundColor: colors.userInfo }} className="px-6 flex flex-col items-center relative">
           
-          <div className="relative z-40 flex flex-col items-center">
+          <div className="relative flex flex-col items-center">
             {isEditMode ? (
-              <div className="w-full space-y-4 pt-4">
+              <div className="w-full space-y-6 pt-4 animate-in slide-in-from-top-4 duration-500">
                 <div className="space-y-1">
-                  <Label className="text-[10px] font-black uppercase opacity-40 ml-1">Name</Label>
-                  <input value={localProfile.name} onChange={e => setLocalProfile(p => ({ ...p, name: e.target.value }))} className="w-full text-center font-black uppercase text-xl h-14 rounded-2xl border-primary/20 bg-white/50 outline-none" placeholder="Your Name" />
+                  <Label className="text-[10px] font-black uppercase opacity-40 ml-1">Innovator Name</Label>
+                  <input value={localProfile.name} onChange={e => setLocalProfile(p => ({ ...p, name: e.target.value }))} className="w-full text-center font-black uppercase text-xl h-14 rounded-2xl border-primary/20 bg-white/50 outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-inner" placeholder="Your Name" />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-[10px] font-black uppercase opacity-40 ml-1">Mission Bio</Label>
-                  <Textarea value={localProfile.bio} onChange={e => setLocalProfile(p => ({ ...p, bio: e.target.value }))} className="text-center font-medium text-xs rounded-2xl border-primary/20 min-h-[100px] bg-white/50" placeholder="What are you building?" />
+                  <Label className="text-[10px] font-black uppercase opacity-40 ml-1">Mission Statement (Bio)</Label>
+                  <Textarea value={localProfile.bio} onChange={e => setLocalProfile(p => ({ ...p, bio: e.target.value }))} className="text-center font-medium text-xs rounded-2xl border-primary/20 min-h-[100px] bg-white/50 focus:ring-2 focus:ring-primary/20 transition-all shadow-inner p-4" placeholder="What are you building?" />
+                </div>
+
+                {/* Color Palette Hub */}
+                <div className="space-y-4 pt-6 border-t border-primary/10">
+                  <div className="flex items-center gap-2 justify-center mb-2">
+                    <Palette size={14} className="text-primary" />
+                    <p className="text-[9px] font-black uppercase tracking-[0.2em] opacity-60">Color Sphere Customization</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {(Object.keys(localProfile.customColors) as Array<keyof CustomColors>).map(key => (
+                      <div key={key} className="space-y-1.5">
+                        <Label className="text-[8px] font-black uppercase ml-1 opacity-50">{key.replace(/([A-Z])/g, ' $1')}</Label>
+                        <div className="flex items-center gap-2 bg-white/60 p-2 rounded-xl border border-primary/5 shadow-sm hover:border-primary/20 transition-colors">
+                          <input 
+                            type="color" 
+                            value={localProfile.customColors[key]} 
+                            onChange={e => updateColor(key, e.target.value)}
+                            className="w-8 h-8 rounded-lg border-none cursor-pointer bg-transparent shadow-sm"
+                          />
+                          <span className="text-[8px] font-mono font-black uppercase truncate">{localProfile.customColors[key]}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             ) : (
@@ -413,8 +440,8 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* LAYER 3: Stickers - Top Layer Z-30 (Above Identity) */}
-      <div className="absolute inset-0 pointer-events-none z-30">
+      {/* LAYER 3: Stickers - Top Layer Z-50 (Was Z-30) */}
+      <div className="absolute inset-0 pointer-events-none z-50">
         {localProfile.stickers.map((sticker) => (
           <div 
             key={sticker.id} 
