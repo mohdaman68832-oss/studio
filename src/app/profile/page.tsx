@@ -319,41 +319,10 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* LAYER 2: Stickers - Middle Layer Z-20 */}
-      <div className="absolute inset-0 pointer-events-none z-20">
-        {localProfile.stickers.map((sticker) => (
-          <div 
-            key={sticker.id} 
-            className={cn(
-              "absolute", 
-              isEditMode ? "pointer-events-auto cursor-pointer" : "pointer-events-none"
-            )} 
-            onPointerDown={(e) => handleStickerPointerDown(e, sticker.id)}
-            onPointerMove={(e) => handleStickerPointerMove(e, sticker.id)}
-            onPointerUp={handleStickerPointerUp}
-            style={{ 
-              left: `${sticker.x}%`, 
-              top: `${sticker.y}%`, 
-              transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg) scale(${sticker.scale})`,
-              touchAction: 'none'
-            }}
-          >
-            <div className={cn(
-              "relative w-24 h-24 transition-all duration-200",
-              isEditMode && selectedStickerId === sticker.id && "ring-4 ring-primary ring-offset-4 rounded-xl scale-105"
-            )}>
-              <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized />
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* LAYER 3: IDENTITY PLANE - Top-most plane Z-30 */}
-      <div className="w-full relative mt-4 z-30">
-        {/* Invisible Protection Box: The background color blocks stickers behind it */}
+      {/* LAYER 2: IDENTITY PLANE - Middle Plane Z-20 (Below Stickers) */}
+      <div className="w-full relative mt-4 z-20">
         <div style={{ backgroundColor: colors.userInfo }} className="px-6 flex flex-col items-center relative">
           
-          {/* Identity Shield: Ensures handle and name are strictly above stickers */}
           <div className="relative z-40 flex flex-col items-center">
             {isEditMode ? (
               <div className="w-full space-y-4 pt-4">
@@ -374,7 +343,6 @@ export default function ProfilePage() {
             )}
           </div>
           
-          {/* Bio Card Overlap Shadow Mastery */}
           {!isEditMode && (
             <div 
               className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-[0_40px_80px_-10px_rgba(0,0,0,0.4)] border-primary/5 relative z-20" 
@@ -440,6 +408,35 @@ export default function ProfilePage() {
             </Tabs>
           </div>
         </div>
+      </div>
+
+      {/* LAYER 3: Stickers - Top Layer Z-30 (Above Identity) */}
+      <div className="absolute inset-0 pointer-events-none z-30">
+        {localProfile.stickers.map((sticker) => (
+          <div 
+            key={sticker.id} 
+            className={cn(
+              "absolute", 
+              isEditMode ? "pointer-events-auto cursor-pointer" : "pointer-events-none"
+            )} 
+            onPointerDown={(e) => handleStickerPointerDown(e, sticker.id)}
+            onPointerMove={(e) => handleStickerPointerMove(e, sticker.id)}
+            onPointerUp={handleStickerPointerUp}
+            style={{ 
+              left: `${sticker.x}%`, 
+              top: `${sticker.y}%`, 
+              transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg) scale(${sticker.scale})`,
+              touchAction: 'none'
+            }}
+          >
+            <div className={cn(
+              "relative w-24 h-24 transition-all duration-200",
+              isEditMode && selectedStickerId === sticker.id && "ring-4 ring-primary ring-offset-4 rounded-xl scale-105"
+            )}>
+              <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized />
+            </div>
+          </div>
+        ))}
       </div>
 
       {isEditMode && (

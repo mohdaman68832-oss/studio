@@ -139,31 +139,10 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         </div>
       </div>
 
-      {/* LAYER 2: Stickers - Middle Plane Z-20 */}
-      <div className="absolute inset-0 pointer-events-none z-20">
-        {stickers.map((sticker) => (
-          <div 
-            key={sticker.id} 
-            className="absolute pointer-events-none select-none" 
-            style={{ 
-              left: `${sticker.x}%`, 
-              top: `${sticker.y}%`, 
-              transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`, 
-            }}
-          >
-            <div className="relative w-24 h-24">
-              <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized />
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* LAYER 3: IDENTITY PLANE - Top-most plane Z-30 */}
-      <div className="w-full relative mt-4 z-30">
-        {/* Invisible Protection Box: The background color blocks stickers behind it */}
+      {/* LAYER 2: IDENTITY PLANE - Middle Plane Z-20 (Below Stickers) */}
+      <div className="w-full relative mt-4 z-20">
         <div style={{ backgroundColor: colors.userInfo }} className="px-6 flex flex-col items-center relative">
           
-          {/* Identity Shield: Ensures handle and name are strictly above stickers */}
           <div className="relative z-40 flex flex-col items-center">
             <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{profileData.name || profileData.username}</h2>
             <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>@{profileData.username}</p>
@@ -178,7 +157,6 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
             </Button>
           </div>
 
-          {/* Bio Card Overlap Shadow Mastery */}
           <div className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-[0_40px_80px_-10px_rgba(0,0,0,0.4)] border-primary/5 relative z-20" style={{ backgroundColor: colors.bioCard || "#FFFFFF" }}>
             <p className="text-center text-[12px] leading-relaxed font-bold italic" style={{ color: getContrastColor(colors.bioCard) }}>
               {profileData.bio || "Innovating the future, one idea at a time."}
@@ -239,6 +217,25 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
             </Tabs>
           </div>
         </div>
+      </div>
+
+      {/* LAYER 3: Stickers - Top Plane Z-30 (Above Identity) */}
+      <div className="absolute inset-0 pointer-events-none z-30">
+        {stickers.map((sticker) => (
+          <div 
+            key={sticker.id} 
+            className="absolute pointer-events-none select-none" 
+            style={{ 
+              left: `${sticker.x}%`, 
+              top: `${sticker.y}%`, 
+              transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`, 
+            }}
+          >
+            <div className="relative w-24 h-24">
+              <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized />
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
