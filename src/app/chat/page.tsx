@@ -19,41 +19,56 @@ function ChatRecipientInfo({ recipientId, lastMessage, timestamp }: { recipientI
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-4 animate-pulse">
-        <div className="h-12 w-12 rounded-full bg-muted" />
+      <div className="flex items-center gap-4 py-4 animate-pulse">
+        <div className="h-14 w-14 rounded-full bg-muted" />
         <div className="flex-1 space-y-2">
-          <div className="h-3 w-24 bg-muted rounded" />
-          <div className="h-2 w-32 bg-muted rounded" />
+          <div className="h-4 w-24 bg-muted rounded" />
+          <div className="h-3 w-40 bg-muted rounded" />
         </div>
       </div>
     );
   }
 
+  const timeString = timestamp instanceof Timestamp 
+    ? timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+    : "New";
+
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-4 py-4 w-full">
+      {/* Avatar Section */}
       <div className="relative shrink-0">
-        <Avatar className="h-12 w-12 border border-primary/10">
+        <Avatar className="h-14 w-14 border-2 border-primary/5 shadow-sm">
           <AvatarImage src={recipient?.profilePictureUrl} className="object-cover" />
-          <AvatarFallback className="bg-primary/5 text-primary text-xs font-black uppercase">
+          <AvatarFallback className="bg-primary/5 text-primary text-sm font-black uppercase">
             {recipient?.username?.[0] || "?"}
           </AvatarFallback>
         </Avatar>
         {recipient?.isOnline && (
-          <div className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 rounded-full border-2 border-white shadow-sm" />
+          <div className="absolute bottom-0 right-0 h-3.5 w-3.5 bg-green-500 rounded-full border-2 border-white shadow-sm" />
         )}
       </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex justify-between items-center mb-0.5">
-          <h4 className="text-sm font-black truncate uppercase tracking-tighter text-foreground">
-            @{recipient?.username || "Innovator"}
+
+      {/* Content Section */}
+      <div className="flex-1 min-w-0 flex flex-col justify-center h-14">
+        <div className="flex justify-between items-start mb-0.5">
+          <h4 className="text-[15px] font-bold text-foreground truncate">
+            {recipient?.name || `@${recipient?.username}`}
           </h4>
-          <p className="text-[8px] text-muted-foreground font-black uppercase shrink-0">
-            {timestamp instanceof Timestamp ? timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "New"}
-          </p>
+          <span className="text-[11px] text-muted-foreground font-medium uppercase">
+            {timeString}
+          </span>
         </div>
-        <p className="text-[11px] text-muted-foreground truncate font-medium">
-          {lastMessage || "Start a conversation..."}
-        </p>
+        
+        <div className="flex justify-between items-center">
+          <p className="text-[13px] text-muted-foreground truncate font-medium max-w-[85%]">
+            {lastMessage || "Start a conversation..."}
+          </p>
+          
+          {/* Unread Count Badge - Matching User Image Style */}
+          <div className="h-5 min-w-[20px] px-1.5 flex items-center justify-center bg-[#6B46C1] text-white text-[10px] font-black rounded-full shadow-lg shadow-purple-500/20">
+            1
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -68,20 +83,17 @@ export default function HubPage() {
   const [isSearchingUsers, setIsSearchingUsers] = useState(false);
   const [useSimpleQuery, setUseSimpleQuery] = useState(false);
 
-  // Debugging: If useSimpleQuery is true, we remove 'orderBy' to bypass the index requirement
   const privateChatsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     const colRef = collection(db, "privateChats");
     
     if (useSimpleQuery) {
-      // Bypasses index requirement by removing ordering
       return query(
         colRef,
         where("participants", "array-contains", user.uid)
       );
     }
 
-    // Standard query requiring a COMPOSITE INDEX
     return query(
       colRef,
       where("participants", "array-contains", user.uid),
@@ -138,14 +150,14 @@ export default function HubPage() {
 
   return (
     <div className="max-w-md mx-auto min-h-screen bg-background pt-8 pb-24 flex flex-col">
-      <div className="px-6 mb-8 flex justify-between items-end border-b pb-4 border-primary/5">
+      <div className="px-6 mb-8 flex justify-between items-end">
         <div>
           <h1 className="text-3xl font-black text-primary uppercase tracking-tighter">The Hub</h1>
-          <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Secure Messaging</p>
+          <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Encrypted Sphere</p>
         </div>
         <Link href="/groups/create">
           <Button size="sm" className="rounded-full h-10 px-5 bg-secondary text-white shadow-lg shadow-secondary/20 font-black uppercase text-[10px] tracking-widest flex items-center gap-2">
-            <Plus size={14} /> Group
+            <Plus size={14} /> Union
           </Button>
         </Link>
       </div>
@@ -193,7 +205,7 @@ export default function HubPage() {
       </div>
 
       <Tabs defaultValue="private" className="w-full flex-1 flex flex-col overflow-hidden">
-        <div className="px-6 mb-6">
+        <div className="px-6 mb-2">
           <TabsList className="w-full h-12 bg-muted/30 rounded-full p-1 grid grid-cols-3">
             <TabsTrigger value="private" className="rounded-full text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
               <MessageCircle size={14} className="mr-2" /> Chats
@@ -207,19 +219,19 @@ export default function HubPage() {
           </TabsList>
         </div>
 
-        <TabsContent value="private" className="flex-1 overflow-y-auto px-6 space-y-4 outline-none no-scrollbar">
+        <TabsContent value="private" className="flex-1 overflow-y-auto outline-none no-scrollbar">
           {isPrivateLoading ? (
             <div className="flex flex-col items-center justify-center py-24 gap-4">
               <Loader2 className="animate-spin text-primary h-8 w-8" />
               <p className="text-[9px] font-black uppercase tracking-widest opacity-40">Decrypting Chats...</p>
             </div>
           ) : isIndexBuilding ? (
-            <div className="py-12 text-center space-y-6 flex flex-col items-center bg-blue-50/50 rounded-[3rem] border border-blue-100 mx-2 animate-in fade-in">
+            <div className="py-12 text-center space-y-6 flex flex-col items-center mx-6 animate-in fade-in">
               <RefreshCcw size={48} className="text-blue-500 animate-spin" />
               <div className="space-y-2">
                 <p className="text-sm font-black uppercase text-blue-600 tracking-tighter">Index Building...</p>
                 <p className="text-[10px] font-medium text-blue-500 px-10 leading-relaxed uppercase">
-                  Firebase is currently constructing your composite index. This usually takes 2-5 minutes.
+                  Firestore is currently constructing your composite index.
                 </p>
               </div>
               <Button 
@@ -227,32 +239,32 @@ export default function HubPage() {
                 variant="outline"
                 className="rounded-full h-10 border-blue-200 text-blue-600 font-black uppercase text-[9px] tracking-widest"
               >
-                Use Simple Fetch (No Sorting)
+                Simple Fetch (No Sorting)
               </Button>
             </div>
           ) : privateError ? (
-             <div className="py-8 text-center space-y-6 flex flex-col items-center bg-primary/5 rounded-[3rem] mx-2 border border-primary/10 animate-in fade-in">
+             <div className="py-8 text-center space-y-6 flex flex-col items-center mx-6 animate-in fade-in">
               <ShieldAlert size={40} className="text-primary animate-pulse" />
               <div className="space-y-2">
-                <p className="text-sm font-black uppercase text-primary tracking-tighter px-4">Index Check Required</p>
+                <p className="text-sm font-black uppercase text-primary tracking-tighter px-4">Index Required</p>
                 <p className="text-[10px] font-medium text-muted-foreground px-8 leading-relaxed uppercase">
-                  A <b>Composite Index</b> is missing. Follow these exact settings in the Firebase Console.
+                  A Composite Index is missing for sorted private chats.
                 </p>
               </div>
               
-              <div className="w-full px-6 space-y-3">
-                <div className="bg-white/80 p-4 rounded-2xl border border-primary/20 text-left shadow-sm">
+              <div className="w-full space-y-3">
+                <div className="bg-white p-4 rounded-2xl border border-primary/20 text-left shadow-sm">
                    <p className="text-[9px] font-black uppercase text-primary mb-2 flex items-center gap-2">
-                     <AlertCircle size={12} /> Index Settings Guide
+                     <AlertCircle size={12} /> Index Settings
                    </p>
                    <div className="space-y-1.5 border-t pt-2 border-primary/5 mt-2">
                       <div className="flex justify-between items-center bg-muted/20 p-1.5 rounded-lg">
-                        <span className="text-[8px] font-bold">Collection ID</span>
+                        <span className="text-[8px] font-bold">Collection</span>
                         <span className="text-[8px] font-black text-primary">privateChats</span>
                       </div>
                       <div className="flex justify-between items-center bg-primary/10 p-1.5 rounded-lg border border-primary/20">
-                        <span className="text-[8px] font-bold">Query Scope</span>
-                        <span className="text-[8px] font-black text-primary underline">Collection</span>
+                        <span className="text-[8px] font-bold">Scope</span>
+                        <span className="text-[8px] font-black text-primary">Collection</span>
                       </div>
                       <div className="flex justify-between items-center bg-muted/20 p-1.5 rounded-lg">
                         <span className="text-[8px] font-bold">Field 1</span>
@@ -264,39 +276,23 @@ export default function HubPage() {
                       </div>
                    </div>
                 </div>
-
-                <div className="bg-white/80 p-4 rounded-2xl border border-primary/20 text-left">
-                   <p className="text-[9px] font-black uppercase text-primary mb-2">Raw Error Message:</p>
-                   <p className="text-[8px] font-mono text-foreground/70 break-all leading-tight">
-                     {privateError.message}
-                   </p>
-                </div>
               </div>
 
-              <div className="flex flex-col gap-3 w-full px-8">
-                <Button 
-                  onClick={() => setUseSimpleQuery(true)} 
-                  variant="outline"
-                  className="w-full rounded-full h-12 border-primary text-primary font-black uppercase text-[10px] tracking-widest shadow-sm"
-                >
-                  <RefreshCcw size={14} className="mr-2" /> Fetch without Sorting (Debug)
-                </Button>
-                
-                <div className="bg-blue-50 p-3 rounded-xl border border-blue-100 flex items-start gap-2">
-                  <Info size={14} className="text-blue-500 shrink-0 mt-0.5" />
-                  <p className="text-[8px] font-bold text-blue-600 uppercase text-left leading-normal">
-                    Tip: Select "Collection" in Query Scope. Do NOT select "Collection Group".
-                  </p>
-                </div>
-              </div>
+              <Button 
+                onClick={() => setUseSimpleQuery(true)} 
+                variant="outline"
+                className="w-full rounded-full h-12 border-primary text-primary font-black uppercase text-[10px] tracking-widest shadow-sm"
+              >
+                Fetch without Sorting (Debug)
+              </Button>
             </div>
           ) : privateChats && privateChats.length > 0 ? (
-            <>
+            <div className="divide-y divide-border/50">
               {useSimpleQuery && (
-                <div className="bg-secondary/10 p-3 rounded-2xl border border-secondary/20 flex items-center justify-between mb-2">
+                <div className="bg-secondary/10 px-6 py-3 border-b border-secondary/20 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 size={14} className="text-secondary" />
-                    <p className="text-[9px] font-black uppercase text-secondary">Simple Fetch Active (Index Bypass)</p>
+                    <p className="text-[9px] font-black uppercase text-secondary">Simple Fetch Active</p>
                   </div>
                   <Button size="sm" variant="ghost" onClick={() => setUseSimpleQuery(false)} className="h-6 text-[8px] uppercase font-black">Enable Sorting</Button>
                 </div>
@@ -305,23 +301,21 @@ export default function HubPage() {
                 const recipientId = chat.participants?.find((id: string) => id !== user.uid);
                 if (!recipientId) return null;
                 return (
-                  <Link key={chat.id} href={`/chat/${chat.id}`}>
-                    <div className="bg-card p-5 rounded-[2.5rem] border border-border/50 shadow-md hover:border-primary transition-all group active:scale-[0.98]">
-                      <ChatRecipientInfo 
-                        recipientId={recipientId} 
-                        lastMessage={chat.lastMessage} 
-                        timestamp={chat.timestamp} 
-                      />
-                    </div>
+                  <Link key={chat.id} href={`/chat/${chat.id}`} className="block px-6 hover:bg-muted/30 transition-colors active:bg-muted/50">
+                    <ChatRecipientInfo 
+                      recipientId={recipientId} 
+                      lastMessage={chat.lastMessage} 
+                      timestamp={chat.timestamp} 
+                    />
                   </Link>
                 );
               })}
-            </>
+            </div>
           ) : (
             <div className="py-24 text-center space-y-4 opacity-30 flex flex-col items-center">
               <MessageCircle size={48} className="text-primary/20" />
-              <p className="text-[10px] font-black uppercase tracking-[0.2em]">Communication Hub Empty</p>
-              <p className="text-[9px] font-medium italic px-10 text-muted-foreground text-center">Use the search bar above to connect with other innovators.</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em]">Hub Empty</p>
+              <p className="text-[9px] font-medium italic px-10 text-muted-foreground text-center">Start a conversation with innovators.</p>
             </div>
           )}
         </TabsContent>
@@ -329,14 +323,14 @@ export default function HubPage() {
         <TabsContent value="notifications" className="flex-1 overflow-y-auto px-6 space-y-4 outline-none">
           <div className="py-24 text-center opacity-30">
              <Bell size={48} className="mx-auto mb-4" />
-             <p className="text-[10px] font-black uppercase tracking-widest">No Alerts Received</p>
+             <p className="text-[10px] font-black uppercase tracking-widest">No Alerts</p>
           </div>
         </TabsContent>
 
         <TabsContent value="groups" className="flex-1 overflow-y-auto px-6 space-y-4 outline-none">
           <div className="py-24 text-center opacity-30">
             <Globe size={48} className="mx-auto mb-4" />
-            <p className="text-[10px] font-black uppercase tracking-widest">Global Discovery Coming Soon</p>
+            <p className="text-[10px] font-black uppercase tracking-widest">Discovering Unions...</p>
           </div>
         </TabsContent>
       </Tabs>
