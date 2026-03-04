@@ -131,7 +131,10 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
             <Image src={profileData.bannerUrl || `https://picsum.photos/seed/banner${profileData.id}/800/400`} alt="banner" fill className="object-cover" unoptimized />
           </div>
           <div className="px-6 -mt-16 flex flex-col items-center relative z-20">
-            <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-2xl">
+            <Avatar className={cn(
+              "h-32 w-32 border-4 border-white bg-white shadow-2xl transition-all duration-500",
+              profileData?.isOnline && "shadow-[0_15px_30px_rgba(255,69,0,0.5)] shadow-primary/50 border-primary"
+            )}>
               <AvatarImage src={profileData.profilePictureUrl} className="object-cover" />
               <AvatarFallback className="text-2xl font-black uppercase">{profileData.username?.[0]}</AvatarFallback>
             </Avatar>

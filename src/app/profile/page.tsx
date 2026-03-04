@@ -304,7 +304,10 @@ export default function ProfilePage() {
           </div>
           <div className="px-6 -mt-16 flex flex-col items-center relative z-20">
             <div className="relative group">
-              <Avatar className="h-32 w-32 border-4 border-white bg-white shadow-lg">
+              <Avatar className={cn(
+                "h-32 w-32 border-4 border-white bg-white shadow-lg transition-all duration-500",
+                profileData?.isOnline && "shadow-[0_15px_30px_rgba(255,69,0,0.5)] shadow-primary/50 border-primary"
+              )}>
                 <AvatarImage src={localProfile.profilePic} className="object-cover" />
                 <AvatarFallback className="text-2xl font-black">{localProfile.name?.[0]?.toUpperCase() || "U"}</AvatarFallback>
               </Avatar>

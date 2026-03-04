@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from "next/image";
@@ -152,8 +153,8 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
       <div className="flex items-center justify-between mb-1">
         <Link href={`/profile/${liveUsername}`} className="flex items-center gap-3 z-10">
           <Avatar className={cn(
-            "h-10 w-10 border-2 border-primary/5 transition-all",
-            authorProfile?.isOnline && "shadow-[0_0_15px_rgba(255,69,0,0.4)] shadow-primary/40 border-primary"
+            "h-10 w-10 border-2 border-primary/5 transition-all duration-500",
+            authorProfile?.isOnline && "shadow-[0_8px_20px_rgba(255,69,0,0.4)] shadow-primary/40 border-primary"
           )}>
             <AvatarImage src={liveAvatar} className="object-cover" />
             <AvatarFallback className="text-[10px] font-black uppercase bg-primary/5 text-primary">
