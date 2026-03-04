@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from "next/image";
@@ -119,7 +120,7 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
                 {isVideo ? (
                    <div className="w-full h-full flex items-center justify-center bg-black"><Play className="text-white fill-white" size={32} /></div>
                 ) : (
-                  <Image src={idea.mediaUrl} alt={idea.title} fill className="object-cover transition-transform group-hover:scale-105" />
+                  <Image src={idea.mediaUrl} alt={idea.title} width={800} height={450} className="object-cover transition-transform group-hover:scale-105" />
                 )}
               </div>
             </Link>
@@ -151,7 +152,10 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
     <div className="bg-card rounded-[2.5rem] idea-card-shadow overflow-hidden border border-border/50 p-5">
       <div className="flex items-center justify-between mb-1">
         <Link href={`/profile/${liveUsername}`} className="flex items-center gap-3 z-10">
-          <Avatar className="h-10 w-10 border-2 border-primary/5">
+          <Avatar className={cn(
+            "h-10 w-10 border-2 border-primary/5 transition-all",
+            authorProfile?.isOnline && "shadow-[0_0_15px_rgba(255,69,0,0.4)] shadow-primary/40 border-primary"
+          )}>
             <AvatarImage src={liveAvatar} className="object-cover" />
             <AvatarFallback className="text-[10px] font-black uppercase bg-primary/5 text-primary">
               {liveUsername?.[0] || "U"}
@@ -189,7 +193,7 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
           <span className="text-[10px] font-black text-muted-foreground mt-1">{commentCount}</span>
         </Link>
         <div className="flex items-center gap-1 ml-auto mr-2 bg-muted/20 px-2 py-1 rounded-full">
-           <Eye size={14} className="text-muted-foreground/60" />
+           < Eye size={14} className="text-muted-foreground/60" />
            <span className="text-[9px] font-black text-muted-foreground/60">{viewCount}</span>
         </div>
         <button type="button" onClick={handleShare} className="p-2"><Share2 size={24} /></button>

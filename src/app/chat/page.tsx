@@ -11,6 +11,7 @@ import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 function ChatRecipientInfo({ recipientId, lastMessage, timestamp, unreadCount }: { recipientId: string, lastMessage: string, timestamp: any, unreadCount: number }) {
   const db = useFirestore();
@@ -37,7 +38,10 @@ function ChatRecipientInfo({ recipientId, lastMessage, timestamp, unreadCount }:
     <div className="flex items-center gap-4 py-4 w-full">
       {/* Avatar Section */}
       <div className="relative shrink-0">
-        <Avatar className="h-14 w-14 border-2 border-primary/5 shadow-sm">
+        <Avatar className={cn(
+          "h-14 w-14 border-2 border-primary/5 shadow-sm transition-all",
+          recipient?.isOnline && "shadow-[0_0_15px_rgba(255,69,0,0.4)] shadow-primary/40 border-primary"
+        )}>
           <AvatarImage src={recipient?.profilePictureUrl} className="object-cover" />
           <AvatarFallback className="bg-primary/5 text-primary text-sm font-black uppercase">
             {recipient?.username?.[0] || "?"}
@@ -184,7 +188,10 @@ export default function HubPage() {
                 className="flex items-center gap-4 bg-white p-3 rounded-2xl border border-primary/10 hover:border-primary cursor-pointer transition-all shadow-sm group"
               >
                 <Link href={`/profile/${u.username}`} onClick={(e) => e.stopPropagation()}>
-                  <Avatar className="h-10 w-10 border-2 border-transparent group-hover:border-primary transition-all">
+                  <Avatar className={cn(
+                    "h-10 w-10 border-2 border-transparent group-hover:border-primary transition-all",
+                    u.isOnline && "shadow-[0_0_15px_rgba(255,69,0,0.4)] shadow-primary/40 border-primary"
+                  )}>
                     <AvatarImage src={u.profilePictureUrl} className="object-cover" />
                     <AvatarFallback className="bg-primary/5 text-primary text-xs font-black">{u.username?.[0]?.toUpperCase()}</AvatarFallback>
                   </Avatar>
