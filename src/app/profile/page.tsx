@@ -319,7 +319,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* LAYER 3: Stickers - Z-50 (Now below text but above media) */}
+      {/* LAYER 3: Stickers - Z-50 (Above media but below text supremacy) */}
       <div className="absolute inset-0 pointer-events-none z-50">
         {localProfile.stickers.map((sticker) => (
           <div 
@@ -348,8 +348,8 @@ export default function ProfilePage() {
         ))}
       </div>
 
-      {/* LAYER 2: User Info & Bio - Z-60 (Now ABOVE stickers) */}
-      <div className="w-full relative mt-4 z-60">
+      {/* LAYER 2: Text Supremacy Section - Z-70 (Always on top of stickers) */}
+      <div className="w-full relative mt-4 z-[70]">
         <div style={{ backgroundColor: colors.userInfo }} className="px-6 flex flex-col items-center relative">
           {isEditMode ? (
             <div className="w-full space-y-4 pt-4">
@@ -379,7 +379,7 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Stats & Content Section - Z-10 to stay below Bio Card shadow */}
+        {/* Stats & Content Section - Z-10 inside Z-70 parent to stay below Bio Card shadow but above stickers if needed */}
         <div className="relative z-10">
           <div style={{ backgroundColor: colors.statsSection }} className="w-full py-10 px-10 relative">
             <div className="grid grid-cols-3 gap-6 w-full">
@@ -443,7 +443,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* LAYER 4: Fine-Tune Sticker Hub - Z-2000 */}
+      {/* Fine-Tune Sticker Hub - Z-2000 */}
       <Sheet open={isStickerSheetOpen} onOpenChange={setIsStickerSheetOpen} modal={false}>
         <SheetContent 
           side="bottom" 
