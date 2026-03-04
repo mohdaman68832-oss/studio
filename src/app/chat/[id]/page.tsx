@@ -110,7 +110,10 @@ export default function ChatDetailPage() {
           className="flex-1 min-w-0 flex items-center gap-3 group hover:opacity-80 transition-opacity"
         >
           <div className="relative shrink-0">
-            <Avatar className="h-10 w-10 border-2 border-primary/10 group-hover:border-primary transition-colors">
+            <Avatar className={cn(
+              "h-10 w-10 border-2 border-primary/10 group-hover:border-primary transition-all",
+              recipient?.isOnline && "shadow-[0_0_15px_rgba(255,69,0,0.4)] shadow-primary/40 border-primary"
+            )}>
               <AvatarImage src={recipient?.profilePictureUrl} className="object-cover" />
               <AvatarFallback>{recipient?.username?.[0]?.toUpperCase() || "U"}</AvatarFallback>
             </Avatar>
