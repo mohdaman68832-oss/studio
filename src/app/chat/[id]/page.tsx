@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { useFirestore, useDoc, useMemoFirebase, useUser, useCollection } from "@/firebase";
 import { doc, collection, query, orderBy, addDoc, serverTimestamp, setDoc, limit } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import Link from "next/link";
 
 export default function ChatDetailPage() {
   const params = useParams();
@@ -87,27 +88,37 @@ export default function ChatDetailPage() {
         <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full">
           <ChevronLeft size={24} />
         </Button>
-        <div className="relative">
-          <Avatar className="h-10 w-10 border-2 border-primary/10">
-            <AvatarImage src={recipient?.profilePictureUrl} className="object-cover" />
-            <AvatarFallback>{recipient?.username?.[0]?.toUpperCase() || "U"}</AvatarFallback>
-          </Avatar>
-          {recipient?.isOnline && (
-            <div className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 rounded-full border-2 border-white" />
-          )}
-        </div>
-        <div className="flex-1 min-w-0">
-          <h2 className="font-black text-sm truncate uppercase tracking-tight">@{recipient?.username || "Innovator"}</h2>
-          <div className="flex items-center gap-1">
-             {recipient?.isOnline ? (
-               <span className="text-[8px] text-green-500 font-black uppercase flex items-center gap-1">
-                 <Circle size={6} className="fill-current" /> Active Now
-               </span>
-             ) : (
-               <span className="text-[8px] text-muted-foreground font-black uppercase">Offline</span>
-             )}
+        
+        {/* Profile Link Header Section */}
+        <Link 
+          href={`/profile/${recipient?.username}`} 
+          className="flex-1 min-w-0 flex items-center gap-3 group hover:opacity-80 transition-opacity"
+        >
+          <div className="relative shrink-0">
+            <Avatar className="h-10 w-10 border-2 border-primary/10 group-hover:border-primary transition-colors">
+              <AvatarImage src={recipient?.profilePictureUrl} className="object-cover" />
+              <AvatarFallback>{recipient?.username?.[0]?.toUpperCase() || "U"}</AvatarFallback>
+            </Avatar>
+            {recipient?.isOnline && (
+              <div className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 rounded-full border-2 border-white" />
+            )}
           </div>
-        </div>
+          <div className="flex-1 min-w-0">
+            <h2 className="font-black text-sm truncate uppercase tracking-tight group-hover:text-primary transition-colors">
+              @{recipient?.username || "Innovator"}
+            </h2>
+            <div className="flex items-center gap-1">
+               {recipient?.isOnline ? (
+                 <span className="text-[8px] text-green-500 font-black uppercase flex items-center gap-1">
+                   <Circle size={6} className="fill-current" /> Active Now
+                 </span>
+               ) : (
+                 <span className="text-[8px] text-muted-foreground font-black uppercase">Offline</span>
+               )}
+            </div>
+          </div>
+        </Link>
+
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="icon" className="rounded-full"><Phone size={18} /></Button>
           <Button variant="ghost" size="icon" className="rounded-full"><Video size={18} /></Button>
@@ -157,7 +168,7 @@ export default function ChatDetailPage() {
         )}
       </div>
 
-      <div className="p-4 pb-20 bg-white border-t sticky bottom-0 z-50">
+      <div className="p-4 pb-24 bg-white border-t sticky bottom-0 z-50">
         <div className="flex items-center gap-2 bg-muted/30 rounded-[2rem] pl-4 pr-1 py-1 border border-primary/10">
           <Input 
             placeholder="Secure private message..." 

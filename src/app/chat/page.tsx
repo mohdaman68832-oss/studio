@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -173,12 +174,14 @@ export default function HubPage() {
               <div 
                 key={u.id} 
                 onClick={() => startChat(u.id)}
-                className="flex items-center gap-4 bg-white p-3 rounded-2xl border border-primary/10 hover:border-primary cursor-pointer transition-all shadow-sm"
+                className="flex items-center gap-4 bg-white p-3 rounded-2xl border border-primary/10 hover:border-primary cursor-pointer transition-all shadow-sm group"
               >
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src={u.profilePictureUrl} className="object-cover" />
-                  <AvatarFallback className="bg-primary/5 text-primary text-xs font-black">{u.username?.[0]?.toUpperCase()}</AvatarFallback>
-                </Avatar>
+                <Link href={`/profile/${u.username}`} onClick={(e) => e.stopPropagation()}>
+                  <Avatar className="h-10 w-10 border-2 border-transparent group-hover:border-primary transition-all">
+                    <AvatarImage src={u.profilePictureUrl} className="object-cover" />
+                    <AvatarFallback className="bg-primary/5 text-primary text-xs font-black">{u.username?.[0]?.toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                </Link>
                 <div className="flex-1">
                   <p className="text-sm font-black uppercase tracking-tight">@{u.username}</p>
                 </div>
