@@ -5,7 +5,7 @@ import { IdeaCard } from "@/components/feed/idea-card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
-import { collection, query, orderBy, doc } from "firebase/firestore";
+import { collection, query, orderBy, where, doc, limit } from "firebase/firestore";
 import { useMemo, useState, Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RefreshCcw, LayoutGrid, Globe, ImageIcon, Video, Type, Sparkles, Users } from "lucide-react";
@@ -13,38 +13,47 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-const SUGGESTED_GROUPS = [
-  { id: "g1", name: "AI Frontiers", avatar: "https://picsum.photos/seed/ai/100/100", category: "Technology" },
-  { id: "g2", name: "Green Future", avatar: "https://picsum.photos/seed/green/100/100", category: "Sustainability" },
-  { id: "g3", name: "Art Hub", avatar: "https://picsum.photos/seed/art/100/100", category: "Art" },
-  { id: "g4", name: "Innovators", avatar: "https://picsum.photos/seed/innov/100/100", category: "Business" },
-];
+function GroupSuggestionRow({ userInterests }: { userInterests: string[] }) {
+  const db = useFirestore();
+  
+  // Fetch groups matching user interests
+  const groupsQuery = useMemoFirebase(() => {
+    if (!db || !userInterests?.length) return null;
+    return query(
+      collection(db, "groups"),
+      where("category", "in", userInterests.slice(0, 10)), // Firestore 'in' limit is 10
+      limit(6)
+    );
+  }, [db, userInterests]);
 
-function GroupSuggestionRow() {
+  const { data: suggestedGroups, isLoading } = useCollection(groupsQuery);
+
+  if (isLoading || !suggestedGroups || suggestedGroups.length === 0) return null;
+
   return (
-    <div className="bg-primary/5 -mx-4 px-4 py-8 space-y-4 border-y border-primary/10">
+    <div className="bg-primary/5 -mx-4 px-4 py-8 space-y-4 border-y border-primary/10 animate-in fade-in duration-700">
       <div className="flex items-center justify-between px-1">
         <div>
           <h3 className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-2">
-            <Users size={14} /> Join the Community
+            <Users size={14} /> Recommended Hubs
           </h3>
-          <p className="text-[9px] text-muted-foreground font-bold uppercase">Trending Groups for You</p>
+          <p className="text-[9px] text-muted-foreground font-bold uppercase">Based on your interests</p>
         </div>
         <Link href="/chat">
-          <Button variant="ghost" className="text-[9px] font-black uppercase text-secondary h-6 p-0">View Hub</Button>
+          <Button variant="ghost" className="text-[9px] font-black uppercase text-secondary h-6 p-0">Explore More</Button>
         </Link>
       </div>
       
       <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
-        {SUGGESTED_GROUPS.map((group) => (
-          <Link key={group.id} href={`/groups/${group.id}`} className="shrink-0 w-32 bg-white p-4 rounded-[2rem] border border-primary/5 shadow-sm flex flex-col items-center gap-2 hover:border-primary/20 transition-all">
-            <Avatar className="h-12 w-12 rounded-2xl">
-              <AvatarImage src={group.avatar} className="object-cover" />
+        {suggestedGroups.map((group) => (
+          <Link key={group.id} href={`/groups/${group.id}`} className="shrink-0 w-36 bg-white p-4 rounded-[2.5rem] border border-primary/5 shadow-sm flex flex-col items-center gap-2 hover:border-primary/20 transition-all group">
+            <Avatar className="h-14 w-14 rounded-2xl border-2 border-transparent group-hover:border-primary transition-all">
+              <AvatarImage src={group.avatarUrl || `https://picsum.photos/seed/${group.id}/100/100`} className="object-cover" />
               <AvatarFallback className="bg-primary/5 text-primary text-xs font-black">{group.name[0]}</AvatarFallback>
             </Avatar>
-            <div className="text-center">
-              <p className="text-[10px] font-black truncate w-24 uppercase tracking-tighter">{group.name}</p>
-              <p className="text-[8px] font-bold text-muted-foreground uppercase">{group.category}</p>
+            <div className="text-center w-full">
+              <p className="text-[10px] font-black truncate uppercase tracking-tighter">{group.name}</p>
+              <p className="text-[8px] font-bold text-muted-foreground uppercase opacity-60">{group.category}</p>
             </div>
           </Link>
         ))}
@@ -66,6 +75,8 @@ function FeedContent() {
   const profileRef = useMemoFirebase(() => (user && db ? doc(db, "userProfiles", user.uid) : null), [user, db]);
   const { data: profileData } = useDoc(profileRef);
 
+  const userInterests = profileData?.interests || [];
+
   // Filtered query for Home Feed
   const postsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
@@ -80,16 +91,17 @@ function FeedContent() {
   const postsToDisplay = useMemo(() => {
     if (!firestorePosts) return [];
     
-    const userInterests = profileData?.interests || [];
-    
     const effectiveCategory = activeCategory === "All" && urlCategory ? urlCategory : activeCategory;
 
     let filtered = firestorePosts;
 
     if (effectiveCategory === "All") {
-      filtered = filtered.filter(post => 
-        userInterests.some(interest => post.category?.toLowerCase() === interest.toLowerCase())
-      );
+      // If personalized interests exist, prioritize them
+      if (userInterests.length > 0 && !urlCategory) {
+        filtered = filtered.filter(post => 
+          userInterests.some(interest => post.category?.toLowerCase() === interest.toLowerCase())
+        );
+      }
     } else {
       filtered = filtered.filter(i => i.category?.toLowerCase() === effectiveCategory.toLowerCase());
     }
@@ -99,7 +111,7 @@ function FeedContent() {
     }
     
     return filtered;
-  }, [firestorePosts, activeCategory, urlCategory, memeType, profileData?.interests]);
+  }, [firestorePosts, activeCategory, urlCategory, memeType, userInterests]);
 
   return (
     <div className="max-w-md mx-auto min-h-screen bg-background px-4 pt-8 pb-24 relative">
@@ -207,7 +219,7 @@ function FeedContent() {
               {/* Insert Group Suggestions at 20, 30, 50 post intervals */}
               {(index === 19 || index === 29 || index === 49) && (
                 <div className="mt-8 mb-4">
-                  <GroupSuggestionRow />
+                  <GroupSuggestionRow userInterests={userInterests} />
                 </div>
               )}
             </div>
