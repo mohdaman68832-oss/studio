@@ -64,8 +64,8 @@ function ChatRecipientInfo({ recipientId, lastMessage, timestamp }: { recipientI
             {lastMessage || "Start a conversation..."}
           </p>
           
-          {/* Unread Count Badge - Matching User Image Style */}
-          <div className="h-5 min-w-[20px] px-1.5 flex items-center justify-center bg-[#6B46C1] text-white text-[10px] font-black rounded-full shadow-lg shadow-purple-500/20">
+          {/* Unread Count Badge - Updated to Primary Orange */}
+          <div className="h-5 min-w-[20px] px-1.5 flex items-center justify-center bg-primary text-white text-[10px] font-black rounded-full shadow-lg shadow-primary/20">
             1
           </div>
         </div>
