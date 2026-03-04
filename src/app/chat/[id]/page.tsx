@@ -52,10 +52,14 @@ export default function ChatDetailPage() {
     }
   }, [db, currentUser, chatId, messages?.length]);
 
-  useEffect(() => {
+  const scrollToBottom = () => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
+  };
+
+  useEffect(() => {
+    scrollToBottom();
   }, [messages]);
 
   const handleSend = async () => {
@@ -100,7 +104,6 @@ export default function ChatDetailPage() {
   return (
     <div className="flex flex-col h-[100dvh] max-w-md mx-auto bg-background relative overflow-hidden">
       <header className="flex items-center gap-3 px-4 py-3 border-b bg-white/80 backdrop-blur-md sticky top-0 z-[60] shrink-0">
-        {/* Profile Link Header Section */}
         <Link 
           href={`/profile/${recipient?.username}`} 
           className="flex-1 min-w-0 flex items-center gap-3 group hover:opacity-80 transition-opacity"
@@ -136,7 +139,7 @@ export default function ChatDetailPage() {
 
       <div 
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar bg-primary/[0.02] pb-10"
+        className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar bg-primary/[0.02]"
       >
         <div className="bg-white/50 border border-border/30 p-4 rounded-[2rem] text-center mb-6 max-w-[80%] mx-auto">
            <Lock size={16} className="mx-auto text-primary mb-2 opacity-30" />
@@ -177,8 +180,7 @@ export default function ChatDetailPage() {
         )}
       </div>
 
-      {/* Input Area - Now part of flex flow to naturally push up with keyboard */}
-      <div className="shrink-0 p-4 pb-8 bg-white border-t z-50">
+      <div className="shrink-0 p-4 pb-6 bg-white border-t z-50">
         <div className="flex items-center gap-2 bg-muted/30 rounded-[2rem] pl-4 pr-1 py-1 border border-primary/10">
           <Input 
             placeholder="Secure private message..." 
@@ -186,6 +188,7 @@ export default function ChatDetailPage() {
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+            onFocus={() => setTimeout(scrollToBottom, 100)}
           />
           <Button 
             size="icon" 
