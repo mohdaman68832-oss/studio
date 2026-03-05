@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { 
-  Settings, LogOut, Loader2, Palette, Plus, Move, Maximize2, RotateCw, Check, X, Camera, Image as ImageIcon, Sticker as StickerIcon, Trash2, Video, Type
+  Settings, LogOut, Loader2, Palette, Plus, Move, Maximize2, RotateCw, Check, X, Camera, Image as ImageIcon, Sticker as StickerIcon, Trash2, Video, Type, ShieldAlert
 } from "lucide-react";
 import { 
   DropdownMenu, 
@@ -26,6 +26,7 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { IdeaCard } from "@/components/feed/idea-card";
 import { useToast } from "@/hooks/use-toast";
+import Link from "next/link";
 
 interface Sticker {
   id: string;
@@ -252,7 +253,7 @@ export default function ProfilePage() {
       className="max-w-md mx-auto min-h-screen pb-24 relative overflow-x-hidden flex flex-col" 
       style={{ backgroundColor: colors.background || "var(--background)" }}
     >
-      {/* LAYER 1: Media (Banner/Logo) - Plane Z-10 */}
+      {/* LAYER 1: Media (Banner/Logo) */}
       <div className="relative w-full shrink-0 z-10">
         <div className="h-16 w-full" style={{ backgroundColor: headerColor }} />
         <header className="absolute top-0 left-0 right-0 px-6 py-5 flex justify-between items-center z-[100]">
@@ -274,10 +275,16 @@ export default function ProfilePage() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon"><Settings size={24} style={{ color: contrastHeader }} /></Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="rounded-3xl p-2 border-2 bg-white/95 backdrop-blur-md">
+                <DropdownMenuContent align="end" className="rounded-3xl p-2 border-2 bg-white/95 backdrop-blur-md min-w-[180px]">
                   <DropdownMenuItem onClick={() => setIsEditMode(true)} className="rounded-2xl h-10 gap-3 cursor-pointer">
                     <Palette size={18} className="text-primary" />
                     <span className="text-[10px] font-black uppercase">Personalize</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="rounded-2xl h-10 gap-3 cursor-pointer">
+                    <Link href="/admin/reports">
+                      <ShieldAlert size={18} className="text-destructive" />
+                      <span className="text-[10px] font-black uppercase">Safety Hub (Admin)</span>
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => signOut(auth)} className="rounded-2xl h-10 gap-3 text-secondary cursor-pointer">
                     <LogOut size={18} />
@@ -325,10 +332,9 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* LAYER 2: IDENTITY PLANE - Middle Plane Z-40 (Raised from Z-20) */}
+      {/* LAYER 2: IDENTITY PLANE */}
       <div className="w-full relative mt-4 z-40">
         <div style={{ backgroundColor: colors.userInfo }} className="px-6 flex flex-col items-center relative">
-          
           <div className="relative flex flex-col items-center">
             {isEditMode ? (
               <div className="w-full space-y-6 pt-4 animate-in slide-in-from-top-4 duration-500">
@@ -341,7 +347,6 @@ export default function ProfilePage() {
                   <Textarea value={localProfile.bio} onChange={e => setLocalProfile(p => ({ ...p, bio: e.target.value }))} className="text-center font-medium text-xs rounded-2xl border-primary/20 min-h-[100px] bg-white/50 focus:ring-2 focus:ring-primary/20 transition-all shadow-inner p-4" placeholder="What are you building?" />
                 </div>
 
-                {/* Color Palette Hub */}
                 <div className="space-y-4 pt-6 border-t border-primary/10">
                   <div className="flex items-center gap-2 justify-center mb-2">
                     <Palette size={14} className="text-primary" />
@@ -385,7 +390,6 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Content Section */}
         <div className="relative z-10">
           <div style={{ backgroundColor: colors.statsSection }} className="w-full py-10 px-10 relative">
             <div className="grid grid-cols-3 gap-6 w-full">
@@ -440,7 +444,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* LAYER 3: Stickers - Top Layer Z-50 (Was Z-30) */}
+      {/* LAYER 3: Stickers */}
       <div className="absolute inset-0 pointer-events-none z-50">
         {localProfile.stickers.map((sticker) => (
           <div 
@@ -478,7 +482,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* Fine-Tune Sticker Hub - Top Most Plane Z-2000 */}
+      {/* Fine-Tune Sticker Hub */}
       <Sheet open={isStickerSheetOpen} onOpenChange={setIsStickerSheetOpen} modal={false}>
         <SheetContent 
           side="bottom" 
