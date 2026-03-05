@@ -6,7 +6,7 @@ import { collection, query, orderBy, doc, updateDoc, deleteDoc } from "firebase/
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ShieldAlert, CheckCircle2, Trash2, AlertTriangle, Eye, ChevronLeft } from "lucide-react";
+import { Loader2, ShieldAlert, CheckCircle2, Trash2, AlertTriangle, Eye, ChevronLeft, MessageSquare, UserCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import Link from "next/link";
@@ -45,8 +45,8 @@ export default function AdminReportsPage() {
         await deleteDoc(doc(db, collectionName, report.targetId));
         await updateDoc(doc(db, "reports", report.id), { status: "resolved" });
         toast({ title: "Purged", description: `The reported ${report.targetType} has been removed.` });
-      } else {
-        toast({ title: "Note", description: "Messages must be handled in DB Console." });
+      } else if (report.targetType === "message") {
+        toast({ title: "Note", description: "Messages must be handled manually in Firebase Console for safety." });
       }
     } catch (e) {
       toast({ variant: "destructive", title: "Action Failed", description: "Content might already be gone." });
@@ -97,7 +97,7 @@ export default function AdminReportsPage() {
               </CardHeader>
               <CardContent className="p-6 space-y-5">
                 <div className="bg-destructive/5 p-4 rounded-2xl border border-destructive/10">
-                  <p className="text-[9px] font-black uppercase text-destructive mb-1 tracking-widest">Reason</p>
+                  <p className="text-[9px] font-black uppercase text-destructive mb-1 tracking-widest">Violation Reason</p>
                   <p className="text-sm font-bold text-foreground leading-tight">"{report.reason}"</p>
                 </div>
 
@@ -113,24 +113,36 @@ export default function AdminReportsPage() {
                 </div>
 
                 <div className="flex flex-col gap-3 pt-2">
+                  {/* Dedicated Isolated View Logic */}
                   {report.targetType === 'post' && (
-                    <Link href={`/idea/${report.targetId}`} target="_blank">
-                      <Button variant="outline" size="sm" className="w-full rounded-xl h-10 text-[10px] font-black uppercase tracking-widest gap-2">
-                        <Eye size={14} /> View Reported Post
+                    <Link href={`/idea/${report.targetId}`} target="_blank" className="w-full">
+                      <Button variant="outline" size="sm" className="w-full rounded-xl h-12 text-[10px] font-black uppercase tracking-widest gap-2 border-2 border-primary/10">
+                        <Eye size={16} /> View Isolated Post
                       </Button>
                     </Link>
                   )}
+                  
                   {report.targetType === 'profile' && (
-                    <Button variant="outline" size="sm" className="w-full rounded-xl h-10 text-[10px] font-black uppercase tracking-widest gap-2" onClick={() => router.push(`/profile/id/${report.targetId}`)}>
-                      <Eye size={14} /> View Profile ID
-                    </Button>
+                    <Link href={`/profile/id/${report.targetId}`} target="_blank" className="w-full">
+                      <Button variant="outline" size="sm" className="w-full rounded-xl h-12 text-[10px] font-black uppercase tracking-widest gap-2 border-2 border-primary/10">
+                        <UserCircle size={16} /> Inspect Profile
+                      </Button>
+                    </Link>
+                  )}
+
+                  {report.targetType === 'message' && (
+                    <Link href={`/chat/${report.targetId}`} target="_blank" className="w-full">
+                      <Button variant="outline" size="sm" className="w-full rounded-xl h-12 text-[10px] font-black uppercase tracking-widest gap-2 border-2 border-primary/10">
+                        <MessageSquare size={16} /> Jump to Chat
+                      </Button>
+                    </Link>
                   )}
                   
                   {report.status === "pending" && (
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-3 mt-2">
                       <Button 
                         size="sm" 
-                        className="rounded-2xl h-12 bg-green-500 hover:bg-green-600 text-white font-black uppercase text-[9px] tracking-widest"
+                        className="rounded-2xl h-12 bg-green-500 hover:bg-green-600 text-white font-black uppercase text-[9px] tracking-widest shadow-lg shadow-green-200"
                         onClick={() => resolveReport(report.id)}
                       >
                         <CheckCircle2 size={16} className="mr-1.5" /> Mark Safe
@@ -138,11 +150,11 @@ export default function AdminReportsPage() {
                       <Button 
                         size="sm" 
                         variant="destructive"
-                        className="rounded-2xl h-12 font-black uppercase text-[9px] tracking-widest"
+                        className="rounded-2xl h-12 font-black uppercase text-[9px] tracking-widest shadow-lg shadow-destructive/20"
                         disabled={processingId === report.id}
                         onClick={() => deleteOffendingContent(report)}
                       >
-                        {processingId === report.id ? <Loader2 size={16} className="animate-spin" /> : <><Trash2 size={16} className="mr-1.5" /> Delete Content</>}
+                        {processingId === report.id ? <Loader2 size={16} className="animate-spin" /> : <><Trash2 size={16} className="mr-1.5" /> Purge Content</>}
                       </Button>
                     </div>
                   )}
