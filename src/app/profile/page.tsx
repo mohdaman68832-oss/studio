@@ -253,7 +253,6 @@ export default function ProfilePage() {
       className="max-w-md mx-auto min-h-screen pb-24 relative overflow-x-hidden flex flex-col" 
       style={{ backgroundColor: colors.background || "var(--background)" }}
     >
-      {/* LAYER 1: Media (Banner/Logo) */}
       <div className="relative w-full shrink-0 z-10">
         <div className="h-16 w-full" style={{ backgroundColor: headerColor }} />
         <header className="absolute top-0 left-0 right-0 px-6 py-5 flex justify-between items-center z-[100]">
@@ -266,6 +265,14 @@ export default function ProfilePage() {
           )}
           
           <div className="flex items-center gap-2">
+            {!isEditMode && (
+              <Link href="/admin/reports">
+                <Button variant="ghost" size="icon" className="bg-primary/10 rounded-full h-10 w-10">
+                  <ShieldAlert size={20} className="text-primary" />
+                </Button>
+              </Link>
+            )}
+            
             {isEditMode ? (
               <Button onClick={handleSave} disabled={isSaving} className="rounded-full h-10 px-6 bg-primary text-white font-black uppercase text-[10px] tracking-widest shadow-xl">
                 {isSaving ? <Loader2 size={16} className="animate-spin" /> : <><Check size={16} className="mr-2" /> Save All</>}
@@ -279,12 +286,6 @@ export default function ProfilePage() {
                   <DropdownMenuItem onClick={() => setIsEditMode(true)} className="rounded-2xl h-10 gap-3 cursor-pointer">
                     <Palette size={18} className="text-primary" />
                     <span className="text-[10px] font-black uppercase">Personalize</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="rounded-2xl h-10 gap-3 cursor-pointer">
-                    <Link href="/admin/reports">
-                      <ShieldAlert size={18} className="text-destructive" />
-                      <span className="text-[10px] font-black uppercase">Safety Hub (Admin)</span>
-                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => signOut(auth)} className="rounded-2xl h-10 gap-3 text-secondary cursor-pointer">
                     <LogOut size={18} />
@@ -332,7 +333,6 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* LAYER 2: IDENTITY PLANE */}
       <div className="w-full relative mt-4 z-40">
         <div style={{ backgroundColor: colors.userInfo }} className="px-6 flex flex-col items-center relative">
           <div className="relative flex flex-col items-center">
@@ -444,7 +444,6 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* LAYER 3: Stickers */}
       <div className="absolute inset-0 pointer-events-none z-50">
         {localProfile.stickers.map((sticker) => (
           <div 
@@ -482,7 +481,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* Fine-Tune Sticker Hub */}
       <Sheet open={isStickerSheetOpen} onOpenChange={setIsStickerSheetOpen} modal={false}>
         <SheetContent 
           side="bottom" 
