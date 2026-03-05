@@ -6,10 +6,10 @@ import { useParams, useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Lock, Circle, Loader2, MoreVertical, Plus, Image as ImageIcon, Video, X, Check, CheckCheck } from "lucide-react";
+import { Send, Lock, Circle, Loader2, MoreVertical, Plus, Image as ImageIcon, Video, X, CheckCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFirestore, useDoc, useMemoFirebase, useUser, useCollection } from "@/firebase";
-import { doc, collection, query, orderBy, addDoc, serverTimestamp, setDoc, limit, updateDoc, increment, writeBatch, getDocs, where } from "firebase/firestore";
+import { doc, collection, query, orderBy, addDoc, serverTimestamp, setDoc, limit, updateDoc, increment, writeBatch } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import Image from "next/image";
@@ -278,13 +278,9 @@ export default function ChatDetailPage() {
                     {new Date(msg.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 )}
-                {isMe && (
+                {isMe && isRead && (
                   <div className="flex items-center">
-                    {isRead ? (
-                      <CheckCheck size={12} className="text-secondary" />
-                    ) : (
-                      <Check size={12} className="text-muted-foreground/40" />
-                    )}
+                    <CheckCheck size={12} className="text-secondary" />
                   </div>
                 )}
               </div>
