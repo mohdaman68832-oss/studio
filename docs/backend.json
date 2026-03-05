@@ -38,9 +38,11 @@
       "properties": {
         "senderId": { "type": "string" },
         "text": { "type": "string" },
+        "mediaUrl": { "type": "string" },
+        "mediaType": { "type": "string", "enum": ["image", "video"] },
         "createdAt": { "type": "string" }
       },
-      "required": ["senderId", "text", "createdAt"]
+      "required": ["senderId", "createdAt"]
     },
     "Report": {
       "title": "Report",

@@ -6,12 +6,13 @@ import { useParams, useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Lock, Circle, Loader2, MoreVertical } from "lucide-react";
+import { Send, Lock, Circle, Loader2, MoreVertical, Plus, Image as ImageIcon, Video, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFirestore, useDoc, useMemoFirebase, useUser, useCollection } from "@/firebase";
 import { doc, collection, query, orderBy, addDoc, serverTimestamp, setDoc, limit, updateDoc, increment } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
+import Image from "next/image";
 import { ReportDialog } from "@/components/report-dialog";
 import { 
   DropdownMenu, 
@@ -19,6 +20,16 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
+
+const toBase64 = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = (error) => reject(error);
+  });
 
 export default function ChatDetailPage() {
   const params = useParams();
@@ -45,7 +56,12 @@ export default function ChatDetailPage() {
   const { data: messages, isLoading: isMessagesLoading } = useCollection(messagesQuery);
 
   const [newMessage, setNewMessage] = useState("");
+  const [mediaUrl, setMediaUrl] = useState<string | null>(null);
+  const [mediaType, setMediaType] = useState<"image" | "video" | null>(null);
+  const [isSending, setIsSending] = useState(false);
+  
   const scrollRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (db && currentUser && chatId) {
@@ -66,30 +82,65 @@ export default function ChatDetailPage() {
     scrollToBottom();
   }, [messages]);
 
-  const handleSend = async () => {
-    if (!newMessage.trim() || !db || !currentUser || !chatId || !recipientId) return;
-    
-    const text = newMessage;
-    setNewMessage("");
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
     try {
-      await setDoc(doc(db, "privateChats", chatId), {
-        chatId: chatId,
-        participants: chatId.split("_"),
-        lastMessage: text,
-        timestamp: serverTimestamp(),
-        [`unreadCounts.${recipientId}`]: increment(1)
-      }, { merge: true });
-
-      await addDoc(collection(db, "privateChats", chatId, "messages"), {
-        senderId: currentUser.uid,
-        text: text,
-        createdAt: serverTimestamp(),
-      });
-    } catch (e) {
-      console.error("Message send failed", e);
-      toast({ title: "Error", description: "Failed to send message.", variant: "destructive" });
+      const base64 = await toBase64(file);
+      setMediaUrl(base64);
+      setMediaType(file.type.startsWith('video/') ? 'video' : 'image');
+    } catch (err) {
+      toast({ variant: "destructive", title: "Process Failed", description: "Media processing error." });
     }
+  };
+
+  const handleSend = async () => {
+    if ((!newMessage.trim() && !mediaUrl) || !db || !currentUser || !chatId || !recipientId || isSending) return;
+    
+    setIsSending(true);
+    const text = newMessage;
+    const currentMediaUrl = mediaUrl;
+    const currentMediaType = mediaType;
+
+    setNewMessage("");
+    setMediaUrl(null);
+    setMediaType(null);
+
+    const chatRef = doc(db, "privateChats", chatId);
+    const messagesRef = collection(db, "privateChats", chatId, "messages");
+
+    const messageData = {
+      senderId: currentUser.uid,
+      text: text,
+      mediaUrl: currentMediaUrl || "",
+      mediaType: currentMediaType || "",
+      createdAt: serverTimestamp(),
+    };
+
+    // Update chat metadata
+    setDoc(chatRef, {
+      chatId: chatId,
+      participants: chatId.split("_"),
+      lastMessage: currentMediaUrl ? (currentMediaType === 'image' ? "📷 Photo" : "🎥 Video") : text,
+      timestamp: serverTimestamp(),
+      [`unreadCounts.${recipientId}`]: increment(1)
+    }, { merge: true }).catch(async (err) => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: chatRef.path,
+        operation: 'write',
+        requestResourceData: { lastMessage: text }
+      }));
+    });
+
+    // Add message
+    addDoc(messagesRef, messageData).catch(async (err) => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: messagesRef.path,
+        operation: 'create',
+        requestResourceData: messageData
+      }));
+    }).finally(() => setIsSending(false));
   };
 
   if (isUserLoading || isRecipientLoading) {
@@ -136,9 +187,9 @@ export default function ChatDetailPage() {
             </div>
           </div>
         </Link>
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full h-9 w-9"><MoreVertical size={20} className="text-muted-foreground" /></Button>
+            <Button variant="ghost" size="icon" className="rounded-full h-9 w-9 focus-visible:ring-0"><MoreVertical size={20} className="text-muted-foreground" /></Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="rounded-2xl p-1 border-2">
             <DropdownMenuItem asChild>
@@ -164,6 +215,7 @@ export default function ChatDetailPage() {
         
         {messages?.map((msg) => {
           const isMe = msg.senderId === currentUser?.uid;
+          const hasMedia = msg.mediaUrl && msg.mediaUrl !== "";
           return (
             <div 
               key={msg.id} 
@@ -174,13 +226,30 @@ export default function ChatDetailPage() {
             >
               <div 
                 className={cn(
-                  "px-4 py-3 rounded-2xl text-[13px] leading-relaxed font-medium shadow-sm group relative",
+                  "rounded-2xl text-[13px] leading-relaxed font-medium shadow-sm group relative overflow-hidden",
                   isMe 
                     ? "bg-primary text-white rounded-tr-none shadow-primary/20" 
-                    : "bg-white text-foreground rounded-tl-none border border-border/50"
+                    : "bg-white text-foreground rounded-tl-none border border-border/50",
+                  hasMedia ? "p-1 pb-2" : "px-4 py-3"
                 )}
               >
-                {msg.text}
+                {hasMedia && (
+                  <div className="mb-2 rounded-xl overflow-hidden bg-black/5">
+                    {msg.mediaType === 'video' ? (
+                      <video src={msg.mediaUrl} className="w-full max-h-60 object-contain" controls />
+                    ) : (
+                      <Image 
+                        src={msg.mediaUrl} 
+                        alt="Chat attachment" 
+                        width={400} 
+                        height={400} 
+                        className="w-full max-h-60 object-contain" 
+                        unoptimized
+                      />
+                    )}
+                  </div>
+                )}
+                <div className={hasMedia ? "px-3" : ""}>{msg.text}</div>
                 {!isMe && (
                   <div className="absolute -right-10 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <ReportDialog targetId={msg.id} targetType="message" />
@@ -195,31 +264,71 @@ export default function ChatDetailPage() {
             </div>
           );
         })}
-        {isMessagesLoading && (
+        {(isMessagesLoading || isSending) && (
           <div className="flex justify-center py-4"><Loader2 className="h-6 w-6 animate-spin text-primary/20" /></div>
         )}
       </div>
 
-      <div className="shrink-0 p-4 bg-white border-t z-[70] pb-safe">
-        <div className="flex items-center gap-2 bg-muted/30 rounded-[2rem] pl-4 pr-1 py-1 border border-primary/10">
-          <Input 
-            placeholder="Secure private message..." 
-            className="border-none bg-transparent focus-visible:ring-0 shadow-none h-12 p-0 text-sm font-medium"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            onFocus={() => {
-              setTimeout(scrollToBottom, 300);
-            }}
+      <div className="shrink-0 p-4 bg-white border-t z-[70] pb-safe space-y-3">
+        {mediaUrl && (
+          <div className="flex items-center gap-3 bg-muted/20 p-2 rounded-2xl animate-in slide-in-from-bottom-2">
+            <div className="relative h-16 w-16 rounded-xl overflow-hidden bg-black/5 shrink-0">
+              {mediaType === 'video' ? (
+                <div className="w-full h-full flex items-center justify-center bg-black"><Video className="text-white" size={20} /></div>
+              ) : (
+                <Image src={mediaUrl} alt="Preview" fill className="object-cover" unoptimized />
+              )}
+              <button 
+                onClick={() => { setMediaUrl(null); setMediaType(null); }}
+                className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5"
+              >
+                <X size={12} />
+              </button>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-black uppercase text-primary">Attachment Ready</p>
+              <p className="text-[9px] text-muted-foreground truncate">{mediaType === 'image' ? 'Image File' : 'Video File'}</p>
+            </div>
+          </div>
+        )}
+
+        <div className="flex items-center gap-2">
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            className="hidden" 
+            accept="image/*,video/*" 
+            onChange={handleFileChange} 
           />
           <Button 
+            variant="ghost" 
             size="icon" 
-            className="rounded-full h-11 w-11 bg-primary text-white shrink-0 shadow-lg active:scale-95 transition-transform"
-            onClick={handleSend}
-            disabled={!newMessage.trim()}
+            className="rounded-full h-11 w-11 bg-muted/30 text-primary shrink-0 active:scale-95 transition-transform"
+            onClick={() => fileInputRef.current?.click()}
           >
-            <Send size={18} />
+            <Plus size={24} />
           </Button>
+          
+          <div className="flex-1 flex items-center gap-2 bg-muted/30 rounded-[2rem] pl-4 pr-1 py-1 border border-primary/10">
+            <Input 
+              placeholder="Secure private message..." 
+              className="border-none bg-transparent focus-visible:ring-0 shadow-none h-12 p-0 text-sm font-medium"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+              onFocus={() => {
+                setTimeout(scrollToBottom, 300);
+              }}
+            />
+            <Button 
+              size="icon" 
+              className="rounded-full h-11 w-11 bg-primary text-white shrink-0 shadow-lg active:scale-95 transition-transform"
+              onClick={handleSend}
+              disabled={(!newMessage.trim() && !mediaUrl) || isSending}
+            >
+              {isSending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
