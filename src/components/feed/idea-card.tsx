@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowBigUp, MoreHorizontal, Share2, Play, MessageCircle, Eye, Flag, Trash2, Loader2, AlertTriangle } from "lucide-react";
+import { ArrowBigUp, MoreHorizontal, Share2, Play, MessageCircle, Eye, Flag, Trash2, Loader2, AlertTriangle, X } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -236,32 +236,37 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
               </div>
               <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-center">Delete Innovation?</DialogTitle>
               <DialogDescription className="text-center font-bold text-muted-foreground uppercase text-[10px] tracking-widest leading-relaxed">
-                This action is irreversible. To proceed, please type <span className="text-destructive font-black">DELETE</span> in the box below.
+                This action is irreversible. To proceed, please type <span className="text-destructive font-black">DELETE</span>.
               </DialogDescription>
             </DialogHeader>
-            <div className="py-6 space-y-4">
-              <Input 
-                placeholder="Type DELETE to confirm" 
-                className="rounded-2xl h-14 bg-muted/30 border-none text-center font-black uppercase placeholder:opacity-30"
-                value={deleteConfirmText}
-                onChange={(e) => setDeleteConfirmText(e.target.value)}
-              />
-              <div className={cn(
-                "grid gap-3 transition-all duration-300",
-                deleteConfirmText === "DELETE" ? "grid-cols-2" : "grid-cols-1"
-              )}>
-                <Button variant="ghost" onClick={() => setIsDeleteDialogOpen(false)} className="rounded-2xl h-14 font-black uppercase text-[10px] tracking-widest">Cancel</Button>
-                {deleteConfirmText === "DELETE" && (
+            <div className="py-6 space-y-6">
+              <div className="relative h-14 w-full">
+                {deleteConfirmText === "DELETE" ? (
                   <Button 
                     variant="destructive" 
                     disabled={isDeleting}
                     onClick={handleDeletePost}
-                    className="rounded-2xl h-14 font-black uppercase text-[10px] tracking-widest shadow-lg shadow-destructive/20 animate-in zoom-in duration-300"
+                    className="absolute inset-0 w-full h-full rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] shadow-lg shadow-destructive/30 animate-in zoom-in-95 duration-300"
                   >
-                    {isDeleting ? <Loader2 className="animate-spin" /> : "Continue Deletion"}
+                    {isDeleting ? <Loader2 className="animate-spin mr-2" /> : "Purge Innovation Now"}
                   </Button>
+                ) : (
+                  <Input 
+                    placeholder="Type DELETE to confirm" 
+                    className="absolute inset-0 w-full h-full rounded-2xl bg-muted/30 border-none text-center font-black uppercase placeholder:opacity-30 tracking-widest focus-visible:ring-primary/20"
+                    value={deleteConfirmText}
+                    onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  />
                 )}
               </div>
+              
+              <Button 
+                variant="ghost" 
+                onClick={() => setIsDeleteDialogOpen(false)} 
+                className="w-full rounded-2xl h-12 font-black uppercase text-[9px] tracking-widest text-muted-foreground/60 hover:text-foreground"
+              >
+                Cancel Action
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -362,32 +367,37 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
             </div>
             <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-center">Delete Innovation?</DialogTitle>
             <DialogDescription className="text-center font-bold text-muted-foreground uppercase text-[10px] tracking-widest leading-relaxed">
-              This action is irreversible. To proceed, please type <span className="text-destructive font-black">DELETE</span> in the box below.
+              This action is irreversible. To proceed, please type <span className="text-destructive font-black">DELETE</span>.
             </DialogDescription>
           </DialogHeader>
-          <div className="py-6 space-y-4">
-            <Input 
-              placeholder="Type DELETE to confirm" 
-              className="rounded-2xl h-14 bg-muted/30 border-none text-center font-black uppercase placeholder:opacity-30"
-              value={deleteConfirmText}
-              onChange={(e) => setDeleteConfirmText(e.target.value)}
-            />
-            <div className={cn(
-              "grid gap-3 transition-all duration-300",
-              deleteConfirmText === "DELETE" ? "grid-cols-2" : "grid-cols-1"
-            )}>
-              <Button variant="ghost" onClick={() => setIsDeleteDialogOpen(false)} className="rounded-2xl h-14 font-black uppercase text-[10px] tracking-widest">Cancel</Button>
-              {deleteConfirmText === "DELETE" && (
+          <div className="py-6 space-y-6">
+            <div className="relative h-14 w-full">
+              {deleteConfirmText === "DELETE" ? (
                 <Button 
                   variant="destructive" 
                   disabled={isDeleting}
                   onClick={handleDeletePost}
-                  className="rounded-2xl h-14 font-black uppercase text-[10px] tracking-widest shadow-lg shadow-destructive/20 animate-in zoom-in duration-300"
+                  className="absolute inset-0 w-full h-full rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] shadow-lg shadow-destructive/30 animate-in zoom-in-95 duration-300"
                 >
-                  {isDeleting ? <Loader2 className="animate-spin" /> : "Continue Deletion"}
+                  {isDeleting ? <Loader2 className="animate-spin mr-2" /> : "Purge Innovation Now"}
                 </Button>
+              ) : (
+                <Input 
+                  placeholder="Type DELETE to confirm" 
+                  className="absolute inset-0 w-full h-full rounded-2xl bg-muted/30 border-none text-center font-black uppercase placeholder:opacity-30 tracking-widest focus-visible:ring-primary/20"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                />
               )}
             </div>
+            
+            <Button 
+              variant="ghost" 
+              onClick={() => setIsDeleteDialogOpen(false)} 
+              className="w-full rounded-2xl h-12 font-black uppercase text-[9px] tracking-widest text-muted-foreground/60 hover:text-foreground"
+            >
+              Cancel Action
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
