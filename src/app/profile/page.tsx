@@ -130,33 +130,33 @@ export default function ProfilePage() {
   return (
     <div className="max-w-md mx-auto min-h-screen pb-24 relative overflow-x-hidden flex flex-col bg-background">
       <div className="relative w-full shrink-0 z-10">
-        <div className="h-16 w-full bg-primary" />
-        <header className="absolute top-0 left-0 right-0 px-6 py-5 flex justify-between items-center z-[100] text-white">
+        <div className="h-16 w-full bg-white border-b" />
+        <header className="absolute top-0 left-0 right-0 px-6 py-5 flex justify-between items-center z-[100] bg-white/80 backdrop-blur-md">
           {isEditMode ? (
-             <Button variant="ghost" size="icon" onClick={() => setIsEditMode(false)} className="rounded-full bg-black/20 backdrop-blur-md">
-               <X size={24} className="text-white" />
+             <Button variant="ghost" size="icon" onClick={() => setIsEditMode(false)} className="rounded-full bg-muted/20">
+               <X size={24} className="text-primary" />
              </Button>
           ) : (
-            <h1 className="text-2xl font-black uppercase tracking-tighter text-white">Sphere</h1>
+            <h1 className="text-2xl font-black uppercase tracking-tighter text-primary">Sphere</h1>
           )}
           
           <div className="flex items-center gap-2">
             {!isEditMode && (
               <Link href="/admin/reports">
-                <Button variant="ghost" size="icon" className="bg-white/20 backdrop-blur-md rounded-full h-10 w-10">
-                  <ShieldAlert size={20} className="text-white" />
+                <Button variant="ghost" size="icon" className="bg-primary/10 rounded-full h-10 w-10">
+                  <ShieldAlert size={20} className="text-primary" />
                 </Button>
               </Link>
             )}
             
             {isEditMode ? (
-              <Button onClick={handleSave} disabled={isSaving} className="rounded-full h-10 px-6 bg-white text-primary font-black uppercase text-[10px] tracking-widest shadow-xl">
+              <Button onClick={handleSave} disabled={isSaving} className="rounded-full h-10 px-6 bg-primary text-white font-black uppercase text-[10px] tracking-widest shadow-xl">
                 {isSaving ? <Loader2 size={16} className="animate-spin" /> : <><Check size={16} className="mr-2" /> Save All</>}
               </Button>
             ) : (
               <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon"><Settings size={24} className="text-white" /></Button>
+                  <Button variant="ghost" size="icon"><Settings size={24} className="text-primary" /></Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="rounded-3xl p-2 border-2 bg-white/95 backdrop-blur-md min-w-[180px]">
                   <DropdownMenuItem onClick={() => setIsEditMode(true)} className="rounded-2xl h-10 gap-3 cursor-pointer">
