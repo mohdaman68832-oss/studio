@@ -5,7 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { ArrowBigUp, MoreHorizontal, Share2, Play, MessageCircle, Eye, Flag } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ArrowBigUp, MoreHorizontal, Share2, Play, MessageCircle, Eye, Flag, Trash2, Loader2, AlertTriangle } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -18,6 +19,14 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface IdeaCardProps {
   idea: {
@@ -43,6 +52,9 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
   const db = useFirestore();
   const { user } = useUser();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
   const viewTracked = useRef(false);
 
   // Author live data
@@ -125,6 +137,22 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
     toast({ title: "Shared!", description: "Link copied to clipboard." });
   };
 
+  const handleDeletePost = async () => {
+    if (!db || !idea.id || deleteConfirmText !== "DELETE") return;
+    
+    setIsDeleting(true);
+    try {
+      await deleteDoc(doc(db, "posts", idea.id));
+      toast({ title: "Post Purged", description: "Your innovation has been removed from the sphere." });
+      setIsDeleteDialogOpen(false);
+    } catch (error) {
+      toast({ variant: "destructive", title: "Deletion Failed", description: "Could not remove post at this time." });
+    } finally {
+      setIsDeleting(false);
+      setDeleteConfirmText("");
+    }
+  };
+
   const isVideo = idea.mediaUrl && (idea.mediaUrl.endsWith('.mp4') || idea.mediaUrl.includes('gtv-videos-bucket'));
   const isTextPost = !idea.mediaUrl || idea.mediaUrl === "";
 
@@ -138,9 +166,26 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
                 {idea.title}
               </h3>
             </Link>
-            <div className="flex items-center gap-1.5 bg-muted/30 px-2 py-1 rounded-full shrink-0">
-              <Eye size={12} className="text-muted-foreground" />
-              <span className="text-[10px] font-black text-muted-foreground">{viewCount}</span>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 bg-muted/30 px-2 py-1 rounded-full shrink-0">
+                <Eye size={12} className="text-muted-foreground" />
+                <span className="text-[10px] font-black text-muted-foreground">{viewCount}</span>
+              </div>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full h-8 w-8"><MoreHorizontal size={20} className="text-muted-foreground" /></Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="rounded-2xl p-1 border-2">
+                   {user?.uid === idea.uid ? (
+                     <DropdownMenuItem onClick={() => setIsDeleteDialogOpen(true)} className="text-destructive font-black uppercase text-[10px] gap-2 p-3 rounded-xl cursor-pointer">
+                       <Trash2 size={14} /> Delete Post
+                     </DropdownMenuItem>
+                   ) : (
+                     <DropdownMenuItem disabled className="text-[10px] font-black uppercase p-3">Options Limited</DropdownMenuItem>
+                   )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
 
@@ -179,6 +224,40 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
             </button>
           </div>
         </div>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <DialogContent className="rounded-[2.5rem] max-w-[90vw] sm:max-w-md border-none shadow-2xl">
+            <DialogHeader className="space-y-4">
+              <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-2 text-destructive">
+                <AlertTriangle size={32} />
+              </div>
+              <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-center">Delete Innovation?</DialogTitle>
+              <DialogDescription className="text-center font-bold text-muted-foreground uppercase text-[10px] tracking-widest leading-relaxed">
+                This action is irreversible. To proceed, please type <span className="text-destructive font-black">DELETE</span> in the box below.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-6 space-y-4">
+              <Input 
+                placeholder="Type DELETE to confirm" 
+                className="rounded-2xl h-14 bg-muted/30 border-none text-center font-black uppercase placeholder:opacity-30"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+              />
+              <div className="grid grid-cols-2 gap-3">
+                <Button variant="ghost" onClick={() => setIsDeleteDialogOpen(false)} className="rounded-2xl h-14 font-black uppercase text-[10px] tracking-widest">Cancel</Button>
+                <Button 
+                  variant="destructive" 
+                  disabled={deleteConfirmText !== "DELETE" || isDeleting}
+                  onClick={handleDeletePost}
+                  className="rounded-2xl h-14 font-black uppercase text-[10px] tracking-widest shadow-lg shadow-destructive/20"
+                >
+                  {isDeleting ? <Loader2 className="animate-spin" /> : "Purge Now"}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
@@ -203,17 +282,19 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
             <Button variant="ghost" size="icon" className="rounded-full h-8 w-8"><MoreHorizontal size={20} className="text-muted-foreground" /></Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="rounded-2xl p-1 border-2">
-            <DropdownMenuItem asChild>
-              {user?.uid !== idea.uid ? (
+            {user?.uid === idea.uid ? (
+              <DropdownMenuItem onClick={() => setIsDeleteDialogOpen(true)} className="text-destructive font-black uppercase text-[10px] gap-2 p-3 rounded-xl cursor-pointer">
+                <Trash2 size={14} /> Delete Post
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem asChild>
                 <ReportDialog 
                   targetId={idea.id} 
                   targetType="post" 
                   trigger={<button className="w-full text-left px-3 py-2 text-xs font-black uppercase flex items-center gap-2 text-destructive"><Flag size={14} /> Report Post</button>} 
                 />
-              ) : (
-                <div className="px-3 py-2 text-xs font-black uppercase text-muted-foreground">Your Post</div>
-              )}
-            </DropdownMenuItem>
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -261,6 +342,40 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
           <button type="button" onClick={handleShare} className="p-2 text-muted-foreground/40 hover:text-primary"><Share2 size={22} /></button>
         </div>
       </div>
+
+      {/* Global Delete Confirmation Dialog (for Feed View) */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="rounded-[2.5rem] max-w-[90vw] sm:max-w-md border-none shadow-2xl">
+          <DialogHeader className="space-y-4">
+            <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-2 text-destructive">
+              <AlertTriangle size={32} />
+            </div>
+            <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-center">Delete Innovation?</DialogTitle>
+            <DialogDescription className="text-center font-bold text-muted-foreground uppercase text-[10px] tracking-widest leading-relaxed">
+              This action is irreversible. To proceed, please type <span className="text-destructive font-black">DELETE</span> in the box below.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-6 space-y-4">
+            <Input 
+              placeholder="Type DELETE to confirm" 
+              className="rounded-2xl h-14 bg-muted/30 border-none text-center font-black uppercase placeholder:opacity-30"
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <Button variant="ghost" onClick={() => setIsDeleteDialogOpen(false)} className="rounded-2xl h-14 font-black uppercase text-[10px] tracking-widest">Cancel</Button>
+              <Button 
+                variant="destructive" 
+                disabled={deleteConfirmText !== "DELETE" || isDeleting}
+                onClick={handleDeletePost}
+                className="rounded-2xl h-14 font-black uppercase text-[10px] tracking-widest shadow-lg shadow-destructive/20"
+              >
+                {isDeleting ? <Loader2 className="animate-spin" /> : "Purge Now"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
