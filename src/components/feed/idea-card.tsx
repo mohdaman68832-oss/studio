@@ -206,29 +206,30 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
           <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-2 text-destructive">
             <AlertTriangle size={32} />
           </div>
-          <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-center">Delete Innovation?</DialogTitle>
+          <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-center">Confirm Deletion</DialogTitle>
           <DialogDescription className="text-center font-bold text-muted-foreground uppercase text-[10px] tracking-widest leading-relaxed">
-            This action is irreversible. To proceed, please type <span className="text-destructive font-black">DELETE</span>.
+            This innovation will be lost forever. Please type <span className="text-destructive font-black">DELETE</span> to unlock the purge button.
           </DialogDescription>
         </DialogHeader>
         <div className="py-6 space-y-4">
           <Input 
-            placeholder="Type DELETE to confirm" 
+            placeholder="Type DELETE here..." 
             className="w-full h-14 rounded-2xl bg-muted/30 border-none text-center font-black uppercase placeholder:opacity-30 tracking-widest focus-visible:ring-primary/20"
             value={deleteConfirmText}
             onChange={(e) => setDeleteConfirmText(e.target.value)}
           />
           
-          {deleteConfirmText.trim() === "DELETE" && (
-            <Button 
-              variant="destructive" 
-              disabled={isDeleting}
-              onClick={handleDeletePost}
-              className="w-full h-14 rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] shadow-lg shadow-destructive/30 animate-in zoom-in-95 duration-300"
-            >
-              {isDeleting ? <Loader2 className="animate-spin mr-2" /> : "Purge Innovation Now"}
-            </Button>
-          )}
+          <Button 
+            variant={deleteConfirmText.trim() === "DELETE" ? "destructive" : "secondary"} 
+            disabled={isDeleting || deleteConfirmText.trim() !== "DELETE"}
+            onClick={handleDeletePost}
+            className={cn(
+              "w-full h-14 rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] transition-all duration-300",
+              deleteConfirmText.trim() === "DELETE" ? "shadow-lg shadow-destructive/30 scale-100" : "opacity-40 scale-95 cursor-not-allowed"
+            )}
+          >
+            {isDeleting ? <Loader2 className="animate-spin mr-2" /> : "Purge Innovation Now"}
+          </Button>
           
           <Button 
             variant="ghost" 
