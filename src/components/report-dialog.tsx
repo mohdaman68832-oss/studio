@@ -30,7 +30,7 @@ export function ReportDialog({ targetId, targetType, trigger }: ReportDialogProp
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState(REASONS[0]);
   const [loading, setLoading] = useState(false);
-  const { db } = useFirestore() as any; // Hook returns instance
+  const db = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
 
