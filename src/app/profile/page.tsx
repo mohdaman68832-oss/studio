@@ -131,7 +131,7 @@ export default function ProfilePage() {
     <div className="max-w-md mx-auto min-h-screen pb-24 relative overflow-x-hidden flex flex-col bg-background">
       <div className="relative w-full shrink-0 z-10">
         <div className="h-16 w-full bg-primary" />
-        <header className="absolute top-0 left-0 right-0 px-6 py-5 flex justify-between items-center z-[100]">
+        <header className="absolute top-0 left-0 right-0 px-6 py-5 flex justify-between items-center z-[100] text-white">
           {isEditMode ? (
              <Button variant="ghost" size="icon" onClick={() => setIsEditMode(false)} className="rounded-full bg-black/20 backdrop-blur-md">
                <X size={24} className="text-white" />
