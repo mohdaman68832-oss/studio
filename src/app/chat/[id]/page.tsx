@@ -102,7 +102,7 @@ export default function ChatDetailPage() {
   if (!currentUser) return null;
 
   return (
-    <div className="flex flex-col h-[100dvh] max-w-md mx-auto bg-background relative overflow-hidden">
+    <div className="flex flex-col fixed inset-0 max-w-md mx-auto bg-background overflow-hidden">
       <header className="flex items-center gap-3 px-4 py-3 border-b bg-white/80 backdrop-blur-md sticky top-0 z-[60] shrink-0">
         <Link 
           href={`/profile/${recipient?.username}`} 
@@ -180,7 +180,7 @@ export default function ChatDetailPage() {
         )}
       </div>
 
-      <div className="shrink-0 p-4 pb-6 bg-white border-t z-50">
+      <div className="shrink-0 p-4 bg-white border-t z-[70] pb-safe">
         <div className="flex items-center gap-2 bg-muted/30 rounded-[2rem] pl-4 pr-1 py-1 border border-primary/10">
           <Input 
             placeholder="Secure private message..." 
@@ -188,7 +188,9 @@ export default function ChatDetailPage() {
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            onFocus={() => setTimeout(scrollToBottom, 100)}
+            onFocus={() => {
+              setTimeout(scrollToBottom, 300);
+            }}
           />
           <Button 
             size="icon" 
