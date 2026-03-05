@@ -4,8 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ArrowBigUp, MoreHorizontal, Share2, Play, MessageCircle, Eye, Flag, Trash2, Loader2, AlertTriangle, X } from "lucide-react";
+import { ArrowBigUp, MoreHorizontal, Share2, Play, MessageCircle, Eye, Flag, Trash2, Loader2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -18,13 +17,6 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 
 interface IdeaCardProps {
   idea: {
@@ -50,8 +42,6 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
   const db = useFirestore();
   const { user } = useUser();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const viewTracked = useRef(false);
 
@@ -136,17 +126,14 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
   };
 
   const handleDeletePost = async () => {
-    if (!db || !idea.id || deleteConfirmText.trim() !== "DELETE") return;
+    if (!db || !idea.id || isDeleting) return;
     
     setIsDeleting(true);
     try {
       await deleteDoc(doc(db, "posts", idea.id));
       toast({ title: "Post Purged", description: "Your innovation has been removed from the sphere." });
-      setIsDeleteDialogOpen(false);
-      setDeleteConfirmText("");
     } catch (error) {
       toast({ variant: "destructive", title: "Deletion Failed", description: "Could not remove post at this time." });
-    } finally {
       setIsDeleting(false);
     }
   };
@@ -164,14 +151,12 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
       <DropdownMenuContent align="end" className="rounded-2xl p-1 border-2 z-[1001]">
         {isProfileView && user?.uid === idea.uid ? (
           <DropdownMenuItem 
-            onSelect={(e) => {
-              e.preventDefault();
-              setDeleteConfirmText("");
-              setIsDeleteDialogOpen(true);
-            }} 
+            onSelect={handleDeletePost} 
+            disabled={isDeleting}
             className="text-destructive font-black uppercase text-[10px] gap-2 p-3 rounded-xl cursor-pointer"
           >
-            <Trash2 size={14} /> Delete Post
+            {isDeleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} 
+            {isDeleting ? "Deleting..." : "Delete Post"}
           </DropdownMenuItem>
         ) : (
           <DropdownMenuItem asChild>
@@ -188,59 +173,6 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
         )}
       </DropdownMenuContent>
     </DropdownMenu>
-  );
-
-  const renderDeleteDialog = () => (
-    <Dialog 
-      open={isDeleteDialogOpen} 
-      onOpenChange={(open) => {
-        setIsDeleteDialogOpen(open);
-        if (!open) {
-          setDeleteConfirmText("");
-          setIsDeleting(false);
-        }
-      }}
-    >
-      <DialogContent className="rounded-[2.5rem] max-w-[90vw] sm:max-w-md border-none shadow-2xl z-[1100]">
-        <DialogHeader className="space-y-4">
-          <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-2 text-destructive">
-            <AlertTriangle size={32} />
-          </div>
-          <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-center">Confirm Deletion</DialogTitle>
-          <DialogDescription className="text-center font-bold text-muted-foreground uppercase text-[10px] tracking-widest leading-relaxed">
-            This innovation will be lost forever. Please type <span className="text-destructive font-black">DELETE</span> to unlock the purge button.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="py-6 space-y-4">
-          <Input 
-            placeholder="Type DELETE here..." 
-            className="w-full h-14 rounded-2xl bg-muted/30 border-none text-center font-black uppercase placeholder:opacity-30 tracking-widest focus-visible:ring-primary/20"
-            value={deleteConfirmText}
-            onChange={(e) => setDeleteConfirmText(e.target.value)}
-          />
-          
-          <Button 
-            variant={deleteConfirmText.trim() === "DELETE" ? "destructive" : "secondary"} 
-            disabled={isDeleting || deleteConfirmText.trim() !== "DELETE"}
-            onClick={handleDeletePost}
-            className={cn(
-              "w-full h-14 rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] transition-all duration-300",
-              deleteConfirmText.trim() === "DELETE" ? "shadow-lg shadow-destructive/30 scale-100" : "opacity-40 scale-95 cursor-not-allowed"
-            )}
-          >
-            {isDeleting ? <Loader2 className="animate-spin mr-2" /> : "Purge Innovation Now"}
-          </Button>
-          
-          <Button 
-            variant="ghost" 
-            onClick={() => setIsDeleteDialogOpen(false)} 
-            className="w-full rounded-2xl h-12 font-black uppercase text-[9px] tracking-widest text-muted-foreground/60 hover:text-foreground"
-          >
-            Cancel Action
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
   );
 
   if (isProfileView) {
@@ -293,7 +225,6 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
             </button>
           </div>
         </div>
-        {renderDeleteDialog()}
       </div>
     );
   }
@@ -352,7 +283,6 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
           <button type="button" onClick={handleShare} className="p-2 text-muted-foreground/40 hover:text-primary"><Share2 size={22} /></button>
         </div>
       </div>
-      {renderDeleteDialog()}
     </div>
   );
 }
