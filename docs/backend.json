@@ -15,6 +15,7 @@
         "customColors": { "type": "object" },
         "createdAt": { "type": "string" },
         "isOnline": { "type": "boolean" },
+        "isBanned": { "type": "boolean" },
         "lastActive": { "type": "string" },
         "interests": { "type": "array" }
       },
