@@ -6,7 +6,7 @@ import { collection, query, orderBy, doc, updateDoc, deleteDoc } from "firebase/
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ShieldAlert, CheckCircle2, Trash2, AlertTriangle, Eye, ChevronLeft, UserX } from "lucide-react";
+import { Loader2, ShieldAlert, CheckCircle2, Trash2, AlertTriangle, Eye, ChevronLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import Link from "next/link";
@@ -31,19 +31,6 @@ export default function AdminReportsPage() {
       toast({ title: "Resolved", description: "Report marked as safe." });
     } catch (e) {
       toast({ variant: "destructive", title: "Action Failed" });
-    }
-  };
-
-  const banUser = async (userId: string, reportId: string) => {
-    setProcessingId(userId);
-    try {
-      await updateDoc(doc(db, "userProfiles", userId), { isBanned: true });
-      await updateDoc(doc(db, "reports", reportId), { status: "resolved" });
-      toast({ title: "User Banned", description: "Identity has been neutralized." });
-    } catch (e) {
-      toast({ variant: "destructive", title: "Ban Failed", description: "Could not flag user." });
-    } finally {
-      setProcessingId(null);
     }
   };
 
@@ -140,36 +127,24 @@ export default function AdminReportsPage() {
                   )}
                   
                   {report.status === "pending" && (
-                    <>
-                      <div className="grid grid-cols-2 gap-3">
-                        <Button 
-                          size="sm" 
-                          className="rounded-2xl h-12 bg-green-500 hover:bg-green-600 text-white font-black uppercase text-[9px] tracking-widest"
-                          onClick={() => resolveReport(report.id)}
-                        >
-                          <CheckCircle2 size={16} className="mr-1.5" /> Mark Safe
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="destructive"
-                          className="rounded-2xl h-12 font-black uppercase text-[9px] tracking-widest"
-                          disabled={processingId === report.id}
-                          onClick={() => deleteOffendingContent(report)}
-                        >
-                          {processingId === report.id ? <Loader2 size={16} className="animate-spin" /> : <><Trash2 size={16} className="mr-1.5" /> Delete Content</>}
-                        </Button>
-                      </div>
-                      
+                    <div className="grid grid-cols-2 gap-3">
                       <Button 
-                        variant="secondary"
                         size="sm" 
-                        className="rounded-2xl h-12 w-full font-black uppercase text-[9px] tracking-widest border-2 border-destructive/20 text-destructive"
-                        onClick={() => banUser(report.targetId, report.id)}
-                        disabled={processingId === report.targetId}
+                        className="rounded-2xl h-12 bg-green-500 hover:bg-green-600 text-white font-black uppercase text-[9px] tracking-widest"
+                        onClick={() => resolveReport(report.id)}
                       >
-                        <UserX size={16} className="mr-1.5" /> Ban Offender ID
+                        <CheckCircle2 size={16} className="mr-1.5" /> Mark Safe
                       </Button>
-                    </>
+                      <Button 
+                        size="sm" 
+                        variant="destructive"
+                        className="rounded-2xl h-12 font-black uppercase text-[9px] tracking-widest"
+                        disabled={processingId === report.id}
+                        onClick={() => deleteOffendingContent(report)}
+                      >
+                        {processingId === report.id ? <Loader2 size={16} className="animate-spin" /> : <><Trash2 size={16} className="mr-1.5" /> Delete Content</>}
+                      </Button>
+                    </div>
                   )}
                 </div>
               </CardContent>
