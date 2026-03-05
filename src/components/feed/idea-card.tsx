@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { ArrowBigUp, MoreHorizontal, Share2, Play, MessageCircle, Eye } from "lucide-react";
+import { ArrowBigUp, MoreHorizontal, Share2, Play, MessageCircle, Eye, Flag } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -144,7 +144,9 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
           </div>
 
           <div className="flex items-center gap-2">
-            <ReportDialog targetId={idea.id} targetType="post" />
+            {user?.uid !== idea.uid && (
+              <ReportDialog targetId={idea.id} targetType="post" />
+            )}
             <button type="button" onClick={handleShare} className="p-2 text-foreground/20 hover:text-primary transition-colors">
               <Share2 size={20} />
             </button>
@@ -177,11 +179,15 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="rounded-2xl p-1 border-2">
             <DropdownMenuItem asChild>
-              <ReportDialog 
-                targetId={idea.id} 
-                targetType="post" 
-                trigger={<button className="w-full text-left px-3 py-2 text-xs font-black uppercase flex items-center gap-2 text-destructive"><MoreHorizontal size={14} /> Report Post</button>} 
-              />
+              {user?.uid !== idea.uid ? (
+                <ReportDialog 
+                  targetId={idea.id} 
+                  targetType="post" 
+                  trigger={<button className="w-full text-left px-3 py-2 text-xs font-black uppercase flex items-center gap-2 text-destructive"><Flag size={14} /> Report Post</button>} 
+                />
+              ) : (
+                <div className="px-3 py-2 text-xs font-black uppercase text-muted-foreground">Your Post</div>
+              )}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -213,11 +219,22 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
           <MessageCircle size={26} className="text-muted-foreground" />
           <span className="text-[10px] font-black text-muted-foreground mt-1">{commentCount}</span>
         </Link>
-        <div className="flex items-center gap-1 ml-auto mr-2 bg-muted/20 px-2 py-1 rounded-full">
+        
+        <div className="flex items-center gap-1 ml-auto mr-1 bg-muted/20 px-2 py-1 rounded-full">
            <Eye size={14} className="text-muted-foreground/60" />
            <span className="text-[9px] font-black text-muted-foreground/60">{viewCount}</span>
         </div>
-        <button type="button" onClick={handleShare} className="p-2"><Share2 size={24} /></button>
+
+        <div className="flex items-center gap-1">
+          {user?.uid !== idea.uid && (
+            <ReportDialog 
+              targetId={idea.id} 
+              targetType="post" 
+              trigger={<Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground/40 hover:text-destructive"><Flag size={18} /></Button>}
+            />
+          )}
+          <button type="button" onClick={handleShare} className="p-2 text-muted-foreground/40 hover:text-primary"><Share2 size={22} /></button>
+        </div>
       </div>
     </div>
   );
