@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { 
-  Settings, LogOut, Loader2, Palette, Check, X, Camera, Image as ImageIcon, ShieldAlert, Video, Type
+  Settings, LogOut, Loader2, Check, X, Camera, Image as ImageIcon, ShieldAlert, Video, Type
 } from "lucide-react";
 import { 
   DropdownMenu, 
@@ -26,15 +26,6 @@ import { IdeaCard } from "@/components/feed/idea-card";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 
-interface CustomColors {
-  header?: string;
-  userInfo?: string;
-  bioCard?: string;
-  statsSection?: string;
-  background?: string;
-  textOutline?: string;
-}
-
 const toBase64 = (file: File): Promise<string> =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -42,21 +33,6 @@ const toBase64 = (file: File): Promise<string> =>
     reader.onload = () => resolve(reader.result as string);
     reader.onerror = (error) => reject(error);
   });
-
-function getContrastColor(hexColor: string | undefined): string {
-  if (!hexColor || !hexColor.startsWith('#')) return 'hsl(var(--primary))';
-  const hex = hexColor.replace('#', '');
-  const r = parseInt(hex.substring(0, 2), 16);
-  const g = parseInt(hex.substring(2, 4), 16);
-  const b = parseInt(hex.substring(4, 6), 16);
-  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-  return brightness >= 128 ? 'hsl(var(--primary))' : '#FFFFFF';
-}
-
-function getTextShadow(color: string | undefined) {
-  if (!color || color === 'transparent') return "none";
-  return `1px 1px 0 ${color}, -1px -1px 0 ${color}, 1px -1px 0 ${color}, -1px 1px 0 ${color}, 0px 1px 0 ${color}, 0px -1px 0 ${color}, 1px 0px 0 ${color}, -1px 0px 0 ${color}`;
-}
 
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
@@ -75,8 +51,7 @@ export default function ProfilePage() {
     name: "",
     bio: "",
     profilePic: "",
-    banner: "",
-    customColors: {} as CustomColors
+    banner: ""
   });
 
   const profileInputRef = useRef<HTMLInputElement>(null);
@@ -88,15 +63,7 @@ export default function ProfilePage() {
         name: profileData.name || user?.displayName || "Innovator",
         bio: profileData.bio || "Innovating the future...",
         profilePic: profileData.profilePictureUrl || user?.photoURL || "",
-        banner: profileData.bannerUrl || "",
-        customColors: profileData.customColors || {
-          header: "#FF4500",
-          userInfo: "#FDF6F2",
-          bioCard: "#FFFFFF",
-          statsSection: "#FDF6F2",
-          background: "#FDF6F2",
-          textOutline: "transparent"
-        }
+        banner: profileData.bannerUrl || ""
       });
     }
   }, [profileData, user]);
@@ -128,7 +95,6 @@ export default function ProfilePage() {
         bio: localProfile.bio,
         profilePictureUrl: localProfile.profilePic,
         bannerUrl: localProfile.banner,
-        customColors: localProfile.customColors,
         updatedAt: serverTimestamp()
       });
       setIsEditMode(false);
@@ -138,10 +104,6 @@ export default function ProfilePage() {
     } finally {
       setIsSaving(false);
     }
-  };
-
-  const updateColor = (key: keyof CustomColors, value: string) => {
-    setLocalProfile(prev => ({ ...prev, customColors: { ...prev.customColors, [key]: value } }));
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'banner') => {
@@ -160,53 +122,46 @@ export default function ProfilePage() {
   );
   if (!user) return null;
 
-  const colors = localProfile.customColors;
-  const headerColor = colors.header || "var(--primary)";
-  const contrastHeader = getContrastColor(headerColor);
-
   const filteredPosts = (type: string) => {
     if (!userPosts) return [];
     return userPosts.filter(p => p.mediaType === type);
   };
 
   return (
-    <div 
-      className="max-w-md mx-auto min-h-screen pb-24 relative overflow-x-hidden flex flex-col" 
-      style={{ backgroundColor: colors.background || "var(--background)" }}
-    >
+    <div className="max-w-md mx-auto min-h-screen pb-24 relative overflow-x-hidden flex flex-col bg-background">
       <div className="relative w-full shrink-0 z-10">
-        <div className="h-16 w-full" style={{ backgroundColor: headerColor }} />
+        <div className="h-16 w-full bg-primary" />
         <header className="absolute top-0 left-0 right-0 px-6 py-5 flex justify-between items-center z-[100]">
           {isEditMode ? (
              <Button variant="ghost" size="icon" onClick={() => setIsEditMode(false)} className="rounded-full bg-black/20 backdrop-blur-md">
                <X size={24} className="text-white" />
              </Button>
           ) : (
-            <h1 className="text-2xl font-black uppercase tracking-tighter" style={{ color: contrastHeader }}>Sphere</h1>
+            <h1 className="text-2xl font-black uppercase tracking-tighter text-white">Sphere</h1>
           )}
           
           <div className="flex items-center gap-2">
             {!isEditMode && (
               <Link href="/admin/reports">
-                <Button variant="ghost" size="icon" className="bg-primary/10 rounded-full h-10 w-10">
-                  <ShieldAlert size={20} className="text-primary" />
+                <Button variant="ghost" size="icon" className="bg-white/20 backdrop-blur-md rounded-full h-10 w-10">
+                  <ShieldAlert size={20} className="text-white" />
                 </Button>
               </Link>
             )}
             
             {isEditMode ? (
-              <Button onClick={handleSave} disabled={isSaving} className="rounded-full h-10 px-6 bg-primary text-white font-black uppercase text-[10px] tracking-widest shadow-xl">
+              <Button onClick={handleSave} disabled={isSaving} className="rounded-full h-10 px-6 bg-white text-primary font-black uppercase text-[10px] tracking-widest shadow-xl">
                 {isSaving ? <Loader2 size={16} className="animate-spin" /> : <><Check size={16} className="mr-2" /> Save All</>}
               </Button>
             ) : (
               <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon"><Settings size={24} style={{ color: contrastHeader }} /></Button>
+                  <Button variant="ghost" size="icon"><Settings size={24} className="text-white" /></Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="rounded-3xl p-2 border-2 bg-white/95 backdrop-blur-md min-w-[180px]">
                   <DropdownMenuItem onClick={() => setIsEditMode(true)} className="rounded-2xl h-10 gap-3 cursor-pointer">
-                    <Palette size={18} className="text-primary" />
-                    <span className="text-[10px] font-black uppercase">Personalize</span>
+                    <Settings size={18} className="text-primary" />
+                    <span className="text-[10px] font-black uppercase">Edit Profile</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => signOut(auth)} className="rounded-2xl h-10 gap-3 text-secondary cursor-pointer">
                     <LogOut size={18} />
@@ -255,8 +210,8 @@ export default function ProfilePage() {
       </div>
 
       <div className="w-full relative mt-4 z-40">
-        <div style={{ backgroundColor: colors.userInfo }} className="px-6 flex flex-col items-center relative">
-          <div className="relative flex flex-col items-center">
+        <div className="px-6 flex flex-col items-center relative">
+          <div className="relative flex flex-col items-center w-full">
             {isEditMode ? (
               <div className="w-full space-y-6 pt-4 animate-in slide-in-from-top-4 duration-500">
                 <div className="space-y-1">
@@ -267,45 +222,13 @@ export default function ProfilePage() {
                   <Label className="text-[10px] font-black uppercase opacity-40 ml-1">Mission Statement (Bio)</Label>
                   <Textarea value={localProfile.bio} onChange={e => setLocalProfile(p => ({ ...p, bio: e.target.value }))} className="text-center font-medium text-xs rounded-2xl border-primary/20 min-h-[100px] bg-white/50 focus:ring-2 focus:ring-primary/20 transition-all shadow-inner p-4" placeholder="What are you building?" />
                 </div>
-
-                <div className="space-y-4 pt-6 border-t border-primary/10">
-                  <div className="flex items-center gap-2 justify-center mb-2">
-                    <Palette size={14} className="text-primary" />
-                    <p className="text-[9px] font-black uppercase tracking-[0.2em] opacity-60">Color Sphere Customization</p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    {(Object.keys(localProfile.customColors) as Array<keyof CustomColors>).map(key => (
-                      <div key={key} className="space-y-1.5">
-                        <Label className="text-[8px] font-black uppercase ml-1 opacity-50">{key.replace(/([A-Z])/g, ' $1')}</Label>
-                        <div className="flex items-center gap-2 bg-white/60 p-2 rounded-xl border border-primary/5 shadow-sm hover:border-primary/20 transition-colors">
-                          <input 
-                            type="color" 
-                            value={localProfile.customColors[key]} 
-                            onChange={e => updateColor(key, e.target.value)}
-                            className="w-8 h-8 rounded-lg border-none cursor-pointer bg-transparent shadow-sm"
-                          />
-                          <span className="text-[8px] font-mono font-black uppercase truncate">{localProfile.customColors[key]}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
               </div>
             ) : (
               <div className="flex flex-col items-center">
-                <h2 
-                  className="text-2xl font-black uppercase tracking-tighter mb-1 transition-all duration-300" 
-                  style={{ 
-                    color: getContrastColor(colors.userInfo),
-                    textShadow: getTextShadow(colors.textOutline)
-                  }}
-                >
+                <h2 className="text-2xl font-black uppercase tracking-tighter mb-1 text-foreground">
                   {localProfile.name}
                 </h2>
-                <p 
-                  className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" 
-                  style={{ color: getContrastColor(colors.userInfo) }}
-                >
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground opacity-70">
                   @{profileData?.username || "user"}
                 </p>
               </div>
@@ -313,17 +236,8 @@ export default function ProfilePage() {
           </div>
           
           {!isEditMode && (
-            <div 
-              className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-[0_40px_80px_-10px_rgba(0,0,0,0.4)] border-primary/5 relative z-20" 
-              style={{ backgroundColor: colors.bioCard || "hsl(var(--card))" }}
-            >
-              <p 
-                className="text-center text-[12px] leading-relaxed font-bold italic transition-all duration-300" 
-                style={{ 
-                  color: getContrastColor(colors.bioCard),
-                  textShadow: getTextShadow(colors.textOutline)
-                }}
-              >
+            <div className="p-6 rounded-[2.5rem] border bg-white w-full mt-6 shadow-xl border-primary/5 relative z-20">
+              <p className="text-center text-[12px] leading-relaxed font-bold italic text-foreground">
                 {localProfile.bio}
               </p>
             </div>
@@ -331,18 +245,18 @@ export default function ProfilePage() {
         </div>
 
         <div className="relative z-10">
-          <div style={{ backgroundColor: colors.statsSection }} className="w-full py-10 px-10 relative">
+          <div className="w-full py-10 px-10 relative">
             <div className="grid grid-cols-3 gap-6 w-full">
               <div className="text-center">
-                <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{dynamicPostCount}</p>
+                <p className="text-xl font-black tracking-tighter text-foreground">{dynamicPostCount}</p>
                 <p className="text-[8px] uppercase font-black opacity-40">Posts</p>
               </div>
               <div className="text-center">
-                <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{circleData?.length || 0}</p>
+                <p className="text-xl font-black tracking-tighter text-foreground">{circleData?.length || 0}</p>
                 <p className="text-[8px] uppercase font-black opacity-40">Circle</p>
               </div>
               <div className="text-center">
-                <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{circlingData?.length || 0}</p>
+                <p className="text-xl font-black tracking-tighter text-foreground">{circlingData?.length || 0}</p>
                 <p className="text-[8px] uppercase font-black opacity-40">Circling</p>
               </div>
             </div>

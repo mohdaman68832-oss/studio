@@ -4,7 +4,7 @@
 import { use, useState, useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, MessageSquare, Loader2, UserPlus, UserCheck, LayoutGrid, Image as ImageIcon, Video, Type, ShieldAlert } from "lucide-react";
+import { ChevronLeft, MessageSquare, Loader2, UserPlus, UserCheck, ShieldAlert, ImageIcon, Video, Type } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -14,30 +14,6 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { IdeaCard } from "@/components/feed/idea-card";
 import { ReportDialog } from "@/components/report-dialog";
-
-interface CustomColors {
-  header?: string;
-  userInfo?: string;
-  bioCard?: string;
-  statsSection?: string;
-  background?: string;
-  textOutline?: string;
-}
-
-function getContrastColor(hexColor: string | undefined): string {
-  if (!hexColor || !hexColor.startsWith('#')) return 'hsl(var(--primary))';
-  const hex = hexColor.replace('#', '');
-  const r = parseInt(hex.substring(0, 2), 16);
-  const g = parseInt(hex.substring(2, 4), 16);
-  const b = parseInt(hex.substring(4, 6), 16);
-  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-  return brightness >= 128 ? 'hsl(var(--primary))' : '#FFFFFF';
-}
-
-function getTextShadow(color: string | undefined) {
-  if (!color) return "none";
-  return `1px 1px 0 ${color}, -1px -1px 0 ${color}, 1px -1px 0 ${color}, -1px 1px 0 ${color}, 0px 1px 0 ${color}, 0px -1px 0 ${color}, 1px 0px 0 ${color}, -1px 0px 0 ${color}`;
-}
 
 export default function UserProfilePage({ params }: { params: Promise<{ username: string }> }) {
   const { username } = use(params);
@@ -102,21 +78,19 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
   if (isLoading) return <div className="max-w-md mx-auto min-h-screen flex items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   if (!profileData) return <div className="max-w-md mx-auto min-h-screen flex flex-col items-center justify-center p-12 text-center"><p className="text-[10px] font-black uppercase tracking-widest opacity-50 mb-4">Innovator Not Found</p><Button onClick={() => router.push("/")} className="rounded-full shadow-lg font-black uppercase text-[10px] px-8">Return Home</Button></div>;
 
-  const colors: CustomColors = profileData.customColors || {};
-
   return (
-    <div className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden flex flex-col" style={{ backgroundColor: colors.background || "var(--background)" }}>
+    <div className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden flex flex-col bg-background">
       <div className="relative w-full shrink-0 z-10">
-        <div className="h-16 w-full" style={{ backgroundColor: colors.header || "var(--primary)" }} />
+        <div className="h-16 w-full bg-primary" />
         <header className="absolute top-0 left-0 right-0 px-6 py-5 flex justify-between items-center z-[100]">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full">
-            <ChevronLeft size={24} style={{ color: getContrastColor(colors.header) }} />
+            <ChevronLeft size={24} className="text-white" />
           </Button>
-          <h1 className="text-lg font-black uppercase tracking-tighter" style={{ color: getContrastColor(colors.header) }}>@{profileData.username}</h1>
+          <h1 className="text-lg font-black uppercase tracking-tighter text-white">@{profileData.username}</h1>
           <ReportDialog 
             targetId={profileData.id} 
             targetType="profile" 
-            trigger={<Button variant="ghost" size="icon"><ShieldAlert size={20} style={{ color: getContrastColor(colors.header) }} className="opacity-50" /></Button>} 
+            trigger={<Button variant="ghost" size="icon"><ShieldAlert size={20} className="text-white opacity-50" /></Button>} 
           />
         </header>
 
@@ -137,19 +111,12 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       </div>
 
       <div className="w-full relative mt-4 z-20">
-        <div style={{ backgroundColor: colors.userInfo }} className="px-6 flex flex-col items-center relative">
-          
+        <div className="px-6 flex flex-col items-center relative">
           <div className="relative z-40 flex flex-col items-center">
-            <h2 
-              className="text-2xl font-black uppercase tracking-tighter mb-1 transition-all duration-300" 
-              style={{ 
-                color: getContrastColor(colors.userInfo),
-                textShadow: getTextShadow(colors.textOutline)
-              }}
-            >
+            <h2 className="text-2xl font-black uppercase tracking-tighter mb-1 text-foreground">
               {profileData.name || profileData.username}
             </h2>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>@{profileData.username}</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground opacity-50">@{profileData.username}</p>
           </div>
           
           <div className="flex gap-3 w-full mt-6 px-4 relative z-40">
@@ -161,32 +128,26 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
             </Button>
           </div>
 
-          <div className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-[0_40px_80px_-10px_rgba(0,0,0,0.4)] border-primary/5 relative z-20" style={{ backgroundColor: colors.bioCard || "#FFFFFF" }}>
-            <p 
-              className="text-center text-[12px] leading-relaxed font-bold italic transition-all duration-300" 
-              style={{ 
-                color: getContrastColor(colors.bioCard),
-                textShadow: getTextShadow(colors.textOutline)
-              }}
-            >
+          <div className="p-6 rounded-[2.5rem] border bg-white w-full mt-6 shadow-xl border-primary/5 relative z-20">
+            <p className="text-center text-[12px] leading-relaxed font-bold italic text-foreground">
               {profileData.bio || "Innovating the future, one idea at a time."}
             </p>
           </div>
         </div>
 
         <div className="relative z-10">
-          <div style={{ backgroundColor: colors.statsSection }} className="w-full py-10 px-10 relative">
+          <div className="w-full py-10 px-10 relative">
             <div className="grid grid-cols-3 gap-6 w-full">
               <div className="text-center">
-                <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{dynamicPostCount}</p>
+                <p className="text-xl font-black tracking-tighter text-foreground">{dynamicPostCount}</p>
                 <p className="text-[8px] uppercase font-black opacity-40">Posts</p>
               </div>
               <div className="text-center">
-                <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{circleData?.length || 0}</p>
+                <p className="text-xl font-black tracking-tighter text-foreground">{circleData?.length || 0}</p>
                 <p className="text-[8px] uppercase font-black opacity-40">Circle</p>
               </div>
               <div className="text-center">
-                <p className="text-xl font-black tracking-tighter" style={{ color: getContrastColor(colors.statsSection) }}>{circlingData?.length || 0}</p>
+                <p className="text-xl font-black tracking-tighter text-foreground">{circlingData?.length || 0}</p>
                 <p className="text-[8px] uppercase font-black opacity-40">Circling</p>
               </div>
             </div>
