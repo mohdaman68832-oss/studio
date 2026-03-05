@@ -45,6 +45,7 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
   const [isProcessing, setIsProcessing] = useState(false);
   const viewTracked = useRef(false);
 
+  // Author live data for latest logo
   const authorProfileRef = useMemoFirebase(() => 
     (db && idea.uid) ? doc(db, "userProfiles", idea.uid) : null
   , [db, idea.uid]);
@@ -66,7 +67,7 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
   const { data: userLike } = useDoc(userLikeRef);
   const isLiked = !!userLike;
 
-  // Unique View Check
+  // Unique View Check logic
   const userViewRef = useMemoFirebase(() => 
     (db && user && idea.id) ? doc(db, "posts", idea.id, "views", user.uid) : null
   , [db, user, idea.id]);
@@ -80,7 +81,7 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
   const likesCount = liveIdeaData?.likes ?? idea.likes ?? 0;
   const viewCount = liveIdeaData?.views ?? idea.views ?? 0;
 
-  // View Tracking Logic: Increment view ONLY if user hasn't viewed before
+  // Real-time Unique View Tracking
   useEffect(() => {
     if (db && idea.id && user && !isViewLoading && !userView && !viewTracked.current) {
       viewTracked.current = true;
@@ -90,7 +91,7 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
       setDoc(viewRecordRef, { viewedAt: serverTimestamp() })
         .then(() => updateDoc(postRef, { views: increment(1) }))
         .catch(err => {
-          // Silent fail for view tracking to maintain UX
+          // Silently fail if rules or network prevent it
         });
     }
   }, [db, idea.id, user, isViewLoading, userView]);
@@ -117,7 +118,7 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
 
   const handleShare = (e: React.MouseEvent) => {
     e.preventDefault();
-    toast({ title: "Shared!", description: "Link copied." });
+    toast({ title: "Shared!", description: "Link copied to clipboard." });
   };
 
   const isVideo = idea.mediaUrl && (idea.mediaUrl.endsWith('.mp4') || idea.mediaUrl.includes('gtv-videos-bucket'));
@@ -182,17 +183,15 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
     <div className="bg-card rounded-[2.5rem] idea-card-shadow overflow-hidden border border-border/50 p-5">
       <div className="flex items-center justify-between mb-1">
         <Link href={`/profile/${liveUsername}`} className="flex items-center gap-3 z-10">
-          <div className="relative">
-            <Avatar className={cn(
-              "h-10 w-10 border-2 border-primary/5 transition-all duration-500",
-              authorProfile?.isOnline && "shadow-[0_15px_30px_rgba(255,69,0,0.5)] shadow-primary/50 border-primary"
-            )}>
-              <AvatarImage src={liveAvatar} className="object-cover" />
-              <AvatarFallback className="text-[10px] font-black uppercase bg-primary/5 text-primary">
-                {liveUsername?.[0] || "U"}
-              </AvatarFallback>
-            </Avatar>
-          </div>
+          <Avatar className={cn(
+            "h-10 w-10 border-2 border-primary/5 transition-all duration-500",
+            authorProfile?.isOnline && "shadow-[0_15px_30px_rgba(255,69,0,0.5)] shadow-primary/50 border-primary"
+          )}>
+            <AvatarImage src={liveAvatar} className="object-cover" />
+            <AvatarFallback className="text-[10px] font-black uppercase bg-primary/5 text-primary">
+              {liveUsername?.[0] || "U"}
+            </AvatarFallback>
+          </Avatar>
           <span className="text-sm font-black text-foreground">@{liveUsername}</span>
         </Link>
         <DropdownMenu>
