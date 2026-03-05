@@ -6,11 +6,11 @@ import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ArrowBigUp, MoreHorizontal, Share2, Play, MessageCircle, Eye, Flag } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useUser, useDoc, useMemoFirebase, useCollection } from "@/firebase";
-import { doc, setDoc, deleteDoc, increment, collection } from "firebase/firestore";
+import { doc, setDoc, deleteDoc, increment, collection, updateDoc } from "firebase/firestore";
 import { ReportDialog } from "@/components/report-dialog";
 import { 
   DropdownMenu, 
@@ -43,6 +43,7 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
   const db = useFirestore();
   const { user } = useUser();
   const [isProcessing, setIsProcessing] = useState(false);
+  const viewTracked = useRef(false);
 
   const authorProfileRef = useMemoFirebase(() => 
     (db && idea.uid) ? doc(db, "userProfiles", idea.uid) : null
@@ -72,6 +73,19 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
 
   const likesCount = liveIdeaData?.likes ?? idea.likes ?? 0;
   const viewCount = liveIdeaData?.views ?? idea.views ?? 0;
+
+  // View Tracking Logic: Increment view when card is shown in feed
+  useEffect(() => {
+    if (db && idea.id && !viewTracked.current) {
+      viewTracked.current = true;
+      const postRef = doc(db, "posts", idea.id);
+      updateDoc(postRef, {
+        views: increment(1)
+      }).catch(err => {
+        // Silent fail for view tracking to maintain UX
+      });
+    }
+  }, [db, idea.id]);
 
   const handleToggleLike = (e: React.MouseEvent) => {
     e.preventDefault();

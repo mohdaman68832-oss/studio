@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -20,6 +21,7 @@ export default function IdeaDetailPage() {
   const ideaId = params.id as string;
   const db = useFirestore();
   const { user: currentUser } = useUser();
+  const viewTracked = useRef(false);
 
   const [commentText, setCommentText] = useState("");
   const [showFullDescription, setShowFullDescription] = useState(false);
@@ -48,18 +50,18 @@ export default function IdeaDetailPage() {
 
   const { data: suggestions } = useCollection(suggestionsQuery);
 
-  // Real-time View Increment logic
+  // Real-time View Increment logic for deep-views
   useEffect(() => {
-    if (db && ideaId && currentUser) {
+    if (db && ideaId && !viewTracked.current) {
+      viewTracked.current = true;
       const postRef = doc(db, "posts", ideaId);
       updateDoc(postRef, {
         views: increment(1)
       }).catch(err => {
-        // Silently fail if rules prevent it, but logic is active
-        console.warn("View tracking update failed", err);
+        // Silently fail if rules or network prevent it
       });
     }
-  }, [db, ideaId, currentUser]);
+  }, [db, ideaId]);
 
   useEffect(() => {
     if (scrollContainerRef.current) {
