@@ -1,4 +1,3 @@
-
 "use client";
 
 import Image from "next/image";
@@ -156,9 +155,98 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
   const isVideo = idea.mediaUrl && (idea.mediaUrl.endsWith('.mp4') || idea.mediaUrl.includes('gtv-videos-bucket'));
   const isTextPost = !idea.mediaUrl || idea.mediaUrl === "";
 
+  // Common Header Logic
+  const renderHeaderMenu = () => (
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 focus-visible:ring-0">
+          <MoreHorizontal size={20} className="text-muted-foreground" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="rounded-2xl p-1 border-2 z-[1001]">
+        {/* Requirement: Delete only on Profile View and for Owner */}
+        {isProfileView && user?.uid === idea.uid ? (
+          <DropdownMenuItem 
+            onSelect={(e) => {
+              e.preventDefault();
+              setDeleteConfirmText("");
+              setIsDeleteDialogOpen(true);
+            }} 
+            className="text-destructive font-black uppercase text-[10px] gap-2 p-3 rounded-xl cursor-pointer"
+          >
+            <Trash2 size={14} /> Delete Post
+          </DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem asChild>
+            <ReportDialog 
+              targetId={idea.id} 
+              targetType="post" 
+              trigger={
+                <button className="w-full text-left px-3 py-2 text-xs font-black uppercase flex items-center gap-2 text-destructive">
+                  <Flag size={14} /> Report Post
+                </button>
+              } 
+            />
+          </DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
+  const renderDeleteDialog = () => (
+    <Dialog 
+      open={isDeleteDialogOpen} 
+      onOpenChange={(open) => {
+        setIsDeleteDialogOpen(open);
+        if (!open) setDeleteConfirmText("");
+      }}
+    >
+      <DialogContent className="rounded-[2.5rem] max-w-[90vw] sm:max-w-md border-none shadow-2xl z-[1002]">
+        <DialogHeader className="space-y-4">
+          <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-2 text-destructive">
+            <AlertTriangle size={32} />
+          </div>
+          <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-center">Delete Innovation?</DialogTitle>
+          <DialogDescription className="text-center font-bold text-muted-foreground uppercase text-[10px] tracking-widest leading-relaxed">
+            This action is irreversible. To proceed, please type <span className="text-destructive font-black">DELETE</span>.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="py-6 space-y-6">
+          <div className="relative h-14 w-full">
+            {deleteConfirmText === "DELETE" ? (
+              <Button 
+                variant="destructive" 
+                disabled={isDeleting}
+                onClick={handleDeletePost}
+                className="absolute inset-0 w-full h-full rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] shadow-lg shadow-destructive/30 animate-in zoom-in-95 duration-300"
+              >
+                {isDeleting ? <Loader2 className="animate-spin mr-2" /> : "Purge Innovation Now"}
+              </Button>
+            ) : (
+              <Input 
+                placeholder="Type DELETE to confirm" 
+                className="absolute inset-0 w-full h-full rounded-2xl bg-muted/30 border-none text-center font-black uppercase placeholder:opacity-30 tracking-widest focus-visible:ring-primary/20"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+              />
+            )}
+          </div>
+          
+          <Button 
+            variant="ghost" 
+            onClick={() => setIsDeleteDialogOpen(false)} 
+            className="w-full rounded-2xl h-12 font-black uppercase text-[9px] tracking-widest text-muted-foreground/60 hover:text-foreground"
+          >
+            Cancel Action
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+
   if (isProfileView) {
     return (
-      <div className="bg-white rounded-[2.5rem] shadow-sm border border-primary/5 p-6 space-y-4 animate-in fade-in duration-500">
+      <div className="bg-white rounded-[2.5rem] shadow-sm border border-primary/5 p-6 space-y-4 animate-in fade-in duration-500 relative">
         <div className="block group space-y-3">
           <div className="flex justify-between items-start">
             <Link href={`/idea/${idea.id}`} className="flex-1 mr-4">
@@ -170,21 +258,7 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
               <div className="flex items-center gap-1.5 bg-muted/30 px-2 py-1 rounded-full shrink-0">
                 <span className="text-[10px] font-black text-muted-foreground">{viewCount} Views</span>
               </div>
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full h-8 w-8"><MoreHorizontal size={20} className="text-muted-foreground" /></Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="rounded-2xl p-1 border-2">
-                   {user?.uid === idea.uid ? (
-                     <DropdownMenuItem onClick={() => { setDeleteConfirmText(""); setIsDeleteDialogOpen(true); }} className="text-destructive font-black uppercase text-[10px] gap-2 p-3 rounded-xl cursor-pointer">
-                       <Trash2 size={14} /> Delete Post
-                     </DropdownMenuItem>
-                   ) : (
-                     <DropdownMenuItem disabled className="text-[10px] font-black uppercase p-3">Options Limited</DropdownMenuItem>
-                   )}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {renderHeaderMenu()}
             </div>
           </div>
 
@@ -223,59 +297,13 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
             </button>
           </div>
         </div>
-
-        {/* Delete Confirmation Dialog */}
-        <Dialog open={isDeleteDialogOpen} onOpenChange={(open) => {
-          setIsDeleteDialogOpen(open);
-          if (!open) setDeleteConfirmText("");
-        }}>
-          <DialogContent className="rounded-[2.5rem] max-w-[90vw] sm:max-w-md border-none shadow-2xl">
-            <DialogHeader className="space-y-4">
-              <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-2 text-destructive">
-                <AlertTriangle size={32} />
-              </div>
-              <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-center">Delete Innovation?</DialogTitle>
-              <DialogDescription className="text-center font-bold text-muted-foreground uppercase text-[10px] tracking-widest leading-relaxed">
-                This action is irreversible. To proceed, please type <span className="text-destructive font-black">DELETE</span>.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-6 space-y-6">
-              <div className="relative h-14 w-full">
-                {deleteConfirmText === "DELETE" ? (
-                  <Button 
-                    variant="destructive" 
-                    disabled={isDeleting}
-                    onClick={handleDeletePost}
-                    className="absolute inset-0 w-full h-full rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] shadow-lg shadow-destructive/30 animate-in zoom-in-95 duration-300"
-                  >
-                    {isDeleting ? <Loader2 className="animate-spin mr-2" /> : "Purge Innovation Now"}
-                  </Button>
-                ) : (
-                  <Input 
-                    placeholder="Type DELETE to confirm" 
-                    className="absolute inset-0 w-full h-full rounded-2xl bg-muted/30 border-none text-center font-black uppercase placeholder:opacity-30 tracking-widest focus-visible:ring-primary/20"
-                    value={deleteConfirmText}
-                    onChange={(e) => setDeleteConfirmText(e.target.value)}
-                  />
-                )}
-              </div>
-              
-              <Button 
-                variant="ghost" 
-                onClick={() => setIsDeleteDialogOpen(false)} 
-                className="w-full rounded-2xl h-12 font-black uppercase text-[9px] tracking-widest text-muted-foreground/60 hover:text-foreground"
-              >
-                Cancel Action
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        {renderDeleteDialog()}
       </div>
     );
   }
 
   return (
-    <div className="bg-card rounded-[2.5rem] idea-card-shadow overflow-hidden border border-border/50 p-5">
+    <div className="bg-card rounded-[2.5rem] idea-card-shadow overflow-hidden border border-border/50 p-5 relative">
       <div className="flex items-center justify-between mb-1">
         <Link href={`/profile/${liveUsername}`} className="flex items-center gap-3 z-10">
           <Avatar className={cn(
@@ -289,26 +317,7 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
           </Avatar>
           <span className="text-sm font-black text-foreground">@{liveUsername}</span>
         </Link>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full h-8 w-8"><MoreHorizontal size={20} className="text-muted-foreground" /></Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="rounded-2xl p-1 border-2">
-            {user?.uid === idea.uid ? (
-              <DropdownMenuItem onClick={() => { setDeleteConfirmText(""); setIsDeleteDialogOpen(true); }} className="text-destructive font-black uppercase text-[10px] gap-2 p-3 rounded-xl cursor-pointer">
-                <Trash2 size={14} /> Delete Post
-              </DropdownMenuItem>
-            ) : (
-              <DropdownMenuItem asChild>
-                <ReportDialog 
-                  targetId={idea.id} 
-                  targetType="post" 
-                  trigger={<button className="w-full text-left px-3 py-2 text-xs font-black uppercase flex items-center gap-2 text-destructive"><Flag size={14} /> Report Post</button>} 
-                />
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {renderHeaderMenu()}
       </div>
 
       <div className="mt-4">
@@ -354,53 +363,7 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
           <button type="button" onClick={handleShare} className="p-2 text-muted-foreground/40 hover:text-primary"><Share2 size={22} /></button>
         </div>
       </div>
-
-      {/* Global Delete Confirmation Dialog (for Feed View) */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={(open) => {
-        setIsDeleteDialogOpen(open);
-        if (!open) setDeleteConfirmText("");
-      }}>
-        <DialogContent className="rounded-[2.5rem] max-w-[90vw] sm:max-w-md border-none shadow-2xl">
-          <DialogHeader className="space-y-4">
-            <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-2 text-destructive">
-              <AlertTriangle size={32} />
-            </div>
-            <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-center">Delete Innovation?</DialogTitle>
-            <DialogDescription className="text-center font-bold text-muted-foreground uppercase text-[10px] tracking-widest leading-relaxed">
-              This action is irreversible. To proceed, please type <span className="text-destructive font-black">DELETE</span>.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-6 space-y-6">
-            <div className="relative h-14 w-full">
-              {deleteConfirmText === "DELETE" ? (
-                <Button 
-                  variant="destructive" 
-                  disabled={isDeleting}
-                  onClick={handleDeletePost}
-                  className="absolute inset-0 w-full h-full rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] shadow-lg shadow-destructive/30 animate-in zoom-in-95 duration-300"
-                >
-                  {isDeleting ? <Loader2 className="animate-spin mr-2" /> : "Purge Innovation Now"}
-                </Button>
-              ) : (
-                <Input 
-                  placeholder="Type DELETE to confirm" 
-                  className="absolute inset-0 w-full h-full rounded-2xl bg-muted/30 border-none text-center font-black uppercase placeholder:opacity-30 tracking-widest focus-visible:ring-primary/20"
-                  value={deleteConfirmText}
-                  onChange={(e) => setDeleteConfirmText(e.target.value)}
-                />
-              )}
-            </div>
-            
-            <Button 
-              variant="ghost" 
-              onClick={() => setIsDeleteDialogOpen(false)} 
-              className="w-full rounded-2xl h-12 font-black uppercase text-[9px] tracking-widest text-muted-foreground/60 hover:text-foreground"
-            >
-              Cancel Action
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {renderDeleteDialog()}
     </div>
   );
 }
