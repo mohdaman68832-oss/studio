@@ -22,7 +22,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -97,11 +96,11 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
       try {
         const viewSnap = await getDoc(viewRecordRef);
         if (!viewSnap.exists()) {
-          viewTracked.current = true; // Set immediately to prevent parallel triggers
+          viewTracked.current = true;
           await setDoc(viewRecordRef, { viewedAt: serverTimestamp() });
           await updateDoc(postRef, { views: increment(1) });
         } else {
-          viewTracked.current = true; // Already exists, just mark as tracked in session
+          viewTracked.current = true;
         }
       } catch (err) {
         console.warn("View tracking silent fail", err);
@@ -137,25 +136,24 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
   };
 
   const handleDeletePost = async () => {
-    if (!db || !idea.id || deleteConfirmText !== "DELETE") return;
+    if (!db || !idea.id || deleteConfirmText.trim() !== "DELETE") return;
     
     setIsDeleting(true);
     try {
       await deleteDoc(doc(db, "posts", idea.id));
       toast({ title: "Post Purged", description: "Your innovation has been removed from the sphere." });
       setIsDeleteDialogOpen(false);
+      setDeleteConfirmText("");
     } catch (error) {
       toast({ variant: "destructive", title: "Deletion Failed", description: "Could not remove post at this time." });
     } finally {
       setIsDeleting(false);
-      setDeleteConfirmText("");
     }
   };
 
   const isVideo = idea.mediaUrl && (idea.mediaUrl.endsWith('.mp4') || idea.mediaUrl.includes('gtv-videos-bucket'));
   const isTextPost = !idea.mediaUrl || idea.mediaUrl === "";
 
-  // Common Header Logic
   const renderHeaderMenu = () => (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
@@ -164,7 +162,6 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="rounded-2xl p-1 border-2 z-[1001]">
-        {/* Requirement: Delete only on Profile View and for Owner */}
         {isProfileView && user?.uid === idea.uid ? (
           <DropdownMenuItem 
             onSelect={(e) => {
@@ -198,10 +195,13 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
       open={isDeleteDialogOpen} 
       onOpenChange={(open) => {
         setIsDeleteDialogOpen(open);
-        if (!open) setDeleteConfirmText("");
+        if (!open) {
+          setDeleteConfirmText("");
+          setIsDeleting(false);
+        }
       }}
     >
-      <DialogContent className="rounded-[2.5rem] max-w-[90vw] sm:max-w-md border-none shadow-2xl z-[1002]">
+      <DialogContent className="rounded-[2.5rem] max-w-[90vw] sm:max-w-md border-none shadow-2xl z-[1100]">
         <DialogHeader className="space-y-4">
           <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-2 text-destructive">
             <AlertTriangle size={32} />
@@ -211,26 +211,24 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
             This action is irreversible. To proceed, please type <span className="text-destructive font-black">DELETE</span>.
           </DialogDescription>
         </DialogHeader>
-        <div className="py-6 space-y-6">
-          <div className="relative h-14 w-full">
-            {deleteConfirmText === "DELETE" ? (
-              <Button 
-                variant="destructive" 
-                disabled={isDeleting}
-                onClick={handleDeletePost}
-                className="absolute inset-0 w-full h-full rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] shadow-lg shadow-destructive/30 animate-in zoom-in-95 duration-300"
-              >
-                {isDeleting ? <Loader2 className="animate-spin mr-2" /> : "Purge Innovation Now"}
-              </Button>
-            ) : (
-              <Input 
-                placeholder="Type DELETE to confirm" 
-                className="absolute inset-0 w-full h-full rounded-2xl bg-muted/30 border-none text-center font-black uppercase placeholder:opacity-30 tracking-widest focus-visible:ring-primary/20"
-                value={deleteConfirmText}
-                onChange={(e) => setDeleteConfirmText(e.target.value)}
-              />
-            )}
-          </div>
+        <div className="py-6 space-y-4">
+          <Input 
+            placeholder="Type DELETE to confirm" 
+            className="w-full h-14 rounded-2xl bg-muted/30 border-none text-center font-black uppercase placeholder:opacity-30 tracking-widest focus-visible:ring-primary/20"
+            value={deleteConfirmText}
+            onChange={(e) => setDeleteConfirmText(e.target.value)}
+          />
+          
+          {deleteConfirmText.trim() === "DELETE" && (
+            <Button 
+              variant="destructive" 
+              disabled={isDeleting}
+              onClick={handleDeletePost}
+              className="w-full h-14 rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] shadow-lg shadow-destructive/30 animate-in zoom-in-95 duration-300"
+            >
+              {isDeleting ? <Loader2 className="animate-spin mr-2" /> : "Purge Innovation Now"}
+            </Button>
+          )}
           
           <Button 
             variant="ghost" 
@@ -289,9 +287,6 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
           </div>
 
           <div className="flex items-center gap-2">
-            {user?.uid !== idea.uid && (
-              <ReportDialog targetId={idea.id} targetType="post" />
-            )}
             <button type="button" onClick={handleShare} className="p-2 text-foreground/20 hover:text-primary transition-colors">
               <Share2 size={20} />
             </button>
@@ -353,13 +348,6 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
         </div>
 
         <div className="flex items-center gap-1">
-          {user?.uid !== idea.uid && (
-            <ReportDialog 
-              targetId={idea.id} 
-              targetType="post" 
-              trigger={<Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground/40 hover:text-destructive"><Flag size={18} /></Button>}
-            />
-          )}
           <button type="button" onClick={handleShare} className="p-2 text-muted-foreground/40 hover:text-primary"><Share2 size={22} /></button>
         </div>
       </div>
