@@ -8,8 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ChevronLeft, Loader2, Users, LayoutGrid, Check } from "lucide-react";
-import { useFirestore } from "@/firebase";
-import { collection, addDoc } from "firebase/firestore";
+import { useFirestore, useUser } from "@/firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { 
@@ -36,6 +36,7 @@ const ALL_CATEGORIES = [
 export default function CreateGroupPage() {
   const router = useRouter();
   const db = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
   
   const [loading, setLoading] = useState(false);
@@ -47,6 +48,10 @@ export default function CreateGroupPage() {
   });
 
   const handleCreate = async () => {
+    if (!user) {
+      toast({ title: "Auth Required", description: "Sign in to form a group." });
+      return;
+    }
     if (!formData.name || !formData.description || !formData.category) {
       toast({
         title: "Missing Info",
@@ -58,14 +63,13 @@ export default function CreateGroupPage() {
 
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 800));
-
       await addDoc(collection(db, "groups"), {
         ...formData,
         memberCount: 1,
-        createdBy: "User",
+        createdBy: user.uid,
+        creatorName: user.displayName || "Innovator",
         avatarUrl: `https://picsum.photos/seed/${formData.name}/200/200`,
-        createdAt: new Date().toISOString(),
+        createdAt: serverTimestamp(),
       });
 
       toast({
