@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { 
-  Settings, LogOut, Loader2, Palette, Plus, Move, Maximize2, RotateCw, Check, X, Camera, Image as ImageIcon, Sticker as StickerIcon, Trash2, Video, Type, ShieldAlert
+  Settings, LogOut, Loader2, Palette, Check, X, Camera, Image as ImageIcon, ShieldAlert
 } from "lucide-react";
 import { 
   DropdownMenu, 
@@ -13,8 +13,6 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -28,21 +26,13 @@ import { IdeaCard } from "@/components/feed/idea-card";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 
-interface Sticker {
-  id: string;
-  url: string;
-  x: number;
-  y: number;
-  rotation: number;
-  scale: number;
-}
-
 interface CustomColors {
   header?: string;
   userInfo?: string;
   bioCard?: string;
   statsSection?: string;
   background?: string;
+  textOutline?: string;
 }
 
 const toBase64 = (file: File): Promise<string> =>
@@ -63,6 +53,11 @@ function getContrastColor(hexColor: string | undefined): string {
   return brightness >= 128 ? 'hsl(var(--primary))' : '#FFFFFF';
 }
 
+function getTextShadow(color: string | undefined) {
+  if (!color) return "none";
+  return `1px 1px 0 ${color}, -1px -1px 0 ${color}, 1px -1px 0 ${color}, -1px 1px 0 ${color}, 0px 1px 0 ${color}, 0px -1px 0 ${color}, 1px 0px 0 ${color}, -1px 0px 0 ${color}`;
+}
+
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
@@ -75,21 +70,15 @@ export default function ProfilePage() {
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [selectedStickerId, setSelectedStickerId] = useState<string | null>(null);
-  const [isStickerSheetOpen, setIsStickerSheetOpen] = useState(false);
   
   const [localProfile, setLocalProfile] = useState({
     name: "",
     bio: "",
     profilePic: "",
     banner: "",
-    stickers: [] as Sticker[],
     customColors: {} as CustomColors
   });
 
-  const [dragStart, setDragStart] = useState<{ x: number, y: number, stickerX: number, stickerY: number } | null>(null);
-
-  const stickerInputRef = useRef<HTMLInputElement>(null);
   const profileInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
@@ -100,13 +89,13 @@ export default function ProfilePage() {
         bio: profileData.bio || "Innovating the future...",
         profilePic: profileData.profilePictureUrl || user?.photoURL || "",
         banner: profileData.bannerUrl || "",
-        stickers: profileData.stickers || [],
         customColors: profileData.customColors || {
           header: "#FF4500",
           userInfo: "#FDF6F2",
           bioCard: "#FFFFFF",
           statsSection: "#FDF6F2",
-          background: "#FDF6F2"
+          background: "#FDF6F2",
+          textOutline: "transparent"
         }
       });
     }
@@ -139,7 +128,6 @@ export default function ProfilePage() {
         bio: localProfile.bio,
         profilePictureUrl: localProfile.profilePic,
         bannerUrl: localProfile.banner,
-        stickers: localProfile.stickers,
         customColors: localProfile.customColors,
         updatedAt: serverTimestamp()
       });
@@ -156,77 +144,12 @@ export default function ProfilePage() {
     setLocalProfile(prev => ({ ...prev, customColors: { ...prev.customColors, [key]: value } }));
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'banner' | 'sticker') => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'banner') => {
     const file = e.target.files?.[0];
     if (file) {
       const base64 = await toBase64(file);
       if (type === 'profile') setLocalProfile(p => ({ ...p, profilePic: base64 }));
       else if (type === 'banner') setLocalProfile(p => ({ ...p, banner: base64 }));
-      else if (type === 'sticker') {
-        const id = Math.random().toString(36).substr(2, 9);
-        const newSticker: Sticker = { id, url: base64, x: 50, y: 30, rotation: 0, scale: 1 };
-        setLocalProfile(p => ({ ...p, stickers: [...p.stickers, newSticker] }));
-        setSelectedStickerId(id);
-        setIsStickerSheetOpen(true);
-      }
-    }
-  };
-
-  const updateSticker = (id: string, property: keyof Sticker, value: number) => {
-    setLocalProfile(prev => ({
-      ...prev,
-      stickers: prev.stickers.map(s => s.id === id ? { ...s, [property]: value } : s)
-    }));
-  };
-
-  const removeSticker = (id: string) => {
-    setLocalProfile(prev => ({ ...prev, stickers: prev.stickers.filter(s => s.id !== id) }));
-    setSelectedStickerId(null);
-    setIsStickerSheetOpen(false);
-  };
-
-  const handleStickerPointerDown = (e: React.PointerEvent, id: string) => {
-    if (!isEditMode) return;
-    e.stopPropagation();
-    
-    const sticker = localProfile.stickers.find(s => s.id === id);
-    if (!sticker) return;
-
-    setSelectedStickerId(id);
-    
-    if (isStickerSheetOpen && selectedStickerId === id) {
-      setDragStart({
-        x: e.clientX,
-        y: e.clientY,
-        stickerX: sticker.x,
-        stickerY: sticker.y
-      });
-      (e.target as HTMLElement).setPointerCapture(e.pointerId);
-    } else {
-      setIsStickerSheetOpen(true);
-    }
-  };
-
-  const handleStickerPointerMove = (e: React.PointerEvent, id: string) => {
-    if (!dragStart || !isEditMode || selectedStickerId !== id || !isStickerSheetOpen) return;
-    
-    const container = document.getElementById('profile-scroll-container');
-    if (!container) return;
-
-    const rect = container.getBoundingClientRect();
-    const dx = ((e.clientX - dragStart.x) / rect.width) * 100;
-    const dy = ((e.clientY - dragStart.y) / rect.height) * 100;
-
-    const newX = Math.max(0, Math.min(100, dragStart.stickerX + dx));
-    const newY = Math.max(0, Math.min(48, dragStart.stickerY + dy));
-
-    updateSticker(id, 'x', newX);
-    updateSticker(id, 'y', newY);
-  };
-
-  const handleStickerPointerUp = (e: React.PointerEvent) => {
-    if (dragStart) {
-      setDragStart(null);
     }
   };
 
@@ -240,7 +163,6 @@ export default function ProfilePage() {
   const colors = localProfile.customColors;
   const headerColor = colors.header || "var(--primary)";
   const contrastHeader = getContrastColor(headerColor);
-  const selectedSticker = localProfile.stickers.find(s => s.id === selectedStickerId);
 
   const filteredPosts = (type: string) => {
     if (!userPosts) return [];
@@ -249,7 +171,6 @@ export default function ProfilePage() {
 
   return (
     <div 
-      id="profile-scroll-container"
       className="max-w-md mx-auto min-h-screen pb-24 relative overflow-x-hidden flex flex-col" 
       style={{ backgroundColor: colors.background || "var(--background)" }}
     >
@@ -372,8 +293,21 @@ export default function ProfilePage() {
               </div>
             ) : (
               <div className="flex flex-col items-center">
-                <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{localProfile.name}</h2>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>@{profileData?.username || "user"}</p>
+                <h2 
+                  className="text-2xl font-black uppercase tracking-tighter mb-1 transition-all duration-300" 
+                  style={{ 
+                    color: getContrastColor(colors.userInfo),
+                    textShadow: getTextShadow(colors.textOutline)
+                  }}
+                >
+                  {localProfile.name}
+                </h2>
+                <p 
+                  className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" 
+                  style={{ color: getContrastColor(colors.userInfo) }}
+                >
+                  @{profileData?.username || "user"}
+                </p>
               </div>
             )}
           </div>
@@ -383,7 +317,13 @@ export default function ProfilePage() {
               className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-[0_40px_80px_-10px_rgba(0,0,0,0.4)] border-primary/5 relative z-20" 
               style={{ backgroundColor: colors.bioCard || "hsl(var(--card))" }}
             >
-              <p className="text-center text-[12px] leading-relaxed font-bold italic" style={{ color: getContrastColor(colors.bioCard) }}>
+              <p 
+                className="text-center text-[12px] leading-relaxed font-bold italic transition-all duration-300" 
+                style={{ 
+                  color: getContrastColor(colors.bioCard),
+                  textShadow: getTextShadow(colors.textOutline)
+                }}
+              >
                 {localProfile.bio}
               </p>
             </div>
@@ -443,99 +383,6 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
-
-      <div className="absolute inset-0 pointer-events-none z-50">
-        {localProfile.stickers.map((sticker) => (
-          <div 
-            key={sticker.id} 
-            className={cn(
-              "absolute", 
-              isEditMode ? "pointer-events-auto cursor-pointer" : "pointer-events-none"
-            )} 
-            onPointerDown={(e) => handleStickerPointerDown(e, sticker.id)}
-            onPointerMove={(e) => handleStickerPointerMove(e, sticker.id)}
-            onPointerUp={handleStickerPointerUp}
-            style={{ 
-              left: `${sticker.x}%`, 
-              top: `${sticker.y}%`, 
-              transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg) scale(${sticker.scale})`,
-              touchAction: 'none'
-            }}
-          >
-            <div className={cn(
-              "relative w-24 h-24 transition-all duration-200",
-              isEditMode && selectedStickerId === sticker.id && "ring-4 ring-primary ring-offset-4 rounded-xl scale-105"
-            )}>
-              <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized />
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {isEditMode && (
-        <div className="fixed bottom-24 right-6 z-[100] flex flex-col gap-3">
-          <Button onClick={() => stickerInputRef.current?.click()} className="h-16 w-16 rounded-full bg-secondary text-white shadow-2xl animate-in zoom-in duration-300 border-4 border-white">
-            <Plus size={32} />
-          </Button>
-          <input type="file" ref={stickerInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, 'sticker')} />
-        </div>
-      )}
-
-      <Sheet open={isStickerSheetOpen} onOpenChange={setIsStickerSheetOpen} modal={false}>
-        <SheetContent 
-          side="bottom" 
-          hideOverlay={true}
-          className="rounded-t-[3rem] h-auto max-h-[60vh] bg-white/95 backdrop-blur-xl border-t-2 border-primary/10 shadow-[0_-20px_50px_rgba(0,0,0,0.1)] p-0 overflow-hidden flex flex-col pointer-events-auto z-[2000]"
-        >
-          <SheetHeader className="p-4 border-b flex flex-row items-center justify-between bg-white/50 space-y-0">
-            <div className="flex items-center gap-2">
-              <div className="bg-primary/10 p-1.5 rounded-lg"><StickerIcon size={16} className="text-primary"/></div>
-              <SheetTitle className="text-sm font-black uppercase tracking-tight text-primary">Fine-Tune Sticker</SheetTitle>
-            </div>
-            <Button variant="ghost" size="icon" onClick={() => setIsStickerSheetOpen(false)} className="rounded-full h-8 w-8 bg-muted/50 hover:bg-muted"><Check size={18}/></Button>
-          </SheetHeader>
-          
-          <div className="flex-1 overflow-y-auto p-6 pb-10 space-y-5 no-scrollbar">
-            {selectedSticker && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 gap-5">
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="flex items-center gap-2 text-[10px] font-black uppercase text-muted-foreground"><RotateCw size={14} className="text-primary"/> Rotation Hub</span>
-                      <span className="text-[10px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-md">{selectedSticker.rotation}°</span>
-                    </div>
-                    <Slider value={[selectedSticker.rotation]} min={0} max={360} step={1} onValueChange={([v]) => updateSticker(selectedSticker.id, 'rotation', v)} />
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="flex items-center gap-2 text-[10px] font-black uppercase text-muted-foreground"><Maximize2 size={14} className="text-secondary"/> Sphere Size</span>
-                      <span className="text-[10px] font-black text-secondary bg-secondary/10 px-2 py-0.5 rounded-md">{selectedSticker.scale.toFixed(1)}x</span>
-                    </div>
-                    <Slider value={[selectedSticker.scale]} min={0.5} max={4} step={0.1} onValueChange={([v]) => updateSticker(selectedSticker.id, 'scale', v)} />
-                  </div>
-                </div>
-
-                <div className="flex gap-3">
-                  <Button 
-                    variant="outline" 
-                    className="flex-1 h-12 rounded-2xl border-2 border-destructive/10 text-destructive font-black uppercase text-[10px] hover:bg-destructive hover:text-white transition-all gap-2" 
-                    onClick={() => removeSticker(selectedSticker.id)}
-                  >
-                    <Trash2 size={14} /> Delete
-                  </Button>
-                  <Button 
-                    className="flex-1 h-12 rounded-2xl bg-primary text-white font-black uppercase text-[10px] shadow-lg shadow-primary/20 gap-2" 
-                    onClick={() => setIsStickerSheetOpen(false)}
-                  >
-                    <Check size={14} /> Done
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-        </SheetContent>
-      </Sheet>
     </div>
   );
 }

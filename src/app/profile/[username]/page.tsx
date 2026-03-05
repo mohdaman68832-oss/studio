@@ -15,21 +15,13 @@ import { useToast } from "@/hooks/use-toast";
 import { IdeaCard } from "@/components/feed/idea-card";
 import { ReportDialog } from "@/components/report-dialog";
 
-interface Sticker {
-  id: string;
-  url: string;
-  x: number;
-  y: number;
-  rotation: number;
-  scale: number;
-}
-
 interface CustomColors {
   header?: string;
   userInfo?: string;
   bioCard?: string;
   statsSection?: string;
   background?: string;
+  textOutline?: string;
 }
 
 function getContrastColor(hexColor: string | undefined): string {
@@ -40,6 +32,11 @@ function getContrastColor(hexColor: string | undefined): string {
   const b = parseInt(hex.substring(4, 6), 16);
   const brightness = (r * 299 + g * 587 + b * 114) / 1000;
   return brightness >= 128 ? 'hsl(var(--primary))' : '#FFFFFF';
+}
+
+function getTextShadow(color: string | undefined) {
+  if (!color) return "none";
+  return `1px 1px 0 ${color}, -1px -1px 0 ${color}, 1px -1px 0 ${color}, -1px 1px 0 ${color}, 0px 1px 0 ${color}, 0px -1px 0 ${color}, 1px 0px 0 ${color}, -1px 0px 0 ${color}`;
 }
 
 export default function UserProfilePage({ params }: { params: Promise<{ username: string }> }) {
@@ -102,16 +99,10 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
     router.push(`/chat/${chatId}`);
   };
 
-  const filteredPosts = (type: string) => {
-    if (!userPosts) return [];
-    return userPosts.filter(p => p.mediaType === type);
-  };
-
   if (isLoading) return <div className="max-w-md mx-auto min-h-screen flex items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   if (!profileData) return <div className="max-w-md mx-auto min-h-screen flex flex-col items-center justify-center p-12 text-center"><p className="text-[10px] font-black uppercase tracking-widest opacity-50 mb-4">Innovator Not Found</p><Button onClick={() => router.push("/")} className="rounded-full shadow-lg font-black uppercase text-[10px] px-8">Return Home</Button></div>;
 
   const colors: CustomColors = profileData.customColors || {};
-  const stickers: Sticker[] = profileData.stickers || [];
 
   return (
     <div className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden flex flex-col" style={{ backgroundColor: colors.background || "var(--background)" }}>
@@ -149,7 +140,15 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         <div style={{ backgroundColor: colors.userInfo }} className="px-6 flex flex-col items-center relative">
           
           <div className="relative z-40 flex flex-col items-center">
-            <h2 className="text-2xl font-black uppercase tracking-tighter mb-1" style={{ color: getContrastColor(colors.userInfo) }}>{profileData.name || profileData.username}</h2>
+            <h2 
+              className="text-2xl font-black uppercase tracking-tighter mb-1 transition-all duration-300" 
+              style={{ 
+                color: getContrastColor(colors.userInfo),
+                textShadow: getTextShadow(colors.textOutline)
+              }}
+            >
+              {profileData.name || profileData.username}
+            </h2>
             <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: getContrastColor(colors.userInfo) }}>@{profileData.username}</p>
           </div>
           
@@ -163,7 +162,13 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
           </div>
 
           <div className="p-6 rounded-[2.5rem] border w-full mt-6 shadow-[0_40px_80px_-10px_rgba(0,0,0,0.4)] border-primary/5 relative z-20" style={{ backgroundColor: colors.bioCard || "#FFFFFF" }}>
-            <p className="text-center text-[12px] leading-relaxed font-bold italic" style={{ color: getContrastColor(colors.bioCard) }}>
+            <p 
+              className="text-center text-[12px] leading-relaxed font-bold italic transition-all duration-300" 
+              style={{ 
+                color: getContrastColor(colors.bioCard),
+                textShadow: getTextShadow(colors.textOutline)
+              }}
+            >
               {profileData.bio || "Innovating the future, one idea at a time."}
             </p>
           </div>
@@ -221,24 +226,6 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
             </Tabs>
           </div>
         </div>
-      </div>
-
-      <div className="absolute inset-0 pointer-events-none z-30">
-        {stickers.map((sticker) => (
-          <div 
-            key={sticker.id} 
-            className="absolute pointer-events-none select-none" 
-            style={{ 
-              left: `${sticker.x}%`, 
-              top: `${sticker.y}%`, 
-              transform: `translate(-50%, -50%) rotate(${sticker.rotation || 0}deg) scale(${sticker.scale || 1})`, 
-            }}
-          >
-            <div className="relative w-24 h-24">
-              <Image src={sticker.url} alt="sticker" fill className="object-contain" unoptimized />
-            </div>
-          </div>
-        ))}
       </div>
     </div>
   );
