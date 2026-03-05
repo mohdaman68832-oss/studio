@@ -6,12 +6,19 @@ import { useParams, useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Lock, Circle, Loader2 } from "lucide-react";
+import { Send, Lock, Circle, Loader2, MoreVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFirestore, useDoc, useMemoFirebase, useUser, useCollection } from "@/firebase";
 import { doc, collection, query, orderBy, addDoc, serverTimestamp, setDoc, limit, updateDoc, increment } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
+import { ReportDialog } from "@/components/report-dialog";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 
 export default function ChatDetailPage() {
   const params = useParams();
@@ -21,10 +28,8 @@ export default function ChatDetailPage() {
   const { toast } = useToast();
   const chatId = params.id as string;
 
-  // Extract recipientId safely
   const recipientId = chatId.split("_").find(id => id !== currentUser?.uid) || "";
 
-  // Wait for currentUser to be stable before creating references
   const recipientRef = useMemoFirebase(() => (db && recipientId && currentUser ? doc(db, "userProfiles", recipientId) : null), [db, recipientId, currentUser]);
   const { data: recipient, isLoading: isRecipientLoading } = useDoc(recipientRef);
 
@@ -42,7 +47,6 @@ export default function ChatDetailPage() {
   const [newMessage, setNewMessage] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Mark messages as seen when chat is opened
   useEffect(() => {
     if (db && currentUser && chatId) {
       const chatRef = doc(db, "privateChats", chatId);
@@ -69,7 +73,6 @@ export default function ChatDetailPage() {
     setNewMessage("");
 
     try {
-      // Create/Update Chat Metadata with participants array and increment recipient unread count
       await setDoc(doc(db, "privateChats", chatId), {
         chatId: chatId,
         participants: chatId.split("_"),
@@ -78,7 +81,6 @@ export default function ChatDetailPage() {
         [`unreadCounts.${recipientId}`]: increment(1)
       }, { merge: true });
 
-      // Add actual message
       await addDoc(collection(db, "privateChats", chatId, "messages"), {
         senderId: currentUser.uid,
         text: text,
@@ -98,7 +100,6 @@ export default function ChatDetailPage() {
     );
   }
 
-  // Final safety check to prevent rendering without auth
   if (!currentUser) return null;
 
   return (
@@ -135,6 +136,20 @@ export default function ChatDetailPage() {
             </div>
           </div>
         </Link>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="rounded-full h-9 w-9"><MoreVertical size={20} className="text-muted-foreground" /></Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="rounded-2xl p-1 border-2">
+            <DropdownMenuItem asChild>
+              <ReportDialog 
+                targetId={chatId} 
+                targetType="message" 
+                trigger={<button className="w-full text-left px-3 py-2 text-xs font-black uppercase flex items-center gap-2 text-destructive">Report Chat</button>} 
+              />
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </header>
 
       <div 
@@ -159,13 +174,18 @@ export default function ChatDetailPage() {
             >
               <div 
                 className={cn(
-                  "px-4 py-3 rounded-2xl text-[13px] leading-relaxed font-medium shadow-sm",
+                  "px-4 py-3 rounded-2xl text-[13px] leading-relaxed font-medium shadow-sm group relative",
                   isMe 
                     ? "bg-primary text-white rounded-tr-none shadow-primary/20" 
                     : "bg-white text-foreground rounded-tl-none border border-border/50"
                 )}
               >
                 {msg.text}
+                {!isMe && (
+                  <div className="absolute -right-10 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <ReportDialog targetId={msg.id} targetType="message" />
+                  </div>
+                )}
               </div>
               {msg.createdAt && (
                 <span className="text-[8px] text-muted-foreground font-black uppercase tracking-widest opacity-60">

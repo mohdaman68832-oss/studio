@@ -15,7 +15,8 @@
         "customColors": { "type": "object" },
         "createdAt": { "type": "string" },
         "isOnline": { "type": "boolean" },
-        "lastActive": { "type": "string" }
+        "lastActive": { "type": "string" },
+        "interests": { "type": "array" }
       },
       "required": ["id", "username", "email"]
     },
@@ -40,6 +41,20 @@
         "createdAt": { "type": "string" }
       },
       "required": ["senderId", "text", "createdAt"]
+    },
+    "Report": {
+      "title": "Report",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "reporterId": { "type": "string" },
+        "targetId": { "type": "string" },
+        "targetType": { "type": "string", "enum": ["post", "profile", "message"] },
+        "reason": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "resolved"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["reporterId", "targetId", "targetType", "reason"]
     }
   },
   "auth": {
@@ -57,6 +72,10 @@
     "/privateChats/{chatId}/messages/{messageId}": {
       "schema": { "$ref": "#/backend/entities/ChatMessage" },
       "description": "Stores individual messages within a private chat."
+    },
+    "/reports/{reportId}": {
+      "schema": { "$ref": "#/backend/entities/Report" },
+      "description": "Stores content reports from users."
     }
   }
 }

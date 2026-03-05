@@ -4,7 +4,7 @@
 import { use, useState, useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, MessageSquare, Loader2, UserPlus, UserCheck, LayoutGrid, Image as ImageIcon, Video, Type } from "lucide-react";
+import { ChevronLeft, MessageSquare, Loader2, UserPlus, UserCheck, LayoutGrid, Image as ImageIcon, Video, Type, ShieldAlert } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -13,6 +13,7 @@ import { collection as fsCollection, query, where, limit, doc, setDoc, deleteDoc
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { IdeaCard } from "@/components/feed/idea-card";
+import { ReportDialog } from "@/components/report-dialog";
 
 interface Sticker {
   id: string;
@@ -76,7 +77,6 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
   const { data: followDoc, isLoading: followLoading } = useDoc(followRef);
   const isFollowing = !!followDoc;
 
-  // Real-time followers/following listeners
   const circlingQuery = useMemoFirebase(() => (db && profileData?.id ? query(fsCollection(db, "follows"), where("followerId", "==", profileData.id)) : null), [db, profileData?.id]);
   const circleQuery = useMemoFirebase(() => (db && profileData?.id ? query(fsCollection(db, "follows"), where("followedId", "==", profileData.id)) : null), [db, profileData?.id]);
   
@@ -115,7 +115,6 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
 
   return (
     <div className="max-w-md mx-auto min-h-screen pt-0 pb-24 relative overflow-x-hidden flex flex-col" style={{ backgroundColor: colors.background || "var(--background)" }}>
-      {/* LAYER 1: Media (Banner/Logo) - Base Plane Z-10 */}
       <div className="relative w-full shrink-0 z-10">
         <div className="h-16 w-full" style={{ backgroundColor: colors.header || "var(--primary)" }} />
         <header className="absolute top-0 left-0 right-0 px-6 py-5 flex justify-between items-center z-[100]">
@@ -123,7 +122,11 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
             <ChevronLeft size={24} style={{ color: getContrastColor(colors.header) }} />
           </Button>
           <h1 className="text-lg font-black uppercase tracking-tighter" style={{ color: getContrastColor(colors.header) }}>@{profileData.username}</h1>
-          <div className="w-10" />
+          <ReportDialog 
+            targetId={profileData.id} 
+            targetType="profile" 
+            trigger={<Button variant="ghost" size="icon"><ShieldAlert size={20} style={{ color: getContrastColor(colors.header) }} className="opacity-50" /></Button>} 
+          />
         </header>
 
         <div className="relative">
@@ -132,7 +135,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
           </div>
           <div className="px-6 -mt-16 flex flex-col items-center relative z-20">
             <Avatar className={cn(
-              "h-32 w-32 border-4 border-white bg-white shadow-2xl transition-all duration-500",
+              "h-32 w-32 border-4 border-white bg-white transition-all duration-500",
               profileData?.isOnline && "shadow-[0_15px_30px_rgba(255,69,0,0.5)] shadow-primary/50 border-primary"
             )}>
               <AvatarImage src={profileData.profilePictureUrl} className="object-cover" />
@@ -142,7 +145,6 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         </div>
       </div>
 
-      {/* LAYER 2: IDENTITY PLANE - Middle Plane Z-20 (Below Stickers) */}
       <div className="w-full relative mt-4 z-20">
         <div style={{ backgroundColor: colors.userInfo }} className="px-6 flex flex-col items-center relative">
           
@@ -167,7 +169,6 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
           </div>
         </div>
 
-        {/* Stats & Content Section */}
         <div className="relative z-10">
           <div style={{ backgroundColor: colors.statsSection }} className="w-full py-10 px-10 relative">
             <div className="grid grid-cols-3 gap-6 w-full">
@@ -204,8 +205,8 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
                 <TabsContent key={type} value={type} className="outline-none space-y-8">
                   {isPostsLoading ? (
                     <div className="flex justify-center py-10"><Loader2 className="animate-spin text-primary" /></div>
-                  ) : filteredPosts(type).length > 0 ? (
-                    filteredPosts(type).map((post) => (
+                  ) : userPosts?.filter(p => p.mediaType === type).length > 0 ? (
+                    userPosts?.filter(p => p.mediaType === type).map((post) => (
                       <div key={post.id} className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                         <IdeaCard idea={post as any} isProfileView={true} />
                       </div>
@@ -222,7 +223,6 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         </div>
       </div>
 
-      {/* LAYER 3: Stickers - Top Plane Z-30 (Above Identity) */}
       <div className="absolute inset-0 pointer-events-none z-30">
         {stickers.map((sticker) => (
           <div 

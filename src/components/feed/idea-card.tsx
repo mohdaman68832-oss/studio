@@ -10,6 +10,13 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useUser, useDoc, useMemoFirebase, useCollection } from "@/firebase";
 import { doc, setDoc, deleteDoc, increment, collection } from "firebase/firestore";
+import { ReportDialog } from "@/components/report-dialog";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 
 interface IdeaCardProps {
   idea: {
@@ -36,20 +43,17 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
   const { user } = useUser();
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Fetch author's live profile to get the latest logo
   const authorProfileRef = useMemoFirebase(() => 
     (db && idea.uid) ? doc(db, "userProfiles", idea.uid) : null
   , [db, idea.uid]);
   const { data: authorProfile } = useDoc(authorProfileRef);
 
-  // Fetch suggestions count
   const suggestionsQuery = useMemoFirebase(() => 
     (db && idea.id) ? collection(db, "posts", idea.id, "suggestions") : null
   , [db, idea.id]);
   const { data: suggestions } = useCollection(suggestionsQuery);
   const commentCount = suggestions?.length || 0;
 
-  // Fallback chain: Live Profile > Cached Post Avatar > Initial Placeholder
   const liveAvatar = authorProfile?.profilePictureUrl || idea.userAvatar || "";
   const liveUsername = authorProfile?.username || idea.username;
 
@@ -66,8 +70,6 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
   const { data: liveIdeaData } = useDoc(ideaDocRef);
 
   const likesCount = liveIdeaData?.likes ?? idea.likes ?? 0;
-  
-  // Real-time View Count from Firestore
   const viewCount = liveIdeaData?.views ?? idea.views ?? 0;
 
   const handleToggleLike = (e: React.MouseEvent) => {
@@ -140,9 +142,12 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
             </Link>
           </div>
 
-          <button type="button" onClick={handleShare} className="p-2 text-foreground/20 hover:text-primary transition-colors">
-            <Share2 size={20} />
-          </button>
+          <div className="flex items-center gap-2">
+            <ReportDialog targetId={idea.id} targetType="post" />
+            <button type="button" onClick={handleShare} className="p-2 text-foreground/20 hover:text-primary transition-colors">
+              <Share2 size={20} />
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -152,18 +157,33 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
     <div className="bg-card rounded-[2.5rem] idea-card-shadow overflow-hidden border border-border/50 p-5">
       <div className="flex items-center justify-between mb-1">
         <Link href={`/profile/${liveUsername}`} className="flex items-center gap-3 z-10">
-          <Avatar className={cn(
-            "h-10 w-10 border-2 border-primary/5 transition-all duration-500",
-            authorProfile?.isOnline && "shadow-[0_8px_20px_rgba(255,69,0,0.4)] shadow-primary/40 border-primary"
-          )}>
-            <AvatarImage src={liveAvatar} className="object-cover" />
-            <AvatarFallback className="text-[10px] font-black uppercase bg-primary/5 text-primary">
-              {liveUsername?.[0] || "U"}
-            </AvatarFallback>
-          </Avatar>
+          <div className="relative">
+            <Avatar className={cn(
+              "h-10 w-10 border-2 border-primary/5 transition-all duration-500",
+              authorProfile?.isOnline && "shadow-[0_15px_30px_rgba(255,69,0,0.5)] shadow-primary/50 border-primary"
+            )}>
+              <AvatarImage src={liveAvatar} className="object-cover" />
+              <AvatarFallback className="text-[10px] font-black uppercase bg-primary/5 text-primary">
+                {liveUsername?.[0] || "U"}
+              </AvatarFallback>
+            </Avatar>
+          </div>
           <span className="text-sm font-black text-foreground">@{liveUsername}</span>
         </Link>
-        <MoreHorizontal size={20} className="text-muted-foreground" />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="rounded-full h-8 w-8"><MoreHorizontal size={20} className="text-muted-foreground" /></Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="rounded-2xl p-1 border-2">
+            <DropdownMenuItem asChild>
+              <ReportDialog 
+                targetId={idea.id} 
+                targetType="post" 
+                trigger={<button className="w-full text-left px-3 py-2 text-xs font-black uppercase flex items-center gap-2 text-destructive"><MoreHorizontal size={14} /> Report Post</button>} 
+              />
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <div className="mt-4">
