@@ -10,7 +10,7 @@ import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useUser, useDoc, useMemoFirebase, useCollection } from "@/firebase";
-import { doc, setDoc, deleteDoc, increment, collection, updateDoc } from "firebase/firestore";
+import { doc, setDoc, deleteDoc, increment, collection, updateDoc, serverTimestamp } from "firebase/firestore";
 import { ReportDialog } from "@/components/report-dialog";
 import { 
   DropdownMenu, 
@@ -66,6 +66,12 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
   const { data: userLike } = useDoc(userLikeRef);
   const isLiked = !!userLike;
 
+  // Unique View Check
+  const userViewRef = useMemoFirebase(() => 
+    (db && user && idea.id) ? doc(db, "posts", idea.id, "views", user.uid) : null
+  , [db, user, idea.id]);
+  const { data: userView, isLoading: isViewLoading } = useDoc(userViewRef);
+
   const ideaDocRef = useMemoFirebase(() => 
     (db && idea.id) ? doc(db, "posts", idea.id) : null
   , [db, idea.id]);
@@ -74,18 +80,20 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
   const likesCount = liveIdeaData?.likes ?? idea.likes ?? 0;
   const viewCount = liveIdeaData?.views ?? idea.views ?? 0;
 
-  // View Tracking Logic: Increment view when card is shown in feed
+  // View Tracking Logic: Increment view ONLY if user hasn't viewed before
   useEffect(() => {
-    if (db && idea.id && !viewTracked.current) {
+    if (db && idea.id && user && !isViewLoading && !userView && !viewTracked.current) {
       viewTracked.current = true;
       const postRef = doc(db, "posts", idea.id);
-      updateDoc(postRef, {
-        views: increment(1)
-      }).catch(err => {
-        // Silent fail for view tracking to maintain UX
-      });
+      const viewRecordRef = doc(db, "posts", idea.id, "views", user.uid);
+      
+      setDoc(viewRecordRef, { viewedAt: serverTimestamp() })
+        .then(() => updateDoc(postRef, { views: increment(1) }))
+        .catch(err => {
+          // Silent fail for view tracking to maintain UX
+        });
     }
-  }, [db, idea.id]);
+  }, [db, idea.id, user, isViewLoading, userView]);
 
   const handleToggleLike = (e: React.MouseEvent) => {
     e.preventDefault();

@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useDoc, useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection, addDoc, query, orderBy, serverTimestamp, doc, updateDoc, increment } from "firebase/firestore";
+import { collection, addDoc, query, orderBy, serverTimestamp, doc, updateDoc, increment, setDoc } from "firebase/firestore";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +40,12 @@ export default function IdeaDetailPage() {
   const liveAvatar = authorProfile?.profilePictureUrl || idea?.userAvatar || "";
   const liveUsername = authorProfile?.username || idea?.username;
 
+  // Unique View Check
+  const userViewRef = useMemoFirebase(() => 
+    (db && currentUser && ideaId) ? doc(db, "posts", ideaId, "views", currentUser.uid) : null
+  , [db, currentUser, ideaId]);
+  const { data: userView, isLoading: isViewLoading } = useDoc(userViewRef);
+
   const suggestionsQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(
@@ -50,18 +56,20 @@ export default function IdeaDetailPage() {
 
   const { data: suggestions } = useCollection(suggestionsQuery);
 
-  // Real-time View Increment logic for deep-views
+  // Real-time Unique View Increment logic
   useEffect(() => {
-    if (db && ideaId && !viewTracked.current) {
+    if (db && ideaId && currentUser && !isViewLoading && !userView && !viewTracked.current) {
       viewTracked.current = true;
       const postRef = doc(db, "posts", ideaId);
-      updateDoc(postRef, {
-        views: increment(1)
-      }).catch(err => {
-        // Silently fail if rules or network prevent it
-      });
+      const viewRecordRef = doc(db, "posts", ideaId, "views", currentUser.uid);
+
+      setDoc(viewRecordRef, { viewedAt: serverTimestamp() })
+        .then(() => updateDoc(postRef, { views: increment(1) }))
+        .catch(err => {
+          // Silently fail if rules or network prevent it
+        });
     }
-  }, [db, ideaId]);
+  }, [db, ideaId, currentUser, isViewLoading, userView]);
 
   useEffect(() => {
     if (scrollContainerRef.current) {
