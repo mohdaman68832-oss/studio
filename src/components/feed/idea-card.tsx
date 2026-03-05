@@ -168,8 +168,7 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
             </Link>
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1.5 bg-muted/30 px-2 py-1 rounded-full shrink-0">
-                <Eye size={12} className="text-muted-foreground" />
-                <span className="text-[10px] font-black text-muted-foreground">{viewCount}</span>
+                <span className="text-[10px] font-black text-muted-foreground">{viewCount} Views</span>
               </div>
               
               <DropdownMenu>
@@ -178,7 +177,7 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="rounded-2xl p-1 border-2">
                    {user?.uid === idea.uid ? (
-                     <DropdownMenuItem onClick={() => setIsDeleteDialogOpen(true)} className="text-destructive font-black uppercase text-[10px] gap-2 p-3 rounded-xl cursor-pointer">
+                     <DropdownMenuItem onClick={() => { setDeleteConfirmText(""); setIsDeleteDialogOpen(true); }} className="text-destructive font-black uppercase text-[10px] gap-2 p-3 rounded-xl cursor-pointer">
                        <Trash2 size={14} /> Delete Post
                      </DropdownMenuItem>
                    ) : (
@@ -250,9 +249,9 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
                   variant="destructive" 
                   disabled={deleteConfirmText !== "DELETE" || isDeleting}
                   onClick={handleDeletePost}
-                  className="rounded-2xl h-14 font-black uppercase text-[10px] tracking-widest shadow-lg shadow-destructive/20"
+                  className="rounded-2xl h-14 font-black uppercase text-[10px] tracking-widest shadow-lg shadow-destructive/20 disabled:opacity-30"
                 >
-                  {isDeleting ? <Loader2 className="animate-spin" /> : "Purge Now"}
+                  {isDeleting ? <Loader2 className="animate-spin" /> : "Continue Deletion"}
                 </Button>
               </div>
             </div>
@@ -283,7 +282,7 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="rounded-2xl p-1 border-2">
             {user?.uid === idea.uid ? (
-              <DropdownMenuItem onClick={() => setIsDeleteDialogOpen(true)} className="text-destructive font-black uppercase text-[10px] gap-2 p-3 rounded-xl cursor-pointer">
+              <DropdownMenuItem onClick={() => { setDeleteConfirmText(""); setIsDeleteDialogOpen(true); }} className="text-destructive font-black uppercase text-[10px] gap-2 p-3 rounded-xl cursor-pointer">
                 <Trash2 size={14} /> Delete Post
               </DropdownMenuItem>
             ) : (
@@ -368,9 +367,9 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
                 variant="destructive" 
                 disabled={deleteConfirmText !== "DELETE" || isDeleting}
                 onClick={handleDeletePost}
-                className="rounded-2xl h-14 font-black uppercase text-[10px] tracking-widest shadow-lg shadow-destructive/20"
+                className="rounded-2xl h-14 font-black uppercase text-[10px] tracking-widest shadow-lg shadow-destructive/20 disabled:opacity-30"
               >
-                {isDeleting ? <Loader2 className="animate-spin" /> : "Purge Now"}
+                {isDeleting ? <Loader2 className="animate-spin" /> : "Continue Deletion"}
               </Button>
             </div>
           </div>
