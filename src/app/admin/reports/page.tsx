@@ -1,8 +1,8 @@
 
 "use client";
 
-import { useCollection, useFirestore } from "@/firebase";
-import { collection, query, orderBy, doc, updateDoc, deleteDoc, getDoc } from "firebase/firestore";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection, query, orderBy, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +18,11 @@ export default function AdminReportsPage() {
   const { toast } = useToast();
   const [processingId, setProcessingId] = useState<string | null>(null);
 
-  const reportsQuery = query(collection(db, "reports"), orderBy("createdAt", "desc"));
+  const reportsQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, "reports"), orderBy("createdAt", "desc"));
+  }, [db]);
+
   const { data: reports, isLoading } = useCollection(reportsQuery);
 
   const resolveReport = async (reportId: string) => {
