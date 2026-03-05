@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { 
-  Settings, LogOut, Loader2, Palette, Check, X, Camera, Image as ImageIcon, ShieldAlert
+  Settings, LogOut, Loader2, Palette, Check, X, Camera, Image as ImageIcon, ShieldAlert, Video, Type
 } from "lucide-react";
 import { 
   DropdownMenu, 
@@ -54,7 +54,7 @@ function getContrastColor(hexColor: string | undefined): string {
 }
 
 function getTextShadow(color: string | undefined) {
-  if (!color) return "none";
+  if (!color || color === 'transparent') return "none";
   return `1px 1px 0 ${color}, -1px -1px 0 ${color}, 1px -1px 0 ${color}, -1px 1px 0 ${color}, 0px 1px 0 ${color}, 0px -1px 0 ${color}, 1px 0px 0 ${color}, -1px 0px 0 ${color}`;
 }
 
