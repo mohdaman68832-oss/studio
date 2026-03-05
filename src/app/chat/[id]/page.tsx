@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -22,14 +21,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
-
-const toBase64 = (file: File): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = (error) => reject(error);
-  });
 
 export default function ChatDetailPage() {
   const params = useParams();
@@ -56,12 +47,9 @@ export default function ChatDetailPage() {
   const { data: messages, isLoading: isMessagesLoading } = useCollection(messagesQuery);
 
   const [newMessage, setNewMessage] = useState("");
-  const [mediaUrl, setMediaUrl] = useState<string | null>(null);
-  const [mediaType, setMediaType] = useState<"image" | "video" | null>(null);
   const [isSending, setIsSending] = useState(false);
   
   const scrollRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Mark messages as read when they appear and user is looking at them
   useEffect(() => {
@@ -95,30 +83,13 @@ export default function ChatDetailPage() {
     scrollToBottom();
   }, [messages]);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const base64 = await toBase64(file);
-      setMediaUrl(base64);
-      setMediaType(file.type.startsWith('video/') ? 'video' : 'image');
-    } catch (err) {
-      toast({ variant: "destructive", title: "Process Failed", description: "Media processing error." });
-    }
-  };
-
   const handleSend = async () => {
-    if ((!newMessage.trim() && !mediaUrl) || !db || !currentUser || !chatId || !recipientId || isSending) return;
+    if (!newMessage.trim() || !db || !currentUser || !chatId || !recipientId || isSending) return;
     
     setIsSending(true);
     const text = newMessage;
-    const currentMediaUrl = mediaUrl;
-    const currentMediaType = mediaType;
 
     setNewMessage("");
-    setMediaUrl(null);
-    setMediaType(null);
 
     const chatRef = doc(db, "privateChats", chatId);
     const messagesRef = collection(db, "privateChats", chatId, "messages");
@@ -126,17 +97,17 @@ export default function ChatDetailPage() {
     const messageData = {
       senderId: currentUser.uid,
       text: text,
-      mediaUrl: currentMediaUrl || "",
-      mediaType: currentMediaType || "",
+      mediaUrl: "",
+      mediaType: "",
       createdAt: serverTimestamp(),
-      status: 'sent' // Initial status
+      status: 'sent'
     };
 
     // Update chat metadata
     setDoc(chatRef, {
       chatId: chatId,
       participants: chatId.split("_"),
-      lastMessage: currentMediaUrl ? (currentMediaType === 'image' ? "📷 Photo" : "🎥 Video") : text,
+      lastMessage: text,
       timestamp: serverTimestamp(),
       [`unreadCounts.${recipientId}`]: increment(1)
     }, { merge: true }).catch(async (err) => {
@@ -293,45 +264,7 @@ export default function ChatDetailPage() {
       </div>
 
       <div className="shrink-0 p-4 bg-white border-t z-[70] pb-safe space-y-3">
-        {mediaUrl && (
-          <div className="flex items-center gap-3 bg-muted/20 p-2 rounded-2xl animate-in slide-in-from-bottom-2">
-            <div className="relative h-16 w-16 rounded-xl overflow-hidden bg-black/5 shrink-0">
-              {mediaType === 'video' ? (
-                <div className="w-full h-full flex items-center justify-center bg-black"><Video className="text-white" size={20} /></div>
-              ) : (
-                <Image src={mediaUrl} alt="Preview" fill className="object-cover" unoptimized />
-              )}
-              <button 
-                onClick={() => { setMediaUrl(null); setMediaType(null); }}
-                className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5"
-              >
-                <X size={12} />
-              </button>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-black uppercase text-primary">Attachment Ready</p>
-              <p className="text-[9px] text-muted-foreground truncate">{mediaType === 'image' ? 'Image File' : 'Video File'}</p>
-            </div>
-          </div>
-        )}
-
         <div className="flex items-center gap-2">
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            className="hidden" 
-            accept="image/*,video/*" 
-            onChange={handleFileChange} 
-          />
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="rounded-full h-11 w-11 bg-muted/30 text-primary shrink-0 active:scale-95 transition-transform"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <Plus size={24} />
-          </Button>
-          
           <div className="flex-1 flex items-center gap-2 bg-muted/30 rounded-[2rem] pl-4 pr-1 py-1 border border-primary/10">
             <Input 
               placeholder="Secure private message..." 
@@ -347,7 +280,7 @@ export default function ChatDetailPage() {
               size="icon" 
               className="rounded-full h-11 w-11 bg-primary text-white shrink-0 shadow-lg active:scale-95 transition-transform"
               onClick={handleSend}
-              disabled={(!newMessage.trim() && !mediaUrl) || isSending}
+              disabled={!newMessage.trim() || isSending}
             >
               {isSending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
             </Button>
