@@ -13,7 +13,7 @@ import { doc, setDoc, getDocs, collection, query, where } from "firebase/firesto
 import { useToast } from "@/hooks/use-toast";
 import { 
   Loader2, ChevronRight, ChevronLeft, Camera, Image as ImageIcon, 
-  Briefcase, Monitor, Smartphone, X, Sparkles,
+  Briefcase, Monitor, Smartphone, X, Sparkles, ShieldCheck, AlertTriangle,
   GraduationCap, Cpu, Bot, Laptop, Rocket, Landmark, 
   IndianRupee, Globe, Heart, Brain, Zap, Flame, Users, Megaphone, 
   Vote, Newspaper, BookOpen, FlaskConical, Gamepad2, Film, Music, 
@@ -25,7 +25,7 @@ import { Progress } from "@/components/ui/progress";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
-type Step = 1 | 2 | 3 | 4;
+type Step = 0 | 1 | 2 | 3 | 4;
 
 const HUB_OPTIONS = [
   { name: "Education", icon: GraduationCap },
@@ -76,7 +76,7 @@ const toBase64 = (file: File): Promise<string> =>
   });
 
 export default function SignupPage() {
-  const [step, setStep] = useState<Step>(1);
+  const [step, setStep] = useState<Step>(0);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -221,12 +221,56 @@ export default function SignupPage() {
       <div className="space-y-2">
         <Progress value={progress} className="h-2 bg-muted rounded-full" />
         <div className="flex justify-between text-[8px] font-black uppercase tracking-widest text-muted-foreground">
+          <span className={step >= 0 ? "text-primary" : ""}>Rules</span>
           <span className={step >= 1 ? "text-primary" : ""}>Info</span>
           <span className={step >= 2 ? "text-primary" : ""}>Handle</span>
           <span className={step >= 3 ? "text-primary" : ""}>Style</span>
           <span className={step >= 4 ? "text-primary" : ""}>Hubs</span>
         </div>
       </div>
+
+      {step === 0 && (
+        <div className="space-y-6 animate-in fade-in duration-500">
+           <div className="bg-primary/5 p-6 rounded-[2.5rem] border border-primary/10 space-y-6">
+              <div className="flex items-center gap-3">
+                <ShieldCheck size={28} className="text-primary" />
+                <h2 className="text-sm font-black uppercase tracking-widest text-primary">Sphere Covenant</h2>
+              </div>
+              
+              <div className="space-y-5">
+                <div className="space-y-2">
+                  <p className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2">
+                    <AlertTriangle size={12} /> Account Deletion
+                  </p>
+                  <p className="text-[11px] font-medium leading-relaxed text-muted-foreground">
+                    Aapka account bina kisi purv suchna ke delete kiya ja sakta hai agar aap:
+                  </p>
+                  <ul className="text-[10px] font-bold text-foreground space-y-1 list-disc pl-4">
+                    <li>Hate speech ya bullying karte hain.</li>
+                    <li>Illegal ya offensive content share karte hain.</li>
+                    <li>Multiple valid reports prapt karte hain.</li>
+                  </ul>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-[10px] font-black uppercase text-primary tracking-widest">Forbidden Content</p>
+                  <ul className="text-[10px] font-bold text-foreground space-y-1 list-disc pl-4">
+                    <li>Adult/Explicit media (Photos/Videos).</li>
+                    <li>Violence ya dangerous activities ka prachar.</li>
+                    <li>Spamming ya misleading information.</li>
+                  </ul>
+                </div>
+              </div>
+
+              <p className="text-[9px] font-medium italic text-muted-foreground pt-4 border-t opacity-60">
+                By continuing, you agree to respect the Sphere community.
+              </p>
+           </div>
+           <Button onClick={() => setStep(1)} className="w-full h-16 rounded-[2rem] bg-primary text-white font-black uppercase shadow-xl">
+             I Accept the Covenant <ChevronRight size={20} className="ml-2" />
+           </Button>
+        </div>
+      )}
 
       {step === 1 && (
         <form onSubmit={handleNextStep1} className="space-y-4 animate-in slide-in-from-right-4 duration-500">
