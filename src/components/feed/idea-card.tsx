@@ -10,7 +10,7 @@ import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useUser, useDoc, useMemoFirebase, useCollection } from "@/firebase";
-import { doc, setDoc, deleteDoc, increment, collection, updateDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, deleteDoc, increment, collection, updateDoc, serverTimestamp, getDoc } from "firebase/firestore";
 import { ReportDialog } from "@/components/report-dialog";
 import { 
   DropdownMenu, 
@@ -45,7 +45,7 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
   const [isProcessing, setIsProcessing] = useState(false);
   const viewTracked = useRef(false);
 
-  // Author live data for latest logo
+  // Author live data
   const authorProfileRef = useMemoFirebase(() => 
     (db && idea.uid) ? doc(db, "userProfiles", idea.uid) : null
   , [db, idea.uid]);
@@ -67,12 +67,6 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
   const { data: userLike } = useDoc(userLikeRef);
   const isLiked = !!userLike;
 
-  // Unique View Check logic
-  const userViewRef = useMemoFirebase(() => 
-    (db && user && idea.id) ? doc(db, "posts", idea.id, "views", user.uid) : null
-  , [db, user, idea.id]);
-  const { data: userView, isLoading: isViewLoading } = useDoc(userViewRef);
-
   const ideaDocRef = useMemoFirebase(() => 
     (db && idea.id) ? doc(db, "posts", idea.id) : null
   , [db, idea.id]);
@@ -81,20 +75,30 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
   const likesCount = liveIdeaData?.likes ?? idea.likes ?? 0;
   const viewCount = liveIdeaData?.views ?? idea.views ?? 0;
 
-  // Real-time Unique View Tracking
+  // Strict Unique View Tracking
   useEffect(() => {
-    if (db && idea.id && user && !isViewLoading && !userView && !viewTracked.current) {
-      viewTracked.current = true;
-      const postRef = doc(db, "posts", idea.id);
+    const trackView = async () => {
+      if (!db || !idea.id || !user || viewTracked.current) return;
+
       const viewRecordRef = doc(db, "posts", idea.id, "views", user.uid);
-      
-      setDoc(viewRecordRef, { viewedAt: serverTimestamp() })
-        .then(() => updateDoc(postRef, { views: increment(1) }))
-        .catch(err => {
-          // Silently fail if rules or network prevent it
-        });
-    }
-  }, [db, idea.id, user, isViewLoading, userView]);
+      const postRef = doc(db, "posts", idea.id);
+
+      try {
+        const viewSnap = await getDoc(viewRecordRef);
+        if (!viewSnap.exists()) {
+          viewTracked.current = true; // Set immediately to prevent parallel triggers
+          await setDoc(viewRecordRef, { viewedAt: serverTimestamp() });
+          await updateDoc(postRef, { views: increment(1) });
+        } else {
+          viewTracked.current = true; // Already exists, just mark as tracked in session
+        }
+      } catch (err) {
+        console.warn("View tracking silent fail", err);
+      }
+    };
+
+    trackView();
+  }, [db, idea.id, user]);
 
   const handleToggleLike = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -107,11 +111,11 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
 
     if (isLiked) {
       deleteDoc(likeDocRef)
-        .then(() => setDoc(postRef, { likes: increment(-1) }, { merge: true }))
+        .then(() => updateDoc(postRef, { likes: increment(-1) }))
         .finally(() => setTimeout(() => setIsProcessing(false), 300));
     } else {
       setDoc(likeDocRef, { userId: user.uid })
-        .then(() => setDoc(postRef, { likes: increment(1) }, { merge: true }))
+        .then(() => updateDoc(postRef, { likes: increment(1) }))
         .finally(() => setTimeout(() => setIsProcessing(false), 300));
     }
   };

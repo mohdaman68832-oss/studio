@@ -4,11 +4,11 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useDoc, useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection, addDoc, query, orderBy, serverTimestamp, doc, updateDoc, increment, setDoc } from "firebase/firestore";
+import { collection, addDoc, query, orderBy, serverTimestamp, doc, updateDoc, increment, setDoc, getDoc } from "firebase/firestore";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, Send, Sparkles, MessageCircle, ChevronDown, ChevronUp, Globe, Lock } from "lucide-react";
+import { ChevronLeft, Send, Sparkles, MessageCircle, ChevronDown, ChevronUp, Globe } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
@@ -31,7 +31,7 @@ export default function IdeaDetailPage() {
   const ideaRef = useMemoFirebase(() => (db ? doc(db, "posts", ideaId) : null), [db, ideaId]);
   const { data: idea, isLoading: ideaLoading } = useDoc(ideaRef);
 
-  // Author live data for latest logo
+  // Author live data
   const authorProfileRef = useMemoFirebase(() => 
     (db && idea?.uid) ? doc(db, "userProfiles", idea.uid) : null
   , [db, idea?.uid]);
@@ -39,12 +39,6 @@ export default function IdeaDetailPage() {
 
   const liveAvatar = authorProfile?.profilePictureUrl || idea?.userAvatar || "";
   const liveUsername = authorProfile?.username || idea?.username;
-
-  // Unique View Check
-  const userViewRef = useMemoFirebase(() => 
-    (db && currentUser && ideaId) ? doc(db, "posts", ideaId, "views", currentUser.uid) : null
-  , [db, currentUser, ideaId]);
-  const { data: userView, isLoading: isViewLoading } = useDoc(userViewRef);
 
   const suggestionsQuery = useMemoFirebase(() => {
     if (!db) return null;
@@ -56,20 +50,30 @@ export default function IdeaDetailPage() {
 
   const { data: suggestions } = useCollection(suggestionsQuery);
 
-  // Real-time Unique View Increment logic
+  // Real-time Unique View Tracking
   useEffect(() => {
-    if (db && ideaId && currentUser && !isViewLoading && !userView && !viewTracked.current) {
-      viewTracked.current = true;
-      const postRef = doc(db, "posts", ideaId);
-      const viewRecordRef = doc(db, "posts", ideaId, "views", currentUser.uid);
+    const trackView = async () => {
+      if (!db || !ideaId || !currentUser || viewTracked.current) return;
 
-      setDoc(viewRecordRef, { viewedAt: serverTimestamp() })
-        .then(() => updateDoc(postRef, { views: increment(1) }))
-        .catch(err => {
-          // Silently fail if rules or network prevent it
-        });
-    }
-  }, [db, ideaId, currentUser, isViewLoading, userView]);
+      const viewRecordRef = doc(db, "posts", ideaId, "views", currentUser.uid);
+      const postRef = doc(db, "posts", ideaId);
+
+      try {
+        const viewSnap = await getDoc(viewRecordRef);
+        if (!viewSnap.exists()) {
+          viewTracked.current = true; // Guard immediately
+          await setDoc(viewRecordRef, { viewedAt: serverTimestamp() });
+          await updateDoc(postRef, { views: increment(1) });
+        } else {
+          viewTracked.current = true;
+        }
+      } catch (err) {
+        console.warn("View tracking detail silent fail", err);
+      }
+    };
+
+    trackView();
+  }, [db, ideaId, currentUser]);
 
   useEffect(() => {
     if (scrollContainerRef.current) {
@@ -88,11 +92,11 @@ export default function IdeaDetailPage() {
       createdAt: serverTimestamp(),
     };
 
-    addDoc(collection(db, "posts", ideaId, "suggestions"), commentData);
+    await addDoc(collection(db, "posts", ideaId, "suggestions"), commentData);
 
-    const postCreatorId = idea.uid || idea.authorId;
+    const postCreatorId = idea.uid;
     if (postCreatorId && postCreatorId !== currentUser.uid) {
-      addDoc(collection(db, "users", postCreatorId, "notifications"), {
+      await addDoc(collection(db, "userProfiles", postCreatorId, "notifications"), {
         userId: postCreatorId,
         type: "newComment",
         sourceId: ideaId,

@@ -38,6 +38,11 @@ service cloud.firestore {
         allow read: if true;
         allow write: if isAuth();
       }
+
+      match /views/{userId} {
+        allow read: if true;
+        allow write: if isAuth() && request.auth.uid == userId;
+      }
     }
 
     // Reports: Any auth user can create, only admin (simulated here as any auth for MVP view) can read/manage
@@ -50,6 +55,12 @@ service cloud.firestore {
     match /follows/{followId} {
       allow read: if true;
       allow write: if isAuth() && (request.auth.uid == request.resource.data.followerId || (resource != null && request.auth.uid == resource.data.followerId));
+    }
+
+    // Groups
+    match /groups/{groupId} {
+      allow read: if true;
+      allow write: if isAuth();
     }
     
     // Global Fallback (Secure by default)
