@@ -6,10 +6,10 @@ import { useParams, useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Lock, Circle, Loader2, MoreVertical, Plus, Image as ImageIcon, Video, X } from "lucide-react";
+import { Send, Lock, Circle, Loader2, MoreVertical, Plus, Image as ImageIcon, Video, X, Check, CheckCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFirestore, useDoc, useMemoFirebase, useUser, useCollection } from "@/firebase";
-import { doc, collection, query, orderBy, addDoc, serverTimestamp, setDoc, limit, updateDoc, increment } from "firebase/firestore";
+import { doc, collection, query, orderBy, addDoc, serverTimestamp, setDoc, limit, updateDoc, increment, writeBatch, getDocs, where } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import Image from "next/image";
@@ -63,14 +63,27 @@ export default function ChatDetailPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Mark messages as read when they appear and user is looking at them
   useEffect(() => {
-    if (db && currentUser && chatId) {
+    if (db && currentUser && chatId && messages) {
+      const unreadMessages = messages.filter(m => m.senderId !== currentUser.uid && m.status !== 'read');
+      
+      if (unreadMessages.length > 0) {
+        const batch = writeBatch(db);
+        unreadMessages.forEach(msg => {
+          const msgRef = doc(db, "privateChats", chatId, "messages", msg.id);
+          batch.update(msgRef, { status: 'read' });
+        });
+        batch.commit().catch(err => console.warn("Failed to mark messages as read", err));
+      }
+
+      // Also clear unread counts in chat metadata
       const chatRef = doc(db, "privateChats", chatId);
       updateDoc(chatRef, {
         [`unreadCounts.${currentUser.uid}`]: 0
       }).catch(err => console.warn("Failed to clear unread counts", err));
     }
-  }, [db, currentUser, chatId, messages?.length]);
+  }, [db, currentUser, chatId, messages]);
 
   const scrollToBottom = () => {
     if (scrollRef.current) {
@@ -116,6 +129,7 @@ export default function ChatDetailPage() {
       mediaUrl: currentMediaUrl || "",
       mediaType: currentMediaType || "",
       createdAt: serverTimestamp(),
+      status: 'sent' // Initial status
     };
 
     // Update chat metadata
@@ -216,6 +230,8 @@ export default function ChatDetailPage() {
         {messages?.map((msg) => {
           const isMe = msg.senderId === currentUser?.uid;
           const hasMedia = msg.mediaUrl && msg.mediaUrl !== "";
+          const isRead = msg.status === 'read';
+
           return (
             <div 
               key={msg.id} 
@@ -256,11 +272,22 @@ export default function ChatDetailPage() {
                   </div>
                 )}
               </div>
-              {msg.createdAt && (
-                <span className="text-[8px] text-muted-foreground font-black uppercase tracking-widest opacity-60">
-                  {new Date(msg.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </span>
-              )}
+              <div className={cn("flex items-center gap-1.5 px-1", isMe ? "flex-row-reverse" : "flex-row")}>
+                {msg.createdAt && (
+                  <span className="text-[8px] text-muted-foreground font-black uppercase tracking-widest opacity-60">
+                    {new Date(msg.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                )}
+                {isMe && (
+                  <div className="flex items-center">
+                    {isRead ? (
+                      <CheckCheck size={12} className="text-secondary" />
+                    ) : (
+                      <Check size={12} className="text-muted-foreground/40" />
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           );
         })}
