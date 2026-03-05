@@ -225,7 +225,10 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
         </div>
 
         {/* Delete Confirmation Dialog */}
-        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <Dialog open={isDeleteDialogOpen} onOpenChange={(open) => {
+          setIsDeleteDialogOpen(open);
+          if (!open) setDeleteConfirmText("");
+        }}>
           <DialogContent className="rounded-[2.5rem] max-w-[90vw] sm:max-w-md border-none shadow-2xl">
             <DialogHeader className="space-y-4">
               <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-2 text-destructive">
@@ -243,16 +246,21 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
                 value={deleteConfirmText}
                 onChange={(e) => setDeleteConfirmText(e.target.value)}
               />
-              <div className="grid grid-cols-2 gap-3">
+              <div className={cn(
+                "grid gap-3 transition-all duration-300",
+                deleteConfirmText === "DELETE" ? "grid-cols-2" : "grid-cols-1"
+              )}>
                 <Button variant="ghost" onClick={() => setIsDeleteDialogOpen(false)} className="rounded-2xl h-14 font-black uppercase text-[10px] tracking-widest">Cancel</Button>
-                <Button 
-                  variant="destructive" 
-                  disabled={deleteConfirmText !== "DELETE" || isDeleting}
-                  onClick={handleDeletePost}
-                  className="rounded-2xl h-14 font-black uppercase text-[10px] tracking-widest shadow-lg shadow-destructive/20 disabled:opacity-30"
-                >
-                  {isDeleting ? <Loader2 className="animate-spin" /> : "Continue Deletion"}
-                </Button>
+                {deleteConfirmText === "DELETE" && (
+                  <Button 
+                    variant="destructive" 
+                    disabled={isDeleting}
+                    onClick={handleDeletePost}
+                    className="rounded-2xl h-14 font-black uppercase text-[10px] tracking-widest shadow-lg shadow-destructive/20 animate-in zoom-in duration-300"
+                  >
+                    {isDeleting ? <Loader2 className="animate-spin" /> : "Continue Deletion"}
+                  </Button>
+                )}
               </div>
             </div>
           </DialogContent>
@@ -343,7 +351,10 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
       </div>
 
       {/* Global Delete Confirmation Dialog (for Feed View) */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <Dialog open={isDeleteDialogOpen} onOpenChange={(open) => {
+        setIsDeleteDialogOpen(open);
+        if (!open) setDeleteConfirmText("");
+      }}>
         <DialogContent className="rounded-[2.5rem] max-w-[90vw] sm:max-w-md border-none shadow-2xl">
           <DialogHeader className="space-y-4">
             <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-2 text-destructive">
@@ -361,16 +372,21 @@ export function IdeaCard({ idea, priority = false, isProfileView = false }: Idea
               value={deleteConfirmText}
               onChange={(e) => setDeleteConfirmText(e.target.value)}
             />
-            <div className="grid grid-cols-2 gap-3">
+            <div className={cn(
+              "grid gap-3 transition-all duration-300",
+              deleteConfirmText === "DELETE" ? "grid-cols-2" : "grid-cols-1"
+            )}>
               <Button variant="ghost" onClick={() => setIsDeleteDialogOpen(false)} className="rounded-2xl h-14 font-black uppercase text-[10px] tracking-widest">Cancel</Button>
-              <Button 
-                variant="destructive" 
-                disabled={deleteConfirmText !== "DELETE" || isDeleting}
-                onClick={handleDeletePost}
-                className="rounded-2xl h-14 font-black uppercase text-[10px] tracking-widest shadow-lg shadow-destructive/20 disabled:opacity-30"
-              >
-                {isDeleting ? <Loader2 className="animate-spin" /> : "Continue Deletion"}
-              </Button>
+              {deleteConfirmText === "DELETE" && (
+                <Button 
+                  variant="destructive" 
+                  disabled={isDeleting}
+                  onClick={handleDeletePost}
+                  className="rounded-2xl h-14 font-black uppercase text-[10px] tracking-widest shadow-lg shadow-destructive/20 animate-in zoom-in duration-300"
+                >
+                  {isDeleting ? <Loader2 className="animate-spin" /> : "Continue Deletion"}
+                </Button>
+              )}
             </div>
           </div>
         </DialogContent>
