@@ -5,7 +5,7 @@
   "private": true,
   "repository": {
     "type": "git",
-    "url": "https://github.com/mohdaman68832-oss/Social-media-.git"
+    "url": "https://github.com/mohdaman68832-oss/studio.git"
   },
   "scripts": {
     "dev": "next dev --turbopack -p 9002",
