@@ -1,6 +1,16 @@
+
 # InnovateSphere | Orange Edition
 
 This is a NextJS + Firebase application built in Firebase Studio.
+
+## 🔗 GitHub Integration
+- **Repository**: [Social-media-](https://github.com/mohdaman68832-oss/Social-media-.git)
+- **How to Link**:
+  1. Go to your [Firebase Console](https://console.firebase.google.com/).
+  2. Navigate to **Build > App Hosting**.
+  3. Click **"Get Started"** or **"Add Backend"**.
+  4. Connect your GitHub account and select the `Social-media-` repository.
+  5. Firebase will now automatically deploy your changes whenever you push to GitHub!
 
 ## 🚀 Terminal & Mobile Help
 - **How to open Terminal**: Look at the bottom bar for a "Terminal" tab. If hidden, click the menu (three lines or dots) in the top-left/right and select **Terminal > New Terminal**.
