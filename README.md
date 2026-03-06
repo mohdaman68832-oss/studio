@@ -2,10 +2,10 @@
 
 This is a NextJS + Firebase application built in Firebase Studio.
 
-## 🚀 Deployment & Environment
-- **Live Preview**: Your app is running in real-time in the Studio window. This is your primary way to see and test changes.
-- **Firebase Console**: The Hosting dashboard in the console might show "Waiting for your first release". This is normal because manual CLI deployments (`firebase deploy`) are not required here.
-- **Automatic Sync**: Every time I update the code, your preview refreshes automatically.
+## 🚀 Terminal & Mobile Help
+- **How to open Terminal**: Look at the bottom bar for a "Terminal" tab. If hidden, click the menu (three lines or dots) in the top-left/right and select **Terminal > New Terminal**.
+- **Mobile Note**: Typing commands in terminal on mobile is hard. **Don't worry!** I automatically handle `npm install` and `firebase` settings when you ask for changes.
+- **Auto-Sync**: Your code updates automatically in the preview window. No need to run `firebase deploy`.
 
 ## 🛠 Tech Stack
 - **Next.js 15 (App Router)**
