@@ -8,7 +8,7 @@ import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@
 import { collection, query, orderBy, where, doc, limit } from "firebase/firestore";
 import { useMemo, useState, Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RefreshCcw, LayoutGrid, Globe, ImageIcon, Video, Type, Sparkles, Users } from "lucide-react";
+import { RefreshCcw, LayoutGrid, Globe, ImageIcon, Video, Type, Sparkles, Users, Plus } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -86,7 +86,6 @@ function FeedContent() {
 
   const { data: firestorePosts, isLoading: loading } = useCollection(postsQuery);
 
-  // Separate query for groups if user filters Meme Hubs
   const memeGroupsQuery = useMemoFirebase(() => {
     if (!db || activeCategory !== "Meme" || memeType !== "group") return null;
     return query(
@@ -282,6 +281,16 @@ function FeedContent() {
           </div>
         )}
       </div>
+
+      {/* Floating Action Button for Posting */}
+      <Link href="/post">
+        <Button 
+          size="icon" 
+          className="fixed bottom-20 right-6 h-14 w-14 rounded-full bg-primary text-white shadow-2xl shadow-primary/40 active:scale-90 transition-transform z-[900]"
+        >
+          <Plus size={28} />
+        </Button>
+      </Link>
     </div>
   );
 }
