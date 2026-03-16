@@ -10,8 +10,8 @@ This is a NextJS + Firebase application built in Firebase Studio.
 
 ---
 
-## 🚀 GitHub Sync Guide (Step-by-Step)
-Agar aapka code GitHub par nahi dikh raha aur Blue Button nahi dab raha, toh ye kijiye:
+## 🚀 GitHub Sync Guide (Surgical Steps)
+Agar aapka code GitHub par nahi dikh raha aur Blue Button nahi dab raha, toh ye 100% kaam karega:
 
 1.  **Step 1 (SABSE ZAROORI)**: Left sidebar mein **3rd icon** (Source Control) par click karein.
 2.  **Step 2 (Stage Karein)**: Jahan "Changes" likha hai, uske thik saamne ek **Plus (+)** icon hoga. Agar icon nahi dikh raha, toh "Changes" wali line par **mouse/ungli le jaayin**, tab wo dikhne lagega. Use dabayein taaki saari files "Staged" ho jayein.
@@ -24,6 +24,7 @@ Ab aap apne GitHub Repo ko refresh karke dekhein, aapka code wahan 100% dikhne l
 
 ## 🛠 Web vs Android
 - **Web App**: Saari configuration `src/firebase/config.ts` mein hai. `google-services.json` ki zaroorat nahi hai.
+- **Folder Structure**: `src` folder ke bahar `package.json` aur `firebase.json` dikhni chahiye. `public` folder agar khali hai toh kabhi kabhi dikhta nahi hai, par `src` zaroor dikhna chahiye.
 
 ## 📱 Tech Stack
 - Next.js 15 (App Router)
