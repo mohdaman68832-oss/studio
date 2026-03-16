@@ -3,6 +3,13 @@
 
 This is a NextJS + Firebase application built in Firebase Studio.
 
+## ✅ Kaise Check Karein ki Connect Hua ya Nahi? (Surgical Check)
+
+1. **GitHub Par Code Dekhein**: Is link par click karein: [studio.git](https://github.com/mohdaman68832-oss/studio.git). Agar wahan saari files (src, package.json) dikh rahi hain, toh aapka code **GitHub se connect ho gaya hai!**
+2. **Website Kahan Hai?**: GitHub par sirf code rehta hai. Aapki website ka link aapke **Firebase Console** mein Hosting section mein milega.
+
+---
+
 ## 🚀 GitHub Sync Guide (Step-by-Step)
 Agar aapka code GitHub par nahi dikh raha aur Blue Button nahi dab raha, toh ye kijiye:
 
@@ -13,7 +20,7 @@ Agar aapka code GitHub par nahi dikh raha aur Blue Button nahi dab raha, toh ye 
 5.  **Step 5 (Commit)**: Ab niche wala **Blue Button** dark ho jayega. Us par click karein (**'Commit'** ya **'Commit change on main'**).
 6.  **Step 6 (Push)**: Commit ke baad wahi par ek naya blue button aayega **'Sync Changes'** ya **'Push'** naam se. Use dabayein aur **OK** kar dein.
 
-Ab aap [studio.git](https://github.com/mohdaman68832-oss/studio.git) ko refresh karke dekhein, aapka code wahan 100% dikhne lagega!
+Ab aap apne GitHub Repo ko refresh karke dekhein, aapka code wahan 100% dikhne lagega!
 
 ## 🛠 Web vs Android
 - **Web App**: Saari configuration `src/firebase/config.ts` mein hai. `google-services.json` ki zaroorat nahi hai.
