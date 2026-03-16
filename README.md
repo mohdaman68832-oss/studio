@@ -4,12 +4,13 @@
 This is a NextJS + Firebase application built in Firebase Studio.
 
 ## 🚀 GitHub Sync Guide (Live kaise karein?)
-Agar aapka code GitHub par nahi dikh raha, toh ye steps karein:
+Agar aapka code GitHub par nahi dikh raha, toh ye steps karein (Aapke screenshot ke mutabiq):
 
 1. **Source Control Kholein**: Left sidebar mein 3rd icon (branch jaisa) par click karein.
-2. **Message Likhein**: Box mein "Update Code" likhein.
-3. **Commit & Push**: 'Commit' dabayein aur phir 'Push' (Sync) select karein.
-4. **Check**: Apne GitHub repo [studio.git](https://github.com/mohdaman68832-oss/studio.git) ko refresh karke dekhein.
+2. **Message Likhein**: Jahan "Message" likha hai, wahan type karein: `First Upload`.
+3. **Commit Dabayein**: Blue button **'Commit'** par click karein.
+4. **Sync/Push**: 'Commit' ke baad wahi par **'Sync Changes'** ya **'Push'** likha aayega, use select karein.
+5. **Check**: Apne GitHub repo [studio.git](https://github.com/mohdaman68832-oss/studio.git) ko refresh karke dekhein.
 
 ## 🔗 Official Repository
 **URL**: [https://github.com/mohdaman68832-oss/studio.git](https://github.com/mohdaman68832-oss/studio.git)
