@@ -7,10 +7,11 @@ This is a NextJS + Firebase application built in Firebase Studio.
 Agar aapka code GitHub par nahi dikh raha aur Blue Button nahi dab raha, toh ye kijiye:
 
 1.  **Step 1 (SABSE ZAROORI)**: Left sidebar mein **3rd icon** (Source Control) par click karein.
-2.  **Step 2 (Stage Karein)**: Jahan "Changes" likha hai, uske thik saamne ek **Plus (+)** icon hoga. Use dabayein taaki saari files "Staged" ho jayein.
-3.  **Step 3 (Message)**: Upar khali box mein type karein: `Update Code`.
-4.  **Step 4 (Commit)**: Ab niche wala **Blue Button** dark ho jayega. Us par click karein (**'Commit'** ya **'Commit change on main'**).
-5.  **Step 5 (Push)**: Commit ke baad wahi par ek naya blue button aayega **'Sync Changes'** ya **'Push'** naam se. Use dabayein aur **OK** kar dein.
+2.  **Step 2 (Stage Karein)**: Jahan "Changes" likha hai, uske thik saamne ek **Plus (+)** icon hoga. Agar icon nahi dikh raha, toh "Changes" wali line par **mouse/ungli le jaayin**, tab wo dikhne lagega. Use dabayein taaki saari files "Staged" ho jayein.
+3.  **Step 3 (Alternative)**: Agar phir bhi `+` nahi mil raha, toh upar teen dot **(...)** par click karein aur **Changes > Stage All** select karein.
+4.  **Step 4 (Message)**: Upar khali box mein type karein: `Update Code`.
+5.  **Step 5 (Commit)**: Ab niche wala **Blue Button** dark ho jayega. Us par click karein (**'Commit'** ya **'Commit change on main'**).
+6.  **Step 6 (Push)**: Commit ke baad wahi par ek naya blue button aayega **'Sync Changes'** ya **'Push'** naam se. Use dabayein aur **OK** kar dein.
 
 Ab aap [studio.git](https://github.com/mohdaman68832-oss/studio.git) ko refresh karke dekhein, aapka code wahan 100% dikhne lagega!
 
